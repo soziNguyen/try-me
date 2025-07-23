@@ -4,7 +4,7 @@ import cors from 'cors';
 import path from 'path';
 import ejs from 'ejs';
 import { fileURLToPath } from 'url';
-// import constants from './configs/constants.js';
+import constants from './configs/constants.js';
 import router from './routes/common.js';
 import passport from './configs/passport.js';
 import session from 'express-session';
@@ -35,7 +35,7 @@ app.use(cors());  // Allow API requests from different origins (CORS)
 app.use(express.json());  // Parse incoming JSON requests (req.body)
 
 //session
-const sessionStore = new MongoStore({
+const sessionStore = MongoStore.create({
   mongoUrl: process.env.MONGODB_URI,
   mongoOptions: {
     // autoReconnect: true
@@ -72,6 +72,11 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.get('/ping', (req, res) => {
+  console.log('==> /ping hit');
+  res.send('pong');
+});
+
 app.use((req, res, next) => {
   res.locals.currentPath = req.path; 
   next();
@@ -80,8 +85,6 @@ app.use((req, res, next) => {
 
 app.use('/', router);
 
-app.use((req, res) => {
-    res.status(404).render('errors/error-404', { title: 'Page Not Found' });
-});
+
 
 export default app;

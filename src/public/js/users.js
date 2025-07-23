@@ -73,7 +73,7 @@ if (logInForm) {
       if (result) {
         toastr.success("Success");
         setTimeout(() => {
-          window.location.href = "/users";
+          window.location.href = "/";
         }, 500);
       }
     } catch (error) {

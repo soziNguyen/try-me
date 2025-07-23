@@ -3,7 +3,10 @@ import * as userController from '../controllers/user.js';
 import isAuthenticated from "../helpers/isAuthenticated.js";
 import isAdmin from '../helpers/isAdmin.js';
 
-const router = express.Router();    
+const router = express.Router();
+
+// Staff Dashboard
+router.get('/', isAdmin, isAuthenticated);
 
 // =====================user routes==================================
 router.get('/users',                isAuthenticated, isAdmin, userController.userPage);     // render view

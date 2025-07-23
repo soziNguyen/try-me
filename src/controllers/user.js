@@ -10,7 +10,7 @@ import { isValidPassword, generateSalt } from '../helpers/common.js';
 //===================VIEWS==========================
 // User Management Page
 export const userPage = async (req, res) => {
-    res.render('users/dashboard', {
+    res.render('users/user', {
         title: 'Dashboard',   
         page: 'user',
         user: req.user,
@@ -45,6 +45,12 @@ export const resetPasswordPage = async (req, res) => {
         title: 'Reset Password'
     })
 }
+
+// export const staffDashboard = async (req, res) => {
+//     res.render('users/staff_dashboard', {
+//         title: 'Dashboard'
+//     })
+// }
 
 
 // [CREATE] / User
