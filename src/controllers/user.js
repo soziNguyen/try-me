@@ -244,7 +244,7 @@ export const forgotPassword = async (req, res) => {
         user.resetTokenExpires = tokenExpires;
         await user.save();
 
-        const resetLink = `http://localhost:3003/reset-password/${resetToken}`;
+        const resetLink = `http://localhost:6001/reset-password/${resetToken}`;
         await mailer.sendMail({
             from: SMTP.username,
             to: user.email,
