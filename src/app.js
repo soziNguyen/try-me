@@ -4,7 +4,6 @@ import cors from 'cors';
 import path from 'path';
 import ejs from 'ejs';
 import { fileURLToPath } from 'url';
-import constants from './configs/constants.js';
 import router from './routes/common.js';
 import passport from './configs/passport.js';
 import session from 'express-session';
