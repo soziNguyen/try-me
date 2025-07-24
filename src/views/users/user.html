@@ -1,14 +1,10 @@
 <%- include('../partials/header.html') %>
-
-  <div class="container mt-5">
-    <%- include('../partials/navbar.html') %>
-    <%- include('./update-user.html')%>
-      <h2 class="t_center fw-bold mt80">USER LIST</h2>
+<%- include('../partials/admin_sidebar.html') %>
+<div class="admin__content">
+  <div class="container">
+      <h2 class="fw-bold">USER LIST</h2>
 
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="search-form d-flex align-items-center" id="search-container">
-          <input type="text" id="searchUserInput" class="form-control me-2" placeholder="Search" />
-        </div>
         <div class="btn-group">
           <button class="btn btn-outline-secondary me-2" id="deleteManyBtn">
             <i class="bi bi-trash me-1"></i> Delete
@@ -16,6 +12,9 @@
           <button class="btn btn-outline-success" id="newUser">
             <i class="bi bi-person-plus me-1"></i> Add User
           </button>
+        </div>
+        <div class="search-form d-flex align-items-center" id="search-container">
+          <input type="text" id="searchUserInput" class="form-control me-2" placeholder="Search" />
         </div>
       </div>
 
@@ -122,8 +121,13 @@
         </div>
       </div>
   </div>
+</div>
+</div>
+</div>
+
   <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
   <%- include('../partials/commonjs.html')%>
   <script src="/js/users.js"></script>
   <script src="/js/update-user.js"></script>
+  <script src="/js/sidebar-toggle.js"></script>
   <%- include('../partials/footer.html') %>
