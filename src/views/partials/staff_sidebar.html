@@ -1,92 +1,77 @@
 <div class="staff__layout">
-    <div class="staff__header">
-        <button id="toggleSidebar">
-            <i class="bi bi-list me-2"></i>
-        </button>
-        <div class="search-group">
-            <input type="text" class="search-input">
-            <button class="search-btn">
-                <i class="bi bi-search me-2"></i>
-            </button>
-        </div>
-        <div class="dropdown info">
-          <a href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-person-circle fs-4"></i>
+  <div class="staff__header">
+      <button id="toggleSidebar">
+        <i class="bi bi-list me-2"></i>
+    </button>
+    <div class="search-group" id="searchGroup">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search">
+      <button class="search-btn">
+        <i class="bi bi-search me-2"></i>
+      </button>
+    </div>
+    <button class="search-btn-mobile d-block d-md-none" id="mobileSearchBtn">
+      <i class="bi bi-search fs-5"></i>
+    </button>
+    <div class="dropdown info">
+      <a class="w-100 info__icon" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-person-circle fs-4"></i>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li class="px-3 mb-3">
+          <span><%= user.username %></span>
+          <span><%= user.email %></span>
+        </li>
+        <li id="change-password">
+          <a class="w-100 dropdown-item">
+            <i class="bi bi-shield-lock me-2"></i> Đổi mật khẩu
           </a>
-          <ul class="dropdown-menu dropdown-menu-end mt-2">
-            <li class="px-3 mb-3">
-              <span><%= user.username %></span>
-              <span><%= user.email %></span>
-            </li>
-            <li id="change-password">
-              <a class="dropdown-item" href="/change-password">
-                <i class="bi bi-shield-lock me-2"></i> Đổi mật khẩu
-              </a>
-            </li>
-            <li id="logOut">
-              <a class="dropdown-item text-danger" href="#" id="logOutDropdown">
-                <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
-              </a>
-            </li>
+        </li>
+        <li id="logOut">
+          <a class="dropdown-item w-100" id="logOutDropdown">
+            <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+          </a>
+        </li>
+      </ul>
+    </div>   
+  </div>
+  
+  <div class="staff__main">
+      <div id="staff__sidebar">
+          <ul>
+              <li class="<%= page === 'Dashboard' ? 'active' : '' %>">
+                <a class="w-100" href="/">
+                  <i class="bi bi-speedometer2 me-2"></i>
+                  <span>Dashboard</span>
+                </a>
+              </li>
+          
+              <li>
+                <a class="w-100" href="/staff/tables">
+                  <i class="bi bi-grid-3x3-gap me-2"></i>
+                  <span>Quản lý Bàn</span>
+                </a>
+              </li>
+          
+              <li>
+                <a class="w-100" href="/staff/orders">
+                  <i class="bi bi-receipt me-2"></i>
+                  <span>Đặt món & Thanh toán</span>
+                </a>
+              </li>
+          
+              <li>
+                <a class="w-100" href="/staff/schedule">
+                  <i class="bi bi-calendar3 me-2"></i>
+                  <span>Xem Lịch làm việc</span>
+                </a>
+              </li>
+          
+              <li>
+                <a class="w-100" href="/staff/attendance">
+                  <i class="bi bi-clock-history me-2"></i>
+                  <span>Chấm công Vào/Ra</span>
+                </a>
+              </li>
           </ul>
-        </div>   
-    </div>
-    
-    <div class="staff__main">
-        <div id="staff__sidebar">
-            <ul>
-                <li>
-                  <a href="/">
-                    <i class="bi bi-speedometer2 me-2"></i>
-                    <span>Dashboard</span>
-                  </a>
-                </li>
-            
-                <li>
-                  <a href="/staff/tables">
-                    <i class="bi bi-grid-3x3-gap me-2"></i>
-                    <span>Quản lý Bàn</span>
-                  </a>
-                </li>
-            
-                <li>
-                  <a href="/staff/orders">
-                    <i class="bi bi-receipt me-2"></i>
-                    <span>Đặt món & Thanh toán</span>
-                  </a>
-                </li>
-            
-                <li>
-                  <a href="/staff/schedule">
-                    <i class="bi bi-calendar3 me-2"></i>
-                    <span>Xem Lịch làm việc</span>
-                  </a>
-                </li>
-            
-                <li>
-                  <a href="/staff/attendance">
-                    <i class="bi bi-clock-history me-2"></i>
-                    <span>Chấm công Vào/Ra</span>
-                  </a>
-                </li>
-            
-                <li>
-                  <a href="/staff/change-password">
-                    <i class="bi bi-key me-2"></i>
-                    <span>Đổi Mật khẩu</span>
-                  </a>
-                </li>
-            
-                <li id="logOut">
-                  <a>
-                    <i class="bi bi-box-arrow-right me-2"></i>
-                    <span>Đăng xuất</span>
-                  </a>
-                </li>
-            </ul>
-        </div>
-        <div class="staff__content">
-            <h1>Welcome Staff</h1>
-        </div>
-    </div>
-</div>
+      </div>
+      <%- include('../users/update-user.html') %>
