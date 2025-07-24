@@ -1,108 +1,109 @@
 <div class="admin__layout">
-    <div class="admin__header">
-      <button id="toggleSidebar">
-          <i class="bi bi-list me-2"></i>
+  <div class="admin__header">
+    <button id="toggleSidebar">
+        <i class="bi bi-list me-2"></i>
+    </button>
+    <div class="search-group" id="searchGroup">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search">
+      <button class="search-btn">
+        <i class="bi bi-search me-2"></i>
       </button>
-      <div class="search-group" id="searchGroup">
-        <input type="text" class="search-input" id="searchInput" placeholder="Search">
-        <button class="search-btn">
-          <i class="bi bi-search me-2"></i>
-        </button>
-      </div>
-      <button class="search-btn-mobile d-block d-md-none" id="mobileSearchBtn">
-        <i class="bi bi-search fs-5"></i>
-      </button>
-      <div class="dropdown info">
-        <a class="info__icon" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="bi bi-person-circle fs-4"></i>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end mt-2">
-          <li class="px-3 mb-3">
-            <span><%= user.username %></span>
-            <span><%= user.email %></span>
-          </li>
-          <li id="change-password">
-            <a class="dropdown-item">
-              <i class="bi bi-shield-lock me-2"></i> Đổi mật khẩu
-            </a>
-          </li>
-          <li id="logOut">
-            <a class="dropdown-item" id="logOutDropdown">
-              <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
-            </a>
-          </li>
-        </ul>
-      </div>      
     </div>
-    
-    <div class="admin__main">
-        <div id="admin__sidebar">
-            <ul>
-                <li>
-                  <a href="/">
-                    <i class="bi bi-speedometer2 me-2"></i>
-                    <span>Dashboard</span>
-                  </a>
-                </li>
-            
-                <li>
-                  <a href="/inventory">
-                    <i class="bi bi-box-seam me-2"></i>
-                    <span>Quản lý Kho</span>
-                  </a>
-                </li>
-            
-                <li>
-                  <a href="/menu">
-                    <i class="bi bi-journal-bookmark me-2"></i>
-                    <span>Quản lý Thực đơn</span>
-                  </a>
-                </li>
-            
-                <li>
-                  <a href="/users">
-                    <i class="bi bi-people me-2"></i>
-                    <span>Quản lý Nhân viên</span>
-                  </a>
-                </li>
-            
-                <li>
-                  <a href="/tax">
-                    <i class="bi bi-file-earmark-text me-2"></i>
-                    <span>Thuế & Tuân thủ</span>
-                  </a>
-                </li>
-            
-                <li>
-                  <a href="/reports/sales">
-                    <i class="bi bi-bar-chart-line me-2"></i>
-                    <span>Báo cáo Bán hàng</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/reports/inventory">
-                    <i class="bi bi-box-seam me-2"></i>
-                    <span>Báo cáo Kho</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/reports/performance">
-                    <i class="bi bi-award me-2"></i>
-                    <span>Báo cáo Nhân viên</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/reports/tax">
-                    <i class="bi bi-file-earmark-text me-2"></i>
-                    <span>Báo cáo Thuế</span>
-                  </a>
-                </li>
-            
-                <li>
-                  <a href="/revenue">
-                    <i class="bi bi-cash-stack me-2"></i>
-                    <span>Theo dõi Doanh thu</span>
-                  </a>
-                </li>
-            </ul>
-        </div>
+    <button class="search-btn-mobile d-block d-md-none" id="mobileSearchBtn">
+      <i class="bi bi-search fs-5"></i>
+    </button>
+    <div class="dropdown info">
+      <a class="w-100 info__icon" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-person-circle fs-4"></i>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li class="px-3 mb-3">
+          <span><%= user.username %></span>
+          <span><%= user.email %></span>
+        </li>
+        <li id="change-password">
+          <a class="w-100 dropdown-item">
+            <i class="bi bi-shield-lock me-2"></i> Đổi mật khẩu
+          </a>
+        </li>
+        <li id="logOut">
+          <a class="dropdown-item w-100" id="logOutDropdown">
+            <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+          </a>
+        </li>
+      </ul>
+    </div>      
+  </div>
+  
+  <div class="admin__main">
+      <div id="admin__sidebar">
+          <ul>
+              <li class="<%= page === 'Dashboard' ? 'active' : '' %>">
+                <a class="w-100" href="/">
+                  <i class="bi bi-speedometer2 me-2"></i>
+                  <span>Dashboard</span>
+                </a>
+              </li>
+          
+              <li class="<%= page === 'Inventory' ? 'active' : '' %>">
+                <a class="w-100" href="/inventory">
+                  <i class="bi bi-box-seam me-2"></i>
+                  <span>Quản lý Kho</span>
+                </a>
+              </li>
+          
+              <li>
+                <a class="w-100" href="/menu">
+                  <i class="bi bi-journal-bookmark me-2"></i>
+                  <span>Quản lý Thực đơn</span>
+                </a>
+              </li>
+          
+              <li class="<%= page === 'User' ? 'active' : '' %>">
+                <a class="w-100" href="/users">
+                  <i class="bi bi-people me-2"></i>
+                  <span>Quản lý Nhân viên</span>
+                </a>
+              </li>
+          
+              <li>
+                <a class="w-100" href="/tax">
+                  <i class="bi bi-file-earmark-text me-2"></i>
+                  <span>Thuế & Tuân thủ</span>
+                </a>
+              </li>
+          
+              <li>
+                <a class="w-100" href="/reports/sales">
+                  <i class="bi bi-bar-chart-line me-2"></i>
+                  <span>Báo cáo Bán hàng</span>
+                </a>
+              </li>
+              <li>
+                <a class="w-100" href="/reports/inventory">
+                  <i class="bi bi-box-seam me-2"></i>
+                  <span>Báo cáo Kho</span>
+                </a>
+              </li>
+              <li>
+                <a class="w-100" href="/reports/performance">
+                  <i class="bi bi-award me-2"></i>
+                  <span>Báo cáo Nhân viên</span>
+                </a>
+              </li>
+              <li>
+                <a class="w-100" href="/reports/tax">
+                  <i class="bi bi-file-earmark-text me-2"></i>
+                  <span>Báo cáo Thuế</span>
+                </a>
+              </li>
+          
+              <li>
+                <a class="w-100" href="/revenue">
+                  <i class="bi bi-cash-stack me-2"></i>
+                  <span>Theo dõi Doanh thu</span>
+                </a>
+              </li>
+          </ul>
+      </div>
+    <%- include('../users/update-user.html') %>

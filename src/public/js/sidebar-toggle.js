@@ -3,17 +3,16 @@ document.querySelectorAll('button[id="toggleSidebar"]').forEach(btn => {
     const layout = btn.closest('.admin__layout, .staff__layout');
     if (!layout) return;
     const sidebar = layout.querySelector('[id$="__sidebar"]');
-    if (sidebar) sidebar.classList.toggle('collapsed');
+
+     if (window.innerWidth <= 991) {
+      sidebar.classList.toggle('show-mobile');
+      sidebar.classList.remove('collapsed');
+    } else {
+      sidebar.classList.toggle('collapsed');
+      sidebar.classList.remove('show-mobile');
+    }
     });
 });
-
-const userInfo = document.querySelector('.info');
-userInfo.addEventListener('click', function () {
-  const changePassword = document.createElement('span');
-  changePassword.className = 'change-password';
-
-  userInfo.append(changePassword)
-})
 
 const logOutBtn = document.getElementById("logOut");
 

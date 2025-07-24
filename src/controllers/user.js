@@ -12,7 +12,7 @@ import { isValidPassword, generateSalt } from '../helpers/common.js';
 export const userPage = async (req, res) => {
     res.render('users/user', {
         title: 'Dashboard',   
-        page: 'user',
+        page: 'User',
         user: req.user,
         currentUserId: req.user._id.toString()
     })
@@ -51,12 +51,14 @@ export const dashboard = async (req, res) => {
         return res.render('users/admin_dashboard', {
             title: 'Dashboard',
             user: req.user,
+            page: 'Dashboard',
             currentUserId: req.user._id.toString()
         })
     } else {
         return res.render('users/staff_dashboard', {
             title: 'Dashboard',
             user: req.user,
+            page: 'Dashboard',
             currentUserId: req.user._id.toString()
         })
     }
