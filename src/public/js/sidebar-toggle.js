@@ -4,13 +4,9 @@ document.querySelectorAll('button[id="toggleSidebar"]').forEach(btn => {
     if (!layout) return;
     const sidebar = layout.querySelector('[id$="__sidebar"]');
 
-     if (window.innerWidth <= 991) {
-      sidebar.classList.toggle('show-mobile');
-      sidebar.classList.remove('collapsed');
-    } else {
+     if (sidebar) {
       sidebar.classList.toggle('collapsed');
-      sidebar.classList.remove('show-mobile');
-    }
+     }
     });
 });
 
