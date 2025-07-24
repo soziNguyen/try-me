@@ -6,7 +6,7 @@ import isAdmin from '../helpers/isAdmin.js';
 const router = express.Router();
 
 // Staff Dashboard
-router.get('/', isAdmin, isAuthenticated);
+router.get('/', isAuthenticated, userController.dashboard);
 
 // =====================user routes==================================
 router.get('/users',                isAuthenticated, isAdmin, userController.userPage);     // render view

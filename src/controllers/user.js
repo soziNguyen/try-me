@@ -46,11 +46,21 @@ export const resetPasswordPage = async (req, res) => {
     })
 }
 
-// export const staffDashboard = async (req, res) => {
-//     res.render('users/staff_dashboard', {
-//         title: 'Dashboard'
-//     })
-// }
+export const dashboard = async (req, res) => {
+    if (req.user && req.user.role === 'Admin') {
+        return res.render('users/admin_dashboard', {
+            title: 'Dashboard',
+            user: req.user,
+            currentUserId: req.user._id.toString()
+        })
+    } else {
+        return res.render('users/staff_dashboard', {
+            title: 'Dashboard',
+            user: req.user,
+            currentUserId: req.user._id.toString()
+        })
+    }
+}
 
 
 // [CREATE] / User

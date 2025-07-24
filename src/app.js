@@ -71,19 +71,11 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('/ping', (req, res) => {
-  console.log('==> /ping hit');
-  res.send('pong');
-});
-
 app.use((req, res, next) => {
   res.locals.currentPath = req.path; 
   next();
 });
 
-
 app.use('/', router);
-
-
 
 export default app;

@@ -2,22 +2,6 @@ const logInForm = document.getElementById("login-form");
 const signUpForm = document.getElementById("signup-form");
 const forgotForm = document.getElementById("forgot-password");
 const resetForm = document.getElementById("reset-form");
-const logOutBtn = document.getElementById("logOut");
-
-if (logOutBtn) {
-  logOutBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    try {
-      const result = await ajax("/api/users/logout", {}, "POST");
-      if (result) {
-        toastr.success("Logged out successfully");
-        setTimeout(() => (window.location.href = "/login"), 1000);
-      }
-    } catch (error) {
-      toastr.error(error.message);
-    }
-  });
-}
 
 if (logInForm) {
   // Điền sẵn giá trị từ localStorage khi trang login load

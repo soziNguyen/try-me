@@ -1,10 +1,8 @@
 const isAdmin = (req, res, next) => {
     if (req.user && req.user.role === "Admin") {
-      return res.render('users/admin_dashboard', {
-        title: 'Dashboard'
-      });
+      return next()
     } else {
-      return res.render('users/staff_dashboard', {
+      return res.render('errors/permission', {
         title: 'Dashboard'
       })
     }
