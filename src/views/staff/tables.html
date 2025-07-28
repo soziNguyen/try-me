@@ -1,0 +1,67 @@
+<%- include('../partials/header.html') %>
+<%- include('../partials/staff_sidebar.html') %>
+
+    <div class="staff__content">
+      <h1>Quản lý Bàn</h1>
+
+        <!-- add table -->
+        <button id="btnShowForm" class="btn btn-dark mb-3" >+ Add table</button>
+
+        <!-- Form add -->
+        <form id="formAddTable" class="mb-4 d-none">
+          <div class="form-row d-flex flex-wrap gap-2">
+                <div>
+                  <label for="name">Tên bàn:</label>
+                  <input type="text" name="name" id="name" class="form-control" required>
+                </div>
+                <div>
+                  <label for="status">Trạng thái:</label>
+                  <select name="status" id="status" class="form-control" required>
+                    <option value="available">Trống</option>
+                    <option value="occupied">Có khách</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="capacity">Số người:</label>
+                  <input type="number" name="capacity" id="capacity" class="form-control" min="1">
+                </div>
+                <div>
+                  <label for="area">Khu vực:</label>
+                  <select name="area" id="area" class="form-control" required>
+                    <option value="kv1">KV1</option>
+                    <option value="kv2">KV2</option>
+                  </select>
+                </div>
+                <div class="align-self-end">
+                  <button type="submit" class="btn btn-dark">Save</button>
+                </div>
+          </div>
+        </form>
+
+
+        <table class="table mt-4">
+          <thead>
+            <tr>
+              <th>Tên bàn</th>
+              <th>Trạng thái</th>
+              <th>Số lượng người</th>
+              <th>Khu vực</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+
+          </tbody> 
+        </table>
+      </div>
+
+</div>
+</div>
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+
+
+
+<%- include('../partials/commonjs.html') %>
+<script src="/js/sidebar-toggle.js"></script>
+<script src="/js/update-user.js"></script>
+<script src="/js/tables.js"></script>
+<%- include('../partials/footer.html') %>
