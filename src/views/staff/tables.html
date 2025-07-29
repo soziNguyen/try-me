@@ -4,8 +4,24 @@
     <div class="staff__content">
       <h1>Quản lý Bàn</h1>
 
-        <!-- add table -->
-        <button id="btnShowForm" class="btn btn-dark mb-3" >+ Add table</button>
+
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div >
+            <button id="btnShowForm" class="btn btn-outline-success">
+              <i class="bi bi-plus me-1"></i> Thêm bàn
+            </button>
+            <button id="btnEditTable" class="btn btn-outline-info">
+               <i class="bi bi-pencil me-1"></i> Cập nhật
+            </button>
+            <button id="btnDeleteTable" class="btn btn-outline-danger"> 
+              <i class="bi bi-trash me-1"></i> Xóa bàn
+            </button>
+        </div>
+        <div class="search-form d-flex align-items-center" id="search-container">
+          <input type="text" id="searchUserInput" class="form-control me-2" placeholder="Search" />
+        </div>
+      </div>
 
         <!-- Form add -->
         <form id="formAddTable" class="mb-4 d-none">
@@ -39,9 +55,41 @@
         </form>
 
 
+        <!-- Modal cập nhật bàn -->
+        <div class="modal fade" id="updateTableModal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Cập nhật bàn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <input id="update-name" class="form-control mb-2" placeholder="Tên bàn" />
+                <select id="update-status" class="form-control mb-2">
+                  <option value="available">Trống</option>
+                  <option value="occupied">Có khách</option>
+                </select>
+                <input id="update-capacity" class="form-control mb-2" type="number" placeholder="Sức chứa" />
+                <select id="update-area" class="form-control mb-2">
+                  <option value="kv1">KV1</option>
+                  <option value="kv2">KV2</option>
+                </select>
+              </div>
+              <div class="modal-footer">
+                <button id="btnUpdateTable" class="btn btn-primary">Cập nhật</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
         <table class="table mt-4">
           <thead>
             <tr>
+              <th class="text-center align-middle">
+                <input type="checkbox" id="selectAllTable" class=" m-0"/>
+              </th>
               <th>Tên bàn</th>
               <th>Trạng thái</th>
               <th>Số lượng người</th>
