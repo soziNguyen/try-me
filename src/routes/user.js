@@ -1,29 +1,30 @@
 import express from 'express';
 import * as userController from '../controllers/user.js';
+import { userPage, logInPage, signUpPage, forgotPasswordPage, resetPasswordPage, dashboard } from '../controllers/pages.js'
 import isAuthenticated from "../helpers/isAuthenticated.js";
 import isAdmin from '../helpers/isAdmin.js';
 
 const router = express.Router();
 
 // Staff Dashboard
-router.get('/', isAuthenticated, userController.dashboard);
+router.get('/', isAuthenticated, dashboard);
 
 // =====================user routes==================================
-router.get('/users',                isAuthenticated, isAdmin, userController.userPage);     // render view
+router.get('/users',                isAuthenticated, isAdmin, userPage);     // render view
 router.get('/api/users',            isAuthenticated, isAdmin, userController.getUsers);     // get data json
 router.get('/api/users/:id',        isAuthenticated,          userController.getUser);      // get data json
 router.post('/api/users/create',                              userController.createUser);   //post
 router.put('/api/users/update/:id', isAuthenticated,          userController.updateUser);   // post
 router.post('/api/users/delete',    isAuthenticated, isAdmin, userController.deleteUsers);  // post
 
-router.get('/signup', userController.signUpPage);       // render view
-router.get('/login', userController.logInPage);         // render view
+router.get('/signup', signUpPage);       // render view
+router.get('/login', logInPage);         // render view
 router.post('/api/users/login', userController.logIn);  // post
 router.post('/api/users/logout', userController.logOut)
 
-router.get('/login/identify', userController.forgotPasswordPage);               // render view
+router.get('/login/identify', forgotPasswordPage);               // render view
 router.post('/api/users/forgot', userController.forgotPassword);                // post
-router.get('/reset-password/:token', userController.resetPasswordPage);         // render view
+router.get('/reset-password/:token', resetPasswordPage);         // render view
 router.post('/api/users/reset-password/:token', userController.resetPassword);  // post
 
 

@@ -6,65 +6,6 @@ import passport from "passport";
 import responseHelper from '../helpers/responseHelper.js';
 import { isValidPassword, generateSalt } from '../helpers/common.js';
 
-
-//===================VIEWS==========================
-// User Management Page
-export const userPage = async (req, res) => {
-    res.render('users/user', {
-        title: 'Dashboard',   
-        page: 'User',
-        user: req.user,
-        currentUserId: req.user._id.toString()
-    })
-}
-
-// User Log In Page
-export const logInPage = async (req, res) => {
-    res.render('users/log_in', {
-        title: 'Log In'
-    })
-}
-
-// User Sign Up Page
-export const signUpPage = async (req, res) => {
-    res.render('users/sign_up', {
-        title: 'Sign Up'
-    })
-}
-
-// User Forgot Password Page
-export const forgotPasswordPage = async (req, res) => {
-    res.render('users/forgot_password', {
-        title: 'Forgot Password'
-    })
-}
-
-// User Reset Password Page
-export const resetPasswordPage = async (req, res) => {
-    res.render('users/reset_password', {
-        title: 'Reset Password'
-    })
-}
-
-export const dashboard = async (req, res) => {
-    if (req.user && req.user.role === 'Admin') {
-        return res.render('users/admin_dashboard', {
-            title: 'Dashboard',
-            user: req.user,
-            page: 'Dashboard',
-            currentUserId: req.user._id.toString()
-        })
-    } else {
-        return res.render('users/staff_dashboard', {
-            title: 'Dashboard',
-            user: req.user,
-            page: 'Dashboard',
-            currentUserId: req.user._id.toString()
-        })
-    }
-}
-
-
 // [CREATE] / User
 export const createUser = async (req, res) => {
     try {
