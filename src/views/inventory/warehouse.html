@@ -1,0 +1,32 @@
+<%- include('../partials/header.html') %>
+<%- include('../partials/admin_sidebar.html') %>
+<div class="admin__content">
+    <h2 class="mb-4">QUẢN LÝ KHO</h2>
+
+    <div class="mb-3">
+        <button id="import" class="btn btn-outline-success me-2">Nhập kho</button>
+        <button id="export" class="btn btn-outline-danger">Xuất kho</button>
+    </div>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Tên Nguyên liệu</th>
+                <th>Tồn kho</th>
+                <th>Đơn vị</th>
+                <th>Trạng thái</th>
+            </tr>
+        </thead>
+        <tbody id="inventory-table-body">
+        </tbody>
+    </table>
+</div>
+
+</div>
+</div>
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<%- include('../partials/commonjs.html') %>
+<script src="/js/sidebar-toggle.js"></script>
+<script src="/js/update-user.js"></script>
+<!-- <script src="/js/inventory.js"></script> -->
+<%- include('../partials/footer.html') %>
