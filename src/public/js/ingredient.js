@@ -35,6 +35,8 @@ $(function () {
       '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
+      autoWidth: false,
+      scrollX: true,
       order: [],
       ajax: {
         url: '/api/inventory/ingredient',
@@ -50,6 +52,15 @@ $(function () {
         zeroRecords: 'Không tìm thấy kết quả phù hợp'
       },
       pageLength: numRows,
+      columnDefs: [
+        { width: '50px',  targets: 0 },
+        { width: '100px',  targets: 1 },
+        { width: '150px',  targets: 2 },
+        { width: '150px',  targets: 3 },
+        { width: '170px',  targets: 4 },
+        { width: '100px',  targets: 5 },
+        { width: '450px',  targets: 6 },
+      ],
       columns: [
         {
           data: null,
@@ -58,10 +69,13 @@ $(function () {
           render: (data, type, row) => `<input type="checkbox" class="ingredientCheckbox" data-id="${row._id}">`
         },
         { data: 'image',
-          render: (data, type ,row) => {
-            return data ? `<img src="${data}" alt="${row.name}" class="ingredient-image">` : ''
+          orderable: false,
+          className: 'image-cell',
+          render: (data, type , row) => {
+            const imgSrc = data || '';
+            return `<img src="${imgSrc}" alt="Ảnh" class="ingredient-image">`;
           }
-          },
+        },
         { data: 'name', 
           render: (data, type, row) => {
             if ( type === 'display' ) {
@@ -79,7 +93,7 @@ $(function () {
           }
         },
         { data: 'category._id',
-          defaultContent: '',
+          name: 'category.name',
           render: (data, type, row) => {
             if ( type === 'display' ) {
               const opts = categories.map(cat => {
@@ -94,7 +108,7 @@ $(function () {
                 ${opts}
               </select>`;
             }
-            return data ?? '';
+            return row.category?.name ?? '';
           }
         },
         { data: 'minStock',
@@ -150,13 +164,13 @@ $(function () {
       success: function (res) {
         if (res.success) {
           toastr.success(res.message);
-          table.ajax.reload(null, true);
+          table.ajax.reload(null, false);
         } else {
           toastr.error(res.message);
         }
       },
-      error: function (error) {
-        toastr.error(error.responseJSON?.message);
+      error: function (xhr) {
+        toastr.error(xhr.responseJSON?.message || 'Đã có lỗi xảy ra');
       },
       complete: function () {
         $btn.prop('disabled', false);
@@ -166,7 +180,7 @@ $(function () {
 
   // Click 'tr' event for checkbox
   $('#ingredientTable tbody').on('click', 'tr', function (e) {
-    if ($(e.target).is('input[type=checkbox], input[type=text], .dataInput')) return;
+    if ($(e.target).is('input[type=checkbox], img, input[type=text], .dataInput')) return;
     const checkbox = $(this).find('.ingredientCheckbox');
     checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
   })
@@ -193,10 +207,14 @@ $(function () {
 
     if (selectedIds.length === 0) {
       toastr.warning('Không có nguyên liệu nào được chọn để xóa');
+      $btn.prop('disabled', false);
       return;
     }
     
-    if (!confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} nguyên liệu không ?`)) return;
+    if (!confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} nguyên liệu không ?`)) {
+      $btn.prop('disabled', false);
+      return;
+    }
 
     $.ajax({
       url: '/api/inventory/ingredient/deletes',
@@ -206,14 +224,14 @@ $(function () {
       success: function (res) {
         if (res.success) {
           toastr.success(res.message);
-          table.ajax.reload(null, true);
+          table.ajax.reload(null, false);
           $('#selectAll').prop('checked', false);
         } else {
           toastr.error(res.message);
         }
       },
-      error: function (error) {
-        toastr.error(error.message);
+      error: function (xhr) {
+        toastr.error(xhr.responseJSON?.message || 'Đã có lỗi xảy ra');
       },
       complete: function () {
         $btn.prop('disabled', false);
@@ -242,9 +260,83 @@ $(function () {
           toastr.error(res.message)
         }
       },
-      error: function (error) {
-        toastr.error(error.message);
+      error: function (xhr) {
+        toastr.error(xhr.responseJSON?.message || 'Đã có lỗi xảy ra');
       }
     })
   }
+
+  let cropper;
+  let currentImgCell;
+
+  $('#ingredientTable').on('click', '.ingredient-image', function () {
+    currentImgCell = $(this).closest('td');
+    $('<input type="file" accept="image/*">')
+      .on('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (event) {
+
+          $('#imagePreview').attr('src', event.target.result);
+          
+          const modal = new bootstrap.Modal(
+            document.getElementById('imageCropModal')
+          );
+          modal.show();
+
+          // Khởi tạo CropperJS trên đúng element
+          if (cropper) cropper.destroy();
+          cropper = new Cropper(
+            document.getElementById('imagePreview'),
+            { aspectRatio: 1, viewMode: 1 }
+          );
+        };
+        reader.readAsDataURL(file);
+      })
+      .trigger('click');
+  });
+
+  // Save
+  $('#cropBtn').on('click', function () {
+    if (!cropper) return;
+    cropper.getCroppedCanvas().toBlob(blob => {
+      const formData = new FormData();
+      formData.append('file', blob, 'cropped.jpg');
+
+      $.ajax({
+        url: '/api/upload',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: res => {
+          const imgUrl = '/' + res.file.path.replace(/\\/g, '/');
+          const timestamp = new Date().getTime();
+          currentImgCell.find('img').attr('src', `${imgUrl}?t=${timestamp}`);
+
+          // Update image field trên server
+          const row = currentImgCell.closest('tr');
+          const id = row.data('id');
+          if (id) {
+            $.ajax({
+              url: `/api/inventory/ingredient/update/${id}`,
+              method: 'POST',
+              contentType: 'application/json',
+              data: JSON.stringify({ image: imgUrl }),
+              success: () => toastr.success('Cập nhật ảnh thành công'),
+              error: () => toastr.error('Lỗi khi cập nhật ảnh'),
+            });
+          }
+
+          // Đóng modal
+          bootstrap.Modal.getInstance(
+            document.getElementById('imageCropModal')
+          ).hide();
+          cropper.destroy();
+        },
+        error: () => toastr.error('Lỗi upload ảnh'),
+      });
+    }, 'image/jpeg');
+  });
 })

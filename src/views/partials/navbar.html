@@ -1,0 +1,26 @@
+<div class="<%= headerClass %>">
+    <button id="toggleSidebar">
+        <i class="bi bi-list me-2"></i>
+    </button>
+    <div class="dropdown info">
+        <a class="w-100 info__icon" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-person-circle fs-4"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <li class="px-3 mb-3">
+            <span><%= user.username %></span>
+            <span><%= user.email %></span>
+        </li>
+        <li id="change-password">
+            <a class="w-100 dropdown-item">
+            <i class="bi bi-shield-lock me-2"></i> Đổi mật khẩu
+            </a>
+        </li>
+        <li id="logOut">
+            <a class="dropdown-item w-100" id="logOutDropdown">
+            <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+            </a>
+        </li>
+        </ul>
+    </div>   
+</div>
