@@ -8,9 +8,17 @@ export const ingredientDataAPI = async (req, res) => {
     const start = parseInt(req.query.start) || 0;
     const length = parseInt(req.query.length) || 10;
     const searchValue = req.query['search[value]'] || '';
-    const orderColumnIndex = req.query['order[0][column]'] || 0;
-    const orderField = req.query[`columns[${orderColumnIndex}][data]`] || 'name';
-    const orderDir = req.query['order[0][dir]'] === 'desc' ? -1 : 1;
+    const orderColumnIndex = req.query['order[0][column]'];
+    let orderField;
+    let orderDir;
+
+    if (orderColumnIndex === undefined) {
+      orderField = 'createdAt';
+      orderDir = -1;
+    } else {
+      orderField = req.query[`columns[${orderColumnIndex}][data]`] || 'name';
+      orderDir = req.query['order[0][dir]'] === 'desc' ? -1 : 1;
+    }
 
     let mongoQuery = {};
     const searchNumber = Number(searchValue);
@@ -32,7 +40,7 @@ export const ingredientDataAPI = async (req, res) => {
     let fullData = [];
     let recordsFiltered = 0;
 
-    // Sort trong RAM voi category
+    // Sắp xếp trong RAM với category
     if (orderField === 'category.name') {
       fullData = await Ingredient.find(mongoQuery)
         .populate('category', 'name')
@@ -101,7 +109,16 @@ export const updateIngredient = async (req, res) => {
       return responseHelper.error(res, "Tên nguyên liệu đã tồn tại", 400);
     }
 
-    await Ingredient.findByIdAndUpdate(id, { name, unit, category: category || null, minStock, note, image }, { new: true });
+    const updateData = {};
+
+    if (name !== undefined) updateData.name = name;
+    if (unit !== undefined) updateData.unit = unit;
+    if (category !== undefined) updateData.category = category || null;
+    if (minStock !== undefined) updateData.minStock = minStock;
+    if (note !== undefined) updateData.note = note;
+    if (image !== undefined) updateData.image = image;
+    
+    await Ingredient.findByIdAndUpdate(id, updateData, { new: true });
     return responseHelper.success(res, null, 'Cập nhật thành công');
   } catch (err) {
     return responseHelper.error(res, err.message);
