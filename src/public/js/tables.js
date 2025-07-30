@@ -2,11 +2,11 @@
 const btnShowForm = document.getElementById('btnShowForm');      
 const formAddTable = document.getElementById('formAddTable');    
 const tableBody = document.getElementById("tableBody");   
-const btnEditTable = document.getElementById("btnEditTable");        
+const btnEditTable = document.getElementById("btnEditTable");
+const btnAssignTable = document.getElementById("btnAssignTable");        
 
 // ========== GÁN SỰ KIỆN ==========
 function bindEvents() {
-  // Sự kiện bật/tắt form
   btnShowForm.addEventListener('click', () => {
     formAddTable.classList.toggle('d-none');
     btnShowForm.textContent = formAddTable.classList.contains('d-none')
@@ -28,7 +28,7 @@ function bindEvents() {
     }
 
     const tableId = selected[0].dataset.id;
-    updateTable(tableId);  // ✅ gọi hàm cập nhật tại đây
+    updateTable(tableId);  
   });
 
   // Sự kiện submit form Thêm bàn
@@ -45,7 +45,12 @@ function bindEvents() {
 
       if (!data) return;
       toastr.success('Thêm bàn thành công!');
-      location.reload();
+      formAddTable.reset();
+      formAddTable.classList.add('d-none');
+      btnShowForm.textContent = '+ Thêm bàn';
+
+    // ✅ Render lại danh sách bàn
+    await getTables();
     } catch (error) {
       toastr.error(error.message); 
     }
@@ -71,15 +76,15 @@ async function getTables() {
       renderTableList(tables); 
 
       // Gán sự kiện cho checkbox "Chọn tất cả"
-      const selectAll = document.getElementById("selectAllTable");
-      selectAll.checked = false;
+      // const selectAll = document.getElementById("selectAllTable");
+      // selectAll.checked = false;
 
-      selectAll.addEventListener('change', function () {
-        const isChecked = this.checked;
-        document.querySelectorAll('.tableCheckbox').forEach(cb => {
-          cb.checked = isChecked;
-        });
-      });
+      // selectAll.addEventListener('change', function () {
+      //   const isChecked = this.checked;
+      //   document.querySelectorAll('.tableCheckbox').forEach(cb => {
+      //     cb.checked = isChecked;
+      //   });
+      // });
     }
   } catch (error) {
     toastr.error(error.message);
@@ -87,25 +92,49 @@ async function getTables() {
 }
 
 
+// ========== STATUS COLOR ==========
+function getBgClassByStatus(status) {
+  if (status === "available") return "bg-success ";       
+  return "bg-secondary";                              
+}
 // ========== HIỂN THỊ DANH SÁCH BÀN ==========
 function renderTableList(tables = []) {
+  const tableGrid = document.getElementById("tableGrid");
+
   if (!Array.isArray(tables) || tables.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="5" class="text-center">Không có bàn nào.</td></tr>`;
+    tableGrid.innerHTML = `<div class="col-12 text-center">Không có bàn nào.</div>`;
     return;
   }
 
-   //tạo dòng HTML tương ứng
-  tableBody.innerHTML = tables.map(table => `
-    <tr>
-      <td class="text-center align-middle">
-        <input type="checkbox" class="tableCheckbox" data-id="${table._id}" />
-      </td>
-      <td>${table.name}</td>
-      <td>${table.status === "available" ? "Trống" : "Có khách"}</td>
-      <td>${table.capacity || "-"}</td>
-      <td>${table.area || "-"}</td>
-    </tr>
-  `).join("");
+tableGrid.innerHTML = tables.map(table =>{ 
+   const bgClass = getBgClassByStatus(table.status);
+  return `
+  <div class="col">
+    <div class="table-card card h-100 ${bgClass} shadow-sm border rounded-3 p-3 position-relative">
+      <input type="checkbox" class="tableCheckbox form-check-input position-absolute top-0 end-0 m-2 d-none" data-id="${table._id}" />
+      <div class="text-center mt-4">
+        <h5 class="mb-3"><i class="la la-pizza-slice text-warning me-1"></i> ${table.name}</h5>
+        <div><strong>Trạng thái:</strong> ${table.status === "available" ? "Trống" : "Có khách"}</div>
+        <div><strong>Số Lượng Người:</strong> ${table.capacity || "-"}</div>
+        <div><strong>Khu vực:</strong> ${table.area || "-"}</div>
+      </div>
+    </div>
+  </div>
+  `;
+}).join("");
+
+
+  document.querySelectorAll('.table-card').forEach(card => {
+    card.addEventListener('click', function (e) {
+      if (e.target.classList.contains('tableCheckbox')) return;
+
+      const checkbox = this.querySelector('.tableCheckbox');
+      checkbox.checked = !checkbox.checked;
+
+      this.classList.toggle('opacity-50', checkbox.checked);
+      
+    });
+  });
 }
 
 
@@ -181,7 +210,7 @@ async function updateTable(tableId) {
 }
 
 
-    // DELETE TABLE
+// ========== DELETE ==========
 document.getElementById("btnDeleteTable")?.addEventListener("click", deleteTables);
 async function deleteTables() {
   const selectedTableIds = [...document.querySelectorAll(".tableCheckbox:checked")].map(cb => cb.dataset.id);
