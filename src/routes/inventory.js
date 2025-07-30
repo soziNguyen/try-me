@@ -1,5 +1,6 @@
 import express from 'express';
-import { ingredientDataAPI } from '../controllers/ingredients.js';
+import { ingredientDataAPI, createIngredient, updateIngredient, deleteIngredients } from '../controllers/ingredients.js';
+import { getIngredientCategories, createInredientCategory, updateIngredientCategory, deleteIngredientCategories } from '../controllers/ingredientCategories.js';
 import { ingredientPage, categoryPage, supplierPage , warehousePage, importPage, exportPage, movementPage } from '../controllers/pages.js';
 import isAuthenticated from "../helpers/isAuthenticated.js";
 import isAdmin from '../helpers/isAdmin.js';
@@ -16,6 +17,18 @@ router.get('/inventory/exports', isAuthenticated, isAdmin, exportPage);
 router.get('/inventory/movements', isAuthenticated, isAdmin, movementPage);
 
 
-// Logic
+// LOGIC
+// 1. Ingredient
 router.get('/api/inventory/ingredient', isAuthenticated, isAdmin, ingredientDataAPI);
+router.post('/api/inventory/ingredient/create', createIngredient);
+router.post('/api/inventory/ingredient/update/:id', updateIngredient);
+router.post('/api/inventory/ingredient/deletes', deleteIngredients);
+
+// 2. Ingredient Category
+router.get('/api/inventory/categories', isAuthenticated, isAdmin, getIngredientCategories)
+router.post('/api/inventory/category/create', isAuthenticated, isAdmin, createInredientCategory)
+router.post('/api/inventory/category/update/:id', isAuthenticated, isAdmin, updateIngredientCategory)
+router.post('/api/inventory/category/deletes', isAuthenticated, isAdmin, deleteIngredientCategories)
+
+
 export default router;

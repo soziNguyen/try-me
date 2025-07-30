@@ -1,7 +1,22 @@
 <%- include('../partials/header.html') %>
 <%- include('../partials/admin_sidebar.html') %>
 <div class="admin__content">
-    <h2 class="mb-4">QUẢN LÝ LOẠI NGUYÊN LIỆU</h2>
+    <h2 class="mb-4 semi-bold">QUẢN LÝ DANH MỤC NGUYÊN LIỆU</h2>
+
+    <table id="ingredientCateTable" class="table table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    <input type="checkbox" id="selectAll">
+                </th>
+                <th>Tên</th>
+                <th>Mô tả</th>
+            </tr>
+        </thead>
+        <tbody id="ingredientCateTableBody">
+
+        </tbody>
+    </table>
 </div>
 
 </div>
@@ -10,5 +25,5 @@
 <%- include('../partials/commonjs.html') %>
 <script src="/js/sidebar-toggle.js"></script>
 <script src="/js/update-user.js"></script>
-<script src="/js/inventory.js"></script>
+<script src="/js/ingredient-category.js"></script>
 <%- include('../partials/footer.html') %>
