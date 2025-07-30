@@ -1,7 +1,7 @@
 <%- include('../partials/header.html') %>
 <%- include('../partials/admin_sidebar.html') %>
 <div class="admin__content">
-    <h1 class="text-center">Welcome, <%= user.username %></h1>
+    <h1>Welcome, <%= user.username %></h1>
 </div>
 </div>
 </div>
@@ -10,3 +10,18 @@
 <script src="/js/update-user.js"></script>
 <script src="/js/sidebar-toggle.js"></script>
 <%- include('../partials/footer.html') %>
+
+<div class="accordion" id="accordionPanelsStayOpenExample">
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+          
+        </button>
+      </h2>
+      <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse ">
+        <div class="accordion-body">
+          
+        </div>
+      </div>
+    </div>
+</div>
