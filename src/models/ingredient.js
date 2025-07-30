@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 
 const ingredientSchema = new mongoose.Schema({
-  name:     { type: String, default: '' },
+  name:     { type: String, default: '', unique: true, sparse: true },
   unit:     { type: String, default: '' },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'IngredientCategory', default: null },
   minStock: { type: Number, default: 0 },
-  note:     { type: String, default: '' }
+  note:     { type: String, default: '' },
+  image:    { type: String, default: ''}
 }, 
 {
     collection: "Ingredients", 

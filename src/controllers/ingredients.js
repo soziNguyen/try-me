@@ -1,4 +1,4 @@
-import Ingredient from '../models/Ingredient.js';
+import Ingredient from '../models/ingredient.js';
 import IngredientCategory from '../models/IngredientCategory.js';
 import responseHelper from '../helpers/responseHelper.js';
 
@@ -75,8 +75,8 @@ export const ingredientDataAPI = async (req, res) => {
 
 export const createIngredient = async (req, res) => {
   try {
-    const { name, unit, category, minStock, note } = req.body;
-    await Ingredient.create({ name, unit, category: category || null, minStock, note });
+    const ingredient = new Ingredient({})
+    await ingredient.save();
     return responseHelper.success(res, null, 'Tạo nguyên liệu thành công');
   } catch (err) {
     return responseHelper.error(res, err.message);
@@ -86,19 +86,41 @@ export const createIngredient = async (req, res) => {
 export const updateIngredient = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, unit, category, minStock, note } = req.body;
-    await Ingredient.findByIdAndUpdate(id, { name, unit, category: category || null, minStock, note });
+    const { name, unit, category, minStock, note, image } = req.body;
+
+    const ingredientId = await Ingredient.findById(id);
+    if (!ingredientId) {
+      return responseHelper.error(res, "Nguyên liệu không tồn tại", 404);
+    }
+
+    const existing = await Ingredient.findOne({
+        name,
+        _id: { $ne: id }
+     });
+    if (existing) {
+      return responseHelper.error(res, "Tên nguyên liệu đã tồn tại", 400);
+    }
+
+    await Ingredient.findByIdAndUpdate(id, { name, unit, category: category || null, minStock, note, image }, { new: true });
     return responseHelper.success(res, null, 'Cập nhật thành công');
   } catch (err) {
     return responseHelper.error(res, err.message);
   }
 };
 
-export const deleteIngredient = async (req, res) => {
+export const deleteIngredients = async (req, res) => {
   try {
-    const { id } = req.params;
-    await Ingredient.findByIdAndDelete(id);
-    return responseHelper.success(res, null, 'Xóa nguyên liệu thành công');
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return responseHelper.error(res, "Không có nguyên liệu nào được chọn để xóa", 400)
+    }
+
+    const result = await Ingredient.deleteMany({
+      _id: { $in: ids }
+    })
+
+    return responseHelper.success(res, result.deletedCount , 'Xóa nguyên liệu thành công');
   } catch (err) {
     return responseHelper.error(res, err.message);
   }

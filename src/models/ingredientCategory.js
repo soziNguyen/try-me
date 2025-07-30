@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const ingredientCateSchema = new mongoose.Schema({
   name: { type: String, default: '' },
+  description: { type: String, default: '' }
 }, 
 {
     collection: "IngredientCategories", 
