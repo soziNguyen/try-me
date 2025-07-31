@@ -123,3 +123,27 @@ export function isValidPassword(input) {
   }
   return null;
 }
+
+/**
+ * Chuyển đổi giá trị đầu vào sang kiểu số, với xử lý mặc định và kiểm tra hợp lệ.
+ *
+ * @param {any} value - Giá trị đầu vào cần parse (có thể là số, chuỗi, null, undefined,...).
+ * @param {number} defaultValue - Giá trị mặc định trả về nếu đầu vào rỗng (mặc định là 0).
+ * @returns {number} - Giá trị sau khi đã chuyển sang kiểu số.
+ * @throws {Error} - Nếu không thể chuyển đổi sang số hợp lệ.
+ */
+export const parseNumberField = (value, defaultValue = 0) => {
+  const raw = value?.toString().trim(); // Chuyển về chuỗi và loại bỏ khoảng trắng
+
+  if (!raw) return defaultValue; // Nếu rỗng -> trả về giá trị mặc định
+
+  const parsed = Number(raw); // Ép sang số
+
+  if (isNaN(parsed)) throw new Error("Giá trị trường này phải là một số"); // Nếu không phải số -> lỗi
+
+  return parsed; // Trả về số hợp lệ
+};
+
+export const parseStringField = (value) => {
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : undefined;
+};

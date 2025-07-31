@@ -1,6 +1,15 @@
 import Supplier from "../models/supplier.js"
 import responseHelper from "../helpers/responseHelper.js"
 
+export const getAllSuppliers = async (req, res) => {
+    try {
+         const suppliers = await Supplier.find({ status: 'active' }).select('_id name')
+         responseHelper.success(res, suppliers)
+    } catch (error) {
+        responseHelper.error(res, error.message)
+    }
+}
+
 export const getSuppliers = async (req, res) => {
     try {
         const { draw, start, length, search, order, columns } = req.query
@@ -9,8 +18,9 @@ export const getSuppliers = async (req, res) => {
         const pageSize = parseInt(length) || 10
         const searchValue = search?.value?.trim() || ''
 
-        const sortField = columns?.[order?.[0]?.column]?.data || 'createdAt'
-        const sortOrder = order?.[0]?.dir === 'asc' ? 1 : -1
+        const sortColumnIndex = req.query['order[0][column]']
+        const sortField = req.query[`columns[${sortColumnIndex}][data]`] || 'createdAt'
+        const sortOrder = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
         const searchableFields = ['name', 'phone', 'email', 'code', 'address', 'taxId', 'note']
 
@@ -32,7 +42,7 @@ export const getSuppliers = async (req, res) => {
             .sort({ [sortField]: sortOrder })
             .skip(startIndex)
             .limit(pageSize)
-
+        
         return res.json({
             draw: Number(draw),
             recordsTotal: totalRecords,
@@ -44,7 +54,6 @@ export const getSuppliers = async (req, res) => {
         responseHelper.error(res, error.message)
     }
 }
-
 
 export const createSupplier = async (req, res) => {
     try {
@@ -66,18 +75,22 @@ export const updateSupplier = async (req, res) => {
             return responseHelper.error(res, "Khách hàng không tồn tại", 404)
         }
 
-        const existing = await Supplier.findOne({
-            code,
-            name,
-            _id: { $ne: id }
-        })
+        const conditions = []
+        if (code !== undefined) conditions.push({ code })
+        if (name !== undefined) conditions.push({ name })
 
-        if (existing) {
-            return responseHelper.error(req, "Mã hoặc tên khách hàng đã tồn tại", 400)
+        if (conditions.length > 0) {
+            const existing = await Supplier.findOne({
+                _id: { $ne: id },
+                $or: conditions
+            })
+
+            if (existing) {
+                return responseHelper.error(res, "Mã hoặc tên khách hàng đã tồn tại", 400)
+            }
         }
 
         const dataUpdate = {}
-
         if (code !== undefined) dataUpdate.code = code 
         if (name !== undefined) dataUpdate.name = name
         if (phone !== undefined) dataUpdate.phone = phone
