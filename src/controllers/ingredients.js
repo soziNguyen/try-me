@@ -1,4 +1,4 @@
-import Ingredient from '../models/ingredient.js';
+import { Ingredient, units } from '../models/ingredient.js';
 import IngredientCategory from '../models/IngredientCategory.js';
 import responseHelper from '../helpers/responseHelper.js';
 
@@ -31,7 +31,7 @@ export const ingredientDataAPI = async (req, res) => {
       ];
 
       if (!isNaN(searchNumber)) {
-        conditions.push({ minStock: searchNumber });
+        conditions.push({ stock: searchNumber });
       }
 
       mongoQuery = { $or: conditions };
@@ -62,6 +62,8 @@ export const ingredientDataAPI = async (req, res) => {
         .skip(start)
         .limit(length)
         .populate('category', 'name')
+        .populate('createdBy', 'username -_id')
+        .populate('updatedBy', 'username -_id')
         .lean();
 
       recordsFiltered = await Ingredient.countDocuments(mongoQuery);
@@ -73,7 +75,8 @@ export const ingredientDataAPI = async (req, res) => {
       draw,
       recordsTotal,
       recordsFiltered,
-      data: fullData
+      data: fullData,
+      units
     });
 
   } catch (err) {
@@ -83,9 +86,20 @@ export const ingredientDataAPI = async (req, res) => {
 
 export const createIngredient = async (req, res) => {
   try {
-    const ingredient = new Ingredient({})
-    await ingredient.save();
-    return responseHelper.success(res, null, 'Tạo nguyên liệu thành công');
+
+    if (!req.user || !req.user._id) {
+      return responseHelper.error(res, 'Thiếu thông tin người dùng', 401);
+    }
+
+    const ingredientData = { ...req.body, createdBy: req.user._id };
+
+    const newIngredient = new Ingredient(ingredientData);
+    await newIngredient.save();
+
+    const saved = await Ingredient.find(newIngredient._id)
+      .populate('category', 'name')
+      .populate('createdBy', 'username -_id')
+    responseHelper.success(res, saved, 'Tạo nguyên liệu thành công');
   } catch (err) {
     return responseHelper.error(res, err.message);
   }
@@ -94,7 +108,7 @@ export const createIngredient = async (req, res) => {
 export const updateIngredient = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, unit, category, minStock, note, image } = req.body;
+    const { name, unit, category, stock, note, image } = req.body;
 
     const ingredientId = await Ingredient.findById(id);
     if (!ingredientId) {
@@ -114,12 +128,28 @@ export const updateIngredient = async (req, res) => {
     if (name !== undefined) updateData.name = name;
     if (unit !== undefined) updateData.unit = unit;
     if (category !== undefined) updateData.category = category || null;
-    if (minStock !== undefined) updateData.minStock = minStock;
+    if (stock !== undefined) {
+      const rawStock = stock.toString().trim();
+      if (rawStock === "") {
+        updateData.stock = 0;
+      }
+      const parsedStock = Number(stock);
+      if (isNaN(parsedStock)) {
+        return responseHelper.error(res, "Dữ liệu tồn kho phải là một số", 400);
+      }
+      updateData.stock = parsedStock;
+    }
     if (note !== undefined) updateData.note = note;
     if (image !== undefined) updateData.image = image;
-    
-    await Ingredient.findByIdAndUpdate(id, updateData, { new: true });
-    return responseHelper.success(res, null, 'Cập nhật thành công');
+    if (req.user._id) updateData.updatedBy = req.user._id;
+
+    const updated = await Ingredient.findByIdAndUpdate(id, updateData, { new: true });
+    const populated = await Ingredient.findById(updated._id)
+      .populate('category', 'name')
+      .populate('createdBy', 'username -_id')
+      .populate('updatedBy', 'username -_id')
+      .lean();
+    responseHelper.success(res, populated, 'Cập nhật thành công');
   } catch (err) {
     return responseHelper.error(res, err.message);
   }
@@ -137,7 +167,7 @@ export const deleteIngredients = async (req, res) => {
       _id: { $in: ids }
     })
 
-    return responseHelper.success(res, result.deletedCount , 'Xóa nguyên liệu thành công');
+  responseHelper.success(res, result.deletedCount , 'Xóa nguyên liệu thành công');
   } catch (err) {
     return responseHelper.error(res, err.message);
   }

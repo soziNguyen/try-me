@@ -6,7 +6,10 @@ import { getPageData } from '../helpers/pageDataHelper.js'
 // User Management Page
 export const userPage = async (req, res) => {
     res.render('users/user',
-    getPageData(req, 'Dashboard', 'User', { headerClass: 'staff__header' })
+    getPageData(req, 'Dashboard', 'User', 
+        { headerClass: 'admin__header' },
+        { pageTitle: 'QUẢN LÝ NHÂN VIÊN' }
+    )
     )
 }
 
@@ -57,48 +60,83 @@ export const dashboard = async (req, res) => {
 // Ingredient Management
 export const ingredientPage = (req, res) => {
     res.render('inventory/ingredient', 
-        getPageData(req, 'Quản lý nguyên liệu', 'Ingredient', { headerClass: 'admin__header' })
+        getPageData(req, 'Quản lý nguyên liệu', 'Ingredient', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ NGUYÊN LIỆU'            
+            }
+        )
     )
 }
 
 // Ingredient Category
 export const categoryPage = (req, res) => {
     res.render('inventory/ingredient_cat', 
-        getPageData(req, 'Quản lý danh mục nguyên liệu', 'Category', { headerClass: 'admin__header' })
+        getPageData(req, 'Quản lý danh mục nguyên liệu', 'Category', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ DANH MỤC NGUYÊN LIỆU'
+            }
+        )
     )
 }
 
 // Warehouse
 export const warehousePage = (req, res) => {
     res.render('inventory/warehouse', 
-        getPageData(req, 'Quản lý kho', 'Warehouse', { headerClass: 'admin__header' })
+        getPageData(req, 'Quản lý kho', 'Warehouse', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ KHO'
+            }
+        )
     )
 }
 
 // Supplier
 export const supplierPage = (req, res) => {
     res.render('inventory/supplier', 
-        getPageData(req, 'Quản lý nhà cung cấp', 'Supplier', { headerClass: 'admin__header' })
+        getPageData(req, 'Quản lý nhà cung cấp', 'Supplier', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ NHÀ CUNG CẤP'
+            }
+        )
     )
 }
 
 // Import
 export const importPage = (req, res) => {
     res.render('inventory/import', 
-        getPageData(req, 'Phiếu nhập kho', 'Import', { headerClass: 'admin__header' })
+        getPageData(req, 'Phiếu nhập kho', 'Import', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'PHIẾU NHẬP KHO'
+            }
+        )
     )
 }
 
 // Export
 export const exportPage = (req, res) => {
     res.render('inventory/export',
-        getPageData(req, 'Phiếu Xuất Kho', 'Export', { headerClass: 'admin__header' })
+        getPageData(req, 'Phiếu Xuất Kho', 'Export', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'PHIẾU XUẤT KHO'
+            }
+        )
     )
 }
 
 // Movement
 export const movementPage = (req, res) => {
     res.render('inventory/import_export_flow', 
-        getPageData(req, 'Lịch Sử Nhập - Xuất Kho', 'Movement', { headerClass: 'admin__header' })
+        getPageData(req, 'Lịch Sử Nhập - Xuất Kho', 'Movement', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'LỊCH SỬ NHẬP - XUẤT KHO'
+            }
+        )
     )
 }

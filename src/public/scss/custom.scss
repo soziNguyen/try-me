@@ -1,60 +1,77 @@
+// scss/ingredient-image-crop.scss
+
+// Container wrapper nếu cần
 #ingredientTable_wrapper {
-    #ingredientTable {
-        #ingredientTableBody {
-            img {
-                width: 50px;
-                height: 50px;
-                object-fit: cover;
-                border-radius: 8px;
-                margin: 0 auto;
-                cursor: pointer;
-            }
-            select {
-                &.form-select-sm {
-                    border: none;
-                    box-shadow: none;
-                }
-            }
+  #ingredientTable {
+    width: 100%;
+
+    #ingredientTableBody {
+      td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 0 !important;
+
+        img.ingredient-image {
+          width: 50px;
+          height: 50px;
+          object-fit: cover;
+          margin: 0 auto;
+          cursor: pointer;
+          padding: .375rem 0;
         }
+
+        select.form-select-sm {
+          border: none;
+          box-shadow: none;
+        }
+
+        input.form-control[type="text"] {
+          padding: .5rem .75rem !important;
+        }
+      }
     }
+  }
 }
 
 table {
-    thead {
-        th {
-            position: relative;
+  thead {
 
-            input[type=checkbox] {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                padding: 0.25rem;
-            }
-        }
+  }
+  tbody {
+    td {
+      text-align: center;
+      vertical-align: middle;
+      padding: 0 !important;
+
+      input.form-control[type="text"] {
+        padding: .5rem .75rem !important;
+      }
     }
+  }
+}
+  
+#imageCropModal {
+  .modal-body {
+    min-height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    overflow: hidden;
 
-    tbody {
-        td {
-            position: relative;
-
-            input[type=checkbox] {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                padding: 0.25rem;
-            }
-        }
+    #imagePreview {
+      max-width: 100%;
+      height: auto;
+      display: block;
     }
+  }
 }
 
-.modal-body {
-  min-height: 300px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-  overflow: hidden;
+@media (max-width: 767px) {
+  #imageCropModal {
+    .modal-body {
+      max-height: 100px;
+    }
+  }
 }
-    
+  
