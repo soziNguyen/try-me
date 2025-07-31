@@ -3,15 +3,6 @@
       <button id="toggleSidebar">
         <i class="bi bi-list me-2"></i>
     </button>
-    <div class="search-group" id="searchGroup">
-      <input type="text" class="search-input" id="searchInput" placeholder="Search">
-      <button class="search-btn">
-        <i class="bi bi-search me-2"></i>
-      </button>
-    </div>
-    <button class="search-btn-mobile d-block d-md-none" id="mobileSearchBtn">
-      <i class="bi bi-search fs-5"></i>
-    </button>
     <div class="dropdown info">
       <a class="w-100 info__icon" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-person-circle fs-4"></i>
@@ -40,35 +31,35 @@
           <ul>
               <li class="<%= page === 'Dashboard' ? 'active' : '' %>">
                 <a class="w-100" href="/">
-                  <i class="bi bi-speedometer2 me-2"></i>
+                  <i class="bi bi-speedometer2 me-2 text-dark"></i>
                   <span>Dashboard</span>
                 </a>
               </li>
           
               <li>
-                <a class="w-100" href="/staff/tables">
-                  <i class="bi bi-grid-3x3-gap me-2"></i>
+                <a class="w-100" href="/tables">
+                  <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>
                   <span>Quản lý Bàn</span>
                 </a>
               </li>
           
               <li>
                 <a class="w-100" href="/staff/orders">
-                  <i class="bi bi-receipt me-2"></i>
+                  <i class="bi bi-receipt me-2 text-success"></i>
                   <span>Đặt món & Thanh toán</span>
                 </a>
               </li>
           
               <li>
                 <a class="w-100" href="/staff/schedule">
-                  <i class="bi bi-calendar3 me-2"></i>
+                  <i class="bi bi-calendar3 me-2 text-warning"></i>
                   <span>Xem Lịch làm việc</span>
                 </a>
               </li>
           
               <li>
                 <a class="w-100" href="/staff/attendance">
-                  <i class="bi bi-clock-history me-2"></i>
+                  <i class="bi bi-clock-history me-2 text-info"></i>
                   <span>Chấm công Vào/Ra</span>
                 </a>
               </li>
