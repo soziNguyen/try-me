@@ -76,9 +76,9 @@ $(function () {
 
   //====================================================================================  
   // EVENT HANDLER
-  handlerAddEvent('#ingredientCateTable', '#addIngredientCateBtn', '/api/inventory/category/create')
-  handlerDeleteEvent('#ingredientCateTable', '#deleteIngredientCateBtn', 'ingredientCateCheckbox', '/api/inventory/category/deletes')
-  handlerUpdateEvent('#ingredientCateTable')
+  handlerAddEvent('#ingredientCateTable', '#addIngredientCateBtn', 'category')
+  handlerDeleteEvent('#ingredientCateTable', '#deleteIngredientCateBtn', 'ingredientCateCheckbox', 'category')
+  handlerUpdateEvent('#ingredientCateTable', 'category')
 
   initTableCheckboxEvents('#ingredientCateTable', 'ingredientCateCheckbox');
 

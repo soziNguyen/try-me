@@ -1,7 +1,7 @@
 import express from 'express'
 import { ingredientDataAPI, createIngredient, updateIngredient, deleteIngredients } from '../controllers/ingredients.js'
 import { getIngredientCategories, createInredientCategory, updateIngredientCategory, deleteIngredientCategories } from '../controllers/ingredientCategories.js'
-import { getSuppliers, createSupplier, updateSupplier, deleteSuppliers } from '../controllers/supplier.js'
+import { getAllSuppliers, getSuppliers, createSupplier, updateSupplier, deleteSuppliers } from '../controllers/supplier.js'
 import { ingredientPage, categoryPage, supplierPage , warehousePage, importPage, exportPage, movementPage } from '../controllers/pages.js'
 import isAuthenticated from "../helpers/isAuthenticated.js"
 import isAdmin from '../helpers/isAdmin.js'
@@ -32,6 +32,7 @@ router.post('/api/inventory/category/update/:id', isAuthenticated, isAdmin, upda
 router.post('/api/inventory/category/deletes', isAuthenticated, isAdmin, deleteIngredientCategories)
 
 // 3. Supplier
+router.get('/api/inventory/supplier/all', isAuthenticated, isAdmin, getAllSuppliers)
 router.get('/api/inventory/suppliers', isAuthenticated, isAdmin, getSuppliers)
 router.post('/api/inventory/supplier/create', isAuthenticated, isAdmin, createSupplier)
 router.post('/api/inventory/supplier/update/:id', isAuthenticated, isAdmin, updateSupplier)

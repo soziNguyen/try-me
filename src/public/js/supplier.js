@@ -1,10 +1,12 @@
 $(function () {
+
   let showList = [10, 25, 50, 100]
   const numRows = Math.floor(($(window).height() - $('#supplierTableBody').offset().top - 100) / 45)
   if (!showList.includes(numRows)) {
       showList.push(numRows)
   }
   showList.sort((a, b) => a - b)
+  
   const table = $('#supplierTable').DataTable({
     dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
     'l' +
@@ -134,10 +136,11 @@ $(function () {
       // })
     }
   })
+
   //====================================================================================  
   // EVENT HANDLER
-  handlerAddEvent('#supplierTable', '#addSupplierBtn', '/api/inventory/supplier/create')
-  handlerDeleteEvent('#supplierTable', '#deleteSupplierBtn', 'supplierCheckbox', '/api/inventory/supplier/deletes')
-  handlerUpdateEvent('#supplierTable')
+  handlerAddEvent('#supplierTable', '#addSupplierBtn', 'supplier')
+  handlerDeleteEvent('#supplierTable', '#deleteSupplierBtn', 'supplierCheckbox', 'supplier')
+  handlerUpdateEvent('#supplierTable', 'supplier')
   initTableCheckboxEvents('#supplierTable', 'supplierCheckbox')
 })

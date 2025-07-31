@@ -5,17 +5,21 @@
 
     <table id="ingredientTable" class="table table-bordered">
         <thead>
-            <tr>
-                <th>
-                    <input type="checkbox" id="selectAll" class="selectAll">
-                </th>
-                <th>Ảnh</th>
-                <th>Tên</th>
-                <th>Đơn vị</th>
-                <th>Danh mục</th>
-                <th>Tồn kho</th>
-                <th>Ghi chú</th>
-              </tr>
+          <tr>
+            <th><input type="checkbox" id="selectAll" class="selectAll"></th>
+            <th>Ảnh</th>
+            <th>SKU</th>
+            <th>Tên</th>
+            <th>Đơn vị</th>
+            <th>Danh mục</th>
+            <th>Tồn kho</th>
+            <th>Giá nhập</th>
+            <th>Nhà cung cấp</th>
+            <th>Hạn sử dụng</th>
+            <th>Barcode</th>
+            <th>Trạng thái</th>
+            <th>Ghi chú</th>
+          </tr>
         </thead>
         <tbody id="ingredientTableBody">
 
@@ -46,5 +50,6 @@
 <%- include('../partials/commonjs.html') %>
 <script src="/js/sidebar-toggle.js"></script>
 <script src="/js/update-user.js"></script>
+<script src="/js/data-table.js"></script>
 <script src="/js/ingredient.js"></script>
 <%- include('../partials/footer.html') %>
