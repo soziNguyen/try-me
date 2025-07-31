@@ -1,0 +1,143 @@
+$(function () {
+  let showList = [10, 25, 50, 100]
+  const numRows = Math.floor(($(window).height() - $('#supplierTableBody').offset().top - 100) / 45)
+  if (!showList.includes(numRows)) {
+      showList.push(numRows)
+  }
+  showList.sort((a, b) => a - b)
+  const table = $('#supplierTable').DataTable({
+    dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+    'l' +
+    'f' +
+    '<"right-group d-flex align-items-center btn-group flex-wrap">' +
+    '>' +
+    'rt' +
+    '<"bottom-bar d-flex justify-content-between mt-3"ip>',
+    serverSide: true,
+    processing: true,
+    autoWidth: false,
+    // scrollX: true,
+    order: [],
+    ajax: {
+      url: '/api/inventory/suppliers',
+      method: 'GET'
+    },
+    lengthMenu: [showList, showList],
+    language: {
+      search: '',
+      searchPlaceholder: 'Tìm kiếm',
+      lengthMenu: `_MENU_ nhà cung cấp mỗi trang`,
+      info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ nhà cung cấp',
+      infoFiltered: '(được lọc từ tổng _MAX_ nhà cung cấp)',
+      zeroRecords: 'Không tìm thấy kết quả phù hợp',
+      emptyTable: 'Không có dữ liệu trong bảng'
+    },
+    pageLength: numRows,
+    columns: [
+      {
+        data: null,
+        orderable: false,
+        className: 'text-center',
+        render: (data, type, row) => `<input type="checkbox" class="supplierCheckbox" data-id="${row._id}">`
+      },
+      { data: 'code',
+        render: (data, type , row) => {
+          if ( type === 'display' ) {
+              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="code" value="${data}">`
+            }
+            return data
+          }
+      },
+      { data: 'name', 
+        render: (data, type, row) => {
+          if ( type === 'display' ) {
+            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="name" value="${data}">`
+          }
+          return data
+        }
+      },
+      { data: 'phone',
+        render: (data, type, row) => {
+          if ( type === 'display' ) {
+            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="phone" value="${data}">`
+          }
+          return data
+        }
+      },
+      { data: 'email',
+          render: (data, type, row) => {
+              if ( type === 'display' ) {
+              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="email" value="${data}">`
+              }
+              return data
+          }
+      },
+      { data: 'country',
+          render: (data, type, row) => {
+              if ( type === 'display' ) {
+              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="country" value="${data}">`
+              }
+              return data
+          }
+      },
+      { data: 'address',
+          render: (data, type, row) => {
+              if ( type === 'display' ) {
+              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="address" value="${data}">`
+              }
+              return data
+          }
+      },
+      { data: 'taxId',
+        render: (data, type, row) => {
+          if ( type === 'display' ) {
+            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="taxId" value="${data}">`
+          }
+          return data
+        }
+      },
+      { data: 'status',
+          render: (data, type, row) => {
+            if ( type === 'display' ) {
+              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="status" value="${data}">`
+            }
+            return data
+          }
+      },
+      { data: 'note',
+          render: (data, type, row) => {
+            if ( type === 'display' ) {
+              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="note" value="${data}">`
+            }
+            return data
+          }
+      }
+    ],
+    rowCallback: function(row, data) {
+      // Tag row with data-id for update
+      $(row).attr('data-id', data._id)
+    },
+    initComplete: function () {
+      // const api = this.api()
+      $('.right-group').html(`
+        <div class="btn-group flex-wrap">
+          <button class="btn btn-outline-danger me-2" id="deleteSupplierBtn">
+          <i class="bi bi-trash"></i> Xóa
+          </button>
+          <button class="btn btn-outline-success" id="addSupplierBtn">
+          <i class="bi bi-plus-circle"></i> Thêm
+          </button>
+        </div>
+      `)
+      // $(window).on('resize', function () {
+      //   api.columns.adjust()
+      // })
+    }
+  })
+  //====================================================================================  
+  // EVENT HANDLER
+  handlerAddEvent('#supplierTable', '#addSupplierBtn', '/api/inventory/supplier/create')
+  handlerDeleteEvent('#supplierTable', '#deleteSupplierBtn', 'supplierCheckbox', '/api/inventory/supplier/deletes')
+  handlerUpdateEvent('#supplierTable')
+  initTableCheckboxEvents('#supplierTable', 'supplierCheckbox')
+})

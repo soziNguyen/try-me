@@ -1,7 +1,7 @@
 $(function () {
 
   let showList = [10, 25, 50, 100];
-  const numRows = Math.floor(($(window).height() - $('#ingredientCateTableBody').offset().top - 250) / 45);
+  const numRows = Math.floor(($(window).height() - $('#ingredientCateTableBody').offset().top - 100) / 45);
   if (!showList.includes(numRows)) {
     showList.push(numRows);
   }
@@ -28,7 +28,8 @@ $(function () {
         lengthMenu: `_MENU_ danh mục nguyên liệu mỗi trang`,
         info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ danh mục nguyên liệu',
         infoFiltered: '(được lọc từ tổng _MAX_ nguyên liệu)',
-        zeroRecords: 'Không tìm thấy kết quả phù hợp'
+        zeroRecords: 'Không tìm thấy kết quả phù hợp',
+        emptyTable: 'Không có dữ liệu trong bảng'
       },
       pageLength: numRows,
       columns: [
@@ -75,119 +76,10 @@ $(function () {
 
   //====================================================================================  
   // EVENT HANDLER
-  const ingredientWrapper = $('#ingredientCateTable_wrapper');
-  ingredientWrapper.on('click', '#addIngredientCateBtn', handlerAddEvent);
-  ingredientWrapper.on('click', '#deleteIngredientCateBtn', handlerDeleteEvent);
-  $('#ingredientCateTable tbody').on('change', '.dataInput', handlerUpdateEvent);
+  handlerAddEvent('#ingredientCateTable', '#addIngredientCateBtn', '/api/inventory/category/create')
+  handlerDeleteEvent('#ingredientCateTable', '#deleteIngredientCateBtn', 'ingredientCateCheckbox', '/api/inventory/category/deletes')
+  handlerUpdateEvent('#ingredientCateTable')
 
-  // =======================================================
-  // HANDLER ADD EVENT
-  function handlerAddEvent () {
-    const $btn = $(this);
-    $btn.prop('disabled', true);
-    $.ajax({
-      url: '/api/inventory/category/create',
-      method: 'POST',
-      contentType: 'application/json',
-      success: function (res) {
-        if (res.success) {
-          toastr.success(res.message);
-          table.ajax.reload(null, true);
-        } else {
-          toastr.error(res.message);
-        }
-      },
-      error: function (error) {
-        toastr.error(error.responseJSON?.message);
-      },
-      complete: function () {
-        $btn.prop('disabled', false);
-      }
-    })
-  }
+  initTableCheckboxEvents('#ingredientCateTable', 'ingredientCateCheckbox');
 
-  // Click 'tr' prop check or uncheck for tr
-  $('#ingredientCateTable tbody').on('click', 'tr', function (e) {
-    if ($(e.target).is('input[type=checkbox], input[type=text], .dataInput')) return;
-    const checkbox = $(this).find('.ingredientCateCheckbox');
-    checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
-
-  })
-
-  // Handle Select All Checkbox
-  ingredientWrapper.on('change', '#selectAll', function () {
-    $('.ingredientCateCheckbox').prop('checked', this.checked);
-  })
-
-  // Sync Select All Checkbox
-  $('#ingredientCateTable tbody').on('change', '.ingredientCateCheckbox', function () {
-    const all = $('.ingredientCateCheckbox').length;
-    const checked = $('.ingredientCateCheckbox:checked').length;
-    $('#selectAll').prop('checked', all > 0 && all === checked);
-  })
-
-  // DELETE EVENT HANDLER
-  function handlerDeleteEvent () {
-    const $btn = $(this);
-    $btn.prop('disabled', true);
-    const selectedIds = $('.ingredientCateCheckbox:checked').map(function () {
-      return $(this).data('id');
-    }).get(); // .get() => get Array
-
-    if (selectedIds.length === 0) {
-      toastr.warning('Không có nguyên liệu nào được chọn để xóa');
-      return;
-    }
-    
-    if (!confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} danh mục nguyên liệu không ?`)) return;
-
-    $.ajax({
-      url: '/api/inventory/category/deletes',
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify({ ids: selectedIds }),
-      success: function (res) {
-        if (res.success) {
-          toastr.success(res.message);
-          table.ajax.reload(null, true);
-          $('#selectAll').prop('checked', false);
-        } else {
-          toastr.error(res.message);
-        }
-      },
-      error: function (error) {
-        toastr.error(error.message);
-      },
-      complete: function () {
-        $btn.prop('disabled', false);
-      }
-    })
-  }
-
-  // UPDATE EVENT HANDLER
-  function handlerUpdateEvent () {
-    const row = $(this).closest('tr');
-    const id = row.data('id');
-    const field = $(this).data('field');
-    const value = $(this).val();
-
-    if (!field || id === null) return;
-
-    $.ajax({
-      url: `/api/inventory/category/update/${id}`,
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify({ [field] : value }),
-      success: function (res) {
-        if (res.success) {
-          toastr.success(res.message);
-        } else {
-          toastr.error(res.message)
-        }
-      },
-      error: function (error) {
-        toastr.error(error.message);
-      }
-    })
-  }
 })
