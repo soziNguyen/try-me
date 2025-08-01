@@ -5,37 +5,18 @@ $(function () {
 
   // Get Category lists for select
   let categories = []
-  $.ajax({
-    url: '/api/inventory/categories',
-    method: 'GET',
-    success: function (res) {
-      if (res.success) {
-        categories = res.data
-        initDataTable()
-      } else {
-        toastr.error("Không tải được dữ liệu danh mục nguyên liệu")
-      }
-    }, 
-    error: function (xhr) {
-      toastr.error(xhr.responseJSON?.message)
-    }
+
+  Promise.all([
+    fetchData('inventory/categories'),
+    fetchData('inventory/supplier/all')
+  ])
+  .then(([cats, sups]) => {
+    categories = cats
+    suppliers = sups
+    initDataTable()
   })
-
-  let suppliers = []
-
-  $.ajax({
-    url: '/api/inventory/supplier/all',
-    method: 'GET',
-    success: function (res) {
-      if (res.success) {
-        suppliers = res.data
-      } else {
-        toastr.error('Không tải được dữ liệu nhà cung cấp')
-      }
-    },
-    error: function (xhr) {
-      toastr.error(xhr.responseJSON?.message)
-    }
+  .catch(err => {
+    toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
   })
 
   // Render dataTable
@@ -212,7 +193,7 @@ $(function () {
             if (type === 'display') {
               return `<input type="checkbox" class="dataInput form-check-input" data-field="isActive" data-id="${row._id}" ${data ? 'checked' : ''}>`
             }
-            return data ? '✔' : '✘'
+            return data
           }
         },
         {

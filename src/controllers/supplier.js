@@ -12,20 +12,18 @@ export const getAllSuppliers = async (req, res) => {
 
 export const getSuppliers = async (req, res) => {
     try {
-        const { draw, start, length, search, order, columns } = req.query
-
-        const startIndex = parseInt(start) || 0
-        const pageSize = parseInt(length) || 10
-        const searchValue = search?.value?.trim() || ''
+        const draw = parseInt(req.query.draw) || 0
+        const start = parseInt(req.query.start) || 0
+        const length = parseInt(req.query.length) || 10
+        const searchValue = (req.query['search[value]'] || '').trim()
 
         const sortColumnIndex = req.query['order[0][column]']
         const sortField = req.query[`columns[${sortColumnIndex}][data]`] || 'createdAt'
         const sortOrder = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
-        const searchableFields = ['name', 'phone', 'email', 'code', 'address', 'taxId', 'note']
+        const searchableFields = ['code', 'name', 'phone', 'email', 'country', 'address', 'taxId', 'status','note']
 
-        const baseCondition = { status: 'active' }
-
+        const baseCondition = { status: 'active' } // { status: 'active'}
         const searchCondition = searchValue
             ? {
                 ...baseCondition,
@@ -40,8 +38,9 @@ export const getSuppliers = async (req, res) => {
 
         const suppliers = await Supplier.find(searchCondition)
             .sort({ [sortField]: sortOrder })
-            .skip(startIndex)
-            .limit(pageSize)
+            .skip(start)
+            .limit(length)
+            .lean()
         
         return res.json({
             draw: Number(draw),
@@ -121,26 +120,30 @@ export const deleteSuppliers = async (req, res) => {
             { $set: { status: 'inactive' } }
     )
 
-        responseHelper.success(res, result.deletedCount, 'Xóa thành công')
+        responseHelper.success(res, result.modifiedCount, 'Xóa thành công')
     } catch (error) {
         responseHelper.error(res, error.message)
     }
 }
 
 export const restoreSuppliers = async (req, res) => {
-    const { ids } = req.body
-    await Supplier.updateMany(
-        { _id: { $in: ids } },
-        { $set: { status: 'active' } }
-    )
-    responseHelper.success(res, 'Khôi phục thành công')
+    try {
+        const { ids } = req.body
+        await Supplier.updateMany(
+            { _id: { $in: ids } },
+            { $set: { status: 'active' } }
+        )
+        responseHelper.success(res, 'Khôi phục thành công')    
+    } catch (error) {
+        responseHelper.error(res, error.message)
+    }
 }
 
 export const forceDeleteSuppliers = async (req, res) => {
     try {
         const { ids } = req.body
         if (!Array.isArray(ids) || ids.length === 0) {
-            return responseHelper.error(res, 'Không có ID nào được cung cấp', 400)
+            return responseHelper.error(res, 'Không có nhà cung cấp nào được chọn để xóa', 400)
         }
 
         await Supplier.deleteMany({ _id: { $in: ids } })

@@ -1,3 +1,5 @@
+// Handle EventListener
+
 function handlerAddEvent(tableSelector, btnSelector, module) {
   const $wrapper = $(`${tableSelector}_wrapper`)
   const table = $(tableSelector).DataTable()
@@ -77,7 +79,11 @@ function handlerUpdateEvent(tableSelector, module, transform) {
   $table.on('change', '.dataInput', function () {
     const id = $(this).closest('tr').data('id')
     const field = $(this).data('field')
-    const value = $(this).is(':checkbox') ? $(this).is(':checked') : $(this).val();
+    let value = $(this).is(':checkbox') ? $(this).is(':checked') : $(this).val()
+
+    if (typeof value === 'string') {
+      value = value.trim()
+    }
 
     if (!field || id === null) return
 
@@ -111,7 +117,7 @@ function handlerUpdateEvent(tableSelector, module, transform) {
 function initTableCheckboxEvents(tableSelector, checkboxClass) {
   const $table = $(tableSelector)
   const $wrapper = $(`${tableSelector}_wrapper`)
-  const selectAllSelector = '#selectAll'
+  const $selectAll = $wrapper.find('#selectAll');
 
   // Click 'tr' event
   $table.on('click', 'tbody tr', function (e) {
@@ -121,15 +127,65 @@ function initTableCheckboxEvents(tableSelector, checkboxClass) {
   })
 
   // Select All checkbox
-  $wrapper.on('change', selectAllSelector, function () {
+  $selectAll.on('change', function () {
     $table.find(`.${checkboxClass}`).prop('checked', this.checked)
   })
+
+  // Click outside selectAll
+  $table.on('click', 'thead th:first-child', function (e) {
+    if ($(e.target).is('input[type=checkbox]')) return;
+    if ($selectAll.length) {
+      $selectAll.prop('checked', !$selectAll.prop('checked')).trigger('change');
+    }
+  });
 
   // Sync Select All
   $table.on('change', `.${checkboxClass}`, function () {
     const all = $table.find(`.${checkboxClass}`).length
     const checked = $table.find(`.${checkboxClass}:checked`).length
-    $wrapper.find(selectAllSelector).prop('checked', all > 0 && all === checked)
+    $selectAll.prop('checked', all > 0 && all === checked)
   })
 }
+
+// Render Input DataTable
+const inputRenderer = (field) => {
+  return (data, type, row) => {
+    if (type === 'display') {
+      return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="${field}" value="${data || ''}">`
+    }
+    return data
+  }
+}
   
+// GET DATA AJAX
+function getData (module, suffix = '',callback) {
+  if (typeof suffix === 'function') {
+    callback = suffix
+    suffix = ''
+  }
+  
+  $.ajax({
+    url: `/api/${module}${suffix ? `/${suffix}` : ''}`,
+    method: 'GET',
+    success: function (res) {
+      if (res.success && typeof callback === 'function') {
+        callback(res.data)
+      } else {
+        toastr.error('Không tải được dữ liệu')
+      }
+    },
+    error: function (xhr) {
+      toastr.error(xhr.responseJSON?.message)
+    }
+  })
+}
+
+// Multi Fetch Data
+function fetchData (endpoint) {
+  return new Promise((resolve, reject) => {
+    getData(endpoint, function (data) {
+      if (data) resolve(data)
+        else reject(new Error('Không thể tải dữ liệu'))
+    })
+  })
+}

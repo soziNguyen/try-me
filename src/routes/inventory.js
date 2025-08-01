@@ -2,6 +2,7 @@ import express from 'express'
 import { ingredientDataAPI, createIngredient, updateIngredient, deleteIngredients } from '../controllers/ingredients.js'
 import { getIngredientCategories, createInredientCategory, updateIngredientCategory, deleteIngredientCategories } from '../controllers/ingredientCategories.js'
 import { getAllSuppliers, getSuppliers, createSupplier, updateSupplier, deleteSuppliers } from '../controllers/supplier.js'
+import { getActiveWarehouses, getWareHouses, createWareHouse, updateWareHouse, deleteWarehouses } from '../controllers/warehouse.js'
 import { ingredientPage, categoryPage, supplierPage , warehousePage, importPage, exportPage, movementPage } from '../controllers/pages.js'
 import isAuthenticated from "../helpers/isAuthenticated.js"
 import isAdmin from '../helpers/isAdmin.js'
@@ -37,5 +38,13 @@ router.get('/api/inventory/suppliers', isAuthenticated, isAdmin, getSuppliers)
 router.post('/api/inventory/supplier/create', isAuthenticated, isAdmin, createSupplier)
 router.post('/api/inventory/supplier/update/:id', isAuthenticated, isAdmin, updateSupplier)
 router.post('/api/inventory/supplier/deletes', isAuthenticated, isAdmin, deleteSuppliers)
+
+
+// 4. Warehouse
+router.get('/api/inventory/warehouse/all', isAuthenticated, isAdmin, getActiveWarehouses)
+router.get('/api/inventory/warehouses', isAuthenticated, isAdmin, getWareHouses)
+router.post('/api/inventory/warehouse/create', isAuthenticated, isAdmin, createWareHouse)
+router.post('/api/inventory/warehouse/update/:id', isAuthenticated, isAdmin, updateWareHouse)
+router.post('/api/inventory/warehouse/deletes', isAuthenticated, isAdmin, deleteWarehouses)
 
 export default router

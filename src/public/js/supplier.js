@@ -1,5 +1,5 @@
 $(function () {
-
+  const editableFields = ['code','name','phone','email','country','address','taxId','status','note'];
   let showList = [10, 25, 50, 100]
   const numRows = Math.floor(($(window).height() - $('#supplierTableBody').offset().top - 100) / 45)
   if (!showList.includes(numRows)) {
@@ -42,78 +42,10 @@ $(function () {
         className: 'text-center',
         render: (data, type, row) => `<input type="checkbox" class="supplierCheckbox" data-id="${row._id}">`
       },
-      { data: 'code',
-        render: (data, type , row) => {
-          if ( type === 'display' ) {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="code" value="${data}">`
-            }
-            return data
-          }
-      },
-      { data: 'name', 
-        render: (data, type, row) => {
-          if ( type === 'display' ) {
-            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="name" value="${data}">`
-          }
-          return data
-        }
-      },
-      { data: 'phone',
-        render: (data, type, row) => {
-          if ( type === 'display' ) {
-            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="phone" value="${data}">`
-          }
-          return data
-        }
-      },
-      { data: 'email',
-          render: (data, type, row) => {
-              if ( type === 'display' ) {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="email" value="${data}">`
-              }
-              return data
-          }
-      },
-      { data: 'country',
-          render: (data, type, row) => {
-              if ( type === 'display' ) {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="country" value="${data}">`
-              }
-              return data
-          }
-      },
-      { data: 'address',
-          render: (data, type, row) => {
-              if ( type === 'display' ) {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="address" value="${data}">`
-              }
-              return data
-          }
-      },
-      { data: 'taxId',
-        render: (data, type, row) => {
-          if ( type === 'display' ) {
-            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="taxId" value="${data}">`
-          }
-          return data
-        }
-      },
-      { data: 'status',
-          render: (data, type, row) => {
-            if ( type === 'display' ) {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="status" value="${data}">`
-            }
-            return data
-          }
-      },
-      { data: 'note',
-          render: (data, type, row) => {
-            if ( type === 'display' ) {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="note" value="${data}">`
-            }
-            return data
-          }
-      }
+      ...editableFields.map(field => ({
+        data: field,
+        render: inputRenderer(field)
+      }))
     ],
     rowCallback: function(row, data) {
       // Tag row with data-id for update
