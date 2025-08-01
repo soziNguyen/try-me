@@ -34,6 +34,7 @@ body {
   }
 
   .#{$role}__main {
+    margin-top: 60px;
     flex: 1;
     display: flex;
 
@@ -41,6 +42,7 @@ body {
       width: 320px;
       background: #fff;
       color: #000;
+      height: calc(100vh - 60px) !important;
       padding: 1rem;
       transition: width 0.3s;
       font-size: 1.25rem;
@@ -181,7 +183,6 @@ body {
     }
 
     .#{$role}__content {
-      margin-top: 60px;
       flex: 1;
       padding: 0 1rem 1rem 1rem;
     }

@@ -84,10 +84,10 @@ export const categoryPage = (req, res) => {
 // Warehouse
 export const warehousePage = (req, res) => {
     res.render('inventory/warehouse', 
-        getPageData(req, 'Quản lý kho', 'Warehouse', 
+        getPageData(req, 'Quản lý nhà kho', 'Warehouse', 
             {
                 headerClass: 'admin__header',
-                pageTitle: 'QUẢN LÝ KHO'
+                pageTitle: 'QUẢN LÝ NHÀ KHO'
             }
         )
     )

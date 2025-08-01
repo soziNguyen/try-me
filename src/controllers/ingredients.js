@@ -156,13 +156,25 @@ export const updateIngredient = async (req, res) => {
     const parsedImage = parseStringField(image)
     if (parsedImage) updateData.image = parsedImage
 
-    const parsedUnit = parseStringField(unit)
-    if (parsedUnit) updateData.unit = parsedUnit
+    if (unit !== undefined) {
+      updateData.unit = unit === "" ? null : unit
+    }
 
-    if (category !== undefined) updateData.category = category
+    if (category !== undefined) {
+      updateData.category = category === "" ? null : category
+    }
 
-    const parsedCostPrice = parseNumberField(costPrice)
-    if (parsedCostPrice) updateData.costPrice = parsedCostPrice
+    // const parsedCostPrice = parseNumberField(costPrice)
+    // if (parsedCostPrice) updateData.costPrice = parsedCostPrice
+    if (costPrice !== undefined) {
+      const rawCost = costPrice.toString().trim();
+      updateData.costPrice = rawCost === "" ? 0 : Number(rawCost);
+    }
+
+    if (stock !== undefined) {
+      const rawStock = stock.toString().trim();
+      updateData.stock = rawStock === "" ? 0 : Number(rawStock);
+    }
 
     const parsedStock = parseNumberField(stock)
     if (parsedStock) updateData.stock = parsedStock
@@ -173,7 +185,9 @@ export const updateIngredient = async (req, res) => {
     const parsedExpirationDays = parseNumberField(expirationDays)
     if (parsedExpirationDays) updateData.expirationDays = parsedExpirationDays
 
-    if (supplier !== undefined) updateData.supplier = supplier
+    if (supplier !== undefined) {
+      updateData.supplier = supplier === "" ? null : supplier
+    }
 
     if (isActive !== undefined) updateData.isActive = Boolean(isActive)
     

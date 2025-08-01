@@ -12,6 +12,5 @@ const warehouseSchema = new mongoose.Schema({
 }
 );
 
-
 const Warehouse = mongoose.model('Warehouse', warehouseSchema);
 export default Warehouse;
