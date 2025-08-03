@@ -9,17 +9,23 @@
                 <span>Dashboard</span>
               </a>
             </li>
-
+            <% const inInventory = ['Ingredient','Category','Warehouse','Supplier','Import','Export','Movement'].includes(page); %>
             <li class="inventory-accordion">
               <div class="accordion" id="accordionInventory">
                 <div class="accordion-item">
                   <h2 class="accordion-header">
-                    <button class="accordion-button <%= ['Inventory', 'Category', 'Warehouse', 'Supplier', 'Import', 'Export', 'Movement'].includes(page) ? 'active' : '' %>" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    <button
+                      class="accordion-button <%= inInventory ? 'active' : '' %> <%= inInventory ? '' : 'collapsed' %>"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#collapseOne"
+                      aria-expanded="<%= inInventory ? 'true' : 'false' %>"
+                      aria-controls="collapseOne">
                       <i class="bi bi-box-seam text-success-emphasis text-info-emphasis me-2"></i>
                       <span>Quản lý Kho</span>
                     </button>
                   </h2>
-                  <div id="collapseOne" class="accordion-collapse" data-bs-parent="#accordionInventory">
+                  <div id="collapseOne" class="accordion-collapse collapse <%= inInventory ? ' show' : '' %>" data-bs-parent="#accordionInventory">
                     <div class="accordion-body">
 
                       <a class="<%= page === 'Ingredient' ? 'accordion-active' : '' %>" href="/inventory/ingredients">

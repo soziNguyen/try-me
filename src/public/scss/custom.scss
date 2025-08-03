@@ -34,6 +34,12 @@
 }
 
 table {
+  // table-layout: auto;
+  // width: max-content;
+  // min-width: 100%;
+  // border-collapse: collapse;
+  // overflow-x: auto;
+  
   thead {
     th {
       &:first-child {
@@ -65,6 +71,10 @@ table {
       }
     }
   }
+}
+
+.updateUserBtn {
+  margin: 10px;
 }
   
 #imageCropModal {

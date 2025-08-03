@@ -1,0 +1,36 @@
+<%- include('../partials/header.html') %>
+<%- include('../partials/admin_sidebar.html') %>
+<div class="admin__content">
+    <h2 class="mb-4 bold">PHIẾU NHẬP KHO</h2>
+
+    <table id="stockEntryTable" class="table table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    <input type="checkbox" id="selectAll">
+                </th>
+                <th>Mã phiếu nhập</th>
+                <th>Ngày nhập</th>
+                <th>Nhà cung cấp</th>
+                <th>Nguyên liệu</th>
+                <th>Số lượng</th>
+                <th>Giá</th>
+                <th>Kho nhập</th>
+                <th>Ghi chú</th>
+            </tr>
+        </thead>
+        <tbody id="stockEntryTableBody">
+
+        </tbody>
+    </table>
+</div>
+
+</div>
+</div>
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<%- include('../partials/commonjs.html') %>
+<script src="/js/sidebar-toggle.js"></script>
+<script src="/js/update-user.js"></script>
+<script src="/js/data-table.js"></script>
+<script src="/js/stock-entry.js"></script>
+<%- include('../partials/footer.html') %>

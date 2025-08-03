@@ -107,7 +107,7 @@ export const supplierPage = (req, res) => {
 
 // Import
 export const importPage = (req, res) => {
-    res.render('inventory/import', 
+    res.render('inventory/stock_entry', 
         getPageData(req, 'Phiếu nhập kho', 'Import', 
             {
                 headerClass: 'admin__header',
@@ -119,7 +119,7 @@ export const importPage = (req, res) => {
 
 // Export
 export const exportPage = (req, res) => {
-    res.render('inventory/export',
+    res.render('inventory/stock_issue',
         getPageData(req, 'Phiếu Xuất Kho', 'Export', 
             {
                 headerClass: 'admin__header',
