@@ -95,7 +95,6 @@ export const updateWareHouse = async (req, res) => {
             }
         }
 
-
         const dataUpdate = {}
         if (name !== undefined) dataUpdate.name = nameTrimmed
         if (location !== undefined) dataUpdate.location = locationTrimmed

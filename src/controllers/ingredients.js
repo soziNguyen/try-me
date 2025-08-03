@@ -3,6 +3,18 @@ import { parseNumberField, parseStringField } from '../helpers/common.js'
 import IngredientCategory from '../models/IngredientCategory.js'
 import responseHelper from '../helpers/responseHelper.js'
 
+export const getAllIngredients = async (req, res) => {
+  try {
+    const ings = await Ingredient.find({ isActive: true })
+      .select('_id name')
+      .sort({ name: 1 })
+      .lean()
+    responseHelper.success(res, ings)
+  } catch (err) {
+    responseHelper.error(res, err.message)
+  }
+}
+
 export const ingredientDataAPI = async (req, res) => {
   try {
     const draw = parseInt(req.query.draw) || 0
