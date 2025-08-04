@@ -1,187 +1,195 @@
-import StockEntry from "../models/stockEntry.js";
-import responseHelper from "../helpers/responseHelper.js";
-import mongoose from "mongoose";
+import StockEntry from "../models/stockEntry.js"
+import { Ingredient } from "../models/ingredient.js"
+import responseHelper from "../helpers/responseHelper.js"
+import mongoose from "mongoose"
+import withTransaction from "../helpers/withTransaction.js"
 
 // GET ALL
 export const getAllStockEntries = async (req, res) => {
   try {
     const entries = await StockEntry
       .find({}, "_id code")
+      .populate('supplier', 'name')
       .sort({ code: 1 })
-      .lean();
-    responseHelper.success(res, entries);
-  } catch (error) {
-    responseHelper.error(res, error.message);
+      .lean()
+    responseHelper.success(res, entries)
+  } catch (err) {
+    responseHelper.error(res, err.message)
   }
-};
+}
 
 // DATATABLE SERVER-SIDE
 export const getStockEntries = async (req, res) => {
   try {
-    const draw               = parseInt(req.query.draw)    || 0;
-    const start              = parseInt(req.query.start)   || 0;
-    const length             = parseInt(req.query.length)  || 10;
-    const searchValue        = (req.query["search[value]"] || "").trim();
+    const draw        = +req.query.draw       || 0
+    const start       = +req.query.start      || 0
+    const length      = +req.query.length     || 10
+    const searchValue = (req.query["search[value]"] || "").trim()
+    const colIdx      = req.query["order[0][column]"]
+    const sortField   = req.query[`columns[${colIdx}][data]`] || "date"
+    const sortDir     = req.query["order[0][dir]"] === "asc" ? 1 : -1
 
-    const sortColumnIndex    = req.query["order[0][column]"];
-    const sortField          = req.query[`columns[${sortColumnIndex}][data]`] || "date";
-    const sortOrder          = req.query["order[0][dir]"] === "asc" ? 1 : -1;
+    const searchable = ["code", "note"]
+    const baseCond   = {}
+    const searchCond = searchValue
+      ? { ...baseCond, $or: searchable.map(f => ({ [f]: { $regex: searchValue, $options: "i" } })) }
+      : baseCond
 
-    const searchableFields   = ["code", "note"];
-    const baseCondition      = {};
-    const searchCondition    = searchValue
-      ? {
-          ...baseCondition,
-          $or: searchableFields.map(fld => ({
-            [fld]: { $regex: searchValue, $options: "i" }
-          }))
-        }
-      : baseCondition;
+    const recordsTotal    = await StockEntry.countDocuments(baseCond)
+    const recordsFiltered = await StockEntry.countDocuments(searchCond)
 
-    const totalRecords       = await StockEntry.countDocuments(baseCondition);
-    const filteredRecords    = await StockEntry.countDocuments(searchCondition);
-
-    const data = await StockEntry.find(searchCondition)
-      .sort({ [sortField]: sortOrder })
+    const data = await StockEntry.find(searchCond)
+      .sort({ [sortField]: sortDir })
       .skip(start)
       .limit(length)
       .populate("supplier", "name")
       .populate("items.ingredient", "name")
       .populate("items.warehouse", "name")
-      .lean();
+      .lean()
 
-    return res.json({
-      draw: Number(draw),
-      recordsTotal: totalRecords,
-      recordsFiltered: filteredRecords,
-      data
-    });
-  } catch (error) {
-    responseHelper.error(res, error.message);
+    res.json({ draw, recordsTotal, recordsFiltered, data })
+  } catch (err) {
+    responseHelper.error(res, err.message)
   }
-};
+}
 
 // CREATE
 export const createStockEntry = async (req, res) => {
   try {
-    const newEntry = new StockEntry({
-      ...req.body,
-      createdBy: req.user._id
-    });
-    await newEntry.save();
-    responseHelper.success(res, newEntry, "Tạo phiếu nhập kho thành công");
-  } catch (error) {
-    responseHelper.error(res, error.message);
+    const entry = await withTransaction(async (session) => {
+      const doc = new StockEntry({ ...req.body, createdBy: req.user._id })
+      await doc.save(session ? { session } : {})
+
+      // tăng tồn kho
+      for (const item of doc.items) {
+        await Ingredient.updateOne(
+          { _id: item.ingredient },
+          { $inc: { stock: item.quantity } },
+          session ? { session } : {}
+        )
+      }
+      return doc
+    })
+
+    responseHelper.success(res, entry, "Tạo phiếu nhập kho thành công")
+  } catch (err) {
+    responseHelper.error(res, err.message)
   }
-};
-
-// UPDATE
-export const updateStockEntry = async (req, res) => {
-    try {
-        const { id } = req.params
-        const updateFields = req.body // Nhận dynamic fields từ frontend
-
-        const stockEntry = await StockEntry.findById(id)
-        if (!stockEntry) {
-            return responseHelper.error(res, "Phiếu nhập kho không tồn tại", 404)
-        }
-
-        const dataUpdate = {}
-        
-        // Xử lý từng field trong request
-        for (const [field, value] of Object.entries(updateFields)) {
-            if (field === 'code') {
-                // Kiểm tra trùng code
-                if (value && value !== stockEntry.code) {
-                    const existing = await StockEntry.findOne({
-                        _id: { $ne: id },
-                        code: value
-                    })
-                    if (existing) {
-                        return responseHelper.error(res, "Mã phiếu đã tồn tại", 400)
-                    }
-                }
-                dataUpdate.code = value
-            }
-            else if (field === 'date') {
-                dataUpdate.date = value
-            }
-            else if (field === 'supplier') {
-                // Supplier là field đơn - ObjectId hoặc null
-                dataUpdate.supplier = (value === "" || !value) ? null : value
-            }
-            else if (field === 'note') {
-                dataUpdate.note = value
-            }
-            else if (field === 'createdBy') {
-                dataUpdate.createdBy = value === "" ? null : value
-            }
-            else if (field.startsWith('items.')) {
-                // Xử lý nested field: items.0.ingredient, items.0.quantity, etc.
-                const parts = field.split('.')
-                const index = parseInt(parts[1])
-                const itemField = parts[2]
-                
-                // Lấy items hiện tại
-                const currentItems = [...(stockEntry.items || [])]
-                
-                // Đảm bảo có item tại index
-                while (currentItems.length <= index) {
-                    currentItems.push({
-                        ingredient: null,
-                        quantity: 0,        // Set default = 1 để tránh required validation
-                        unitPrice: 0,
-                        warehouse: null
-                    })
-                }
-
-                // Update field cụ thể
-                if (itemField === 'ingredient' || itemField === 'warehouse') {
-                    currentItems[index][itemField] = value === "" ? null : value
-                } else if (itemField === 'quantity' || itemField === 'unitPrice') {
-                    // Xử lý số lượng và giá như field stock
-                    const rawValue = value?.toString().trim();
-                    currentItems[index][itemField] = rawValue === "" ? 0 : Number(rawValue);
-                } else {
-                    currentItems[index][itemField] = value
-                }
-                
-                dataUpdate.items = currentItems
-            }
-            else {
-                return responseHelper.error(res, `Field ${field} không được hỗ trợ`, 400)
-            }
-        }
-
-        if (Object.keys(dataUpdate).length === 0) {
-            return responseHelper.error(res, "Không có dữ liệu để cập nhật", 400)
-        }
-
-        const updated = await StockEntry.findByIdAndUpdate(id, dataUpdate, { 
-            new: true,
-            runValidators: false  // ← Tắt validation cho inline edit
-        }).populate('supplier', 'name')
-          .populate('items.ingredient', 'name')
-          .populate('items.warehouse', 'name')
-          .populate('createdBy', 'username')
-
-        responseHelper.success(res, updated, "Cập nhật phiếu nhập kho thành công")
-    } catch (error) {
-        responseHelper.error(res, error.message)
-    }
 }
 
-// DELETE (xóa cứng)
+// UPDATE (inline edit + nested items)
+export const updateStockEntry = async (req, res) => {
+  try {
+    const updatedDoc = await withTransaction(async (session) => {
+      const { id } = req.params
+      if (!mongoose.isValidObjectId(id)) {
+        throw new Error("ID không hợp lệ")
+      }
+
+      // Lấy phiếu cũ & revert stock
+      const oldEntry = await StockEntry.findById(id).session(session)
+      if (!oldEntry) {
+        throw new Error("Phiếu nhập không tồn tại")
+      }
+      for (const itm of oldEntry.items) {
+        if (itm.ingredient) {
+          await Ingredient.updateOne(
+            { _id: itm.ingredient },
+            { $inc: { stock: -Math.abs(itm.quantity) } },
+            { session }
+          )
+        }
+      }
+
+      // Normalize dữ liệu từ req.body
+      const normalized = {}
+      for (const [key, value] of Object.entries(req.body)) {
+        if (key.endsWith(".quantity") || key.endsWith(".unitPrice")) {
+          const raw = value?.toString().trim()
+          let num = raw === "" ? 0 : Number(raw)
+          if (num < 0) num = 0
+          normalized[key] = num
+        }
+        else if (
+          key === "supplier" ||
+          key.endsWith(".ingredient") ||
+          key.endsWith(".warehouse")
+        ) {
+          normalized[key] = value === "" ? null : value
+        }
+        else {
+          normalized[key] = value
+        }
+      }
+      normalized.updatedBy = req.user._id
+
+      const newEntry = await StockEntry.findByIdAndUpdate(
+        id,
+        { $set: normalized },
+        { new: true, session }
+      )
+      if (!newEntry) {
+        throw new Error("Cập nhật thất bại")
+      }
+
+      // Cập nhật tồn kho theo phiếu mới
+      for (const itm of newEntry.items) {
+        if (itm.ingredient) {
+          await Ingredient.updateOne(
+            { _id: itm.ingredient },
+            { $inc: { stock: Math.abs(itm.quantity) },
+              $set: {
+                costPrice: itm.unitPrice,
+                supplier: newEntry.supplier
+              } 
+            },
+            { session }
+          )
+        }
+      }
+
+      await newEntry.populate("supplier", "name")
+      await newEntry.populate("items.ingredient", "name")
+      await newEntry.populate("items.warehouse", "name")
+
+      return newEntry
+    })
+
+    responseHelper.success(res, updatedDoc, "Cập nhật phiếu nhập kho thành công")
+  } catch (err) {
+    responseHelper.error(res, err.message)
+  }
+}
+
+// DELETE
 export const deleteStockEntries = async (req, res) => {
   try {
-    const { ids } = req.body;
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(res, "Không có phiếu nào được chọn", 400);
-    }
+    await withTransaction(async (session) => {
+      const { ids } = req.body
+      if (!Array.isArray(ids) || ids.length === 0) {
+        throw new Error("Không có phiếu nào được chọn")
+      }
 
-    const result = await StockEntry.deleteMany({ _id: { $in: ids } });
-    responseHelper.success(res, result.deletedCount, "Xóa thành công");
+      // Lấy các phiếu nhập
+      const entries = await StockEntry.find({ _id: { $in: ids } }).session(session)
+
+      // Trừ tồn kho
+      for (const entry of entries) {
+        for (const item of entry.items) {
+          await Ingredient.updateOne(
+            { _id: item.ingredient },
+            { $inc: { stock: -Math.abs(item.quantity) } },
+            { session }
+          )
+        }
+      }
+
+      // Xóa phiếu
+      await StockEntry.deleteMany({ _id: { $in: ids } }).session(session)
+    })
+
+    responseHelper.success(res, null, "Xóa thành công và cập nhật tồn kho")
   } catch (error) {
-    responseHelper.error(res, error.message);
+    responseHelper.error(res, error.message)
   }
-};
+}

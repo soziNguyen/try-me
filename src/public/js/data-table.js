@@ -121,7 +121,7 @@ function initTableCheckboxEvents(tableSelector, checkboxClass) {
 
   // Click 'tr' event
   $table.on('click', 'tbody tr', function (e) {
-    if ($(e.target).is(`input[type=checkbox], img, input[type=text], .dataInput`)) return
+    if ($(e.target).is(`input[type=checkbox], img, input[type=text], input[type=number], .dataInput`)) return
     const checkbox = $(this).find(`.${checkboxClass}`)
     checkbox.prop('checked', !checkbox.prop('checked')).trigger('change')
   })

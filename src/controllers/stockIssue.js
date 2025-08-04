@@ -1,0 +1,195 @@
+import mongoose from "mongoose"
+import StockIssue from "../models/stockIssue.js"
+import { Ingredient } from "../models/ingredient.js"
+import responseHelper from "../helpers/responseHelper.js"
+import withTransaction from "../helpers/withTransaction.js"
+
+// GET
+export const getStockIssues = async (req, res) => {
+  try {
+    const draw = parseInt(req.query.draw) || 0
+    const start = parseInt(req.query.start) || 0
+    const length = parseInt(req.query.length) || 10
+    const searchValue = (req.query['search[value]'] || '').trim()
+    const sortColumnIndex = req.query['order[0][column]']
+    const sortField = req.query[`columns[${sortColumnIndex}][data]`] || 'date'
+    const sortOrder = req.query['order[0][dir]'] === 'asc' ? 1 : -1
+
+    const searchableFields = ['code', 'reason', 'note']
+    const baseCondition = {}
+    const searchCondition = searchValue
+      ? {
+          ...baseCondition,
+          $or: searchableFields.map(f => ({
+            [f]: { $regex: searchValue, $options: 'i' }
+          }))
+        }
+      : baseCondition
+
+    const recordsTotal = await StockIssue.countDocuments(baseCondition)
+    const recordsFiltered = await StockIssue.countDocuments(searchCondition)
+
+    const data = await StockIssue.find(searchCondition)
+      .sort({ [sortField]: sortOrder })
+      .skip(start)
+      .limit(length)
+      .populate('createdBy', 'username')
+      .populate('items.ingredient', 'name')
+      .populate('items.warehouse', 'name')
+      .lean()
+
+    return res.json({
+      draw,
+      recordsTotal,
+      recordsFiltered,
+      data
+    })
+  } catch (err) {
+    responseHelper.error(res, err.message)
+  }
+}
+
+// CREATE
+export const createStockIssue = async (req, res) => {
+  try {
+    const issue = await withTransaction(async (session) => {
+      const doc = new StockIssue({
+        ...req.body,
+        createdBy: req.user._id
+      })
+      await doc.save({ session })
+
+      for (const item of doc.items) {
+        await Ingredient.updateOne(
+          { _id: item.ingredient },
+          { $inc: { stock: -Math.abs(item.quantity) } },
+          { session }
+        )
+      }
+      return doc
+    })
+
+    responseHelper.success(res, issue, "Tạo phiếu xuất kho thành công")
+  } catch (err) {
+    responseHelper.error(res, err.message)
+  }
+}
+
+// UPDATE
+export const updateStockIssue = async (req, res) => {
+  try {
+    const updatedIssue = await withTransaction(async (session) => {
+      const { id } = req.params
+
+      if (!mongoose.isValidObjectId(id)) {
+        throw new Error("ID không hợp lệ")
+      }
+
+      const oldIssue = await StockIssue.findById(id).session(session)
+      if (!oldIssue) {
+        throw new Error("Phiếu xuất không tồn tại")
+      }
+
+      // Hoàn trả tồn kho từ phiếu cũ
+      for (const item of oldIssue.items) {
+        await Ingredient.updateOne(
+          { _id: item.ingredient },
+          { $inc: { stock: Math.abs(item.quantity) } },
+          { session }
+        )
+      }
+
+      // Chuẩn hóa dữ liệu
+      const payload = {}
+
+      for (const [key, value] of Object.entries(req.body)) {
+        if (key.endsWith(".quantity")) {
+          const raw = value?.toString().trim()
+          let num = raw === "" ? 0 : Number(raw)
+          if (num < 0) num = 0
+          payload[key] = num
+        } else if (
+          key.endsWith(".ingredient") ||
+          key.endsWith(".warehouse")
+        ) {
+          payload[key] = value === "" ? null : value
+        } else {
+          payload[key] = value
+        }
+      }
+
+      payload.updatedBy = req.user._id
+
+      // Cập nhật phiếu xuất
+      const newIssue = await StockIssue.findByIdAndUpdate(
+        id,
+        { $set: payload },
+        { new: true, session }
+      )
+
+      if (!newIssue) {
+        throw new Error("Cập nhật thất bại")
+      }
+
+      // Trừ kho với kiểm tra tồn kho an toàn
+      for (const item of newIssue.items) {
+        const updateResult = await Ingredient.updateOne(
+          {
+            _id: item.ingredient,
+            stock: { $gte: item.quantity }
+          },
+          {
+            $inc: { stock: -Math.abs(item.quantity) }
+          },
+          { session }
+        )
+
+        if (updateResult.modifiedCount === 0) {
+          const ing = await Ingredient.findById(item.ingredient).session(session)
+          const stockLeft = ing?.stock ?? 0;
+          throw new Error(`Nguyên liệu "${ing?.name || item.ingredient}" chỉ còn ${stockLeft}, không đủ để xuất ${item.quantity}`);
+        }
+      }
+
+      await newIssue.populate("createdBy", "username")
+      await newIssue.populate("items.ingredient", "name")
+      await newIssue.populate("items.warehouse", "name")
+
+      return newIssue
+    })
+
+    responseHelper.success(res, updatedIssue, "Cập nhật phiếu xuất kho thành công")
+  } catch (err) {
+    responseHelper.error(res, err.message)
+  }
+}
+
+// DELETE
+export const deleteStockIssues = async (req, res) => {
+  try {
+    await withTransaction(async (session) => {
+      const { ids } = req.body
+      if (!Array.isArray(ids) || ids.length === 0) {
+        throw new Error("Không có phiếu nào được chọn")
+      }
+
+      const issues = await StockIssue.find({ _id: { $in: ids } }).session(session)
+
+      for (const issue of issues) {
+        for (const item of issue.items) {
+          await Ingredient.updateOne(
+            { _id: item.ingredient },
+            { $inc: { stock: Math.abs(item.quantity) } },
+            { session }
+          )
+        }
+      }
+
+      await StockIssue.deleteMany({ _id: { $in: ids } }).session(session)
+    })
+
+    responseHelper.success(res, null, "Xóa thành công")
+  } catch (err) {
+    responseHelper.error(res, err.message)
+  }
+}

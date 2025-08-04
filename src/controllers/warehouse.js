@@ -1,4 +1,5 @@
 import responseHelper from "../helpers/responseHelper.js"
+import User from '../models/user.js'
 import Warehouse from "../models/warehouse.js"
 
 
@@ -12,49 +13,58 @@ export const getActiveWarehouses = async (req, res) => {
 }
 
 export const getWareHouses = async (req, res) => {
-    try {
-
+  try {
     const draw = parseInt(req.query.draw) || 0
     const start = parseInt(req.query.start) || 0
     const length = parseInt(req.query.length) || 10
 
     const searchValue = (req.query['search[value]'] || '').trim()
-
     const sortColumnIndex = req.query['order[0][column]']
     const sortField = req.query[`columns[${sortColumnIndex}][data]`] || 'createdAt'
     const sortOrder = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
-    const searchableFields = ['name', 'location', 'manager']
+    const baseCondition = { isActive: true }
 
-    const baseCondition = { isActive: 'true' }
-    const searchCondition = searchValue
-    ? {
-        ...baseCondition,
-        $or: searchableFields.map(field => ({
-            [field] : { $regex: searchValue, $options: 'i' }
-        }))
+    let managerIds = []
+
+    if (searchValue) {
+      const matchedManagers = await User.find({
+        username: { $regex: searchValue, $options: 'i' }
+      }).select('_id')
+
+      managerIds = matchedManagers.map(user => user._id)
     }
-    : baseCondition
-    
+
+    const searchCondition = searchValue
+      ? {
+          ...baseCondition,
+          $or: [
+            { name: { $regex: searchValue, $options: 'i' } },
+            { location: { $regex: searchValue, $options: 'i' } },
+            { manager: { $in: managerIds } }
+          ]
+        }
+      : baseCondition
+
     const totalRecords = await Warehouse.countDocuments(baseCondition)
     const filteredRecords = await Warehouse.countDocuments(searchCondition)
 
     const warehouses = await Warehouse.find(searchCondition)
-        .sort({ [sortField] : sortOrder })
-        .skip(start)
-        .limit(length)
-        .populate('manager', 'username')
-        .lean()
+      .sort({ [sortField]: sortOrder })
+      .skip(start)
+      .limit(length)
+      .populate('manager', 'username')
+      .lean()
 
     return res.json({
-        draw: Number(draw),
-        recordsTotal: totalRecords,
-        recordsFiltered: filteredRecords,
-        data: warehouses
+      draw,
+      recordsTotal: totalRecords,
+      recordsFiltered: filteredRecords,
+      data: warehouses
     })
-    } catch (error) {
-      responseHelper.error(res, error.message)  
-    }
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
 }
 
 export const createWareHouse = async (req, res) => {

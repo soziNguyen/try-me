@@ -82,7 +82,7 @@ $(function () {
               }).join('')
               return `
                 <select class="dataInput form-select form-select-sm" data-field="supplier" data-id="${row._id}">
-                  <option value="">— Chọn nhà cung cấp —</option>
+                  <option value="" class="text-center">— Chọn nhà cung cấp —</option>
                   ${opts}
                 </select>`
             }
@@ -100,7 +100,7 @@ $(function () {
               }).join('')
               return `
                 <select class="dataInput form-select form-select-sm" data-field="items.0.ingredient" data-id="${row._id}">
-                  <option value="">— Chọn nguyên liệu —</option>
+                  <option value="" class="text-center">— Chọn nguyên liệu —</option>
                   ${opts}
                 </select>`
             }
@@ -112,7 +112,7 @@ $(function () {
           render: (items, type, row) => {
             const firstItem = Array.isArray(items) && items.length ? items[0] : null
             if (type === 'display') {
-              return `<input type="number" class="dataInput border-0 w-100 form-control"
+              return `<input type="number" class="dataInput border-0 text-end form-control"
                               data-field="items.0.quantity" value="${firstItem?.quantity ?? ''}">`
             }
             return firstItem?.quantity ?? ''
@@ -123,7 +123,7 @@ $(function () {
           render: (items, type, row) => {
             const firstItem = Array.isArray(items) && items.length ? items[0] : null
             if (type === 'display') {
-              return `<input type="number" class="dataInput border-0 w-100 form-control"
+              return `<input type="number" class="dataInput border-0 text-end form-control"
                               data-field="items.0.unitPrice" value="${firstItem?.unitPrice ?? ''}">`
             }
             return firstItem?.unitPrice ?? ''
@@ -136,11 +136,11 @@ $(function () {
             if (type === 'display') {
               const opts = warehouses.map(wh => {
                 const sel = firstItem?.warehouse?._id === wh._id ? 'selected' : ''
-                return `<option value="${wh._id}" ${sel}>${wh.name}</option>`
+                return `<option value="${wh._id}" ${sel}>${wh.name} - ${wh.location}</option>`
               }).join('')
               return `
                 <select class="dataInput form-select form-select-sm" data-field="items.0.warehouse" data-id="${row._id}">
-                  <option value="">— Chọn kho —</option>
+                  <option value="" class="text-center">— Chọn kho —</option>
                   ${opts}
                 </select>`
             }
