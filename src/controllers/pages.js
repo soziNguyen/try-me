@@ -131,7 +131,7 @@ export const exportPage = (req, res) => {
 
 // Movement
 export const movementPage = (req, res) => {
-    res.render('inventory/import_export_flow', 
+    res.render('inventory/stock_movement', 
         getPageData(req, 'Lịch Sử Nhập - Xuất Kho', 'Movement', 
             {
                 headerClass: 'admin__header',

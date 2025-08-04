@@ -8,7 +8,7 @@ $(function () {
 
   Promise.all([
     fetchData('inventory/categories'),
-    fetchData('inventory/supplier/all')
+    // fetchData('inventory/supplier/all')
   ])
   .then(([cats, sups]) => {
     categories = cats
@@ -98,18 +98,10 @@ $(function () {
           }
         },
         {
-          data: 'unit',
+          data: 'barcode',
           render: (data, type, row) => {
             if (type === 'display') {
-              const opts = units.map(unit => {
-                const selected = unit === data ? 'selected' : ''
-                return `<option value="${unit}" ${selected}>${unit}</option>`
-              }).join('')
-              return `
-                <select class="dataInput form-select form-select-sm" data-field="unit" data-id="${row._id}">
-                  <option value="">— Chọn đơn vị —</option>
-                  ${opts}
-                </select>`
+              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="barcode" value="${data ?? ''}">`
             }
             return data
           }
@@ -136,7 +128,24 @@ $(function () {
           data: 'stock',
           render: (data, type, row) => {
             if (type === 'display') {
-              return `<input type="number" class="dataInput border-0 w-100 form-control" data-field="stock" value="${data ?? ''}">`
+              return `<input type="number" class="form-control-plaintext text-center" value="${data ?? 0}" readonly>`
+            }
+            return data
+          }
+        },
+        {
+          data: 'unit',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              const opts = units.map(unit => {
+                const selected = unit === data ? 'selected' : ''
+                return `<option value="${unit}" ${selected}>${unit}</option>`
+              }).join('')
+              return `
+                <select class="dataInput form-select form-select-sm" data-field="unit" data-id="${row._id}">
+                  <option value="">— Chọn đơn vị —</option>
+                  ${opts}
+                </select>`
             }
             return data
           }
@@ -145,7 +154,7 @@ $(function () {
           data: 'costPrice',
           render: (data, type, row) => {
             if (type === 'display') {
-              return `<input type="number" class="dataInput border-0 w-100 form-control" data-field="costPrice" value="${data ?? ''}">`
+              return `<input type="number" class="form-control-plaintext text-center" value="${data ?? 0}" readonly>`
             }
             return data
           }
@@ -155,15 +164,8 @@ $(function () {
           name: 'supplier.name',
           render: (data, type, row) => {
             if (type === 'display') {
-              const opts = suppliers.map(s => {
-                const sel = s._id === (row.supplier?._id) ? 'selected' : ''
-                return `<option value="${s._id}" ${sel}>${s.name}</option>`
-              }).join('')
-              return `
-                <select class="dataInput form-select form-select-sm" data-field="supplier" data-id="${row._id}">
-                  <option value="">— Chọn nhà cung cấp —</option>
-                  ${opts}
-                </select>`
+              const name = row.supplier?.name ?? ''
+              return `<input type="number" class="form-control-plaintext text-center" value="${name}" readonly>`
             }
             return row.supplier?.name ?? ''
           }
@@ -173,15 +175,6 @@ $(function () {
           render: (data, type, row) => {
             if (type === 'display') {
               return `<input type="number" class="dataInput border-0 w-100 form-control" data-field="expirationDays" value="${data ?? ''}">`
-            }
-            return data
-          }
-        },
-        {
-          data: 'barcode',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="barcode" value="${data ?? ''}">`
             }
             return data
           }
