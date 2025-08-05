@@ -1,8 +1,43 @@
+import mongoose from "mongoose"
 import StockEntry from "../models/stockEntry.js"
 import { Ingredient } from "../models/ingredient.js"
 import responseHelper from "../helpers/responseHelper.js"
-import mongoose from "mongoose"
 import withTransaction from "../helpers/withTransaction.js"
+
+
+export const generateStockEntryCode = async (prefix = 'SE') => {
+  try {
+    const now = new Date()
+    const year = now.getFullYear().toString().substr(-2) // 24 cho 2024
+    const month = (now.getMonth() + 1).toString().padStart(2, '0')
+    const day = now.getDate().toString().padStart(2, '0')
+    const datePrefix = `${prefix}-${year}${month}${day}`
+    
+    // Tìm mã cao nhất trong ngày hiện tại
+    const lastEntry = await StockEntry.findOne({
+      code: { $regex: `^${datePrefix}-\\d{3}$`}
+    }).sort({ code: -1 }).lean()
+    
+    let nextNumber = 1
+    if (lastEntry && lastEntry.code) {
+      const lastNumber = parseInt(lastEntry.code.split('-')[2])
+      nextNumber = lastNumber + 1
+    }
+    
+    // Format: SE-241205-001, SE-241205-002...
+    const formattedNumber = nextNumber.toString().padStart(3, '0')
+    return `${datePrefix}-${formattedNumber}`
+    
+  } catch (error) {
+    // Fallback
+    const now = new Date()
+    const year = now.getFullYear().toString().substr(-2)
+    const month = (now.getMonth() + 1).toString().padStart(2, '0')
+    const day = now.getDate().toString().padStart(2, '0')
+    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+    return `SE-${year}${month}${day}-${randomNum}`
+  }
+}
 
 // GET ALL
 export const getAllStockEntries = async (req, res) => {
@@ -10,7 +45,7 @@ export const getAllStockEntries = async (req, res) => {
     const entries = await StockEntry
       .find({}, "_id code")
       .populate('supplier', 'name')
-      .sort({ code: 1 })
+      .sort({ createdAt: -1 })
       .lean()
     responseHelper.success(res, entries)
   } catch (err) {
@@ -44,7 +79,7 @@ export const getStockEntries = async (req, res) => {
       .limit(length)
       .populate("supplier", "name")
       .populate("items.ingredient", "name")
-      .populate("items.warehouse", "name")
+      .populate("items.warehouse", "name location")
       .lean()
 
     res.json({ draw, recordsTotal, recordsFiltered, data })
@@ -53,113 +88,229 @@ export const getStockEntries = async (req, res) => {
   }
 }
 
+// Get Stock Entry by ID (Detail)
+export const getStockEntryById = async (req, res) => {
+  try {
+    const { id } = req.params
+    
+    if (!mongoose.isValidObjectId(id)) {
+      return responseHelper.error(res, 'ID không hợp lệ', 400)
+    }
+    
+    const stockEntry = await StockEntry.findById(id)
+      .populate('supplier', 'name')
+      .populate('createdBy', 'name username')
+      .populate('updatedBy', 'name username')
+      .populate('items.ingredient', 'name')
+      .populate('items.warehouse', 'name location')
+      .lean()
+    
+    if (!stockEntry) {
+      return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
+    }
+    
+    responseHelper.success(res, stockEntry, 'Lấy thông tin phiếu nhập thành công')
+  } catch (err) {
+    console.error('Get stock entry error:', err)
+    responseHelper.error(res, err.message)
+  }
+}
+
 // CREATE
 export const createStockEntry = async (req, res) => {
   try {
     const entry = await withTransaction(async (session) => {
-      const doc = new StockEntry({ ...req.body, createdBy: req.user._id })
+      const code = await generateStockEntryCode('SE')
+      const date = new Date()
+      const doc = new StockEntry({
+        date: date,
+        createdBy: req.user._id,
+        code: code
+       })
       await doc.save(session ? { session } : {})
-
-      // tăng tồn kho
-      for (const item of doc.items) {
-        await Ingredient.updateOne(
-          { _id: item.ingredient },
-          { $inc: { stock: item.quantity } },
-          session ? { session } : {}
-        )
-      }
       return doc
     })
-
-    responseHelper.success(res, entry, "Tạo phiếu nhập kho thành công")
+    responseHelper.success(res, { id: entry._id, code: entry.code }, "Khởi tạo phiếu nhập thành công")
   } catch (err) {
     responseHelper.error(res, err.message)
   }
 }
 
-// UPDATE (inline edit + nested items)
-export const updateStockEntry = async (req, res) => {
+// UPDATE (form)
+export const updateStockEntryFromForm = async (req, res) => {
   try {
     const updatedDoc = await withTransaction(async (session) => {
-      const { id } = req.params
+      const { id } = req.params;
       if (!mongoose.isValidObjectId(id)) {
-        throw new Error("ID không hợp lệ")
+        throw new Error("ID không hợp lệ");
       }
 
-      // Lấy phiếu cũ & revert stock
-      const oldEntry = await StockEntry.findById(id).session(session)
-      if (!oldEntry) {
-        throw new Error("Phiếu nhập không tồn tại")
-      }
-      for (const itm of oldEntry.items) {
-        if (itm.ingredient) {
+      // Lấy phiếu cũ để revert stock
+      const oldEntry = await StockEntry.findById(id).session(session);
+      if (!oldEntry) throw new Error("Phiếu nhập không tồn tại");
+
+      // Revert stock của items cũ
+      for (const item of oldEntry.items) {
+        if (item.ingredient && item.quantity) {
           await Ingredient.updateOne(
-            { _id: itm.ingredient },
-            { $inc: { stock: -Math.abs(itm.quantity) } },
+            { _id: item.ingredient },
+            { $inc: { stock: -Math.abs(item.quantity) } },
             { session }
-          )
+          );
         }
       }
 
-      // Normalize dữ liệu từ req.body
-      const normalized = {}
-      for (const [key, value] of Object.entries(req.body)) {
-        if (key.endsWith(".quantity") || key.endsWith(".unitPrice")) {
-          const raw = value?.toString().trim()
-          let num = raw === "" ? 0 : Number(raw)
-          if (num < 0) num = 0
-          normalized[key] = num
-        }
-        else if (
-          key === "supplier" ||
-          key.endsWith(".ingredient") ||
-          key.endsWith(".warehouse")
-        ) {
-          normalized[key] = value === "" ? null : value
-        }
-        else {
-          normalized[key] = value
-        }
-      }
-      normalized.updatedBy = req.user._id
+      // Chuẩn bị dữ liệu update
+      const {
+        supplier,
+        note,
+        items: rawItems = []
+      } = req.body;
+      
+      let totalAmount = 0; // Biến tạm để tính tổng tiền của cả phiếu
 
+      const items = rawItems.map(item => {
+        const quantity = parseFloat(item.quantity) || 0;
+        const unitPrice = parseFloat(item.unitPrice) || 0;
+        const itemTotal = quantity * unitPrice; // Tính total cho từng item
+        
+        totalAmount += itemTotal; // Cộng dồn vào tổng tiền của phiếu nhập
+
+        return {
+          ingredient: item.ingredient,
+          warehouse: item.warehouse,
+          quantity: quantity,
+          unitPrice: unitPrice,
+          total: itemTotal // Tính tổng tiền cho từng item
+        };
+      });
+
+      const updateData = { 
+        supplier, 
+        note, 
+        items, 
+        total: totalAmount, // Cập nhật tổng tiền của phiếu
+        updatedBy: req.user._id 
+      };
+
+      // Cập nhật phiếu
       const newEntry = await StockEntry.findByIdAndUpdate(
         id,
-        { $set: normalized },
+        updateData,
         { new: true, session }
-      )
-      if (!newEntry) {
-        throw new Error("Cập nhật thất bại")
-      }
+      );
+      if (!newEntry) throw new Error("Cập nhật thất bại");
 
-      // Cập nhật tồn kho theo phiếu mới
-      for (const itm of newEntry.items) {
-        if (itm.ingredient) {
+      // Cập nhật stock với items mới
+      for (const item of newEntry.items) {
+        if (item.ingredient && item.quantity) {
           await Ingredient.updateOne(
-            { _id: itm.ingredient },
-            { $inc: { stock: Math.abs(itm.quantity) },
-              $set: {
-                costPrice: itm.unitPrice,
-                supplier: newEntry.supplier
-              } 
+            { _id: item.ingredient },
+            {
+              $inc: { stock: Math.abs(item.quantity) },
+              $set: { 
+                costPrice: item.unitPrice || 0,
+                supplier: newEntry.supplier 
+              }
             },
             { session }
-          )
+          );
         }
       }
 
+      // Populate để trả về đầy đủ thông tin
       await newEntry.populate("supplier", "name")
+      await newEntry.populate("createdBy", "name username")
+      await newEntry.populate("updatedBy", "name username")
       await newEntry.populate("items.ingredient", "name")
-      await newEntry.populate("items.warehouse", "name")
+      await newEntry.populate("items.warehouse", "name location");
 
-      return newEntry
-    })
+      return newEntry;
+    });
 
-    responseHelper.success(res, updatedDoc, "Cập nhật phiếu nhập kho thành công")
+    responseHelper.success(res, updatedDoc, "Cập nhật phiếu nhập thành công");
   } catch (err) {
-    responseHelper.error(res, err.message)
+    console.error("Update stock entry error:", err);
+    responseHelper.error(res, err.message);
   }
-}
+};
+
+
+// UPDATE (inline edit + nested items)
+// export const updateStockEntry = async (req, res) => {
+//   try {
+//     const updatedDoc = await withTransaction(async (session) => {
+//       const { id } = req.params
+//       if (!mongoose.isValidObjectId(id)) {
+//         throw new Error("ID không hợp lệ")
+//       }
+
+//       // Lấy phiếu cũ & revert stock
+//       const oldEntry = await StockEntry.findById(id).session(session)
+//       if (!oldEntry) throw new Error("Phiếu nhập không tồn tại")
+//       for (const itm of oldEntry.items) {
+//         if (itm.ingredient) {
+//           await Ingredient.updateOne(
+//             { _id: itm.ingredient },
+//             { $inc: { stock: -Math.abs(itm.quantity) } },
+//             { session }
+//           )
+//         }
+//       }
+
+//       // Chuẩn hóa dữ liệu
+//       const normalized = {}
+//       for (const [key, value] of Object.entries(req.body)) {
+//         if (key.endsWith(".quantity") || key.endsWith(".unitPrice")) {
+//           let num = Number(value) || 0
+//           if (num < 0) num = 0
+//           normalized[key] = num
+//         } else if (
+//           key === "supplier" ||
+//           key.endsWith(".ingredient") ||
+//           key.endsWith(".warehouse")
+//         ) {
+//           normalized[key] = value === "" ? null : value
+//         } else {
+//           normalized[key] = value
+//         }
+//       }
+//       normalized.updatedBy = req.user._id
+
+//       // Cập nhật phiếu
+//       const newEntry = await StockEntry.findByIdAndUpdate(
+//         id,
+//         { $set: normalized },
+//         { new: true, session }
+//       )
+//       if (!newEntry) throw new Error("Cập nhật thất bại")
+
+//       // Tăng tồn kho cho items mới
+//       for (const itm of newEntry.items) {
+//         if (itm.ingredient) {
+//           await Ingredient.updateOne(
+//             { _id: itm.ingredient },
+//             {
+//               $inc: { stock: Math.abs(itm.quantity) },
+//               $set: { costPrice: itm.unitPrice, supplier: newEntry.supplier }
+//             },
+//             { session }
+//           )
+//         }
+//       }
+
+//       await newEntry.populate("supplier", "name")
+//       await newEntry.populate("items.ingredient", "name")
+//       await newEntry.populate("items.warehouse", "name")
+
+//       return newEntry
+//     })
+
+//     responseHelper.success(res, updatedDoc, "Cập nhật phiếu nhập kho thành công")
+//   } catch (err) {
+//     responseHelper.error(res, err.message)
+//   }
+// }
 
 // DELETE
 export const deleteStockEntries = async (req, res) => {

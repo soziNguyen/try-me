@@ -132,7 +132,6 @@ export const updateIngredient = async (req, res) => {
       stock,
       supplier,
       expirationDays,
-      barcode,
       isActive,
       note } = req.body
 
@@ -190,9 +189,6 @@ export const updateIngredient = async (req, res) => {
 
     const parsedStock = parseNumberField(stock)
     if (parsedStock) updateData.stock = parsedStock
-
-    const parsedBarcode = parseStringField(barcode)
-    if (parsedBarcode) updateData.barcode = parsedBarcode
 
     const parsedExpirationDays = parseNumberField(expirationDays)
     if (parsedExpirationDays) updateData.expirationDays = parsedExpirationDays
