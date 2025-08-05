@@ -3,7 +3,7 @@ import { ingredientPage, categoryPage, supplierPage , warehousePage, importPage,
 import { getAllIngredients, ingredientDataAPI, createIngredient, updateIngredient, deleteIngredients } from '../controllers/ingredients.js'
 import { getIngredientCategories, createInredientCategory, updateIngredientCategory, deleteIngredientCategories } from '../controllers/ingredientCategories.js'
 import { getAllSuppliers, getSuppliers, createSupplier, updateSupplier, deleteSuppliers } from '../controllers/supplier.js'
-import { getActiveWarehouses, getWareHouses, createWareHouse, updateWareHouse, deleteWarehouses } from '../controllers/warehouse.js'
+import { getActiveWarehouses, getWareHouses, createWareHouse, updateWareHouse, deleteWarehouses, forceDeleteWareHouses } from '../controllers/warehouse.js'
 import { getAllStockEntries, getStockEntries, getStockEntryById, createStockEntry, updateStockEntryFromForm, deleteStockEntries } from '../controllers/stockEntry.js'
 import { getStockIssues, createStockIssue, updateStockIssue, deleteStockIssues } from '../controllers/stockIssue.js'
 import { getStockMovements } from '../controllers/stockMovement.js'
@@ -50,7 +50,7 @@ router.get('/api/inventory/warehouse/all', isAuthenticated, isAdmin, getActiveWa
 router.get('/api/inventory/warehouses', isAuthenticated, isAdmin, getWareHouses)
 router.post('/api/inventory/warehouse/create', isAuthenticated, isAdmin, createWareHouse)
 router.post('/api/inventory/warehouse/update/:id', isAuthenticated, isAdmin, updateWareHouse)
-router.post('/api/inventory/warehouse/deletes', isAuthenticated, isAdmin, deleteWarehouses)
+router.post('/api/inventory/warehouse/deletes', isAuthenticated, isAdmin, forceDeleteWareHouses)
 
 // 5. Stock Entry
 router.get('/api/inventory/stock-entry/all', isAuthenticated, isAdmin, getAllStockEntries)

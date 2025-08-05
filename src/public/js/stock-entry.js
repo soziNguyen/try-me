@@ -48,6 +48,7 @@ $(function () {
         searchPlaceholder: 'Tìm kiếm',
         lengthMenu: `_MENU_ phiếu nhập mỗi trang`,
         info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ phiếu nhập',
+        infoEmpty: 'Không có bản ghi nào',
         infoFiltered: '(được lọc từ tổng _MAX_ phiếu nhập)',
         zeroRecords: 'Không tìm thấy kết quả phù hợp',
         emptyTable: 'Không có dữ liệu trong bảng'
@@ -55,6 +56,7 @@ $(function () {
       columns: [
         {
           data: null,
+          title: '<input type="checkbox" id="selectAll">',
           orderable: false,
           className: 'text-center',
           render: (data, type, row) =>
@@ -62,11 +64,13 @@ $(function () {
         },
         {
           data: 'code',
+          title: 'Mã phiếu nhập',
           className: 'text-center',
           render: (data) => data || ''
         },
         {
           data: 'date',
+          title: 'Ngày nhập',
           className: 'text-center',
           render: (data) => {
             const dt = new Date(data)
@@ -75,36 +79,53 @@ $(function () {
         },
         {
           data: 'supplier.name',
+          title: 'Nhà cung cấp',
           className: 'text-center',
           render: (data) => data || ''
         },
         {
           data: 'items',
-          className: 'text-center',
-          render: (items) => {
-            const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            return firstItem?.ingredient?.name || ''
+          className: 'text-start px-1',
+          title: 'Nguyên liệu',
+          render: items => {
+            if (!Array.isArray(items) || items.length === 0) return '';
+            const names = items.map(it => it.ingredient?.name).filter(Boolean);
+            const firstThree = names.slice(0, 3).join(', ');
+            // const more = names.length > 3 ? `… và ${names.length - 3} item khác` : '';
+            const more = names.length > 3 ? '...' : ''
+            return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`;
           }
         },
         {
           data: 'items',
           className: 'text-center',
+          title: 'Số lượng',
           render: (items) => {
-            const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            return firstItem?.quantity || ''
+            console.log(items)
+            if (!Array.isArray(items) || items.length === 0) return ''
+            const totalQty = items.reduce((acc, cur) => acc + (cur.quantity || 0), 0)
+            return totalQty
+            // const firstItem = Array.isArray(items) && items.length ? items[0] : null
+            // return firstItem?.quantity || ''
+          }
+        },
+        {
+          data: 'items',
+          title: 'Giá TB (₫)',
+          className: 'text-center',
+          render: items => {
+            if (!Array.isArray(items) || items.length === 0) return '';
+            const prices = items.map(it => it.unitPrice || 0);
+            const sum = prices.reduce((s, p) => s + p, 0);
+            const avg = sum / prices.length;
+            // Format theo vi-VN
+            return avg.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫';
           }
         },
         {
           data: 'items',
           className: 'text-center',
-          render: (items) => {
-            const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            return firstItem?.unitPrice || ''
-          }
-        },
-        {
-          data: 'items',
-          className: 'text-center',
+          title: 'Kho nhập',
           render: (items) => {
             if (Array.isArray(items) && items.length && items[0].warehouse) {
               const { name = '', location = '' } = items[0].warehouse
@@ -115,6 +136,7 @@ $(function () {
         },
         {
           data: 'note',
+          title: 'Ghi chú',
           className: 'text-center',
           render: (data) => data || ''
         },

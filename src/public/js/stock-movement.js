@@ -41,6 +41,7 @@ $(function () {
           searchPlaceholder: 'Tìm kiếm',
           lengthMenu: `_MENU_ phiếu dịch chuyển mỗi trang`,
           info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ phiếu',
+          infoEmpty: 'Không có bản ghi nào',
           infoFiltered: '(lọc từ _MAX_ phiếu)',
           zeroRecords: 'Không tìm thấy',
           emptyTable: 'Không có dữ liệu'

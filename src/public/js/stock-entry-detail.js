@@ -2,88 +2,97 @@ $(function () {
   let suppliers = [];
   let ingredients = [];
   let warehouses = [];
-  let users = [];
   let stockEntryId = null;
   let itemCounter = 1;
 
   // Lấy stockEntryId từ URL
   const urlPath = window.location.pathname;
-  const matches = urlPath.match(/\/inventory\/stock-entry\/(.+)/);
+  const matches = urlPath.match(/\/inventory\/stock-entry\/([^\/?#]+)/);
   if (matches) {
-  stockEntryId = matches[1];
+    stockEntryId = matches[1];
   }
 
   // Load dữ liệu ban đầu
   Promise.all([
-  fetchData('inventory/supplier/all'),
-  fetchData('inventory/ingredient/all'),
-  fetchData('inventory/warehouse/all'),
-  fetchData('users'),
-  stockEntryId ? fetchData(`inventory/stock-entry/${stockEntryId}`) : Promise.resolve(null)
+    fetchData("inventory/supplier/all"),
+    fetchData("inventory/ingredient/all"),
+    fetchData("inventory/warehouse/all"),
+    stockEntryId
+      ? fetchData(`inventory/stock-entry/${stockEntryId}`)
+      : Promise.resolve(null),
   ])
-  .then(([sups, ings, whs, usrs, stockEntry]) => {
-  suppliers = sups;
-  ingredients = ings;
-  warehouses = whs;
-  users = usrs;
+    .then(([sups, ings, whs, stockEntry]) => {
+      suppliers = sups;
+      ingredients = ings;
+      warehouses = whs;
 
-  initForm();
-  if (stockEntry) {
-    console.log(stockEntry)
-    populateForm(stockEntry);
-  } else {
-    const currentUserName = '<%= currentUserName %>';
-    const currentUserId = '<%= currentUserId %>';
-    $('#createdBy').val(currentUserName).data('id', currentUserId);
-  }
-  })
-  .catch(err => {
-  console.error('Error loading data:', err);
-  toastr.error('Không thể load dữ liệu cần thiết');
-  });
+      initForm();
+      if (stockEntry) {
+        populateForm(stockEntry);
+      } else {
+        const currentUserName = "<%= currentUserName %>";
+        const currentUserId = "<%= currentUserId %>";
+        $("#createdBy").val(currentUserName).data("id", currentUserId);
+      }
+    })
+    .catch((err) => {
+      console.error("Error loading data:", err);
+      toastr.error("Không thể load dữ liệu cần thiết");
+    });
 
   function initForm() {
-  // Populate suppliers dropdown
-  const supplierOptions = suppliers.map(sup =>
-    `<option value="${sup._id}">${sup.name}</option>`
-  ).join('');
-  $('#supplier').html('<option value="">— Chọn nhà cung cấp —</option>' + supplierOptions);
-  
-  // Populate ingredients và warehouses cho row đầu tiên
-  updateRowDropdowns(0);
+    addNewItem();
+    // Populate suppliers dropdown
+    const supplierOptions = suppliers
+      .map((sup) => `<option value="${sup._id}">${sup.name}</option>`)
+      .join("");
+    $("#supplier").html(
+      '<option value="">— Chọn nhà cung cấp —</option>' + supplierOptions
+    );
 
-  // Event handlers
-  $('#addItemBtn').on('click', addNewItem);
-  $('#stockEntryForm').on('submit', saveStockEntry);
+    // Populate ingredients và warehouses cho row đầu tiên
+    updateRowDropdowns(0);
 
-  // Auto calculate totals
-  $(document).on('input', 'input[name*="[quantity]"], input[name*="[unitPrice]"]', calculateRowTotal);
-  $(document).on('click', '.remove-item-btn', function() {
-    $(this).closest('tr').remove();
-    calculateTotalAmount();
-  });
+    // Event handlers
+    $("#addItemBtn").on("click", addNewItem);
+    $("#stockEntryForm").on("submit", saveStockEntry);
+
+    // Auto calculate totals
+    $(document).on(
+      "input",
+      'input[name*="[quantity]"], input[name*="[unitPrice]"]',
+      calculateRowTotal
+    );
+    $(document).on("click", ".remove-item-btn", function () {
+      $(this).closest("tr").remove();
+      calculateTotalAmount();
+    });
   }
 
   function updateRowDropdowns(rowIndex) {
-  // Update ingredients dropdown
-  const ingredientOptions = ingredients.map(ing =>
-    `<option value="${ing._id}">${ing.name}</option>`
-  ).join('');
-  $(`select[name="items[${rowIndex}][ingredient]"]`).html(
-    '<option value="" class="text-center">— Chọn nguyên liệu —</option>' + ingredientOptions
-  );
+    // Update ingredients dropdown
+    const ingredientOptions = ingredients
+      .map((ing) => `<option value="${ing._id}">${ing.name}</option>`)
+      .join("");
+    $(`select[name="items[${rowIndex}][ingredient]"]`).html(
+      '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
+        ingredientOptions
+    );
 
-  // Update warehouses dropdown
-  const warehouseOptions = warehouses.map(wh =>
-    `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`
-  ).join('');
-  $(`select[name="items[${rowIndex}][warehouse]"]`).html(
-    '<option value="" class="text-center">— Chọn kho —</option>' + warehouseOptions
-  );
+    // Update warehouses dropdown
+    const warehouseOptions = warehouses
+      .map(
+        (wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`
+      )
+      .join("");
+    $(`select[name="items[${rowIndex}][warehouse]"]`).html(
+      '<option value="" class="text-center">— Chọn kho —</option>' +
+        warehouseOptions
+    );
   }
 
   function addNewItem() {
-  const newRow = `
+    const newRow = `
     <tr>
     <td>
       <select class="form-select form-select-sm" name="items[${itemCounter}][ingredient]">
@@ -111,53 +120,52 @@ $(function () {
     </td>
     </tr>
   `;
-  $('#itemsTableBody').append(newRow);
-  updateRowDropdowns(itemCounter);
-  itemCounter++;
-  }
-
-  // Global function để remove item
-  window.removeItem = function(button) {
-  $(button).closest('tr').remove();
-  calculateTotalAmount();
+    $("#itemsTableBody").append(newRow);
+    updateRowDropdowns(itemCounter);
+    itemCounter++;
   }
 
   function calculateRowTotal() {
-  const row = $(this).closest('tr');
-  const quantity = parseFloat(row.find('input[name*="[quantity]"]').val()) || 0;
-  const unitPrice = parseFloat(row.find('input[name*="[unitPrice]"]').val()) || 0;
-  const total = quantity * unitPrice;
+    const row = $(this).closest("tr");
+    const quantity =
+      parseFloat(row.find('input[name*="[quantity]"]').val()) || 0;
+    const unitPrice =
+      parseFloat(row.find('input[name*="[unitPrice]"]').val()) || 0;
+    const total = quantity * unitPrice;
 
-  row.find('input[readonly]').val(total.toLocaleString('vi-VN') + ' ₫');
-  calculateTotalAmount();
+    row.find("input[readonly]").val(total.toLocaleString("vi-VN") + " ₫");
+    calculateTotalAmount();
   }
 
   function calculateTotalAmount() {
-  let totalAmount = 0;
+    let totalAmount = 0;
 
-  $('#itemsTableBody tr').each(function() {
-    const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val()) || 0;
-    const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val()) || 0;
-    totalAmount += quantity * unitPrice;
-  });
+    $("#itemsTableBody tr").each(function () {
+      const quantity =
+        parseFloat($(this).find('input[name*="[quantity]"]').val()) || 0;
+      const unitPrice =
+        parseFloat($(this).find('input[name*="[unitPrice]"]').val()) || 0;
+      totalAmount += quantity * unitPrice;
+    });
 
-  $('#totalAmount').text(totalAmount.toLocaleString('vi-VN') + ' ₫');
+    $("#totalAmount").text(totalAmount.toLocaleString("vi-VN") + " ₫");
   }
 
   function populateForm(stockEntry) {
-  // Populate basic fields
-  $('#code').val(stockEntry.code || '');
-  $('#date').val(formatDate(stockEntry.date) || '');
-  $('#supplier').val(stockEntry.supplier?._id || '');
-  $('#createdBy').val(stockEntry.createdBy?.name || stockEntry.createdBy?.username || '')
-    .data('id', stockEntry.createdBy?._id);
-  $('#note').val(stockEntry.note || '');
+    // Populate basic fields
+    $("#code").val(stockEntry.code || "");
+    $("#date").val(formatDate(stockEntry.date) || "");
+    $("#supplier").val(stockEntry.supplier?._id || "");
+    $("#createdBy")
+      .val(stockEntry.createdBy?.name || stockEntry.createdBy?.username || "")
+      .data("id", stockEntry.createdBy?._id);
+    $("#note").val(stockEntry.note || "");
 
-  // Populate items
-  if (stockEntry.items && stockEntry.items.length > 0) {
-    $('#itemsTableBody').empty();
-    stockEntry.items.forEach((item, index) => {
-    const row = `
+    // Populate items
+    if (stockEntry.items && stockEntry.items.length > 0) {
+      $("#itemsTableBody").empty();
+      stockEntry.items.forEach((item, index) => {
+        const row = `
       <tr>
       <td>
         <select class="form-select form-select-sm" name="items[${index}][ingredient]">
@@ -166,14 +174,16 @@ $(function () {
       </td>
       <td>
         <input type="number" class="form-control form-control-sm" name="items[${index}][quantity]" 
-          min="0" step="0.01" value="${item.quantity || ''}" placeholder="0">
+          min="0" step="0.01" value="${item.quantity || ""}" placeholder="0">
       </td>
       <td>
         <input type="number" class="form-control form-control-sm" name="items[${index}][unitPrice]" 
-          min="0" step="0.01" value="${item.unitPrice || ''}" placeholder="0">
+          min="0" step="0.01" value="${item.unitPrice || ""}" placeholder="0">
       </td>
       <td>
-        <input type="text" class="form-control form-control-sm" readonly value="${(item.total || 0).toLocaleString('vi-VN') + ' ₫'}" placeholder="0">
+        <input type="text" class="form-control form-control-sm" readonly value="${
+          (item.total || 0).toLocaleString("vi-VN") + " ₫"
+        }" placeholder="0">
       </td>
       <td>
         <select class="form-select form-select-sm" name="items[${index}][warehouse]">
@@ -187,79 +197,83 @@ $(function () {
       </td>
       </tr>
     `;
-    $('#itemsTableBody').append(row);
-    updateRowDropdowns(index);
-    $(`select[name="items[${index}][ingredient]"]`).val(item.ingredient?._id || '');
-    $(`select[name="items[${index}][warehouse]"]`).val(item.warehouse?._id || '');
-    });
-    itemCounter = stockEntry.items.length;
-    calculateTotalAmount();
-  }
+        $("#itemsTableBody").append(row);
+        updateRowDropdowns(index);
+        $(`select[name="items[${index}][ingredient]"]`).val(
+          item.ingredient?._id || ""
+        );
+        $(`select[name="items[${index}][warehouse]"]`).val(
+          item.warehouse?._id || ""
+        );
+      });
+      itemCounter = stockEntry.items.length;
+      calculateTotalAmount();
+    }
   }
 
   function saveStockEntry(e) {
-  e.preventDefault();
-  
-  const formData = new FormData(this);
-  const data = {
-    code: formData.get('code'),
-    date: formData.get('date'),
-    supplier: formData.get('supplier'),
-    note: formData.get('note'),
-    items: []
-  };
-  
-  if (!stockEntryId) {
-    data.createdBy = $('#createdBy').data('id') || '<%= currentUserId %>';
-  }
-  
-  // Collect items data
-  $('#itemsTableBody tr').each(function() {
-    const ingredient = $(this).find('select[name*="[ingredient]"]').val();
-    const quantity = $(this).find('input[name*="[quantity]"]').val();
-    const unitPrice = $(this).find('input[name*="[unitPrice]"]').val();
-    const warehouse = $(this).find('select[name*="[warehouse]"]').val();
-  
-    if (ingredient && quantity && unitPrice && warehouse) {
-    const total = parseFloat(quantity) * parseFloat(unitPrice);
-    
-    data.items.push({
-      ingredient,
-      quantity: parseFloat(quantity),
-      unitPrice: parseFloat(unitPrice),
-      total: total, // Tính tổng tiền cho từng item
-      warehouse
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const data = {
+      code: formData.get("code"),
+      date: formData.get("date"),
+      supplier: formData.get("supplier"),
+      note: formData.get("note"),
+      items: [],
+    };
+
+    if (!stockEntryId) {
+      data.createdBy = $("#createdBy").data("id") || "<%= currentUserId %>";
+    }
+
+    // Collect items data
+    $("#itemsTableBody tr").each(function () {
+      const ingredient = $(this).find('select[name*="[ingredient]"]').val();
+      const quantity = $(this).find('input[name*="[quantity]"]').val();
+      const unitPrice = $(this).find('input[name*="[unitPrice]"]').val();
+      const warehouse = $(this).find('select[name*="[warehouse]"]').val();
+
+      if (ingredient && quantity && unitPrice && warehouse) {
+        const total = parseFloat(quantity) * parseFloat(unitPrice);
+
+        data.items.push({
+          ingredient,
+          quantity: parseFloat(quantity),
+          unitPrice: parseFloat(unitPrice),
+          total: total, // Tính tổng tiền cho từng item
+          warehouse,
+        });
+      }
     });
+
+    // Validate
+    if (!data.code || !data.supplier || data.items.length === 0) {
+      toastr.error("Vui lòng điền đầy đủ thông tin bắt buộc");
+      return;
     }
-  });
-  
-  // Validate
-  if (!data.code || !data.supplier || data.items.length === 0) {
-    toastr.error('Vui lòng điền đầy đủ thông tin bắt buộc');
-    return;
-  }
-  
-  // Save
-  const url = stockEntryId
-    ? `/api/inventory/stock-entry/update/${stockEntryId}`
-    : '/api/inventory/stock-entry/create';
-  
-  $.ajax({
-    url,
-    method: 'POST',
-    contentType: 'application/json',
-    data: JSON.stringify(data),
-    success: function(res) {
-    if (res.success) {
-      toastr.success(res.message || 'Lưu phiếu nhập thành công');
-    } else {
-      toastr.error(res.message || 'Có lỗi xảy ra');
-    }
-    },
-    error: function(xhr) {
-    console.error('Save error:', xhr);
-    toastr.error(xhr.responseJSON?.message || 'Có lỗi xảy ra khi lưu');
-    }
-  });
+
+    // Save
+    const url = stockEntryId
+      ? `/api/inventory/stock-entry/update/${stockEntryId}`
+      : "/api/inventory/stock-entry/create";
+
+    $.ajax({
+      url,
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(data),
+      success: function (res) {
+        if (res.success) {
+          toastr.success(res.message || "Lưu phiếu nhập thành công");
+        } else {
+          toastr.error(res.message || "Có lỗi xảy ra");
+        }
+      },
+      error: function (xhr) {
+        console.error("Save error:", xhr);
+        toastr.error(xhr.responseJSON?.message || "Có lỗi xảy ra khi lưu");
+      },
+    });
   }
 });
