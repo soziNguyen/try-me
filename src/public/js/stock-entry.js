@@ -62,94 +62,78 @@ $(function () {
         },
         {
           data: 'code',
-          render: inputRenderer('code')
+          className: 'text-center',
+          render: (data) => data || ''
         },
         {
           data: 'date',
+          className: 'text-center',
           render: (data) => {
             const dt = new Date(data)
             return dt.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
           }
         },
         {
-          data: 'supplier._id',
-          name: 'supplier.name',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              const opts = suppliers.map(sup => {
-                const sel = sup._id === (row.supplier?._id) ? 'selected' : ''
-                return `<option value="${sup._id}" ${sel}>${sup.name}</option>`
-              }).join('')
-              return `
-                <select class="dataInput form-select form-select-sm" data-field="supplier" data-id="${row._id}">
-                  <option value="" class="text-center">— Chọn nhà cung cấp —</option>
-                  ${opts}
-                </select>`
-            }
-            return row.supplier?.name ?? ''
+          data: 'supplier.name',
+          className: 'text-center',
+          render: (data) => data || ''
+        },
+        {
+          data: 'items',
+          className: 'text-center',
+          render: (items) => {
+            const firstItem = Array.isArray(items) && items.length ? items[0] : null
+            return firstItem?.ingredient?.name || ''
           }
         },
         {
           data: 'items',
-          render: (items, type, row) => {
+          className: 'text-center',
+          render: (items) => {
             const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            if (type === 'display') {
-              const opts = ingredients.map(ing => {
-                const sel = firstItem?.ingredient?._id === ing._id ? 'selected' : ''
-                return `<option value="${ing._id}" ${sel}>${ing.name}</option>`
-              }).join('')
-              return `
-                <select class="dataInput form-select form-select-sm" data-field="items.0.ingredient" data-id="${row._id}">
-                  <option value="" class="text-center">— Chọn nguyên liệu —</option>
-                  ${opts}
-                </select>`
-            }
-            return firstItem?.ingredient?.name ?? ''
+            return firstItem?.quantity || ''
           }
         },
         {
           data: 'items',
-          render: (items, type, row) => {
+          className: 'text-center',
+          render: (items) => {
             const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            if (type === 'display') {
-              return `<input type="number" class="dataInput border-0 text-end form-control"
-                              data-field="items.0.quantity" value="${firstItem?.quantity ?? ''}">`
-            }
-            return firstItem?.quantity ?? ''
+            return firstItem?.unitPrice || ''
           }
         },
         {
           data: 'items',
-          render: (items, type, row) => {
-            const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            if (type === 'display') {
-              return `<input type="number" class="dataInput border-0 text-end form-control"
-                              data-field="items.0.unitPrice" value="${firstItem?.unitPrice ?? ''}">`
+          className: 'text-center',
+          render: (items) => {
+            if (Array.isArray(items) && items.length && items[0].warehouse) {
+              const { name = '', location = '' } = items[0].warehouse
+              return `${name} ${location}`.trim()
             }
-            return firstItem?.unitPrice ?? ''
-          }
-        },
-        {
-          data: 'items',
-          render: (items, type, row) => {
-            const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            if (type === 'display') {
-              const opts = warehouses.map(wh => {
-                const sel = firstItem?.warehouse?._id === wh._id ? 'selected' : ''
-                return `<option value="${wh._id}" ${sel}>${wh.name} - ${wh.location}</option>`
-              }).join('')
-              return `
-                <select class="dataInput form-select form-select-sm" data-field="items.0.warehouse" data-id="${row._id}">
-                  <option value="" class="text-center">— Chọn kho —</option>
-                  ${opts}
-                </select>`
-            }
-            return firstItem?.warehouse?.name ?? ''
+            return ''
           }
         },
         {
           data: 'note',
-          render: inputRenderer('note')
+          className: 'text-center',
+          render: (data) => data || ''
+        },
+        {
+          data: null,
+          orderable: false,
+          className: 'text-center',
+          width: '100px',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `
+                <button class="btn btn-sm btn-outline-primary my-1 detail-btn" 
+                        data-id="${row._id}" 
+                        title="Xem chi tiết">
+                  <i class="bi bi-eye"></i> Chi tiết
+                </button>`
+            }
+            return ''
+          }
         }
       ],
       rowCallback: function (row, data) {
@@ -166,13 +150,24 @@ $(function () {
             </button>
           </div>
         `)
+        
+        // Event handler cho nút "Thêm"
+        $('#addStockEntryBtn').on('click', () => {
+          createNewRecord('inventory/stock-entry', {}, (data) => {
+              window.location.href = `/inventory/stock-entry/${data.id}?mode=new`
+          })
+        })
+
+        // Event handler cho nút "Chi tiết"
+        $(document).on('click', '.detail-btn', function () {
+          const id = $(this).data('id')
+          window.location.href = `/inventory/stock-entry/${id}`
+        })
+        
+        // CHỈ GIỮ LẠI DELETE VÀ CHECKBOX EVENTS
+        handlerDeleteEvent('#stockEntryTable', '#deleteStockEntryBtn', 'stockEntryCheckbox', 'stock-entry')
+        initTableCheckboxEvents('#stockEntryTable', 'stockEntryCheckbox')
       }
     })
-
-    // Event handler
-    handlerAddEvent('#stockEntryTable', '#addStockEntryBtn', 'stock-entries')
-    handlerDeleteEvent('#stockEntryTable', '#deleteStockEntryBtn', 'stockEntryCheckbox', 'stock-entries')
-    handlerUpdateEvent('#stockEntryTable', 'stock-entries')
-    initTableCheckboxEvents('#stockEntryTable', 'stockEntryCheckbox')
   }
 })

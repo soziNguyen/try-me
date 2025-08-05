@@ -98,15 +98,6 @@ $(function () {
           }
         },
         {
-          data: 'barcode',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="barcode" value="${data ?? ''}">`
-            }
-            return data
-          }
-        },
-        {
           data: 'category._id',
           name: 'category.name',
           render: (data, type, row) => {

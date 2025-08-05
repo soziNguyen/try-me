@@ -121,7 +121,7 @@ function initTableCheckboxEvents(tableSelector, checkboxClass) {
 
   // Click 'tr' event
   $table.on('click', 'tbody tr', function (e) {
-    if ($(e.target).is(`input[type=checkbox], img, input[type=text], input[type=number], .dataInput`)) return
+    if ($(e.target).is(`input[type=checkbox], img, input[type=text], input[type=number], button, .dataInput`)) return
     const checkbox = $(this).find(`.${checkboxClass}`)
     checkbox.prop('checked', !checkbox.prop('checked')).trigger('change')
   })
@@ -187,5 +187,25 @@ function fetchData (endpoint) {
       if (data) resolve(data)
         else reject(new Error('Không thể tải dữ liệu'))
     })
+  })
+}
+
+// Create New Record
+function createNewRecord(module, data, callback) {
+  $.ajax({
+    url: `/api/${module}/create`,
+    method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(data),
+    success: function (res) {
+      if (res.success && typeof callback === 'function') {
+        callback(res.data)
+      } else {
+        toastr.error(res.message || 'Không thể tạo bản ghi mới')
+      }
+    },
+    error: function (xhr) {
+      toastr.error(xhr.responseJSON?.message || 'Đã có lỗi xảy ra')
+    }
   })
 }

@@ -140,3 +140,16 @@ export const movementPage = (req, res) => {
         )
     )
 }
+
+// New Stock Entry
+export const newStockEntryPage = (req, res) => {
+    const stockEntryId = req.params.id
+    const mode = req.query.mode || ''
+
+    const isNew = mode === 'new' ? 'Nhập Nguyên Liệu Mới' : 'Chi Tiết Nhập Nguyên Liệu'
+    res.render('inventory/stock_entry_detail', 
+        getPageData(req, isNew, 'New Stock Entry', {
+            stockEntryId: stockEntryId
+        })
+    )
+}
