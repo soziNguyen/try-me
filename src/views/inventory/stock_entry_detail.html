@@ -32,7 +32,6 @@
                                 <div class="col-md-6">
                                     <label for="supplier" class="form-label">Nhà cung cấp</label>
                                     <select class="form-select" id="supplier" name="supplier">
-                                        <option value="">Chọn nhà cung cấp</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -59,39 +58,14 @@
                                         <tr>
                                             <th width="30%">Nguyên liệu</th>
                                             <th width="15%">Số lượng</th>
-                                            <th width="15%">Đơn giá</th>
+                                            <th width="15%">Đơn giá (đ)</th>
                                             <th width="15%">Thành tiền</th>
                                             <th width="20%">Kho</th>
                                             <th width="5%">Xóa</th>
                                         </tr>
                                     </thead>
                                     <tbody id="itemsTableBody">
-                                        <tr>
-                                            <td>
-                                                <select class="form-select form-select-sm" name="items[0][ingredient]">
-                                                    <option value="" class="text-center">Chọn nguyên liệu</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <input type="number" class="form-control form-control-sm" name="items[0][quantity]" min="0" step="0.01" placeholder="0">
-                                            </td>
-                                            <td>
-                                                <input type="number" class="form-control form-control-sm" name="items[0][unitPrice]" min="0" step="0.01" placeholder="0">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="form-control form-control-sm" readonly placeholder="0">
-                                            </td>
-                                            <td>
-                                                <select class="form-select form-select-sm" name="items[0][warehouse]">
-                                                    <option value="" class="text-center">Chọn kho</option>
-                                                </select>
-                                            </td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(this)">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
+                                        
                                     </tbody>
                                 </table>
                             </div>
@@ -104,7 +78,7 @@
                                         <div class="card-body p-3">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <strong>Tổng tiền:</strong>
-                                                <h5 class="text-primary mb-0" id="totalAmount">0 ₫</h5>
+                                                <h5 class="text-primary mb-0" id="totalAmount"></h5>
                                             </div>
                                         </div>
                                     </div>
