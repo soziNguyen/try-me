@@ -147,3 +147,35 @@ export const parseNumberField = (value, defaultValue = 0) => {
 export const parseStringField = (value) => {
   return typeof value === 'string' && value.trim() !== '' ? value.trim() : undefined;
 };
+
+export const generateDocumentCode = async (model, prefix = 'DOC') => {
+  try {
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2);
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const datePrefix = `${prefix}-${year}${month}${day}`;
+
+    const lastDoc = await model.findOne({
+      code: { $regex: `^${datePrefix}-\\d{3}$` }
+    }).sort({ code: -1 }).lean();
+
+    let nextNumber = 1;
+    if (lastDoc && lastDoc.code) {
+      const lastNumber = parseInt(lastDoc.code.split('-')[2]);
+      nextNumber = lastNumber + 1;
+    }
+
+    const formattedNumber = nextNumber.toString().padStart(3, '0');
+    return `${datePrefix}-${formattedNumber}`;
+
+  } catch (error) {
+    // Fallback: random mã
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2);
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `${prefix}-${year}${month}${day}-${randomNum}`;
+  }
+};

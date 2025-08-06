@@ -141,7 +141,6 @@ export const movementPage = (req, res) => {
     )
 }
 
-
 // New Stock Entry
 export const newStockEntryPage = (req, res) => {
     const stockEntryId = req.params.id

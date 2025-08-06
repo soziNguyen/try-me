@@ -7,9 +7,7 @@ const ingredientSchema = new mongoose.Schema({
   image:    { type: String, default: ''},
   unit:     { type: String, enum: units, default: null },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'IngredientCategory', default: null },
-  costPrice: { type: Number, default: 0 }, // Giá nhập
   stock: { type: Number, default: 0 },
-  supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier', default: null },
   expirationDays: { type: Number, default: null },
   isActive:    { type: Boolean, default: true },
   note:     { type: String, default: '' },

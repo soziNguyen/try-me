@@ -9,7 +9,7 @@
                 <span>Dashboard</span>
               </a>
             </li>
-            <% const inInventory = ['Ingredient','Category','Warehouse','Supplier','Import','Export','Movement'].includes(page); %>
+            <% const inInventory = ['Ingredient','Category','Warehouse', 'IngredientStock','Supplier','Import','Export','Movement'].includes(page); %>
             <li class="inventory-accordion">
               <div class="accordion" id="accordionInventory">
                 <div class="accordion-item">
@@ -36,6 +36,11 @@
                       <a class="<%= page === 'Category' ? 'accordion-active' : '' %>" href="/inventory/categories">
                         <i class="bi bi-leaf text-success me-2"></i>
                         <span>Quản lý Loại Nguyên Liệu</span>
+                      </a>
+
+                      <a class="<%= page === 'IngredientStock' ? 'accordion-active' : '' %>" href="/inventory/inventory-stock">
+                        <i class="bi bi-database-check text-dark me-2"></i>
+                        <span>Quản lý Tồn Kho</span>
                       </a>
                     
                       <a class="<%= page === 'Warehouse' ? 'accordion-active' : '' %>" href="/inventory/warehouses">
