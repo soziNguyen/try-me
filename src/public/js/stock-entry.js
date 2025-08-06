@@ -1,17 +1,14 @@
 // public/js/stock-entry.js
 $(function () {
-  let suppliers = []
   let ingredients = []
   let warehouses = []
   let table
 
   Promise.all([
-    fetchData('inventory/supplier/all'),  // danh sách nhà cung cấp
     fetchData('inventory/ingredient/all'),// danh sách nguyên liệu
     fetchData('inventory/warehouse/all')  // danh sách kho
   ])
-  .then(([sups, ings, whs]) => {
-    suppliers = sups
+  .then(([ings, whs]) => {
     ingredients = ings
     warehouses = whs
     initDataTable()
@@ -90,9 +87,12 @@ $(function () {
           render: items => {
             if (!Array.isArray(items) || items.length === 0) return '';
             const names = items.map(it => it.ingredient?.name).filter(Boolean);
-            const firstThree = names.slice(0, 3).join(', ');
-            // const more = names.length > 3 ? `… và ${names.length - 3} item khác` : '';
-            const more = names.length > 3 ? '...' : ''
+            const uniqueNames  = new Set(names);
+            
+            if (uniqueNames .size === 0) return '';
+            const nameLengths = [...uniqueNames]
+            const firstThree = nameLengths.slice(0, 3).join(', ');
+            const more = nameLengths.length > 3 ? '...' : ''
             return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`;
           }
         },
@@ -101,12 +101,9 @@ $(function () {
           className: 'text-center',
           title: 'Số lượng',
           render: (items) => {
-            console.log(items)
             if (!Array.isArray(items) || items.length === 0) return ''
             const totalQty = items.reduce((acc, cur) => acc + (cur.quantity || 0), 0)
             return totalQty
-            // const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            // return firstItem?.quantity || ''
           }
         },
         {
@@ -127,13 +124,22 @@ $(function () {
           className: 'text-center',
           title: 'Kho nhập',
           render: (items) => {
-            if (Array.isArray(items) && items.length && items[0].warehouse) {
-              const { name = '', location = '' } = items[0].warehouse
-              return `${name} ${location}`.trim()
-            }
-            return ''
+            if (!Array.isArray(items) || items.length === 0) return '';
+            console.log(items)
+            const warehouses = items
+              .map(item => item.warehouse?.name)
+              .filter(Boolean);
+        
+            const uniqueWarehouses = [...new Set(warehouses)];
+        
+            if (uniqueWarehouses.length === 0) return '';
+        
+            const display = uniqueWarehouses.slice(0, 3).join(', ');
+            const more = uniqueWarehouses.length > 3 ? '...' : '';
+        
+            return `<span title="${uniqueWarehouses.join('\n')}">${display} ${more}</span>`;
           }
-        },
+        },        
         {
           data: 'note',
           title: 'Ghi chú',

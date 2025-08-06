@@ -1,18 +1,14 @@
 $(function () {
 
-  // Unit field
+  let table;
   let units = []
-
-  // Get Category lists for select
   let categories = []
 
   Promise.all([
     fetchData('inventory/categories'),
-    // fetchData('inventory/supplier/all')
   ])
-  .then(([cats, sups]) => {
+  .then(([cats]) => {
     categories = cats
-    suppliers = sups
     initDataTable()
   })
   .catch(err => {
@@ -27,7 +23,7 @@ $(function () {
   }
   showList.sort((a, b) => a - b)
 
-  let table;
+  
   function initDataTable () {
     table = $('#ingredientTable').DataTable({
       dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
@@ -140,26 +136,6 @@ $(function () {
                 </select>`
             }
             return data
-          }
-        },
-        {
-          data: 'costPrice',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<input type="number" class="form-control-plaintext text-center" value="${data ?? 0}" readonly>`
-            }
-            return data
-          }
-        },
-        {
-          data: 'supplier._id',
-          name: 'supplier.name',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              const name = row.supplier?.name ?? ''
-              return `<input type="number" class="form-control-plaintext text-center" value="${name}" readonly>`
-            }
-            return row.supplier?.name ?? ''
           }
         },
         {

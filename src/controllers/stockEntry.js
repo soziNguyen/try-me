@@ -1,43 +1,13 @@
 import mongoose from "mongoose"
 import StockEntry from "../models/stockEntry.js"
+import IngredientStock from "../models/ingredientStock.js"
 import { Ingredient } from "../models/ingredient.js"
 import responseHelper from "../helpers/responseHelper.js"
 import withTransaction from "../helpers/withTransaction.js"
+import { generateDocumentCode } from "../helpers/common.js"
 
 
-export const generateStockEntryCode = async (prefix = 'SE') => {
-  try {
-    const now = new Date()
-    const year = now.getFullYear().toString().substr(-2) // 24 cho 2024
-    const month = (now.getMonth() + 1).toString().padStart(2, '0')
-    const day = now.getDate().toString().padStart(2, '0')
-    const datePrefix = `${prefix}-${year}${month}${day}`
-    
-    // Tìm mã cao nhất trong ngày hiện tại
-    const lastEntry = await StockEntry.findOne({
-      code: { $regex: `^${datePrefix}-\\d{3}$`}
-    }).sort({ code: -1 }).lean()
-    
-    let nextNumber = 1
-    if (lastEntry && lastEntry.code) {
-      const lastNumber = parseInt(lastEntry.code.split('-')[2])
-      nextNumber = lastNumber + 1
-    }
-    
-    // Format: SE-241205-001, SE-241205-002...
-    const formattedNumber = nextNumber.toString().padStart(3, '0')
-    return `${datePrefix}-${formattedNumber}`
-    
-  } catch (error) {
-    // Fallback
-    const now = new Date()
-    const year = now.getFullYear().toString().substr(-2)
-    const month = (now.getMonth() + 1).toString().padStart(2, '0')
-    const day = now.getDate().toString().padStart(2, '0')
-    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
-    return `SE-${year}${month}${day}-${randomNum}`
-  }
-}
+
 
 // GET ALL
 export const getAllStockEntries = async (req, res) => {
@@ -120,7 +90,7 @@ export const getStockEntryById = async (req, res) => {
 export const createStockEntry = async (req, res) => {
   try {
     const entry = await withTransaction(async (session) => {
-      const code = await generateStockEntryCode('SE')
+      const code = await generateDocumentCode(StockEntry, 'SE')
       const date = new Date()
       const doc = new StockEntry({
         date: date,
@@ -140,100 +110,107 @@ export const createStockEntry = async (req, res) => {
 export const updateStockEntryFromForm = async (req, res) => {
   try {
     const updatedDoc = await withTransaction(async (session) => {
-      const { id } = req.params;
+      const { id } = req.params
       if (!mongoose.isValidObjectId(id)) {
-        throw new Error("ID không hợp lệ");
+        throw new Error('ID không hợp lệ')
       }
 
-      // Lấy phiếu cũ để revert stock
-      const oldEntry = await StockEntry.findById(id).session(session);
-      if (!oldEntry) throw new Error("Phiếu nhập không tồn tại");
+      // Lấy phiếu nhập cũ
+      const oldEntry = await StockEntry.findById(id).session(session)
+      if (!oldEntry) throw new Error('Phiếu nhập không tồn tại')
 
-      // Revert stock của items cũ
+      // Trừ tồn kho cũ khỏi IngredientStock
       for (const item of oldEntry.items) {
-        if (item.ingredient && item.quantity) {
-          await Ingredient.updateOne(
-            { _id: item.ingredient },
-            { $inc: { stock: -Math.abs(item.quantity) } },
+        if (item.ingredient && item.warehouse && item.quantity) {
+          await IngredientStock.updateOne(
+            { ingredient: item.ingredient, warehouse: item.warehouse },
+            { $inc: { quantity: -Math.abs(item.quantity) } },
             { session }
-          );
+          )
         }
       }
 
-      // Chuẩn bị dữ liệu update
-      const {
-        supplier,
-        note,
-        items: rawItems = []
-      } = req.body;
-      
-      let totalAmount = 0; // Biến tạm để tính tổng tiền của cả phiếu
+      // Lấy dữ liệu mới từ form
+      const { supplier, note, items: rawItems = [] } = req.body
+      let totalAmount = 0
 
+      // Chuẩn hóa dữ liệu items và tính tổng tiền
       const items = rawItems.map(item => {
-        const quantity = parseFloat(item.quantity) || 0;
-        const unitPrice = parseFloat(item.unitPrice) || 0;
-        const itemTotal = quantity * unitPrice; // Tính total cho từng item
-        
-        totalAmount += itemTotal; // Cộng dồn vào tổng tiền của phiếu nhập
+        const quantity = parseFloat(item.quantity) || 0
+        const unitPrice = parseFloat(item.unitPrice) || 0
+        const itemTotal = quantity * unitPrice
+        totalAmount += itemTotal
 
         return {
           ingredient: item.ingredient,
           warehouse: item.warehouse,
-          quantity: quantity,
-          unitPrice: unitPrice,
-          total: itemTotal // Tính tổng tiền cho từng item
-        };
-      });
+          quantity,
+          unitPrice,
+          total: itemTotal
+        }
+      })
 
-      const updateData = { 
-        supplier, 
-        note, 
-        items, 
-        total: totalAmount, // Cập nhật tổng tiền của phiếu
-        updatedBy: req.user._id 
-      };
+      const updateData = {
+        supplier,
+        note,
+        items,
+        total: totalAmount,
+        updatedBy: req.user._id
+      }
 
-      // Cập nhật phiếu
-      const newEntry = await StockEntry.findByIdAndUpdate(
-        id,
-        updateData,
-        { new: true, session }
-      );
-      if (!newEntry) throw new Error("Cập nhật thất bại");
+      // Cập nhật phiếu nhập
+      const newEntry = await StockEntry.findByIdAndUpdate(id, updateData, { new: true, session })
+      if (!newEntry) throw new Error('Cập nhật thất bại')
 
-      // Cập nhật stock với items mới
+      // Cộng tồn kho mới vào IngredientStock
       for (const item of newEntry.items) {
-        if (item.ingredient && item.quantity) {
-          await Ingredient.updateOne(
-            { _id: item.ingredient },
+        if (item.ingredient && item.warehouse && item.quantity) {
+          await IngredientStock.updateOne(
+            { ingredient: item.ingredient, warehouse: item.warehouse },
             {
-              $inc: { stock: Math.abs(item.quantity) },
-              $set: { 
-                costPrice: item.unitPrice || 0,
-                supplier: newEntry.supplier 
-              }
+              $inc: { quantity: Math.abs(item.quantity) },
+              $set: { supplier: newEntry.supplier }
             },
-            { session }
-          );
+            { upsert: true, session }
+          )
         }
       }
 
-      // Populate để trả về đầy đủ thông tin
-      await newEntry.populate("supplier", "name")
-      await newEntry.populate("createdBy", "name username")
-      await newEntry.populate("updatedBy", "name username")
-      await newEntry.populate("items.ingredient", "name")
-      await newEntry.populate("items.warehouse", "name location");
+      // 👉 Cập nhật lại tổng tồn kho trong Ingredient
+      const updatedIngredientIds = [...new Set(newEntry.items.map(i => i.ingredient.toString()))]
 
-      return newEntry;
-    });
+      for (const ingId of updatedIngredientIds) {
+        const totalStockAgg = await IngredientStock.aggregate([
+          { $match: { ingredient: new mongoose.Types.ObjectId(ingId) } },
+          { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
+        ]).session(session)
 
-    responseHelper.success(res, updatedDoc, "Cập nhật phiếu nhập thành công");
+        const totalStock = totalStockAgg[0]?.totalQuantity || 0
+
+        await Ingredient.updateOne(
+          { _id: ingId },
+          { $set: { stock: totalStock } },
+          { session }
+        )
+      }
+
+      // Populate tham chiếu để trả về cho FE
+      await newEntry.populate('supplier', 'name')
+      await newEntry.populate('createdBy', 'name username')
+      await newEntry.populate('updatedBy', 'name username')
+      await newEntry.populate('items.ingredient', 'name unit')
+      await newEntry.populate('items.warehouse', 'name location')
+
+      return newEntry
+    })
+
+    responseHelper.success(res, updatedDoc, 'Cập nhật phiếu nhập thành công')
   } catch (err) {
-    console.error("Update stock entry error:", err);
-    responseHelper.error(res, err.message);
+    console.error('Update stock entry error:', err)
+    responseHelper.error(res, err.message)
   }
-};
+}
+
 
 // DELETE
 export const deleteStockEntries = async (req, res) => {
@@ -247,12 +224,13 @@ export const deleteStockEntries = async (req, res) => {
       // Lấy các phiếu nhập
       const entries = await StockEntry.find({ _id: { $in: ids } }).session(session)
 
-      // Trừ tồn kho
+      // Trừ tồn kho từ IngredientStock
       for (const entry of entries) {
         for (const item of entry.items) {
-          await Ingredient.updateOne(
-            { _id: item.ingredient },
-            { $inc: { stock: -Math.abs(item.quantity) } },
+          const { ingredient, warehouse, quantity } = item
+          await IngredientStock.updateOne(
+            { ingredient, warehouse },
+            { $inc: { quantity: -Math.abs(quantity) } },
             { session }
           )
         }
