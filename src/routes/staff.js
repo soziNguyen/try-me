@@ -1,6 +1,6 @@
 import express from 'express';
 import * as tableController from '../controllers/tableController.js';
-import { tablePage } from '../controllers/pages.js';
+import { tablePage } from '../controllers/staffPages.js'
 import isAuthenticated from "../helpers/isAuthenticated.js";
 // import isAdmin from "../helpers/isAdmin.js"; // Mở khi cần
 
