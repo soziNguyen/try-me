@@ -14,7 +14,8 @@ const TableSchema = new Schema({
       type: String,
       enum: ['kv1', 'kv2'],
       default: 'kv1'
-  }
+  },
+    checkInTime: { type: Date, default: null }
   },
   {
     collection: 'Tables',

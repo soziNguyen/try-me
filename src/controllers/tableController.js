@@ -3,17 +3,11 @@ import responseHelper from '../helpers/responseHelper.js';
 
 export const tablePage = async (req, res) => {
     try {
-        const tables = await Table.find(); 
-        res.render('staff/tables', {
-            title: 'Table Management',
-            page: 'Table',
-            user: req.user,
-            currentUserId: req.user._id.toString(),
-            tables
-        });
+        const tables = await Table.find();
+        responseHelper.success(res, tables)
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        responseHelper.error(res, err.message)
     }
 };
 
@@ -68,7 +62,7 @@ export const getTableById = async (req, res) => {
   // UPDATE
 export const updateTable = async (req, res) => {
     try {
-        const { name, status, capacity, area } = req.body;
+        const { name, status, capacity, area, checkInTime } = req.body;
         const { id } = req.params;
 
         // Kiểm tra bàn có tồn tại không
@@ -94,6 +88,9 @@ export const updateTable = async (req, res) => {
             capacity,
             area
         };
+        if (checkInTime) {
+            updatedFields.checkInTime = checkInTime;
+        }
 
         const updatedTable = await Table.findByIdAndUpdate(id, updatedFields, { new: true });
 

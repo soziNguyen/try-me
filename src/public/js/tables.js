@@ -48,13 +48,45 @@ function bindEvents() {
       formAddTable.reset();
       formAddTable.classList.add('d-none');
       btnShowForm.textContent = '+ Thêm bàn';
-
-    // ✅ Render lại danh sách bàn
     await getTables();
     } catch (error) {
       toastr.error(error.message); 
     }
   });
+
+            // XAC NHAN
+document.getElementById('btnConfirmAssignTable').addEventListener('click', async function () {
+  const tableId = this.getAttribute('data-id');
+  if (!tableId) {
+    toastr.warning("Không tìm thấy bàn để giao.");
+    return;
+  }
+  try {
+    const table = await ajax(`/api/tables/${tableId}`, {}, "GET");
+    // Kiểm tra trạng thái bàn
+    if (table.status === "occupied") {
+      toastr.warning("Bàn đã có khách. Không thể giao bàn.");
+      return;
+    }
+    // Cập nhật trạng thái bàn
+    const result = await ajax(`/api/tables/update/${tableId}`, {
+      status: "occupied",
+      checkInTime: new Date().toISOString() //TIME
+    }, "PUT");
+    if (result) {
+      await getTables();
+      const assignModalElement = document.getElementById('assignTableModal');
+      const assignModal = bootstrap.Modal.getInstance(assignModalElement);
+      assignModal.hide();
+      toastr.success("Giao bàn thành công!");
+      // Chuyển đến trang gọi món
+      // window.location.href = `order.html?tableId=${tableId}`;
+    }
+  } catch (err) {
+    toastr.error("Lỗi khi giao bàn: " + err.message);
+  }
+});
+
 }
 
 
@@ -62,6 +94,7 @@ function bindEvents() {
 document.addEventListener('DOMContentLoaded', async () => {
   bindEvents();      
   await getTables(); 
+  setInterval(updateSeatedTimes, 1000);
 });
 
 
@@ -113,10 +146,17 @@ tableGrid.innerHTML = tables.map(table =>{
     <div class="table-card card h-100 ${bgClass} shadow-sm border rounded-3 p-3 position-relative">
       <input type="checkbox" class="tableCheckbox form-check-input position-absolute top-0 end-0 m-2 d-none" data-id="${table._id}" />
       <div class="text-center mt-4">
-        <h5 class="mb-3"><i class="la la-pizza-slice text-warning me-1"></i> ${table.name}</h5>
+        <h5 class="mb-3"> 👩‍🍳 ${table.name}</h5>
         <div><strong>Trạng thái:</strong> ${table.status === "available" ? "Trống" : "Có khách"}</div>
         <div><strong>Số Lượng Người:</strong> ${table.capacity || "-"}</div>
         <div><strong>Khu vực:</strong> ${table.area || "-"}</div>
+        ${table.status === "occupied" && table.checkInTime ? `
+        <div><strong>Giờ vào:</strong> ${new Date(table.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        <div><strong>Đã ngồi:</strong> <span class="seated-time" data-checkin="${table.checkInTime}" data-id="${table._id}">Đang tính...</span></div>
+      ` : ""}
+            <button class ="btnAssignTable btn btn-outline-dark mt-3">
+              <i class="bi bi-clock me-1"></i> Giao bàn
+            </button>
       </div>
     </div>
   </div>
@@ -126,17 +166,70 @@ tableGrid.innerHTML = tables.map(table =>{
 
   document.querySelectorAll('.table-card').forEach(card => {
     card.addEventListener('click', function (e) {
-      if (e.target.classList.contains('tableCheckbox')) return;
-
+      if (
+      e.target.classList.contains('tableCheckbox') ||
+      e.target.closest('button')
+    ) return;
       const checkbox = this.querySelector('.tableCheckbox');
       checkbox.checked = !checkbox.checked;
-
       this.classList.toggle('opacity-50', checkbox.checked);
-      
     });
   });
+  
+  // BẮT SỰ KIỆN NÚT GIAO BÀN
+    document.querySelectorAll('.btnAssignTable').forEach(button => {
+      button.addEventListener('click', function (e) {
+        e.stopPropagation();
+
+        const card = this.closest('.table-card');
+        const tableName = card.querySelector('h5').textContent.trim();
+        const capacityText = card.querySelector('div:nth-child(3)').textContent.trim();
+        const areaText = card.querySelector('div:nth-child(4)').textContent.trim();
+
+        // GÁN THÔNG TIN VÀO MODAL
+        document.getElementById('assign-table-question').textContent = `Bạn có chắc chắn muốn giao bàn "${tableName}" không?`;
+        document.getElementById('assign-table-name').textContent = tableName;
+        document.getElementById('assign-table-capacity').textContent = capacityText.replace("Số Lượng Người:", "").trim();
+        document.getElementById('assign-table-area').textContent = areaText.replace("Khu vực:", "").trim();
+
+        // Lưu ID bàn để xử lý sau khi xác nhận
+        const tableId = card.querySelector('.tableCheckbox').getAttribute('data-id');
+        document.getElementById('btnConfirmAssignTable').setAttribute('data-id', tableId);
+
+        // HIỂN THỊ MODAL
+        const assignModal = new bootstrap.Modal(document.getElementById('assignTableModal'));
+        assignModal.show();
+      });
+    });
 }
 
+        // TIME ĐÃ NGỒI
+function updateSeatedTimes() {
+  const elements = document.querySelectorAll('.seated-time');
+
+  elements.forEach(el => {
+    const checkInTime = new Date(el.dataset.checkin);
+    const now = new Date();
+
+    const diffMs = now - checkInTime;
+    const diffSeconds = Math.floor(diffMs / 1000);
+
+    const hours = Math.floor(diffSeconds / 3600);
+    const minutes = Math.floor((diffSeconds % 3600) / 60);
+    const seconds = diffSeconds % 60;
+
+    let timeStr = "";
+    if (hours > 0) {
+      timeStr = `${hours} giờ ${minutes} phút ${seconds} giây`;
+    } else if (minutes > 0) {
+      timeStr = `${minutes} phút ${seconds} giây`;
+    } else {
+      timeStr = `${seconds} giây`;
+    }
+
+    el.textContent = timeStr;
+  });
+}
 
 // ========== HÀM HỖ TRỢ ==========
 function getSelectedTableIds() {
@@ -155,7 +248,6 @@ async function updateTable(tableId) {
       return;
     }
 
-    // Gọi API lấy dữ liệu bàn theo id
     const table = await ajax(`/api/tables/${tableId}`, {}, "GET");
 
     // Điền dữ liệu vào form

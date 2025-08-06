@@ -141,18 +141,6 @@ export const movementPage = (req, res) => {
     )
 }
 
-// Inventory Stock
-export const inventoryStock = (req, res) => {
-    res.render('inventory/ingredient_stock', 
-        getPageData(req, 'Quản lý tồn kho', 'IngredientStock', 
-            {
-                headerClass: 'admin__header',
-                pageTitle: 'QUẢN LÝ TỒN KHO'
-            }
-        )
-    )
-}
-
 // New Stock Entry
 export const newStockEntryPage = (req, res) => {
     const stockEntryId = req.params.id
