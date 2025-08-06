@@ -2,7 +2,7 @@
 <%- include('../partials/staff_sidebar.html') %>
 
     <div class="staff__content">
-      <h1>Quản lý Bàn</h1>
+      <h2><%= pageTitle %></h2>
       
       <div class="d-flex justify-content-between align-items-center mb-3">
         <div >
@@ -14,9 +14,6 @@
             </button>
             <button id="btnDeleteTable" class="btn btn-outline-danger"> 
               <i class="bi bi-trash me-1"></i> Xóa bàn
-            </button>
-            <button id="btnAssignTable" class="btn btn-outline-primary">
-              <i class="bi bi-clock me-1"></i> Giao bàn
             </button>
         </div>
           <div class="search-form d-flex align-items-center" id="search-container">
@@ -89,6 +86,30 @@
 
           <!-- GRID -->
           <div id="tableGrid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mt-4"></div>
+      </div>
+
+      <!-- Modal xác nhận giao bàn -->
+      <div class="modal fade" id="assignTableModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Xác nhận giao bàn</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+            <p id="assign-table-question" class="fw-bold text-danger"></p>
+            <ul class="list-unstyled mb-0">
+              <li><strong>Tên bàn:</strong> <span id="assign-table-name"></span></li>
+              <li><strong>Sức chứa:</strong> <span id="assign-table-capacity"></span></li>
+              <li><strong>Khu vực:</strong> <span id="assign-table-area"></span></li>
+            </ul>
+            </div>
+            <div class="modal-footer">
+              <button id="btnConfirmAssignTable" class="btn btn-success">Xác nhận</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            </div>
+          </div>
+        </div>
       </div>
 
 </div>
