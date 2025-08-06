@@ -75,7 +75,6 @@ export const ingredientDataAPI = async (req, res) => {
         .skip(start)
         .limit(length)
         .populate('category', 'name')
-        .populate('supplier', 'name')
         .populate('createdBy', 'username -_id')
         .populate('updatedBy', 'username -_id')
         .lean()
@@ -128,9 +127,7 @@ export const updateIngredient = async (req, res) => {
       image,
       unit,
       category,
-      costPrice,
       stock,
-      supplier,
       expirationDays,
       isActive,
       note } = req.body
@@ -175,13 +172,6 @@ export const updateIngredient = async (req, res) => {
       updateData.category = category === "" ? null : category
     }
 
-    // const parsedCostPrice = parseNumberField(costPrice)
-    // if (parsedCostPrice) updateData.costPrice = parsedCostPrice
-    if (costPrice !== undefined) {
-      const rawCost = costPrice.toString().trim();
-      updateData.costPrice = rawCost === "" ? 0 : Number(rawCost);
-    }
-
     if (stock !== undefined) {
       const rawStock = stock.toString().trim();
       updateData.stock = rawStock === "" ? 0 : Number(rawStock);
@@ -193,10 +183,6 @@ export const updateIngredient = async (req, res) => {
     const parsedExpirationDays = parseNumberField(expirationDays)
     if (parsedExpirationDays) updateData.expirationDays = parsedExpirationDays
 
-    if (supplier !== undefined) {
-      updateData.supplier = supplier === "" ? null : supplier
-    }
-
     if (isActive !== undefined) updateData.isActive = Boolean(isActive)
     
 
@@ -205,7 +191,6 @@ export const updateIngredient = async (req, res) => {
 
     const updated = await Ingredient.findByIdAndUpdate(id, updateData, { new: true })
       .populate('category', 'name')
-      .populate('supplier', 'name')
       .populate('createdBy', 'username -_id')
       .populate('updatedBy', 'username -_id')
       .lean()

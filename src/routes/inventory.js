@@ -1,8 +1,9 @@
 import express from 'express'
-import { ingredientPage, categoryPage, supplierPage , warehousePage, importPage, exportPage, movementPage, newStockEntryPage } from '../controllers/pages.js'
+import { ingredientPage, categoryPage, supplierPage , warehousePage, inventoryStock, importPage, exportPage, movementPage, newStockEntryPage } from '../controllers/pages.js'
 import { getAllIngredients, ingredientDataAPI, createIngredient, updateIngredient, deleteIngredients } from '../controllers/ingredients.js'
 import { getIngredientCategories, createInredientCategory, updateIngredientCategory, deleteIngredientCategories } from '../controllers/ingredientCategories.js'
 import { getAllSuppliers, getSuppliers, createSupplier, updateSupplier, deleteSuppliers } from '../controllers/supplier.js'
+import { getIngredientStockList, getIngredientTotalStock } from '../controllers/ingredientStock.js'
 import { getActiveWarehouses, getWareHouses, createWareHouse, updateWareHouse, deleteWarehouses, forceDeleteWareHouses } from '../controllers/warehouse.js'
 import { getAllStockEntries, getStockEntries, getStockEntryById, createStockEntry, updateStockEntryFromForm, deleteStockEntries } from '../controllers/stockEntry.js'
 import { getStockIssues, createStockIssue, updateStockIssue, deleteStockIssues } from '../controllers/stockIssue.js'
@@ -15,6 +16,7 @@ const router = express.Router()
 // Inventory Render Page
 router.get('/inventory/ingredients', isAuthenticated, isAdmin, ingredientPage)
 router.get('/inventory/categories', isAuthenticated, isAdmin, categoryPage)
+router.get('/inventory/inventory-stock', isAuthenticated, isAdmin, inventoryStock)
 router.get('/inventory/suppliers', isAuthenticated, isAdmin, supplierPage)
 router.get('/inventory/warehouses', isAuthenticated, isAdmin, warehousePage)
 router.get('/inventory/imports', isAuthenticated, isAdmin, importPage)
@@ -66,7 +68,11 @@ router.post('/api/inventory/stock-issue/create', isAuthenticated, isAdmin, creat
 router.post('/api/inventory/stock-issue/update/:id', isAuthenticated, isAdmin, updateStockIssue)
 router.post('/api/inventory/stock-issue/deletes', isAuthenticated, isAdmin, deleteStockIssues)
 
-// 7. Stock Movement
+// 7. Ingredient Stock
+router.get('/api/inventory/ingredient-stock', isAuthenticated, isAdmin, getIngredientStockList)
+router.get('/ingredients/:id/total-stock', isAuthenticated, isAdmin, getIngredientTotalStock);
+
+// 8. Stock Movement
 router.get('/api/inventory/stock-movements', isAuthenticated, isAdmin, getStockMovements)
 
 export default router
