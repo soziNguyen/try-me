@@ -30,6 +30,7 @@ $(function () {
       searchPlaceholder: 'Tìm kiếm',
       lengthMenu: `_MENU_ nhà cung cấp mỗi trang`,
       info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ nhà cung cấp',
+      infoEmpty: 'Không có bản ghi nào',
       infoFiltered: '(được lọc từ tổng _MAX_ nhà cung cấp)',
       zeroRecords: 'Không tìm thấy kết quả phù hợp',
       emptyTable: 'Không có dữ liệu trong bảng'

@@ -242,7 +242,7 @@ if (logInForm) {
     if (filtered.length === 0) {
       userTableBody.innerHTML = `
         <tr>
-          <td colspan="6" class="text-center">No users found</td>
+          <td colspan="7" class="text-center">No users found</td>
         </tr>
       `
     } else {
@@ -410,7 +410,7 @@ function renderTable(users = []) {
   if (!Array.isArray(users) || users.length === 0) {
     tableBody.innerHTML = `
         <tr>
-            <td colspan="5" class="t_center">No User records found.</td>
+            <td colspan="7" class="t_center">No User records found.</td>
         </tr>
         `;
     return;

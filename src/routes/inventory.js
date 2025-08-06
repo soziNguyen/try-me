@@ -1,10 +1,12 @@
 import express from 'express'
+import { ingredientPage, categoryPage, supplierPage , warehousePage, importPage, exportPage, movementPage, newStockEntryPage } from '../controllers/pages.js'
 import { getAllIngredients, ingredientDataAPI, createIngredient, updateIngredient, deleteIngredients } from '../controllers/ingredients.js'
 import { getIngredientCategories, createInredientCategory, updateIngredientCategory, deleteIngredientCategories } from '../controllers/ingredientCategories.js'
 import { getAllSuppliers, getSuppliers, createSupplier, updateSupplier, deleteSuppliers } from '../controllers/supplier.js'
-import { getAllStockEntries, getStockEntries, createStockEntry, updateStockEntry, deleteStockEntries } from '../controllers/stockEntry.js'
-import { getActiveWarehouses, getWareHouses, createWareHouse, updateWareHouse, deleteWarehouses } from '../controllers/warehouse.js'
-import { ingredientPage, categoryPage, supplierPage , warehousePage, importPage, exportPage, movementPage } from '../controllers/pages.js'
+import { getActiveWarehouses, getWareHouses, createWareHouse, updateWareHouse, deleteWarehouses, forceDeleteWareHouses } from '../controllers/warehouse.js'
+import { getAllStockEntries, getStockEntries, getStockEntryById, createStockEntry, updateStockEntryFromForm, deleteStockEntries } from '../controllers/stockEntry.js'
+import { getStockIssues, createStockIssue, updateStockIssue, deleteStockIssues } from '../controllers/stockIssue.js'
+import { getStockMovements } from '../controllers/stockMovement.js'
 import isAuthenticated from "../helpers/isAuthenticated.js"
 import isAdmin from '../helpers/isAdmin.js'
 
@@ -18,6 +20,7 @@ router.get('/inventory/warehouses', isAuthenticated, isAdmin, warehousePage)
 router.get('/inventory/imports', isAuthenticated, isAdmin, importPage)
 router.get('/inventory/exports', isAuthenticated, isAdmin, exportPage)
 router.get('/inventory/movements', isAuthenticated, isAdmin, movementPage)
+router.get('/inventory/stock-entry/:id', isAuthenticated, isAdmin, newStockEntryPage)
 
 
 // LOGIC
@@ -47,12 +50,23 @@ router.get('/api/inventory/warehouse/all', isAuthenticated, isAdmin, getActiveWa
 router.get('/api/inventory/warehouses', isAuthenticated, isAdmin, getWareHouses)
 router.post('/api/inventory/warehouse/create', isAuthenticated, isAdmin, createWareHouse)
 router.post('/api/inventory/warehouse/update/:id', isAuthenticated, isAdmin, updateWareHouse)
-router.post('/api/inventory/warehouse/deletes', isAuthenticated, isAdmin, deleteWarehouses)
+router.post('/api/inventory/warehouse/deletes', isAuthenticated, isAdmin, forceDeleteWareHouses)
 
 // 5. Stock Entry
-router.get('/api/inventory/stock-entries/all', isAuthenticated, isAdmin, getAllStockEntries)
+router.get('/api/inventory/stock-entry/all', isAuthenticated, isAdmin, getAllStockEntries)
 router.get('/api/inventory/stock-entries', isAuthenticated, isAdmin, getStockEntries)
-router.post('/api/inventory/stock-entries/create', isAuthenticated, isAdmin, createStockEntry)
-router.post('/api/inventory/stock-entries/update/:id', isAuthenticated, isAdmin, updateStockEntry)
-router.post('/api/inventory/stock-entries/deletes', isAuthenticated, isAdmin, deleteStockEntries)
+router.get("/api/inventory/stock-entry/:id", isAuthenticated, isAdmin, getStockEntryById)
+router.post('/api/inventory/stock-entry/create', isAuthenticated, isAdmin, createStockEntry)
+router.post('/api/inventory/stock-entry/update/:id', isAuthenticated, isAdmin, updateStockEntryFromForm)
+router.post('/api/inventory/stock-entry/deletes', isAuthenticated, isAdmin, deleteStockEntries)
+
+// 6. Stock Issue
+router.get('/api/inventory/stock-issue', isAuthenticated, isAdmin, getStockIssues)
+router.post('/api/inventory/stock-issue/create', isAuthenticated, isAdmin, createStockIssue)
+router.post('/api/inventory/stock-issue/update/:id', isAuthenticated, isAdmin, updateStockIssue)
+router.post('/api/inventory/stock-issue/deletes', isAuthenticated, isAdmin, deleteStockIssues)
+
+// 7. Stock Movement
+router.get('/api/inventory/stock-movements', isAuthenticated, isAdmin, getStockMovements)
+
 export default router

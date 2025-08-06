@@ -8,10 +8,13 @@ const stockEntrySchema = new mongoose.Schema({
     ingredient: { type: mongoose.Schema.Types.ObjectId, ref: 'Ingredient', default: null },
     quantity:   { type: Number, default: 0 },
     unitPrice:  { type: Number, default: 0 },
+    total:      { type: Number, default: 0 },
     warehouse:  { type: mongoose.Schema.Types.ObjectId, ref: 'Warehouse', default: null }
   }],
+  total:     { type: Number, default: 0 },
   note:      { type: String, default: '' },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
 }, 
 {
     collection: "StockEntries",

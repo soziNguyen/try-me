@@ -48,6 +48,7 @@ $(function () {
         searchPlaceholder: 'Tìm kiếm',
         lengthMenu: `_MENU_ phiếu nhập mỗi trang`,
         info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ phiếu nhập',
+        infoEmpty: 'Không có bản ghi nào',
         infoFiltered: '(được lọc từ tổng _MAX_ phiếu nhập)',
         zeroRecords: 'Không tìm thấy kết quả phù hợp',
         emptyTable: 'Không có dữ liệu trong bảng'
@@ -55,6 +56,7 @@ $(function () {
       columns: [
         {
           data: null,
+          title: '<input type="checkbox" id="selectAll">',
           orderable: false,
           className: 'text-center',
           render: (data, type, row) =>
@@ -62,94 +64,98 @@ $(function () {
         },
         {
           data: 'code',
-          render: inputRenderer('code')
+          title: 'Mã phiếu nhập',
+          className: 'text-center',
+          render: (data) => data || ''
         },
         {
           data: 'date',
+          title: 'Ngày nhập',
+          className: 'text-center',
           render: (data) => {
             const dt = new Date(data)
             return dt.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
           }
         },
         {
-          data: 'supplier._id',
-          name: 'supplier.name',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              const opts = suppliers.map(sup => {
-                const sel = sup._id === (row.supplier?._id) ? 'selected' : ''
-                return `<option value="${sup._id}" ${sel}>${sup.name}</option>`
-              }).join('')
-              return `
-                <select class="dataInput form-select form-select-sm" data-field="supplier" data-id="${row._id}">
-                  <option value="">— Chọn nhà cung cấp —</option>
-                  ${opts}
-                </select>`
-            }
-            return row.supplier?.name ?? ''
+          data: 'supplier.name',
+          title: 'Nhà cung cấp',
+          className: 'text-center',
+          render: (data) => data || ''
+        },
+        {
+          data: 'items',
+          className: 'text-start px-1',
+          title: 'Nguyên liệu',
+          render: items => {
+            if (!Array.isArray(items) || items.length === 0) return '';
+            const names = items.map(it => it.ingredient?.name).filter(Boolean);
+            const firstThree = names.slice(0, 3).join(', ');
+            // const more = names.length > 3 ? `… và ${names.length - 3} item khác` : '';
+            const more = names.length > 3 ? '...' : ''
+            return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`;
           }
         },
         {
           data: 'items',
-          render: (items, type, row) => {
-            const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            if (type === 'display') {
-              const opts = ingredients.map(ing => {
-                const sel = firstItem?.ingredient?._id === ing._id ? 'selected' : ''
-                return `<option value="${ing._id}" ${sel}>${ing.name}</option>`
-              }).join('')
-              return `
-                <select class="dataInput form-select form-select-sm" data-field="items.0.ingredient" data-id="${row._id}">
-                  <option value="">— Chọn nguyên liệu —</option>
-                  ${opts}
-                </select>`
-            }
-            return firstItem?.ingredient?.name ?? ''
+          className: 'text-center',
+          title: 'Số lượng',
+          render: (items) => {
+            console.log(items)
+            if (!Array.isArray(items) || items.length === 0) return ''
+            const totalQty = items.reduce((acc, cur) => acc + (cur.quantity || 0), 0)
+            return totalQty
+            // const firstItem = Array.isArray(items) && items.length ? items[0] : null
+            // return firstItem?.quantity || ''
           }
         },
         {
           data: 'items',
-          render: (items, type, row) => {
-            const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            if (type === 'display') {
-              return `<input type="number" class="dataInput border-0 w-100 form-control"
-                              data-field="items.0.quantity" value="${firstItem?.quantity ?? ''}">`
-            }
-            return firstItem?.quantity ?? ''
+          title: 'Giá TB (₫)',
+          className: 'text-center',
+          render: items => {
+            if (!Array.isArray(items) || items.length === 0) return '';
+            const prices = items.map(it => it.unitPrice || 0);
+            const sum = prices.reduce((s, p) => s + p, 0);
+            const avg = sum / prices.length;
+            // Format theo vi-VN
+            return avg.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫';
           }
         },
         {
           data: 'items',
-          render: (items, type, row) => {
-            const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            if (type === 'display') {
-              return `<input type="number" class="dataInput border-0 w-100 form-control"
-                              data-field="items.0.unitPrice" value="${firstItem?.unitPrice ?? ''}">`
+          className: 'text-center',
+          title: 'Kho nhập',
+          render: (items) => {
+            if (Array.isArray(items) && items.length && items[0].warehouse) {
+              const { name = '', location = '' } = items[0].warehouse
+              return `${name} ${location}`.trim()
             }
-            return firstItem?.unitPrice ?? ''
-          }
-        },
-        {
-          data: 'items',
-          render: (items, type, row) => {
-            const firstItem = Array.isArray(items) && items.length ? items[0] : null
-            if (type === 'display') {
-              const opts = warehouses.map(wh => {
-                const sel = firstItem?.warehouse?._id === wh._id ? 'selected' : ''
-                return `<option value="${wh._id}" ${sel}>${wh.name}</option>`
-              }).join('')
-              return `
-                <select class="dataInput form-select form-select-sm" data-field="items.0.warehouse" data-id="${row._id}">
-                  <option value="">— Chọn kho —</option>
-                  ${opts}
-                </select>`
-            }
-            return firstItem?.warehouse?.name ?? ''
+            return ''
           }
         },
         {
           data: 'note',
-          render: inputRenderer('note')
+          title: 'Ghi chú',
+          className: 'text-center',
+          render: (data) => data || ''
+        },
+        {
+          data: null,
+          orderable: false,
+          className: 'text-center',
+          width: '100px',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `
+                <button class="btn btn-sm btn-outline-primary my-1 detail-btn" 
+                        data-id="${row._id}" 
+                        title="Xem chi tiết">
+                  <i class="bi bi-eye"></i> Chi tiết
+                </button>`
+            }
+            return ''
+          }
         }
       ],
       rowCallback: function (row, data) {
@@ -166,13 +172,24 @@ $(function () {
             </button>
           </div>
         `)
+        
+        // Event handler cho nút "Thêm"
+        $('#addStockEntryBtn').on('click', () => {
+          createNewRecord('inventory/stock-entry', {}, (data) => {
+              window.location.href = `/inventory/stock-entry/${data.id}?mode=new`
+          })
+        })
+
+        // Event handler cho nút "Chi tiết"
+        $(document).on('click', '.detail-btn', function () {
+          const id = $(this).data('id')
+          window.location.href = `/inventory/stock-entry/${id}`
+        })
+        
+        // CHỈ GIỮ LẠI DELETE VÀ CHECKBOX EVENTS
+        handlerDeleteEvent('#stockEntryTable', '#deleteStockEntryBtn', 'stockEntryCheckbox', 'stock-entry')
+        initTableCheckboxEvents('#stockEntryTable', 'stockEntryCheckbox')
       }
     })
-
-    // Event handler
-    handlerAddEvent('#stockEntryTable', '#addStockEntryBtn', 'stock-entries')
-    handlerDeleteEvent('#stockEntryTable', '#deleteStockEntryBtn', 'stockEntryCheckbox', 'stock-entries')
-    handlerUpdateEvent('#stockEntryTable', 'stock-entries')
-    initTableCheckboxEvents('#stockEntryTable', 'stockEntryCheckbox')
   }
 })

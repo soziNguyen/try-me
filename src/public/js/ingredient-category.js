@@ -27,6 +27,7 @@ $(function () {
         searchPlaceholder: 'Tìm kiếm',
         lengthMenu: `_MENU_ danh mục nguyên liệu mỗi trang`,
         info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ danh mục nguyên liệu',
+        infoEmpty: 'Không có bản ghi nào',
         infoFiltered: '(được lọc từ tổng _MAX_ nguyên liệu)',
         zeroRecords: 'Không tìm thấy kết quả phù hợp',
         emptyTable: 'Không có dữ liệu trong bảng'

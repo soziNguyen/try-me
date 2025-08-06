@@ -131,7 +131,7 @@ export const exportPage = (req, res) => {
 
 // Movement
 export const movementPage = (req, res) => {
-    res.render('inventory/import_export_flow', 
+    res.render('inventory/stock_movement', 
         getPageData(req, 'Lịch Sử Nhập - Xuất Kho', 'Movement', 
             {
                 headerClass: 'admin__header',
@@ -149,5 +149,17 @@ export const tablePage = (req, res) => {
                 pageTitle: 'QUẢN LÝ BÀN'
             }
         )
+    )    
+}
+// New Stock Entry
+export const newStockEntryPage = (req, res) => {
+    const stockEntryId = req.params.id
+    const mode = req.query.mode || ''
+
+    const isNew = mode === 'new' ? 'Nhập Nguyên Liệu Mới' : 'Chi Tiết Nhập Nguyên Liệu'
+    res.render('inventory/stock_entry_detail', 
+        getPageData(req, isNew, 'New Stock Entry', {
+            stockEntryId: stockEntryId
+        })
     )
 }

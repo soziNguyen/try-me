@@ -43,6 +43,7 @@ $(function () {
         searchPlaceholder: 'Tìm kiếm',
         lengthMenu: `_MENU_ nhà kho mỗi trang`,
         info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ nhà kho',
+        infoEmpty: 'Không có bản ghi nào',
         infoFiltered: '(được lọc từ tổng _MAX_ nhà kho)',
         zeroRecords: 'Không tìm thấy kết quả phù hợp',
         emptyTable: 'Không có dữ liệu trong bảng'

@@ -11,7 +11,6 @@ const ingredientSchema = new mongoose.Schema({
   stock: { type: Number, default: 0 },
   supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier', default: null },
   expirationDays: { type: Number, default: null },
-  barcode: { type: String, default: '' },
   isActive:    { type: Boolean, default: true },
   note:     { type: String, default: '' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
