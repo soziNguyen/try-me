@@ -2,13 +2,15 @@ import { Ingredient, units } from '../models/ingredient.js'
 import { parseNumberField, parseStringField } from '../helpers/common.js'
 import IngredientCategory from '../models/IngredientCategory.js'
 import responseHelper from '../helpers/responseHelper.js'
+import mongoose from 'mongoose'
 
 export const getAllIngredients = async (req, res) => {
   try {
-    const ings = await Ingredient.find({ isActive: true })
-      .select('_id name')
-      .sort({ name: 1 })
-      .lean()
+    const ings = await Ingredient.aggregate([
+      { $match: { isActive: true } },
+      { $project: { _id: 1, name: 1 } },
+      { $sort: { name: 1 } }
+    ])
     responseHelper.success(res, ings)
   } catch (err) {
     responseHelper.error(res, err.message)
@@ -17,78 +19,149 @@ export const getAllIngredients = async (req, res) => {
 
 export const ingredientDataAPI = async (req, res) => {
   try {
-    const draw = parseInt(req.query.draw) || 0
-    const start = parseInt(req.query.start) || 0
-    const length = parseInt(req.query.length) || 10
-    const searchValue = req.query['search[value]'] || ''
-    const orderColumnIndex = req.query['order[0][column]']
-    let orderField
-    let orderDir
+    const draw = +req.query.draw || 0
+    const start = +req.query.start || 0
+    const length = +req.query.length || 10
+    const searchValue = (req.query['search[value]'] || '').trim()
+    const colIdx = req.query['order[0][column]']
+    const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
+    const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
-    if (orderColumnIndex === undefined) {
-      orderField = 'createdAt'
-      orderDir = -1
-    } else {
-      orderField = req.query[`columns[${orderColumnIndex}][data]`] || 'name'
-      orderDir = req.query['order[0][dir]'] === 'desc' ? -1 : 1
-    }
+    // Khởi tạo pipeline
+    const pipeline = [
+      {
+        $lookup: {
+          from: 'IngredientCategories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      {
+        $unwind: {
+          path: '$category',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'Users',
+          localField: 'createdBy',
+          foreignField: '_id',
+          as: 'createdBy'
+        }
+      },
+      {
+        $unwind: {
+          path: '$createdBy',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'Users',
+          localField: 'updatedBy',
+          foreignField: '_id',
+          as: 'updatedBy'
+        }
+      },
+      {
+        $unwind: {
+          path: '$updatedBy',
+          preserveNullAndEmptyArrays: true
+        }
+      }
+    ]
 
-    let mongoQuery = {}
-    const searchNumber = Number(searchValue)
-
+    // Search
     if (searchValue) {
-      const conditions = [
+      const isNumeric = !isNaN(searchValue)
+      const orConditions = [
+        { sku: { $regex: searchValue, $options: 'i' } },
         { name: { $regex: searchValue, $options: 'i' } },
+        { 'category.name': { $regex: searchValue, $options: 'i' } },
         { unit: { $regex: searchValue, $options: 'i' } },
         { note: { $regex: searchValue, $options: 'i' } }
       ]
 
-      if (!isNaN(searchNumber)) {
-        conditions.push({ stock: searchNumber })
+      if (isNumeric) {
+        orConditions.push({ stock: Number(searchValue) })
       }
 
-      mongoQuery = { $or: conditions }
-    }
-
-    let fullData = []
-    let recordsFiltered = 0
-
-    // Sắp xếp trong RAM với category
-    if (orderField === 'category.name') {
-      fullData = await Ingredient.find(mongoQuery)
-        .populate('category', 'name')
-        .lean()
-
-      fullData.sort((a, b) => {
-        const nameA = a.category?.name || ''
-        const nameB = b.category?.name || ''
-        return orderDir === 1
-          ? nameA.localeCompare(nameB)
-          : nameB.localeCompare(nameA)
+      pipeline.push({
+        $match: { $or: orConditions }
       })
-
-      recordsFiltered = fullData.length
-      fullData = fullData.slice(start, start + length)
-    } else {
-      fullData = await Ingredient.find(mongoQuery)
-        .sort({ [orderField]: orderDir })
-        .skip(start)
-        .limit(length)
-        .populate('category', 'name')
-        .populate('createdBy', 'username -_id')
-        .populate('updatedBy', 'username -_id')
-        .lean()
-
-      recordsFiltered = await Ingredient.countDocuments(mongoQuery)
     }
 
+    // Đếm bản ghi sau lọc (recordsFiltered)
+    const countPipeline = [...pipeline, { $count: 'count' }]
+    const countResult = await Ingredient.aggregate(countPipeline)
+    const recordsFiltered = countResult[0]?.count || 0
+
+    // Sort
+    const sortObj = {}
+    switch (sortField) {
+      case 'category.name':
+      case 'category':
+        sortObj['category.name'] = sortDir
+        break
+      case 'createdBy.username':
+      case 'createdBy':
+        sortObj['createdBy.username'] = sortDir
+        break
+      case 'updatedBy.username':
+      case 'updatedBy':
+        sortObj['updatedBy.username'] = sortDir
+        break
+      case 'stock':
+      case 'expirationDays':
+        sortObj[sortField] = sortDir
+        break
+      default:
+        sortObj[sortField] = sortDir
+    }
+    pipeline.push({ $sort: sortObj })
+
+    // Pagination
+    pipeline.push({ $skip: start })
+    pipeline.push({ $limit: length })
+
+    // Project dữ liệu
+    pipeline.push({
+      $project: {
+        _id: 1,
+        sku: 1,
+        name: 1,
+        image: 1,
+        unit: 1,
+        stock: 1,
+        expirationDays: 1,
+        isActive: 1,
+        note: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        category: {
+          _id: '$category._id',
+          name: '$category.name'
+        },
+        createdBy: {
+          username: '$createdBy.username'
+        },
+        updatedBy: {
+          username: '$updatedBy.username'
+        }
+      }
+    })
+
+    // Lấy dữ liệu và tổng bản ghi
+    const data = await Ingredient.aggregate(pipeline)
     const recordsTotal = await Ingredient.countDocuments()
 
-    res.json({
+    return res.json({
       draw,
       recordsTotal,
       recordsFiltered,
-      data: fullData,
+      data,
       units
     })
 
@@ -99,7 +172,6 @@ export const ingredientDataAPI = async (req, res) => {
 
 export const createIngredient = async (req, res) => {
   try {
-
     if (!req.user || !req.user._id) {
       return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
     }
@@ -109,10 +181,52 @@ export const createIngredient = async (req, res) => {
     const newIngredient = new Ingredient(ingredientData)
     await newIngredient.save()
 
-    const saved = await Ingredient.find(newIngredient._id)
-      .populate('category', 'name')
-      .populate('createdBy', 'username -_id')
-    responseHelper.success(res, saved, 'Tạo nguyên liệu thành công')
+    // Use aggregate to get populated data
+    const saved = await Ingredient.aggregate([
+      { $match: { _id: newIngredient._id } },
+      {
+        $lookup: {
+          from: 'IngredientCategories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      {
+        $lookup: {
+          from: 'Users',
+          localField: 'createdBy',
+          foreignField: '_id',
+          as: 'createdBy'
+        }
+      },
+      {
+        $addFields: {
+          category: { $arrayElemAt: ['$category', 0] },
+          createdBy: { $arrayElemAt: ['$createdBy', 0] }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          sku: 1,
+          name: 1,
+          image: 1,
+          unit: 1,
+          stock: 1,
+          expirationDays: 1,
+          isActive: 1,
+          note: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          'category._id': 1,
+          'category.name': 1,
+          'createdBy.username': 1
+        }
+      }
+    ])
+
+    responseHelper.success(res, saved[0], 'Tạo nguyên liệu thành công')
   } catch (err) {
     return responseHelper.error(res, err.message)
   }
@@ -121,16 +235,7 @@ export const createIngredient = async (req, res) => {
 export const updateIngredient = async (req, res) => {
   try {
     const { id } = req.params
-    const {
-      sku,
-      name,
-      image,
-      unit,
-      category,
-      stock,
-      expirationDays,
-      isActive,
-      note } = req.body
+    const { sku, name, image, unit, category, expirationDays, isActive, note } = req.body
 
     const ingredient = await Ingredient.findById(id)
     if (!ingredient) {
@@ -172,29 +277,73 @@ export const updateIngredient = async (req, res) => {
       updateData.category = category === "" ? null : category
     }
 
-    if (stock !== undefined) {
-      const rawStock = stock.toString().trim();
-      updateData.stock = rawStock === "" ? 0 : Number(rawStock);
-    }
-
-    const parsedStock = parseNumberField(stock)
-    if (parsedStock) updateData.stock = parsedStock
-
     const parsedExpirationDays = parseNumberField(expirationDays)
     if (parsedExpirationDays) updateData.expirationDays = parsedExpirationDays
 
     if (isActive !== undefined) updateData.isActive = Boolean(isActive)
-    
 
     const parsedNote = parseStringField(note)
     if (parsedNote) updateData.note = note
 
-    const updated = await Ingredient.findByIdAndUpdate(id, updateData, { new: true })
-      .populate('category', 'name')
-      .populate('createdBy', 'username -_id')
-      .populate('updatedBy', 'username -_id')
-      .lean()
-    responseHelper.success(res, updated, 'Cập nhật thành công')
+    // Update the document
+    await Ingredient.findByIdAndUpdate(id, updateData, { new: true })
+
+    // Use aggregate to get updated data with populated fields
+    const updated = await Ingredient.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(String(id)) } },
+      {
+        $lookup: {
+          from: 'IngredientCategories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      {
+        $lookup: {
+          from: 'Users',
+          localField: 'createdBy',
+          foreignField: '_id',
+          as: 'createdBy'
+        }
+      },
+      {
+        $lookup: {
+          from: 'Users',
+          localField: 'updatedBy',
+          foreignField: '_id',
+          as: 'updatedBy'
+        }
+      },
+      {
+        $addFields: {
+          category: { $arrayElemAt: ['$category', 0] },
+          createdBy: { $arrayElemAt: ['$createdBy', 0] },
+          updatedBy: { $arrayElemAt: ['$updatedBy', 0] }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          sku: 1,
+          name: 1,
+          image: 1,
+          unit: 1,
+          stock: 1,
+          expirationDays: 1,
+          isActive: 1,
+          note: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          'category._id': 1,
+          'category.name': 1,
+          'createdBy.username': 1,
+          'updatedBy.username': 1
+        }
+      }
+    ])
+
+    responseHelper.success(res, updated[0], 'Cập nhật thành công')
   } catch (err) {
     return responseHelper.error(res, err.message)
   }
@@ -212,9 +361,8 @@ export const deleteIngredients = async (req, res) => {
       _id: { $in: ids }
     })
 
-  responseHelper.success(res, result.deletedCount , 'Xóa nguyên liệu thành công')
+    responseHelper.success(res, result.deletedCount, 'Xóa nguyên liệu thành công')
   } catch (err) {
     return responseHelper.error(res, err.message)
   }
 }
-  
