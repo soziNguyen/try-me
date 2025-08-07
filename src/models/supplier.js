@@ -8,7 +8,7 @@ const supplierSchema = new mongoose.Schema({
     country: { type: String, default: '' },
     address: { type: String, default: '' },
     taxId:   { type: String, default: '' },
-    status:  { type: String, enum: ['active', 'inactive'], default: 'active' },
+    isActive:   { type: Boolean, default: true },
     note:    { type: String, default: '' },
 },
 {

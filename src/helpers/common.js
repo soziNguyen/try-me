@@ -23,6 +23,11 @@ export function getDateFromTimestamp(timestamp){
   return result;
 }
 
+// remove accents
+export function removeAccents(str) {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
+}
+
 export function getCreatedAt() {
     //const today = new Date(Date.now()+ 7*60*60*1000);
     const today = new Date();
