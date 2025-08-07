@@ -87,9 +87,9 @@ $(function () {
           render: items => {
             if (!Array.isArray(items) || items.length === 0) return '';
             const names = items.map(it => it.ingredient?.name).filter(Boolean);
-            const uniqueNames  = new Set(names);
+            const uniqueNames = new Set(names);
             
-            if (uniqueNames .size === 0) return '';
+            if (uniqueNames.size === 0) return '';
             const nameLengths = [...uniqueNames]
             const firstThree = nameLengths.slice(0, 3).join(', ');
             const more = nameLengths.length > 3 ? '...' : ''
@@ -125,7 +125,6 @@ $(function () {
           title: 'Kho nhập',
           render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return '';
-            console.log(items)
             const warehouses = items
               .map(item => item.warehouse?.name)
               .filter(Boolean);
@@ -137,7 +136,7 @@ $(function () {
             const display = uniqueWarehouses.slice(0, 3).join(', ');
             const more = uniqueWarehouses.length > 3 ? '...' : '';
         
-            return `<span title="${uniqueWarehouses.join('\n')}">${display} ${more}</span>`;
+            return `<span title="${warehouses.join('\n')}">${display} ${more}</span>`;
           }
         },        
         {

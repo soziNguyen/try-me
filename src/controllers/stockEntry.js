@@ -102,7 +102,9 @@ export const getStockEntries = async (req, res) => {
           note: { $first: "$note" },
           date: { $first: "$date" },
           supplier: { $first: "$supplier" },
+          createdAt: { $first: "$createdAt" },
           items: { $push: "$items" },
+          isLocked: { $first: "$isLocked" }
         }
       }
     )

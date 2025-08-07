@@ -59,6 +59,7 @@ $(function () {
           {
             data: null,
             orderable: false,
+            title: '<input type="checkbox" id="selectAll">',
             className: 'text-center',
             render: (data, type, row) =>
               `<input type="checkbox" class="stockIssueCheckbox" data-id="${row._id}">`
@@ -66,13 +67,17 @@ $(function () {
           // code
           {
             data: 'code',
-            render: inputRenderer('code')
+            title: 'Mã xuất kho',
+            className: 'text-center',
+            render: (data) => data || ''
           },
           // date
           {
             data: 'date',
-            render: d => {
-              const dt = new Date(d)
+            title: 'Ngày xuất',
+            className: 'text-center',
+            render: data => {
+              const dt = new Date(data)
               return dt.toLocaleDateString('vi-VN', {
                 day: '2-digit', month: '2-digit', year: 'numeric'
               })
@@ -81,75 +86,82 @@ $(function () {
           // reason
           {
             data: 'reason',
-            render: inputRenderer('reason')
+            title: 'Loại xuất kho',
+            className: 'text-center',
+            render: (data) => data || ''
           },
           // ingredient (first item)
           {
-            data: 'items',
-            render: (items, type, row) => {
-              const first = Array.isArray(items) && items.length ? items[0] : null
-              if (type === 'display') {
-                const opts = ingredients.map(ing => {
-                  const sel = first?.ingredient?._id===ing._id?'selected':''
-                  return `<option value="${ing._id}" ${sel}>${ing.name}</option>`
-                }).join('')
-                return `
-                  <select class="dataInput form-select form-select-sm"
-                          data-field="items.0.ingredient"
-                          data-id="${row._id}">
-                    <option value="" class="text-center">— Chọn nguyên liệu —</option>
-                    ${opts}
-                  </select>`
-              }
-              return first?.ingredient?.name||''
+          data: 'items',
+          className: 'text-start px-1',
+          title: 'Nguyên liệu',
+          render: (items, type, row) => {
+            if (!Array.isArray(items) || items.length === 0) return '';
+            const names = items.map(it => it.ingredient?.name).filter(Boolean);
+            const uniqueNames  = new Set(names);
+            
+            if (uniqueNames .size === 0) return '';
+              const nameLengths = [...uniqueNames]
+              const firstThree = nameLengths.slice(0, 3).join(', ');
+              const more = nameLengths.length > 3 ? '...' : ''
+              return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`;
             }
           },
           // quantity
           {
             data: 'items',
-            render: (items, type, row) => {
-              const first = Array.isArray(items) && items.length ? items[0] : null
-              if (type==='display') {
-                return `<input type="number" class="dataInput text-end border-0 form-control"
-                                data-field="items.0.quantity"
-                                data-id="${row._id}"
-                                value="${first?.quantity||''}">`
-              }
-              return first?.quantity||''
+            className: 'text-center',
+            title: 'Số lượng',
+            render: (items) => {
+              if (!Array.isArray(items) || items.length === 0) return ''
+              const totalQty = items.reduce((acc, cur) => acc + (cur.quantity || 0), 0)
+              return totalQty
             }
           },
           // warehouse
           {
             data: 'items',
-            render: (items, type, row) => {
-              const first = Array.isArray(items) && items.length ? items[0] : null
-              if (type==='display') {
-                const opts = warehouses.map(wh => {
-                  const sel = first?.warehouse?._id===wh._id?'selected':''
-                  return `<option value="${wh._id}" ${sel}>${wh.name} - ${wh.location}</option>`
-                }).join('')
-                return `
-                  <select class="dataInput form-select form-select-sm"
-                          data-field="items.0.warehouse"
-                          data-id="${row._id}">
-                    <option value="" class="text-center">— Chọn kho —</option>
-                    ${opts}
-                  </select>`
-              }
-              return first?.warehouse?.name||''
+            className: 'text-start px-1',
+            title: 'Nhà kho',
+            render: items => {
+              if (!Array.isArray(items) || items.length === 0) return '';
+              const names = items.map(it => it.warehouse?.name).filter(Boolean);
+              const uniqueNames = new Set(names);
+              
+              if (uniqueNames.size === 0) return '';
+              const nameLengths = [...uniqueNames]
+              const firstThree = nameLengths.slice(0, 3).join(', ');
+              const more = nameLengths.length > 3 ? '...' : ''
+              return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`;
             }
           },
           // note
           {
             data: 'note',
-            render: inputRenderer('note')
+            title: 'Ghi chú',
+            render: data => data || ''
+          },
+          {
+          data: null,
+          orderable: false,
+          className: 'text-center',
+          width: '100px',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `
+                <button class="btn btn-sm btn-outline-primary my-1 detail-btn" 
+                        data-id="${row._id}" 
+                        title="Xem chi tiết">
+                  <i class="bi bi-eye"></i> Chi tiết
+                </button>`
+            }
+            return ''
           }
+        }
         ],
-  
         rowCallback(row, data) {
           $(row).attr('data-id', data._id)
         },
-  
         initComplete() {
           $('.btn-group').html(`
             <button class="btn btn-outline-danger me-2" id="deleteStockIssueBtn">
@@ -159,13 +171,23 @@ $(function () {
               <i class="bi bi-plus-circle"></i> Thêm
             </button>
           `)
+
+          $('#addStockIssueBtn').on('click', () => {
+            createNewRecord('inventory/stock-issue', {}, (data) => {
+              window.location.href = `/inventory/stock-issue/${data.id}`
+            })
+          })
+
+          $('.detail-btn').on('click', function () {
+            const id = $(this).data('id')
+            window.location.href = `/inventory/stock-issue/${id}`
+          })
         }
       })
+
   
       // các handler
-      handlerAddEvent('#stockIssueTable', '#addStockIssueBtn', 'stock-issue')
       handlerDeleteEvent('#stockIssueTable', '#deleteStockIssueBtn', 'stockIssueCheckbox', 'stock-issue')
-      handlerUpdateEvent('#stockIssueTable', 'stock-issue')
       initTableCheckboxEvents('#stockIssueTable', 'stockIssueCheckbox')
     }
   })

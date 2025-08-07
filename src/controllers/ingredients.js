@@ -2,6 +2,7 @@ import { Ingredient, units } from '../models/ingredient.js'
 import { parseNumberField, parseStringField } from '../helpers/common.js'
 import responseHelper from '../helpers/responseHelper.js'
 import { lookupUser, lookupRef } from '../helpers/lookupHelper.js'
+import mongoose from 'mongoose'
 
 export const getAllIngredients = async (req, res) => {
   try {
@@ -141,7 +142,7 @@ export const ingredientDataAPI = async (req, res) => {
     // Execute the main query
     const data = await Ingredient.aggregate(pipeline)
 
-    res.json({
+    return res.json({
       draw,
       recordsTotal,
       recordsFiltered,
@@ -173,7 +174,7 @@ export const createIngredient = async (req, res) => {
     const newIngredient = new Ingredient(ingredientData)
     await newIngredient.save()
 
-    const saved = await Ingredient.find(newIngredient._id)
+    const saved = await Ingredient.findById(newIngredient._id)
       .populate('category', 'name')
       .populate('createdBy', 'username -_id')
     responseHelper.success(res, saved, 'Tạo nguyên liệu thành công')
@@ -236,22 +237,17 @@ export const updateIngredient = async (req, res) => {
       updateData.category = category === "" ? null : category
     }
 
-    if (stock !== undefined) {
-      const rawStock = stock.toString().trim()
-      updateData.stock = rawStock === "" ? 0 : Number(rawStock)
-    }
-
     const parsedStock = parseNumberField(stock)
-    if (parsedStock) updateData.stock = parsedStock
+    if (parsedStock !== undefined) updateData.stock = parsedStock
 
     const parsedExpirationDays = parseNumberField(expirationDays)
-    if (parsedExpirationDays) updateData.expirationDays = parsedExpirationDays
+    if (parsedExpirationDays !== undefined) updateData.expirationDays = parsedExpirationDays
 
     if (isActive !== undefined) updateData.isActive = Boolean(isActive)
     
 
     const parsedNote = parseStringField(note)
-    if (parsedNote) updateData.note = note
+    if (parsedNote) updateData.note = parsedNote
 
     const updated = await Ingredient.findByIdAndUpdate(id, updateData, { new: true })
       .populate('category', 'name')
@@ -276,9 +272,8 @@ export const deleteIngredients = async (req, res) => {
       _id: { $in: ids }
     })
 
-  responseHelper.success(res, result.deletedCount , 'Xóa nguyên liệu thành công')
+    responseHelper.success(res, result.deletedCount, 'Xóa nguyên liệu thành công')
   } catch (err) {
     return responseHelper.error(res, err.message)
   }
 }
-  

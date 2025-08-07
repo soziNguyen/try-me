@@ -129,6 +129,15 @@ export const exportPage = (req, res) => {
     )
 }
 
+export const ingredientStockPage = (req, res) => {
+    res.render('inventory/ingredient_stock',
+        getPageData(req, 'Quản lý Tồn Kho', 'IngredientStock', {
+            headerClass: 'admin__header',
+            pageTitle: 'QUẢN LÝ TỒN KHO'
+        })
+    )
+}
+
 // Movement
 export const movementPage = (req, res) => {
     res.render('inventory/stock_movement', 
@@ -150,6 +159,18 @@ export const newStockEntryPage = (req, res) => {
     res.render('inventory/stock_entry_detail', 
         getPageData(req, isNew, 'New Stock Entry', {
             stockEntryId: stockEntryId
+        })
+    )
+}
+
+export const newStockIssuePage = (req, res) => {
+    const stockIssueId = req.params.id
+    const mode = req.query.mode || ''
+
+    const isNew = mode === 'new' ? 'Tạo phiếu xuất nguyên liệu' : 'Chi Tiết Xuất Nguyên Liệu'
+    res.render('inventory/stock_issue_detail', 
+        getPageData(req, isNew, 'New Issue Entry', {
+            stockIssueId: stockIssueId
         })
     )
 }
