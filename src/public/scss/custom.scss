@@ -82,6 +82,12 @@ table {
       .form-control-sm {
         border: none;
         box-shadow: none !important;
+        padding: .5rem .75rem !important;
+        border-radius: 0 !important;
+      }
+      .form-select-sm {
+        padding: .5rem .75rem !important;
+        border-radius: 0 !important;
       }
     }
   }

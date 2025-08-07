@@ -63,7 +63,33 @@ $(function () {
     // Event handlers
     $("#addItemBtn").on("click", addNewItem)
     $("#stockEntryForm").on("submit", saveStockEntry)
-
+    $("#btn-lock-entry").on("click", function () {
+      if (!confirm("Bạn có chắc chắn muốn khóa phiếu này? Sau khi khóa sẽ không thể chỉnh sửa hoặc xóa.")) return
+      $.ajax({
+        url: `/api/inventory/stock-entry/lock/${stockEntryId}`,
+        method: "POST",
+        beforeSend: function () {
+          $("#btn-lock-entry").prop("disabled", true).text("Đang khóa...")
+        },
+        success(res) {
+          if (res.success && res.data.isLocked) {
+            toastr.success("Phiếu nhập đã được khóa thành công")
+            $("#btn-lock-entry").prop("disabled", true).text("Phiếu đã khóa")
+            $("#addItemBtn").prop("disabled", true)
+            $("#stockEntryForm input, #stockEntryForm select").prop("disabled", true)
+          } else {
+            toastr.error(res.message || "Có lỗi xảy ra")
+            $("#btn-lock-entry").prop("disabled", false).text("Khóa phiếu")
+          }
+        },
+        error(xhr) {
+          const msg = xhr.responseJSON?.message || "Lỗi hệ thống"
+          toastr.error(msg)
+          $("#btn-lock-entry").prop("disabled", false).text("Khóa phiếu")
+        }
+      })
+    })
+    
     // Auto calculate totals
     $(document).on(
       "input",
@@ -210,6 +236,15 @@ $(function () {
       itemCounter = stockEntry.items.length
       calculateTotalAmount()
     }
+    if (stockEntry?.isLocked) {
+      $("#btn-lock-entry").prop("disabled", true).html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
+    
+      $("#stockEntryForm")
+        .find("input, select, textarea, button")
+        .not("#btn-lock-entry, #btn-print-entry")
+        .add("#btn-save-entry, #addItemBtn, #supplier")
+        .prop("disabled", true)
+    }   
   }
 
   function saveStockEntry(e) {
@@ -218,67 +253,86 @@ $(function () {
     const $rows = $("#itemsTableBody tr")
     const partialErrors = []
   
-    // Check data trong từng dòng
-    $rows.each(function (idx) {
-      const rowNum = idx + 1
-      const ing = $(this).find('select[name*="[ingredient]"]').val()
-      const q   = $(this).find('input[name*="[quantity]"]').val()
-      const p   = $(this).find('input[name*="[unitPrice]"]').val()
-      const wh  = $(this).find('select[name*="[warehouse]"]').val()
+    // Kiểm tra từng dòng
+    $rows.each(function (index) {
+      const rowIndex = index + 1
   
-      // Nếu đã nhập ít nhất 1 trường nhưng không đủ 4
-      if ((ing || q || p || wh) && !(ing && q && p && wh)) {
-        const missing = []
-        if (!ing) missing.push("nguyên liệu")
-        if (!q)   missing.push("số lượng")
-        if (!p)   missing.push("đơn giá")
-        if (!wh)  missing.push("kho")
-        partialErrors.push(`Dòng ${rowNum} thiếu ${missing.join(", ")}`)
+      const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
+      const quantity = $(this).find('input[name*="[quantity]"]').val()
+      const unitPrice = $(this).find('input[name*="[unitPrice]"]').val()
+      const warehouseId = $(this).find('select[name*="[warehouse]"]').val()
+  
+      const hasAnyValue = ingredientId || quantity || unitPrice || warehouseId
+      const isComplete = ingredientId && quantity && unitPrice && warehouseId
+  
+      if (hasAnyValue && !isComplete) {
+        const missingFields = []
+        if (!ingredientId) missingFields.push("nguyên liệu")
+        if (!quantity) missingFields.push("số lượng")
+        if (!unitPrice) missingFields.push("đơn giá")
+        if (!warehouseId) missingFields.push("kho")
+  
+        partialErrors.push(`Dòng ${rowIndex} thiếu ${missingFields.join(", ")}`)
       }
     })
   
-    // Nếu có lỗi partial, hiển thị chi tiết và dừng
+    // Nếu có lỗi dữ liệu từng dòng thì báo lỗi và dừng lại
     if (partialErrors.length) {
       toastr.error(partialErrors.join("<br/>"), "Lỗi dữ liệu")
       return
     }
   
-    // Xoá những dòng hoàn toàn trống
-    $rows.each(function () {
-      const ing = $(this).find('select[name*="[ingredient]"]').val()
-      const q   = $(this).find('input[name*="[quantity]"]').val()
-      const p   = $(this).find('input[name*="[unitPrice]"]').val()
-      const wh  = $(this).find('select[name*="[warehouse]"]').val()
-      if (!ing && !q && !p && !wh) {
-        $(this).remove()
-      }
-    })
+    // Loại bỏ những dòng hoàn toàn trống (nếu có nhiều hơn 1 dòng)
+    if ($rows.length > 1) {
+      $rows.each(function () {
+        const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
+        const quantity = $(this).find('input[name*="[quantity]"]').val()
+        const unitPrice = $(this).find('input[name*="[unitPrice]"]').val()
+        const warehouseId = $(this).find('select[name*="[warehouse]"]').val()
   
-    // Thu thập data
+        if (!ingredientId && !quantity && !unitPrice && !warehouseId) {
+          $(this).remove()
+        }
+      })
+    }
+  
+    // Thu thập dữ liệu từ form
     const formData = new FormData(this)
-    const data = {
+    const stockEntryData = {
       code: formData.get("code"),
       date: formData.get("date"),
       supplier: formData.get("supplier"),
       note: formData.get("note"),
       items: [],
     }
+  
     if (!stockEntryId) {
-      data.createdBy = $("#createdBy").data("id") || "<%= currentUserId %>"
+      stockEntryData.createdBy = $("#createdBy").data("id") || "<%= currentUserId %>"
     }
+  
     $("#itemsTableBody tr").each(function () {
-      const ingredient = $(this).find('select[name*="[ingredient]"]').val()
-      const quantity   = parseFloat($(this).find('input[name*="[quantity]"]').val())
-      const unitPrice  = parseFloat($(this).find('input[name*="[unitPrice]"]').val())
-      const warehouse  = $(this).find('select[name*="[warehouse]"]').val()
-      data.items.push({ ingredient, quantity, unitPrice, total: quantity * unitPrice, warehouse })
+      const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
+      const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val())
+      const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val())
+      const warehouseId = $(this).find('select[name*="[warehouse]"]').val()
+  
+      if (ingredientId && quantity && unitPrice && warehouseId) {
+        stockEntryData.items.push({
+          ingredient: ingredientId,
+          quantity,
+          unitPrice,
+          total: quantity * unitPrice,
+          warehouse: warehouseId,
+        })
+      }
     })
   
-    if (!data.supplier) {
+    if (!stockEntryData.supplier) {
       toastr.error("Vui lòng chọn nhà cung cấp", "Lỗi dữ liệu")
       return
     }
-    if (data.items.length === 0) {
+  
+    if (stockEntryData.items.length === 0) {
       toastr.error("Phải có ít nhất 1 dòng nguyên liệu hợp lệ", "Lỗi dữ liệu")
       return
     }
@@ -292,7 +346,7 @@ $(function () {
       url,
       method: "POST",
       contentType: "application/json",
-      data: JSON.stringify(data),
+      data: JSON.stringify(stockEntryData),
       success(res) {
         if (res.success) {
           toastr.success(res.message || "Lưu phiếu nhập thành công")
@@ -305,5 +359,5 @@ $(function () {
         toastr.error(xhr.responseJSON?.message || "Có lỗi xảy ra khi lưu")
       },
     })
-  }
+  }  
 })

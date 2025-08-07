@@ -14,7 +14,8 @@ const stockEntrySchema = new mongoose.Schema({
   total:     { type: Number, default: 0 },
   note:      { type: String, default: '' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
-  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  isLocked: { type: Boolean, default: false }
 }, 
 {
     collection: "StockEntries",

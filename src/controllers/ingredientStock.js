@@ -1,5 +1,6 @@
 import IngredientStock from '../models/ingredientStock.js'
 import responseHelper from '../helpers/responseHelper.js'
+import { lookupRef } from '../helpers/lookupHelper.js'
 
 export const getIngredientStockList = async (req, res) => {
   try {
@@ -13,48 +14,9 @@ export const getIngredientStockList = async (req, res) => {
 
     // Khởi tạo pipeline
     const pipeline = [
-      {
-        $lookup: {
-          from: "Ingredients",
-          localField: "ingredient",
-          foreignField: "_id",
-          as: "ingredient"
-        }
-      },
-      {
-        $unwind: {
-          path: "$ingredient",
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $lookup: {
-          from: "Warehouses",
-          localField: "warehouse",
-          foreignField: "_id",
-          as: "warehouse"
-        }
-      },
-      {
-        $unwind: {
-          path: "$warehouse",
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $lookup: {
-          from: "Suppliers",
-          localField: "supplier",
-          foreignField: "_id",
-          as: "supplier"
-        }
-      },
-      {
-        $unwind: {
-          path: "$supplier",
-          preserveNullAndEmptyArrays: true
-        }
-      }
+      ...lookupRef('ingredient', 'Ingredients'),
+      ...lookupRef('warehouse', 'Warehouses'),
+      ...lookupRef('supplier', 'Suppliers')
     ]
 
     // Search

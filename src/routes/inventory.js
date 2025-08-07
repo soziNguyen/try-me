@@ -2,10 +2,10 @@ import express from 'express'
 import { ingredientPage, categoryPage, supplierPage , warehousePage, inventoryStock, importPage, exportPage, movementPage, newStockEntryPage } from '../controllers/pages.js'
 import { getAllIngredients, ingredientDataAPI, createIngredient, updateIngredient, deleteIngredients } from '../controllers/ingredients.js'
 import { getIngredientCategories, createInredientCategory, updateIngredientCategory, deleteIngredientCategories } from '../controllers/ingredientCategories.js'
-import { getAllSuppliers, getSuppliers, createSupplier, updateSupplier, deleteSuppliers } from '../controllers/supplier.js'
+import { getAllSuppliers, getSuppliers, createSupplier, updateSupplier, deleteSuppliers, forceDeleteSuppliers } from '../controllers/supplier.js'
 import { getIngredientStockList, getIngredientTotalStock } from '../controllers/ingredientStock.js'
 import { getActiveWarehouses, getWareHouses, createWareHouse, updateWareHouse, deleteWarehouses, forceDeleteWareHouses } from '../controllers/warehouse.js'
-import { getAllStockEntries, getStockEntries, getStockEntryById, createStockEntry, updateStockEntryFromForm, deleteStockEntries } from '../controllers/stockEntry.js'
+import { getAllStockEntries, getStockEntries, getStockEntryById, createStockEntry, updateStockEntryFromForm, deleteStockEntries, lockStockEntry } from '../controllers/stockEntry.js'
 import { getStockIssues, createStockIssue, updateStockIssue, deleteStockIssues } from '../controllers/stockIssue.js'
 import { getStockMovements } from '../controllers/stockMovement.js'
 import isAuthenticated from "../helpers/isAuthenticated.js"
@@ -19,7 +19,7 @@ router.get('/inventory/categories', isAuthenticated, isAdmin, categoryPage)
 router.get('/inventory/inventory-stock', isAuthenticated, isAdmin, inventoryStock)
 router.get('/inventory/suppliers', isAuthenticated, isAdmin, supplierPage)
 router.get('/inventory/warehouses', isAuthenticated, isAdmin, warehousePage)
-router.get('/inventory/imports', isAuthenticated, isAdmin, importPage)
+router.get('/inventory/stock-entries', isAuthenticated, isAdmin, importPage)
 router.get('/inventory/exports', isAuthenticated, isAdmin, exportPage)
 router.get('/inventory/movements', isAuthenticated, isAdmin, movementPage)
 router.get('/inventory/stock-entry/:id', isAuthenticated, isAdmin, newStockEntryPage)
@@ -44,7 +44,7 @@ router.get('/api/inventory/supplier/all', isAuthenticated, isAdmin, getAllSuppli
 router.get('/api/inventory/suppliers', isAuthenticated, isAdmin, getSuppliers)
 router.post('/api/inventory/supplier/create', isAuthenticated, isAdmin, createSupplier)
 router.post('/api/inventory/supplier/update/:id', isAuthenticated, isAdmin, updateSupplier)
-router.post('/api/inventory/supplier/deletes', isAuthenticated, isAdmin, deleteSuppliers)
+router.post('/api/inventory/supplier/deletes', isAuthenticated, isAdmin, forceDeleteSuppliers)
 
 
 // 4. Warehouse
@@ -61,6 +61,7 @@ router.get("/api/inventory/stock-entry/:id", isAuthenticated, isAdmin, getStockE
 router.post('/api/inventory/stock-entry/create', isAuthenticated, isAdmin, createStockEntry)
 router.post('/api/inventory/stock-entry/update/:id', isAuthenticated, isAdmin, updateStockEntryFromForm)
 router.post('/api/inventory/stock-entry/deletes', isAuthenticated, isAdmin, deleteStockEntries)
+router.post('/api/inventory/stock-entry/lock/:id', isAuthenticated, isAdmin, lockStockEntry)
 
 // 6. Stock Issue
 router.get('/api/inventory/stock-issue', isAuthenticated, isAdmin, getStockIssues)
