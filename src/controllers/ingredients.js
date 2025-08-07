@@ -2,6 +2,7 @@ import { Ingredient, units } from '../models/ingredient.js'
 import { parseNumberField, parseStringField } from '../helpers/common.js'
 import responseHelper from '../helpers/responseHelper.js'
 import { lookupUser, lookupRef } from '../helpers/lookupHelper.js'
+import mongoose from 'mongoose'
 
 export const getAllIngredients = async (req, res) => {
   try {
@@ -163,6 +164,7 @@ export const ingredientDataAPI = async (req, res) => {
 
 export const createIngredient = async (req, res) => {
   try {
+
     if (!req.user || !req.user._id) {
       return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
     }
@@ -172,52 +174,10 @@ export const createIngredient = async (req, res) => {
     const newIngredient = new Ingredient(ingredientData)
     await newIngredient.save()
 
-    // Use aggregate to get populated data
-    const saved = await Ingredient.aggregate([
-      { $match: { _id: newIngredient._id } },
-      {
-        $lookup: {
-          from: 'IngredientCategories',
-          localField: 'category',
-          foreignField: '_id',
-          as: 'category'
-        }
-      },
-      {
-        $lookup: {
-          from: 'Users',
-          localField: 'createdBy',
-          foreignField: '_id',
-          as: 'createdBy'
-        }
-      },
-      {
-        $addFields: {
-          category: { $arrayElemAt: ['$category', 0] },
-          createdBy: { $arrayElemAt: ['$createdBy', 0] }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          sku: 1,
-          name: 1,
-          image: 1,
-          unit: 1,
-          stock: 1,
-          expirationDays: 1,
-          isActive: 1,
-          note: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          'category._id': 1,
-          'category.name': 1,
-          'createdBy.username': 1
-        }
-      }
-    ])
-
-    responseHelper.success(res, saved[0], 'Tạo nguyên liệu thành công')
+    const saved = await Ingredient.findById(newIngredient._id)
+      .populate('category', 'name')
+      .populate('createdBy', 'username -_id')
+    responseHelper.success(res, saved, 'Tạo nguyên liệu thành công')
   } catch (err) {
     return responseHelper.error(res, err.message)
   }
@@ -226,7 +186,16 @@ export const createIngredient = async (req, res) => {
 export const updateIngredient = async (req, res) => {
   try {
     const { id } = req.params
-    const { sku, name, image, unit, category, expirationDays, isActive, note } = req.body
+    const {
+      sku,
+      name,
+      image,
+      unit,
+      category,
+      stock,
+      expirationDays,
+      isActive,
+      note } = req.body
 
     const ingredient = await Ingredient.findById(id)
     if (!ingredient) {
@@ -268,81 +237,24 @@ export const updateIngredient = async (req, res) => {
       updateData.category = category === "" ? null : category
     }
 
-    if (stock !== undefined) {
-      const rawStock = stock.toString().trim()
-      updateData.stock = rawStock === "" ? 0 : Number(rawStock)
-    }
-
     const parsedStock = parseNumberField(stock)
-    if (parsedStock) updateData.stock = parsedStock
+    if (parsedStock !== undefined) updateData.stock = parsedStock
 
     const parsedExpirationDays = parseNumberField(expirationDays)
-    if (parsedExpirationDays) updateData.expirationDays = parsedExpirationDays
+    if (parsedExpirationDays !== undefined) updateData.expirationDays = parsedExpirationDays
 
     if (isActive !== undefined) updateData.isActive = Boolean(isActive)
+    
 
     const parsedNote = parseStringField(note)
-    if (parsedNote) updateData.note = note
+    if (parsedNote) updateData.note = parsedNote
 
-    // Update the document
-    await Ingredient.findByIdAndUpdate(id, updateData, { new: true })
-
-    // Use aggregate to get updated data with populated fields
-    const updated = await Ingredient.aggregate([
-      { $match: { _id: new mongoose.Types.ObjectId(String(id)) } },
-      {
-        $lookup: {
-          from: 'IngredientCategories',
-          localField: 'category',
-          foreignField: '_id',
-          as: 'category'
-        }
-      },
-      {
-        $lookup: {
-          from: 'Users',
-          localField: 'createdBy',
-          foreignField: '_id',
-          as: 'createdBy'
-        }
-      },
-      {
-        $lookup: {
-          from: 'Users',
-          localField: 'updatedBy',
-          foreignField: '_id',
-          as: 'updatedBy'
-        }
-      },
-      {
-        $addFields: {
-          category: { $arrayElemAt: ['$category', 0] },
-          createdBy: { $arrayElemAt: ['$createdBy', 0] },
-          updatedBy: { $arrayElemAt: ['$updatedBy', 0] }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          sku: 1,
-          name: 1,
-          image: 1,
-          unit: 1,
-          stock: 1,
-          expirationDays: 1,
-          isActive: 1,
-          note: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          'category._id': 1,
-          'category.name': 1,
-          'createdBy.username': 1,
-          'updatedBy.username': 1
-        }
-      }
-    ])
-
-    responseHelper.success(res, updated[0], 'Cập nhật thành công')
+    const updated = await Ingredient.findByIdAndUpdate(id, updateData, { new: true })
+      .populate('category', 'name')
+      .populate('createdBy', 'username -_id')
+      .populate('updatedBy', 'username -_id')
+      .lean()
+    responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (err) {
     return responseHelper.error(res, err.message)
   }

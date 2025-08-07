@@ -7,7 +7,7 @@ const ingredientStockSchema = new mongoose.Schema({
   quantity:   { type: Number, default: 0 }
 }, {
   collection: 'IngredientStocks',
-  timestamps: true
+  timestamps: { createdAt: 'createdAt', updatedAt : 'updatedAt'}
 });
 
 ingredientStockSchema.index({ ingredient: 1, warehouse: 1 });
