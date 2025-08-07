@@ -3,51 +3,126 @@ import StockIssue from "../models/stockIssue.js"
 import { Ingredient } from "../models/ingredient.js"
 import responseHelper from "../helpers/responseHelper.js"
 import withTransaction from "../helpers/withTransaction.js"
+import { lookupRef } from "../helpers/lookupHelper.js"
 
 // GET
 export const getStockIssues = async (req, res) => {
   try {
-    const draw = parseInt(req.query.draw) || 0
-    const start = parseInt(req.query.start) || 0
-    const length = parseInt(req.query.length) || 10
-    const searchValue = (req.query['search[value]'] || '').trim()
-    const sortColumnIndex = req.query['order[0][column]']
-    const sortField = req.query[`columns[${sortColumnIndex}][data]`] || 'date'
-    const sortOrder = req.query['order[0][dir]'] === 'asc' ? 1 : -1
+    const draw = +req.query.draw || 0;
+    const start = +req.query.start || 0;
+    const length = +req.query.length || 10;
+    const searchValue = (req.query["search[value]"] || "").trim();
+    const colIdx = req.query["order[0][column]"];
+    const sortField = req.query[`columns[${colIdx}][data]`] || "date";
+    const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1;
 
-    const searchableFields = ['code', 'reason', 'note']
-    const baseCondition = {}
-    const searchCondition = searchValue
-      ? {
-          ...baseCondition,
-          $or: searchableFields.map(f => ({
-            [f]: { $regex: searchValue, $options: 'i' }
-          }))
+    const pipeline = [
+      ...lookupRef('createdBy', 'Users', { as: 'creator' }),
+      { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
+      ...lookupRef('items.ingredient', 'Ingredients', { as: 'ingredient' }),
+      ...lookupRef('items.warehouse', 'Warehouses', { as: 'warehouse' }),
+    ];
+
+    if (searchValue) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { code: { $regex: searchValue, $options: "i" } },
+            { reason: { $regex: searchValue, $options: "i" } },
+            { note: { $regex: searchValue, $options: "i" } },
+            { "creator.username": { $regex: searchValue, $options: "i" } },
+            { "ingredient.name": { $regex: searchValue, $options: "i" } },
+            { "warehouse.name": { $regex: searchValue, $options: "i" } },
+            {
+              $expr: {
+                $regexMatch: {
+                  input: { $toString: "$items.quantity" },
+                  regex: searchValue
+                }
+              }
+            },
+            {
+              $expr: {
+                $regexMatch: {
+                  input: { $dateToString: { format: "%d/%m/%Y", date: "$date" } },
+                  regex: searchValue,
+                  options: "i"
+                }
+              }
+            }
+          ]
         }
-      : baseCondition
+      });
+    }
 
-    const recordsTotal = await StockIssue.countDocuments(baseCondition)
-    const recordsFiltered = await StockIssue.countDocuments(searchCondition)
+    pipeline.push(
+      {
+        $addFields: {
+          "items.ingredient": {
+            _id: "$ingredient._id",
+            name: "$ingredient.name"
+          },
+          "items.warehouse": {
+            _id: "$warehouse._id",
+            name: "$warehouse.name"
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id",
+          code: { $first: "$code" },
+          reason: { $first: "$reason" },
+          note: { $first: "$note" },
+          date: { $first: "$date" },
+          createdBy: { $first: "$creator" },
+          items: { $push: "$items" }
+        }
+      }
+    );
 
-    const data = await StockIssue.find(searchCondition)
-      .sort({ [sortField]: sortOrder })
-      .skip(start)
-      .limit(length)
-      .populate('createdBy', 'username')
-      .populate('items.ingredient', 'name')
-      .populate('items.warehouse', 'name')
-      .lean()
+    const countPipeline = [...pipeline, { $count: "count" }];
+    const countResult = await StockIssue.aggregate(countPipeline);
+    const recordsFiltered = countResult[0]?.count || 0;
 
-    return res.json({
+    const sortObj = {};
+    switch (sortField) {
+      case "createdBy.username":
+        sortObj["createdBy.username"] = sortDir;
+        break;
+      case "code":
+      case "note":
+      case "reason":
+      case "date":
+        sortObj[sortField] = sortDir;
+        break;
+      default:
+        sortObj[sortField] = sortDir;
+    }
+    pipeline.push({ $sort: sortObj });
+
+    pipeline.push({ $skip: start }, { $limit: length });
+
+    pipeline.push({
+      $project: {
+        ingredient: 0,
+        warehouse: 0
+      }
+    });
+
+    const data = await StockIssue.aggregate(pipeline);
+    const recordsTotal = await StockIssue.countDocuments();
+
+    res.json({
       draw,
       recordsTotal,
       recordsFiltered,
       data
-    })
+    });
   } catch (err) {
-    responseHelper.error(res, err.message)
+    responseHelper.error(res, err.message);
   }
-}
+};
 
 // CREATE
 export const createStockIssue = async (req, res) => {
