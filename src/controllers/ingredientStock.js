@@ -12,7 +12,6 @@ export const getIngredientStockList = async (req, res) => {
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
-    console.log(sortField)
     // Khởi tạo pipeline với lookup
     const pipeline = [
       ...lookupRef('ingredient', 'Ingredients'),

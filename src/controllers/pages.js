@@ -129,6 +129,18 @@ export const exportPage = (req, res) => {
     )
 }
 
+// Stock Transfer
+export const transferPage = (req, res) => {
+    res.render('inventory/stock_transfer',
+        getPageData(req, 'Phiếu Chuyển Kho', 'Transfer', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'PHIẾU CHUYỂN KHO'
+            }
+        )
+    )
+}
+
 export const ingredientStockPage = (req, res) => {
     res.render('inventory/ingredient_stock',
         getPageData(req, 'Quản lý Tồn Kho', 'IngredientStock', {
@@ -163,14 +175,28 @@ export const newStockEntryPage = (req, res) => {
     )
 }
 
+// New Stock Issue
 export const newStockIssuePage = (req, res) => {
     const stockIssueId = req.params.id
     const mode = req.query.mode || ''
 
-    const isNew = mode === 'new' ? 'Tạo phiếu xuất nguyên liệu' : 'Chi Tiết Xuất Nguyên Liệu'
+    const isNew = mode === 'new' ? 'Tạo Phiếu Xuất Kho' : 'Chi Tiết Xuất Kho'
     res.render('inventory/stock_issue_detail', 
         getPageData(req, isNew, 'New Issue Entry', {
             stockIssueId: stockIssueId
+        })
+    )
+}
+
+// New Stock Transfer
+export const newStockTransferPage = (req, res) => {
+    const stockTransferId = req.params.id
+    const mode = req.query.mode || ''
+
+    const isNew = mode === 'new' ? 'Tạo Phiếu Chuyển Kho' : 'Chi Tiết Chuyển Kho'
+    res.render('inventory/stock_transfer_detail', 
+        getPageData(req, isNew, 'New Transfer Entry', {
+            stockTransferId: stockTransferId
         })
     )
 }
