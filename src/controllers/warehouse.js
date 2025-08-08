@@ -123,7 +123,6 @@ export const updateWareHouse = async (req, res) => {
   try {
     const { id } = req.params
     const { name, location, manager, isActive } = req.body
-    console.log('Manager value:', manager, typeof manager)
     const warehouse = await Warehouse.findById(id)
     if (!warehouse) {
         return responseHelper.error(res, "Nhà kho không tồn tại", 404)

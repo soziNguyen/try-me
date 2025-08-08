@@ -6,6 +6,7 @@ import responseHelper from "../helpers/responseHelper.js"
 import withTransaction from "../helpers/withTransaction.js"
 import { generateDocumentCode } from "../helpers/common.js"
 import { lookupRef } from "../helpers/lookupHelper.js"
+import { toVietnamTime } from "../helpers/dateHelper.js"
 
 // GET ALL
 export const getAllStockEntries = async (req, res) => {
@@ -104,7 +105,9 @@ export const getStockEntries = async (req, res) => {
           supplier: { $first: "$supplier" },
           createdAt: { $first: "$createdAt" },
           items: { $push: "$items" },
-          isLocked: { $first: "$isLocked" }
+          isLocked: { $first: "$isLocked" },
+          lockedAt: { $first: "$lockedAt" },
+          lockedBy: { $first: "$lockedBy" }
         }
       }
     )
@@ -173,6 +176,7 @@ export const getStockEntryById = async (req, res) => {
       .populate('supplier', 'name')
       .populate('createdBy', 'name username')
       .populate('updatedBy', 'name username')
+      .populate('lockedBy', 'name username')
       .populate('items.ingredient', 'name')
       .populate('items.warehouse', 'name location')
       .lean()
@@ -304,6 +308,7 @@ export const updateStockEntryFromForm = async (req, res) => {
       await newEntry.populate('supplier', 'name')
       await newEntry.populate('createdBy', 'name username')
       await newEntry.populate('updatedBy', 'name username')
+      await newEntry.populate('lockedBy', 'name username')
       await newEntry.populate('items.ingredient', 'name unit')
       await newEntry.populate('items.warehouse', 'name location')
 
@@ -362,7 +367,7 @@ export const deleteStockEntries = async (req, res) => {
   }
 }
 
-
+// LOCK Stock Entry
 export const lockStockEntry = async (req, res) => {
   try {
     const { id } = req.params
@@ -371,13 +376,64 @@ export const lockStockEntry = async (req, res) => {
       return responseHelper.error(res, 'ID không hợp lệ', 400)
     }
 
-    const entry = await StockEntry.findByIdAndUpdate(id, { isLocked: true }, { new: true })
-
+    const entry = await StockEntry.findById(id)
     if (!entry) {
       return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
     }
 
-    responseHelper.success(res, entry, 'Đã khóa phiếu nhập thành công')
+    if (entry.isLocked) {
+      return responseHelper.error(res, 'Phiếu nhập đã được khóa trước đó', 400)
+    }
+
+    let updatedEntry = await StockEntry.findByIdAndUpdate(
+      id, 
+      { 
+        isLocked: true,
+        lockedAt: new Date(),
+        lockedBy: req.user._id
+      }, 
+      { new: true }
+    )
+    .populate('lockedBy', 'name username')
+
+    updatedEntry = updatedEntry.toObject()
+    updatedEntry.lockedAt = toVietnamTime(updatedEntry.lockedAt)
+
+    responseHelper.success(res, updatedEntry, 'Đã khóa phiếu nhập thành công')
+  } catch (err) {
+    responseHelper.error(res, err.message)
+  }
+}
+
+// UNLOCK Stock Entry
+export const unlockStockEntry = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if (!mongoose.isValidObjectId(id)) {
+      return responseHelper.error(res, 'ID không hợp lệ', 400)
+    }
+
+    const entry = await StockEntry.findById(id)
+    if (!entry) {
+      return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
+    }
+
+    if (!entry.isLocked) {
+      return responseHelper.error(res, 'Phiếu nhập chưa được khóa', 400)
+    }
+
+    const updatedEntry = await StockEntry.findByIdAndUpdate(
+      id, 
+      { 
+        isLocked: false,
+        lockedAt: null,
+        lockedBy: null
+      }, 
+      { new: true }
+    )
+
+    responseHelper.success(res, updatedEntry, 'Đã mở khóa phiếu nhập thành công')
   } catch (err) {
     responseHelper.error(res, err.message)
   }

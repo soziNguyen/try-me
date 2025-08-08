@@ -36,7 +36,7 @@ $(function () {
         order: [],
   
         ajax: {
-          url: '/api/inventory/stock-issue',
+          url: '/api/inventory/stock-issues',
           type: 'GET'
         },
   
