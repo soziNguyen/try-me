@@ -1,5 +1,6 @@
 import Table from '../models/tableModel.js';
 import responseHelper from '../helpers/responseHelper.js';
+import paginationHelper from '../helpers/paginationHelper.js';
 
 export const tablePage = async (req, res) => {
     try {
@@ -37,12 +38,29 @@ export const createTable = async (req, res) => {
 
 // [GET] /api/tables
 export const getTables = async (req, res) => {
-    try {
-        const tables = await Table.find().lean(); 
-        responseHelper.success(res, tables);
-    } catch (error) {
-        responseHelper.error(res, error.message);
-    }
+  try {
+    const { page, limit } = req.query;
+    const { currentPage, perPage, skip } = paginationHelper(page, limit);
+
+    const [tables, totalItems] = await Promise.all([
+      Table.find().skip(skip).limit(perPage).lean(),
+      Table.countDocuments()
+    ]);
+
+    const totalPages = Math.ceil(totalItems / perPage);
+
+    responseHelper.success(res, {
+      tables,
+      pagination: {
+        currentPage,
+        perPage,
+        totalItems,
+        totalPages
+      }
+    });
+  } catch (error) {
+    responseHelper.error(res, error.message);
+  }
 };
 
 export const getTableById = async (req, res) => {

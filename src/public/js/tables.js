@@ -8,10 +8,8 @@ const btnAssignTable = document.getElementById("btnAssignTable");
 // ========== GÁN SỰ KIỆN ==========
 function bindEvents() {
   btnShowForm.addEventListener('click', () => {
-    formAddTable.classList.toggle('d-none');
-    btnShowForm.textContent = formAddTable.classList.contains('d-none')
-      ? '+ Thêm bàn'
-      : 'Đóng';
+    const isHidden = formAddTable.classList.toggle('d-none');
+    btnShowForm.textContent = isHidden ? '+ Thêm bàn' : 'Đóng';
   });
 
   // Sự kiện nhấn nút Cập nhật
@@ -95,29 +93,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindEvents();      
   await getTables(); 
   setInterval(updateSeatedTimes, 1000);
+  paginationHandle((page, limit) => {
+  getTables(page);
+  });
 });
 
 
 // ========== LẤY DỮ LIỆU TỪ SERVER ==========
-let tableData = []; 
+let tableData = [];
+let currentPage = 1;
+const limit = 8;
 
-async function getTables() {
+async function getTables(page = 1) {
   try {
-    const tables = await ajax("/api/tables", {}, "GET");
-    if (tables) {
+    currentPage = page;
+    const res = await ajax(`/api/tables?page=${page}&limit=${limit}`, {}, "GET");
+
+    if (res) {
+      const { tables, pagination } = res;
+
       tableData = tables;
-      renderTableList(tables); 
-
-      // Gán sự kiện cho checkbox "Chọn tất cả"
-      // const selectAll = document.getElementById("selectAllTable");
-      // selectAll.checked = false;
-
-      // selectAll.addEventListener('change', function () {
-      //   const isChecked = this.checked;
-      //   document.querySelectorAll('.tableCheckbox').forEach(cb => {
-      //     cb.checked = isChecked;
-      //   });
-      // });
+      renderTableList(tables);
+      document.getElementById('pagination').innerHTML = renderPagination(pagination);
     }
   } catch (error) {
     toastr.error(error.message);
@@ -154,9 +151,10 @@ tableGrid.innerHTML = tables.map(table =>{
         <div><strong>Giờ vào:</strong> ${new Date(table.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
         <div><strong>Đã ngồi:</strong> <span class="seated-time" data-checkin="${table.checkInTime}" data-id="${table._id}">Đang tính...</span></div>
       ` : ""}
-            <button class ="btnAssignTable btn btn-outline-dark mt-3">
-              <i class="bi bi-clock me-1"></i> Giao bàn
-            </button>
+        ${table.status === "available" ? `
+          <button class ="btnAssignTable btn btn-warning btn-sm mt-2 fw-bold shadow-sm">
+            <i class="bi bi-clock me-1"></i> Giao bàn
+          </button>` : ""}
       </div>
     </div>
   </div>
