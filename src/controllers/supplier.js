@@ -3,7 +3,7 @@ import responseHelper from "../helpers/responseHelper.js"
 
 export const getAllSuppliers = async (req, res) => {
     try {
-         const suppliers = await Supplier.find({ status: 'active' }).select('_id name')
+         const suppliers = await Supplier.find({ isActive: true }).select('_id name')
          responseHelper.success(res, suppliers)
     } catch (error) {
         responseHelper.error(res, error.message)
@@ -12,47 +12,63 @@ export const getAllSuppliers = async (req, res) => {
 
 export const getSuppliers = async (req, res) => {
     try {
-        const draw = parseInt(req.query.draw) || 0
-        const start = parseInt(req.query.start) || 0
-        const length = parseInt(req.query.length) || 10
-        const searchValue = (req.query['search[value]'] || '').trim()
+        const draw = +req.query.draw || 0;
+        const start = +req.query.start || 0;
+        const length = +req.query.length || 10;
+        const searchValue = (req.query["search[value]"] || "").trim();
+        const colIdx = req.query["order[0][column]"];
+        const sortField = req.query[`columns[${colIdx}][data]`] || "createdAt";
+        const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1;
 
-        const sortColumnIndex = req.query['order[0][column]']
-        const sortField = req.query[`columns[${sortColumnIndex}][data]`] || 'createdAt'
-        const sortOrder = req.query['order[0][dir]'] === 'asc' ? 1 : -1
+        const fieldToSearch = ['code', 'name', 'phone', 'email', 'country', 'address', 'taxId', 'note'];
 
-        const searchableFields = ['code', 'name', 'phone', 'email', 'country', 'address', 'taxId', 'status','note']
+        const pipeline = [];
 
-        const baseCondition = { status: 'active' } // { status: 'active'}
-        const searchCondition = searchValue
-            ? {
-                ...baseCondition,
-                $or: searchableFields.map(field => ({
-                    [field]: { $regex: searchValue, $options: 'i' }
-                }))
+        if (searchValue) {
+            const orConditions = fieldToSearch.map(field => ({
+                [field]: { $regex: searchValue, $options: "i" }
+            }));
+            pipeline.push({ $match: { $or: orConditions } });
+        }
+
+        const countPipeline = [...pipeline, { $count: "count" }];
+        const countResult = await Supplier.aggregate(countPipeline);
+        const recordsFiltered = countResult[0]?.count || 0;
+
+        const recordsTotal = await Supplier.estimatedDocumentCount();
+
+        pipeline.push(
+            { $sort: { [sortField]: sortDir } },
+            { $skip: start },
+            { $limit: length },
+            {
+                $project: {
+                  code: 1,
+                  name: 1,
+                  phone: 1,
+                  email: 1,
+                  country: 1,
+                  address: 1,
+                  taxId: 1,
+                  note: 1,
+                  isActive: 1,
+                  createdAt: 1
+                }
             }
-            : baseCondition
+        );
 
-        const totalRecords = await Supplier.countDocuments({ status: 'active' })
-        const filteredRecords = await Supplier.countDocuments(searchCondition)
+        const suppliers = await Supplier.aggregate(pipeline);
 
-        const suppliers = await Supplier.find(searchCondition)
-            .sort({ [sortField]: sortOrder })
-            .skip(start)
-            .limit(length)
-            .lean()
-        
         return res.json({
-            draw: Number(draw),
-            recordsTotal: totalRecords,
-            recordsFiltered: filteredRecords,
+            draw,
+            recordsTotal,
+            recordsFiltered,
             data: suppliers
-        })
-
+        });
     } catch (error) {
-        responseHelper.error(res, error.message)
+        responseHelper.error(res, error.message);
     }
-}
+};
 
 export const createSupplier = async (req, res) => {
     try {
@@ -67,7 +83,7 @@ export const createSupplier = async (req, res) => {
 export const updateSupplier = async (req, res) => {
     try {
         const { id } = req.params
-        const { code, name, phone, email, country, address, taxId, status, note } = req.body
+        const { code, name, phone, email, country, address, taxId, isActive, note } = req.body
 
         const supplier = await Supplier.findById(id)
         if (!supplier) {
@@ -97,7 +113,7 @@ export const updateSupplier = async (req, res) => {
         if (country !== undefined) dataUpdate.country = country
         if (address !== undefined) dataUpdate.address = address
         if (taxId !== undefined) dataUpdate.taxId = taxId
-        if (status !== undefined) dataUpdate.status = status
+        if (isActive !== undefined) dataUpdate.isActive = isActive
         if (note !== undefined) dataUpdate.note = note
 
         const updated = await Supplier.findByIdAndUpdate(id, dataUpdate, { new: true })
@@ -117,7 +133,7 @@ export const deleteSuppliers = async (req, res) => {
 
         const result = await Supplier.updateMany(
             { _id: { $in: ids } },
-            { $set: { status: 'inactive' } }
+            { $set: { isActive: false } }
     )
 
         responseHelper.success(res, result.modifiedCount, 'Xóa thành công')
@@ -131,7 +147,7 @@ export const restoreSuppliers = async (req, res) => {
         const { ids } = req.body
         await Supplier.updateMany(
             { _id: { $in: ids } },
-            { $set: { status: 'active' } }
+            { $set: { isActive: true } }
         )
         responseHelper.success(res, 'Khôi phục thành công')    
     } catch (error) {

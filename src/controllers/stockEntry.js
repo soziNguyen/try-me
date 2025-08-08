@@ -5,18 +5,24 @@ import { Ingredient } from "../models/ingredient.js"
 import responseHelper from "../helpers/responseHelper.js"
 import withTransaction from "../helpers/withTransaction.js"
 import { generateDocumentCode } from "../helpers/common.js"
-
-
-
+import { lookupRef } from "../helpers/lookupHelper.js"
 
 // GET ALL
 export const getAllStockEntries = async (req, res) => {
   try {
-    const entries = await StockEntry
-      .find({}, "_id code")
-      .populate('supplier', 'name')
-      .sort({ createdAt: -1 })
-      .lean()
+    const entries = await StockEntry.aggregate([
+      {
+        $lookup: {
+          from: "Suppliers",
+          localField: "supplier",
+          foreignField: "_id",
+          as: "supplier"
+        }
+      },
+      { $unwind: { path: "$supplier", preserveNullAndEmptyArrays: true } },
+      { $sort: { createdAt: -1 } },
+      { $project: { _id: 1, code: 1, "supplier.name": 1 } }
+    ])
     responseHelper.success(res, entries)
   } catch (err) {
     responseHelper.error(res, err.message)
@@ -26,33 +32,129 @@ export const getAllStockEntries = async (req, res) => {
 // DATATABLE SERVER-SIDE
 export const getStockEntries = async (req, res) => {
   try {
-    const draw        = +req.query.draw       || 0
-    const start       = +req.query.start      || 0
-    const length      = +req.query.length     || 10
+    const draw = +req.query.draw || 0
+    const start = +req.query.start || 0
+    const length = +req.query.length || 10
     const searchValue = (req.query["search[value]"] || "").trim()
-    const colIdx      = req.query["order[0][column]"]
-    const sortField   = req.query[`columns[${colIdx}][data]`] || "date"
-    const sortDir     = req.query["order[0][dir]"] === "asc" ? 1 : -1
+    const colIdx = req.query["order[0][column]"]
+    const sortField = req.query[`columns[${colIdx}][data]`] || "createdAt"
+    const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
 
-    const searchable = ["code", "note"]
-    const baseCond   = {}
-    const searchCond = searchValue
-      ? { ...baseCond, $or: searchable.map(f => ({ [f]: { $regex: searchValue, $options: "i" } })) }
-      : baseCond
+    const pipeline = [
+      ...lookupRef('supplier', 'Suppliers'),
+      { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
+      ...lookupRef('items.ingredient', 'Ingredients', { as: 'ingredient' }),
+      ...lookupRef('items.warehouse', 'Warehouses', { as: 'warehouse' }),
+    ]    
 
-    const recordsTotal    = await StockEntry.countDocuments(baseCond)
-    const recordsFiltered = await StockEntry.countDocuments(searchCond)
+    // Search before grouping
+    if (searchValue) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { code: { $regex: searchValue, $options: "i" } },
+            { note: { $regex: searchValue, $options: "i" } },
+            { "supplier.name": { $regex: searchValue, $options: "i" } },
+            { "ingredient.name": { $regex: searchValue, $options: "i" } },
+            { "warehouse.name": { $regex: searchValue, $options: "i" } },
+            { "items.quantity": { $regex: searchValue, $options: "i" } },
+            {
+              $expr: {
+                $regexMatch: {
+                  input: { $toString: "$items.quantity" },
+                  regex: searchValue
+                }
+              }
+            },
+            { 
+              $expr: {
+                $regexMatch: {
+                  input: { $dateToString: { format: "%d/%m/%Y", date: "$date" } },
+                  regex: searchValue,
+                  options: "i"
+                }
+              }
+            }
+          ]
+        }
+      })
+    }
 
-    const data = await StockEntry.find(searchCond)
-      .sort({ [sortField]: sortDir })
-      .skip(start)
-      .limit(length)
-      .populate("supplier", "name")
-      .populate("items.ingredient", "name")
-      .populate("items.warehouse", "name location")
-      .lean()
+    // Thêm addFields và group
+    pipeline.push(
+      {
+        $addFields: {
+          "items.ingredient": {
+            _id: "$ingredient._id",
+            name: "$ingredient.name"
+          },
+          "items.warehouse": {
+            _id: "$warehouse._id",
+            name: "$warehouse.name",
+            location: "$warehouse.location"
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id",
+          code: { $first: "$code" },
+          note: { $first: "$note" },
+          date: { $first: "$date" },
+          supplier: { $first: "$supplier" },
+          createdAt: { $first: "$createdAt" },
+          items: { $push: "$items" },
+          isLocked: { $first: "$isLocked" }
+        }
+      }
+    )
 
-    res.json({ draw, recordsTotal, recordsFiltered, data })
+    // Đếm sau lọc
+    const countPipeline = [...pipeline, { $count: "count" }]
+    const countResult = await StockEntry.aggregate(countPipeline)
+    const recordsFiltered = countResult[0]?.count || 0
+
+    // Sort
+    const sortObj = {}
+    switch (sortField) {
+      case 'supplier.name':
+      case 'supplier':
+        sortObj['supplier.name'] = sortDir
+        break
+      case 'code':
+        sortObj['code'] = sortDir
+        break
+      case 'note':
+        sortObj['note'] = sortDir
+        break
+      case 'date':
+        sortObj['date'] = sortDir
+        break
+      default:
+        sortObj[sortField] = sortDir
+    }
+    pipeline.push({ $sort: sortObj })
+
+    // Pagination
+    pipeline.push({ $skip: start })
+    pipeline.push({ $limit: length })
+
+    pipeline.push({
+      $project: {
+        ingredient: 0,
+        warehouse: 0
+      }
+    })
+
+    const data = await StockEntry.aggregate(pipeline)
+    const recordsTotal = await StockEntry.countDocuments()
+
+    res.json({
+      draw,
+      recordsTotal,
+      recordsFiltered,
+      data
+    })
   } catch (err) {
     responseHelper.error(res, err.message)
   }
@@ -119,6 +221,10 @@ export const updateStockEntryFromForm = async (req, res) => {
       const oldEntry = await StockEntry.findById(id).session(session)
       if (!oldEntry) throw new Error('Phiếu nhập không tồn tại')
 
+      if (oldEntry.isLocked) {
+        throw new Error('Phiếu nhập đã bị khóa, không thể chỉnh sửa')
+      }
+
       // Trừ tồn kho cũ khỏi IngredientStock
       for (const item of oldEntry.items) {
         if (item.ingredient && item.warehouse && item.quantity) {
@@ -176,7 +282,7 @@ export const updateStockEntryFromForm = async (req, res) => {
         }
       }
 
-      // 👉 Cập nhật lại tổng tồn kho trong Ingredient
+      // Cập nhật lại tổng tồn kho trong Ingredient
       const updatedIngredientIds = [...new Set(newEntry.items.map(i => i.ingredient.toString()))]
 
       for (const ingId of updatedIngredientIds) {
@@ -184,9 +290,9 @@ export const updateStockEntryFromForm = async (req, res) => {
           { $match: { ingredient: new mongoose.Types.ObjectId(ingId) } },
           { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
         ]).session(session)
-
+        
         const totalStock = totalStockAgg[0]?.totalQuantity || 0
-
+        
         await Ingredient.updateOne(
           { _id: ingId },
           { $set: { stock: totalStock } },
@@ -226,11 +332,21 @@ export const deleteStockEntries = async (req, res) => {
 
       // Trừ tồn kho từ IngredientStock
       for (const entry of entries) {
+        if (entry.isLocked) {
+          throw new Error(`Phiếu nhập ${entry.code} đã bị khóa, không thể xóa`)
+        }
+
         for (const item of entry.items) {
           const { ingredient, warehouse, quantity } = item
           await IngredientStock.updateOne(
             { ingredient, warehouse },
             { $inc: { quantity: -Math.abs(quantity) } },
+            { session }
+          )
+
+          await Ingredient.updateOne(
+            { _id: ingredient },
+            { $inc: { stock: -Math.abs(quantity) } },
             { session }
           )
         }
@@ -243,5 +359,26 @@ export const deleteStockEntries = async (req, res) => {
     responseHelper.success(res, null, "Xóa thành công và cập nhật tồn kho")
   } catch (error) {
     responseHelper.error(res, error.message)
+  }
+}
+
+
+export const lockStockEntry = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if (!mongoose.isValidObjectId(id)) {
+      return responseHelper.error(res, 'ID không hợp lệ', 400)
+    }
+
+    const entry = await StockEntry.findByIdAndUpdate(id, { isLocked: true }, { new: true })
+
+    if (!entry) {
+      return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
+    }
+
+    responseHelper.success(res, entry, 'Đã khóa phiếu nhập thành công')
+  } catch (err) {
+    responseHelper.error(res, err.message)
   }
 }

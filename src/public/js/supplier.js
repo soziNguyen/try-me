@@ -1,5 +1,5 @@
 $(function () {
-  const editableFields = ['code','name','phone','email','country','address','taxId','status','note'];
+  const editableFields = ['code','name','phone','email','country','address','taxId'];
   let showList = [10, 25, 50, 100]
   const numRows = Math.floor(($(window).height() - $('#supplierTableBody').offset().top - 100) / 45)
   if (!showList.includes(numRows)) {
@@ -46,7 +46,26 @@ $(function () {
       ...editableFields.map(field => ({
         data: field,
         render: inputRenderer(field)
-      }))
+      })),
+      {
+        data: 'isActive',
+        className: 'text-center',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<input type="checkbox" class="dataInput form-check-input" data-field="isActive" data-id="${row._id}" ${data ? 'checked' : ''}>`
+          }
+          return data
+        }
+      },
+      {
+        data: 'note',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="note" value="${data ?? ''}">`
+          }
+          return data
+        }
+      }
     ],
     rowCallback: function(row, data) {
       // Tag row with data-id for update

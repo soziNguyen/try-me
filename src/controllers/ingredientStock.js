@@ -1,60 +1,23 @@
 import IngredientStock from '../models/ingredientStock.js'
 import responseHelper from '../helpers/responseHelper.js'
+import { lookupRef } from '../helpers/lookupHelper.js'
 
 export const getIngredientStockList = async (req, res) => {
   try {
     const draw = +req.query.draw || 0
     const start = +req.query.start || 0
     const length = +req.query.length || 10
-    const searchValue = (req.query["search[value]"] || "").trim()
-    const colIdx = req.query["order[0][column]"]
-    const sortField = req.query[`columns[${colIdx}][data]`] || "updatedAt"
-    const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
+    const searchValue = (req.query['search[value]'] || '').trim()
+    const colIdx = req.query['order[0][column]']
+    const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
+    const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
-    // Khởi tạo pipeline
+    console.log(sortField)
+    // Khởi tạo pipeline với lookup
     const pipeline = [
-      {
-        $lookup: {
-          from: "Ingredients",
-          localField: "ingredient",
-          foreignField: "_id",
-          as: "ingredient"
-        }
-      },
-      {
-        $unwind: {
-          path: "$ingredient",
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $lookup: {
-          from: "Warehouses",
-          localField: "warehouse",
-          foreignField: "_id",
-          as: "warehouse"
-        }
-      },
-      {
-        $unwind: {
-          path: "$warehouse",
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $lookup: {
-          from: "Suppliers",
-          localField: "supplier",
-          foreignField: "_id",
-          as: "supplier"
-        }
-      },
-      {
-        $unwind: {
-          path: "$supplier",
-          preserveNullAndEmptyArrays: true
-        }
-      }
+      ...lookupRef('ingredient', 'Ingredients'),
+      ...lookupRef('warehouse', 'Warehouses'),
+      ...lookupRef('supplier', 'Suppliers')
     ]
 
     // Search
@@ -62,6 +25,7 @@ export const getIngredientStockList = async (req, res) => {
       const isNumeric = !isNaN(searchValue);
       const orConditions = [
         { "ingredient.name": { $regex: searchValue, $options: "i" } },
+        { "ingredient.unit": { $regex: searchValue, $options: "i" } },
         { "warehouse.name": { $regex: searchValue, $options: "i" } },
         { "supplier.name": { $regex: searchValue, $options: "i" } }
       ];
@@ -78,7 +42,7 @@ export const getIngredientStockList = async (req, res) => {
     // Đếm bản ghi sau lọc (recordsFiltered)
     const countPipeline = [...pipeline, { $count: "count" }]
     const countResult = await IngredientStock.aggregate(countPipeline)
-    const recordsFiltered = countResult[0]?.count || 0
+    const recordsFiltered = countResult.length > 0 ? countResult[0].count : 0
 
     // Sort
     const sortObj = {}
@@ -93,23 +57,26 @@ export const getIngredientStockList = async (req, res) => {
         break
       case 'supplier.name':
       case 'supplier':
-        sortObj['suppliers.name'] = sortDir
+        sortObj['supplier.name'] = sortDir
         break
       case 'quantity':
         sortObj['quantity'] = sortDir
         break
+      case 'unit':
+      case 'ingredient.unit':
+        sortObj['ingredient.unit'] = sortDir
+        break
       default:
         sortObj[sortField] = sortDir
     }
-    pipeline.push({ $sort: sortObj })
-
-    // Pagination
-    pipeline.push({ $skip: start })
-    pipeline.push({ $limit: length })
 
     // Project dữ liệu
-    pipeline.push({
-      $project: {
+    pipeline.push(
+      { $sort: sortObj },
+      { $skip: start },
+      { $limit: length },
+      {
+        $project: {
         _id: 1,
         quantity: 1,
         ingredient: {
@@ -121,7 +88,9 @@ export const getIngredientStockList = async (req, res) => {
         },
         supplier: {
           name: "$supplier.name"
-        }
+        },
+        createdAt: 1,
+        updatedAt: 1
       }
     })
 
@@ -139,33 +108,3 @@ export const getIngredientStockList = async (req, res) => {
     responseHelper.error(res, err.message)
   }
 }
-
-export const getIngredientTotalStock = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    if (!mongoose.isValidObjectId(id)) {
-      throw new Error('ID nguyên liệu không hợp lệ');
-    }
-
-    const result = await IngredientStock.aggregate([
-      {
-        $match: {
-          ingredient: new mongoose.Types.ObjectId(id)
-        }
-      },
-      {
-        $group: {
-          _id: '$ingredient',
-          totalStock: { $sum: '$quantity' }
-        }
-      }
-    ]);
-
-    const totalStock = result[0]?.totalStock || 0;
-
-    responseHelper.success(res, { ingredient: id, totalStock });
-  } catch (err) {
-    responseHelper.error(res, err.message);
-  }
-};
