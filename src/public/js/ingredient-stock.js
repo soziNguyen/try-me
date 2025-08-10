@@ -42,8 +42,12 @@ $(function () {
         },
         {
           data: 'supplier.name',
-          render: (data, type, row) =>
-            `<span class="text">${row.supplier?.name || ''}</span>`,
+          render: (data, type, row) => {
+            if (row.supplier?.name) {
+              return `<span class="badge bg-success">${row.supplier.name}</span>`;
+            }
+            return `<span class="badge bg-info">Chuyển kho</span>`;
+          },
         },
       ],
       lengthMenu: [showList, showList],

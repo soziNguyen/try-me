@@ -38,6 +38,14 @@ $(function () {
     })
 
   function initForm() {
+    // Populate warehouses dropdown
+    const warehouseOptions = warehouses
+      .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
+      .join("")
+    $("#warehouse").html(
+      '<option value="" class="text-center">— Chọn kho —</option>' + warehouseOptions
+    )
+
     if ($("#itemsTableBody tr").length === 0) {
       addNewItem()
     }
@@ -46,12 +54,10 @@ $(function () {
       initSelect2($(this), '— Chọn nguyên liệu —')
     })
 
-    // Populate first row
-    updateRowDropdowns(0)
-
     // Event handlers
     $("#addItemBtn").on("click", addNewItem)
     $("#stockIssueForm").on("submit", saveStockIssue)
+    
     $("#btn-lock-issue").on("click", function () {
       if (!confirm("Bạn có chắc chắn muốn khóa phiếu này? Sau khi khóa sẽ không thể chỉnh sửa hoặc xóa.")) return
       $.ajax({
@@ -68,7 +74,7 @@ $(function () {
             $("#stockIssueForm")
               .find("input, select, textarea, button")
               .not("#btn-lock-issue, #btn-print-issue")
-              .add("#btn-save-issue, #addItemBtn, #reason")
+              .add("#btn-save-issue, #addItemBtn")
               .prop("disabled", true)
           } else {
             toastr.error(res.message || "Có lỗi xảy ra")
@@ -95,39 +101,21 @@ $(function () {
     })
   }
 
-  function updateRowDropdowns(rowIndex) {
+  function addNewItem() {
     const ingredientOptions = ingredients
       .map((ing) => `<option value="${ing._id}">${ing.name}</option>`)
       .join("")
-    $(`select[name="items[${rowIndex}][ingredient]"]`).html(
-      '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
-        ingredientOptions
-    )
-
-    const warehouseOptions = warehouses
-      .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
-      .join("")
-    $(`select[name="items[${rowIndex}][warehouse]"]`).html(
-      '<option value="" class="text-center">— Chọn kho —</option>' +
-        warehouseOptions
-    )
-  }
-
-  function addNewItem() {
+      
     const newRow = `
     <tr>
       <td>
         <select class="form-select form-select-sm select2-ingredient" name="items[${itemCounter}][ingredient]">
           <option value="" class="text-center">— Chọn nguyên liệu —</option>
+          ${ingredientOptions}
         </select>
       </td>
       <td>
         <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][quantity]" min="0" step="0.01" placeholder="0">
-      </td>
-      <td>
-        <select class="form-select form-select-sm" name="items[${itemCounter}][warehouse]">
-          <option value="" class="text-center">— Chọn kho —</option>
-        </select>
       </td>
       <td class="text-center">
         <button type="button" class="btn btn-danger btn-sm remove-item-btn">
@@ -138,7 +126,6 @@ $(function () {
     `
     $("#itemsTableBody").append(newRow)
     const $newSelect = $(`select[name="items[${itemCounter}][ingredient]"]`)
-    updateRowDropdowns(itemCounter)
     initSelect2($newSelect, '— Chọn nguyên liệu —')
     itemCounter++
   }
@@ -147,6 +134,7 @@ $(function () {
     $("#code").val(stockIssue.code || "")
     $("#date").val(formatDate(stockIssue.date) || "")
     $("#reason").val(stockIssue.reason || "")
+    $("#warehouse").val(stockIssue.warehouse?._id || "")
     $("#createdBy")
       .val(stockIssue.createdBy?.name || stockIssue.createdBy?.username || "")
       .data("id", stockIssue.createdBy?._id)
@@ -155,21 +143,21 @@ $(function () {
     if (stockIssue.items && stockIssue.items.length > 0) {
       $("#itemsTableBody").empty()
       stockIssue.items.forEach((item, index) => {
+        const ingredientOptions = ingredients
+          .map((ing) => `<option value="${ing._id}">${ing.name}</option>`)
+          .join("")
+          
         const row = `
         <tr>
           <td>
             <select class="form-select form-select-sm select2-ingredient" name="items[${index}][ingredient]">
               <option value="" class="text-center">— Chọn nguyên liệu —</option>
+              ${ingredientOptions}
             </select>
           </td>
           <td>
             <input type="number" class="form-control form-control-sm" name="items[${index}][quantity]" 
               min="0" step="0.01" value="${item.quantity || ""}" placeholder="0">
-          </td>
-          <td>
-            <select class="form-select form-select-sm" name="items[${index}][warehouse]">
-              <option value="" class="text-center">— Chọn kho —</option>
-            </select>
           </td>
           <td class="text-center">
             <button type="button" class="btn btn-danger btn-sm remove-item-btn">
@@ -180,29 +168,32 @@ $(function () {
         `
         $("#itemsTableBody").append(row)
         const $sel = $(`select[name="items[${index}][ingredient]"]`)
-        updateRowDropdowns(index)
         $sel.val(item.ingredient?._id || "")
         initSelect2($sel, '— Chọn nguyên liệu —')
-        $(`select[name="items[${index}][warehouse]"]`).val(
-          item.warehouse?._id || ""
-        )
       })
       itemCounter = stockIssue.items.length || 1
     }
 
     if (stockIssue?.isLocked) {
       $("#btn-lock-issue").prop("disabled", true).html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
-    
+      
       $("#stockIssueForm")
         .find("input, select, textarea, button")
         .not("#btn-lock-issue, #btn-print-issue")
-        .add("#btn-save-issue, #addItemBtn, #reason")
+        .add("#btn-save-issue, #addItemBtn")
         .prop("disabled", true)
     }   
   }
 
   function saveStockIssue(e) {
     e.preventDefault()
+  
+    // Kiểm tra kho đã chọn chưa
+    const warehouseId = $("#warehouse").val()
+    if (!warehouseId) {
+      toastr.error("Vui lòng chọn kho xuất", "Lỗi dữ liệu")
+      return
+    }
   
     const $rows = $("#itemsTableBody tr")
     const partialErrors = []
@@ -213,16 +204,14 @@ $(function () {
   
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
       const quantity = $(this).find('input[name*="[quantity]"]').val()
-      const warehouseId = $(this).find('select[name*="[warehouse]"]').val()
   
-      const hasAnyValue = ingredientId || quantity || warehouseId
-      const isComplete = ingredientId && quantity && warehouseId
+      const hasAnyValue = ingredientId || quantity
+      const isComplete = ingredientId && quantity && parseFloat(quantity) > 0
   
       if (hasAnyValue && !isComplete) {
         const missingFields = []
         if (!ingredientId) missingFields.push("nguyên liệu")
-        if (!quantity) missingFields.push("số lượng")
-        if (!warehouseId) missingFields.push("kho")
+        if (!quantity || parseFloat(quantity) <= 0) missingFields.push("số lượng hợp lệ")
   
         partialErrors.push(`Dòng ${rowIndex} thiếu ${missingFields.join(", ")}`)
       }
@@ -239,9 +228,8 @@ $(function () {
       $rows.each(function () {
         const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
         const quantity = $(this).find('input[name*="[quantity]"]').val()
-        const warehouseId = $(this).find('select[name*="[warehouse]"]').val()
   
-        if (!ingredientId && !quantity && !warehouseId) {
+        if (!ingredientId && !quantity) {
           $(this).remove()
         }
       })
@@ -252,6 +240,7 @@ $(function () {
     const stockIssueData = {
       code: formData.get("code"),
       date: formData.get("date"),
+      warehouse: warehouseId, // Kho chung cho cả phiếu
       reason: formData.get("reason"),
       note: formData.get("note"),
       items: [],
@@ -264,13 +253,11 @@ $(function () {
     $("#itemsTableBody tr").each(function () {
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
       const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val())
-      const warehouseId = $(this).find('select[name*="[warehouse]"]').val()
   
-      if (ingredientId && quantity && warehouseId) {
+      if (ingredientId && quantity > 0) {
         stockIssueData.items.push({
           ingredient: ingredientId,
-          quantity,
-          warehouse: warehouseId,
+          quantity: quantity
         })
       }
     })
@@ -290,16 +277,26 @@ $(function () {
       ? `/api/inventory/stock-issue/update/${stockIssueId}`
       : "/api/inventory/stock-issue/create"
 
-      console.log(stockIssueData)
+    console.log("Sending data:", stockIssueData)
       
     $.ajax({
       url,
       method: "POST",
       contentType: "application/json",
       data: JSON.stringify(stockIssueData),
+      beforeSend: function() {
+        $("#btn-save-issue").prop("disabled", true).text("Đang lưu...")
+      },
       success(res) {
         if (res.success) {
           toastr.success(res.message || "Lưu phiếu xuất thành công")
+          
+          // Nếu là tạo mới, chuyển sang trang edit
+          if (!stockIssueId && res.data?.id) {
+            setTimeout(() => {
+              window.location.href = `/inventory/stock-issue/${res.data.id}`
+            }, 1500)
+          }
         } else {
           toastr.error(res.message || "Có lỗi xảy ra")
         }
@@ -308,6 +305,9 @@ $(function () {
         console.error("Save error:", xhr)
         toastr.error(xhr.responseJSON?.message || "Có lỗi xảy ra khi lưu")
       },
+      complete() {
+        $("#btn-save-issue").prop("disabled", false).html('<i class="bi bi-check-circle me-2"></i>Lưu phiếu')
+      }
     })
-  }  
+  }
 })

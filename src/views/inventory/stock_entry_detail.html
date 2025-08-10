@@ -35,6 +35,12 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6">
+                                    <label for="warehouse" class="form-label">Kho <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="warehouse" name="warehouse" required>
+                                        <option value="" class="text-center">— Chọn kho —</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
                                     <label for="createdBy" class="form-label">Người tạo</label>
                                     <input type="text" class="form-control" id="createdBy" readonly>
                                 </div>
@@ -60,7 +66,6 @@
                                             <th width="15%">Số lượng</th>
                                             <th width="15%">Đơn giá (đ)</th>
                                             <th width="15%">Thành tiền</th>
-                                            <th width="20%">Kho</th>
                                             <th width="5%">Xóa</th>
                                         </tr>
                                     </thead>

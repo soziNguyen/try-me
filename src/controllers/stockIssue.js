@@ -2,6 +2,7 @@ import mongoose from "mongoose"
 import StockIssue from "../models/stockIssue.js"
 import IngredientStock from "../models/ingredientStock.js"
 import { Ingredient } from "../models/ingredient.js"
+import Warehouse from "../models/warehouse.js"
 import responseHelper from "../helpers/responseHelper.js"
 import withTransaction from "../helpers/withTransaction.js"
 import { generateDocumentCode } from "../helpers/common.js"
@@ -11,8 +12,17 @@ import { lookupRef } from "../helpers/lookupHelper.js"
 export const getAllStockIssues = async (req, res) => {
   try {
     const issues = await StockIssue.aggregate([
+      {
+        $lookup: {
+          from: "Warehouses",
+          localField: "warehouse",
+          foreignField: "_id",
+          as: "warehouse"
+        }
+      },
+      { $unwind: { path: "$warehouse", preserveNullAndEmptyArrays: true } },
       { $sort: { createdAt: -1 } },
-      { $project: { _id: 1, code: 1, reason: 1 } }
+      { $project: { _id: 1, code: 1, reason: 1, "warehouse.name": 1 } }
     ])
     responseHelper.success(res, issues)
   } catch (err) {
@@ -32,9 +42,9 @@ export const getStockIssues = async (req, res) => {
     const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
 
     const pipeline = [
+      ...lookupRef('warehouse', 'Warehouses'),
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
       ...lookupRef('items.ingredient', 'Ingredients', { as: 'ingredient' }),
-      ...lookupRef('items.warehouse', 'Warehouses', { as: 'warehouse' }),
     ]    
 
     // Search before grouping
@@ -45,8 +55,8 @@ export const getStockIssues = async (req, res) => {
             { code: { $regex: searchValue, $options: "i" } },
             { reason: { $regex: searchValue, $options: "i" } },
             { note: { $regex: searchValue, $options: "i" } },
-            { "ingredient.name": { $regex: searchValue, $options: "i" } },
             { "warehouse.name": { $regex: searchValue, $options: "i" } },
+            { "ingredient.name": { $regex: searchValue, $options: "i" } },
             {
               $expr: {
                 $regexMatch: {
@@ -69,18 +79,13 @@ export const getStockIssues = async (req, res) => {
       })
     }
 
-    // Thêm addFields và group
+    // Group và filter items rỗng
     pipeline.push(
       {
         $addFields: {
           "items.ingredient": {
             _id: "$ingredient._id",
             name: "$ingredient.name"
-          },
-          "items.warehouse": {
-            _id: "$warehouse._id",
-            name: "$warehouse.name",
-            location: "$warehouse.location"
           }
         }
       },
@@ -91,8 +96,17 @@ export const getStockIssues = async (req, res) => {
           reason: { $first: "$reason" },
           note: { $first: "$note" },
           date: { $first: "$date" },
+          warehouse: { $first: "$warehouse" },
           createdAt: { $first: "$createdAt" },
-          items: { $push: "$items" },
+          items: { 
+            $push: {
+              $cond: {
+                if: { $ne: ["$items.ingredient", null] },
+                then: "$items",
+                else: "$$REMOVE"
+              }
+            }
+          },
           isLocked: { $first: "$isLocked" }
         }
       }
@@ -106,6 +120,10 @@ export const getStockIssues = async (req, res) => {
     // Sort
     const sortObj = {}
     switch (sortField) {
+      case 'warehouse.name':
+      case 'warehouse':
+        sortObj['warehouse.name'] = sortDir
+        break
       case 'code':
         sortObj['code'] = sortDir
         break
@@ -125,21 +143,17 @@ export const getStockIssues = async (req, res) => {
         sortObj[sortField] = sortDir
     }
 
-    // Secondary sort để đảm bảo thứ tự ổn định
     if (sortField !== '_id') {
       sortObj['_id'] = sortDir
     }
 
     pipeline.push({ $sort: sortObj })
-
-    // Pagination
     pipeline.push({ $skip: start })
     pipeline.push({ $limit: length })
 
     pipeline.push({
       $project: {
-        ingredient: 0,
-        warehouse: 0
+        ingredient: 0
       }
     })
 
@@ -167,10 +181,10 @@ export const getStockIssueById = async (req, res) => {
     }
     
     const stockIssue = await StockIssue.findById(id)
+      .populate('warehouse', 'name location')
       .populate('createdBy', 'name username')
       .populate('updatedBy', 'name username')
       .populate('items.ingredient', 'name unit')
-      .populate('items.warehouse', 'name location')
       .lean()
     
     if (!stockIssue) {
@@ -179,7 +193,6 @@ export const getStockIssueById = async (req, res) => {
     
     responseHelper.success(res, stockIssue, 'Lấy thông tin phiếu xuất thành công')
   } catch (err) {
-    console.error('Get stock issue error:', err)
     responseHelper.error(res, err.message)
   }
 }
@@ -195,7 +208,7 @@ export const createStockIssue = async (req, res) => {
         createdBy: req.user._id,
         code: code
        })
-      await doc.save(session ? { session } : {})
+      await doc.save({ session })
       return doc
     })
     responseHelper.success(res, { id: issue._id, code: issue.code }, "Khởi tạo phiếu xuất thành công")
@@ -213,111 +226,134 @@ export const updateStockIssue = async (req, res) => {
         throw new Error('ID không hợp lệ')
       }
 
-      // Lấy phiếu xuất cũ
       const oldIssue = await StockIssue.findById(id).session(session)
       if (!oldIssue) throw new Error('Phiếu xuất không tồn tại')
+      if (oldIssue.isLocked) throw new Error('Phiếu xuất đã bị khóa, không thể chỉnh sửa')
 
-      if (oldIssue.isLocked) {
-        throw new Error('Phiếu xuất đã bị khóa, không thể chỉnh sửa')
+      const { warehouse, reason, note, items: rawItems = [] } = req.body
+
+      // Validate input
+      if (!warehouse) throw new Error('Vui lòng chọn kho xuất')
+      if (!Array.isArray(rawItems) || rawItems.length === 0) {
+        throw new Error('Vui lòng thêm ít nhất một sản phẩm')
       }
 
-      // Hoàn tồn kho cũ vào IngredientStock (vì đã trừ trước đó)
-      for (const item of oldIssue.items) {
-        if (item.ingredient && item.warehouse && item.quantity) {
-          await IngredientStock.updateOne(
-            { ingredient: item.ingredient, warehouse: item.warehouse },
-            { $inc: { quantity: Math.abs(item.quantity) } },
-            { session }
-          )
-        }
-      }
+      // Chuẩn hóa items - lọc bỏ item có quantity = 0
+      const newItems = rawItems
+        .map(item => ({
+          ingredient: item.ingredient,
+          quantity: Math.abs(parseFloat(item.quantity) || 0)
+        }))
+        .filter(item => item.ingredient && item.quantity > 0)
 
-      // Lấy dữ liệu mới từ form
-      const { reason, note, items: rawItems = [] } = req.body
+      if (newItems.length === 0) throw new Error('Không có sản phẩm hợp lệ để xuất')
 
-      // Chuẩn hóa dữ liệu items
-      const items = rawItems.map(item => ({
-        ingredient: item.ingredient,
-        warehouse: item.warehouse,
-        quantity: Math.abs(parseFloat(item.quantity) || 0)
-      }))
-
-      // Kiểm tra tồn kho trước khi xuất
-      for (const item of items) {
-        if (item.ingredient && item.warehouse && item.quantity > 0) {
-          const stock = await IngredientStock.findOne({
-            ingredient: item.ingredient,
-            warehouse: item.warehouse
-          }).session(session)
-
-          if (!stock || stock.quantity < item.quantity) {
-            const ingredientDoc = await mongoose.model('Ingredient').findById(item.ingredient).session(session)
-            const warehouseDoc = await mongoose.model('Warehouse').findById(item.warehouse).session(session)
-            throw new Error(
-              `Không đủ tồn kho cho ${ingredientDoc?.name || 'nguyên liệu'} tại kho ${warehouseDoc?.name || 'không xác định'}. ` +
-              `Tồn kho hiện tại: ${stock?.quantity || 0}`
-            )
+      // Tính toán thay đổi tồn kho
+      const stockChanges = new Map() // key: ingredient_warehouse, value: {ingredient, warehouse, change}
+      
+      // Hoàn trả items cũ (nếu có)
+      if (oldIssue.warehouse && oldIssue.items.length > 0) {
+        for (const oldItem of oldIssue.items) {
+          if (oldItem.ingredient && oldItem.quantity > 0) {
+            const key = `${oldItem.ingredient}_${oldIssue.warehouse}`
+            const existing = stockChanges.get(key) || { 
+              ingredient: oldItem.ingredient, 
+              warehouse: oldIssue.warehouse, 
+              change: 0 
+            }
+            existing.change += oldItem.quantity // Hoàn trả (cộng vào)
+            stockChanges.set(key, existing)
           }
         }
       }
 
-      const updateData = {
-        reason,
-        note,
-        items,
-        updatedBy: req.user._id
+      // Trừ items mới
+      for (const newItem of newItems) {
+        if (newItem.ingredient && newItem.quantity > 0) {
+          const key = `${newItem.ingredient}_${warehouse}`
+          const existing = stockChanges.get(key) || { 
+            ingredient: newItem.ingredient, 
+            warehouse: warehouse, 
+            change: 0 
+          }
+          existing.change -= newItem.quantity // Xuất kho (trừ đi)
+          stockChanges.set(key, existing)
+        }
       }
 
-      // Cập nhật phiếu xuất
-      const newIssue = await StockIssue.findByIdAndUpdate(id, updateData, { new: true, session })
-      if (!newIssue) throw new Error('Cập nhật thất bại')
+      // Kiểm tra tồn kho cho tất cả thay đổi
+      for (const stockChange of stockChanges.values()) {
+        if (stockChange.change >= 0) continue // Không cần kiểm tra nếu là hoàn trả
 
-      // Trừ tồn kho mới từ IngredientStock
-      for (const item of newIssue.items) {
-        if (item.ingredient && item.warehouse && item.quantity) {
-          await IngredientStock.updateOne(
-            { ingredient: item.ingredient, warehouse: item.warehouse },
-            { $inc: { quantity: -Math.abs(item.quantity) } },
-            { session }
+        const stock = await IngredientStock.findOne({
+          ingredient: stockChange.ingredient,
+          warehouse: stockChange.warehouse
+        }).session(session)
+
+        const currentStock = stock?.quantity || 0
+        const requiredStock = Math.abs(stockChange.change) // Số lượng cần xuất
+        
+        if (currentStock < requiredStock) {
+          const ingredientDoc = await Ingredient.findById(stockChange.ingredient, 'name').session(session)
+          const warehouseDoc = await Warehouse.findById(stockChange.warehouse, 'name').session(session)
+          throw new Error(
+            `Không đủ tồn kho cho "${ingredientDoc?.name || 'nguyên liệu'}" tại kho "${warehouseDoc?.name || 'không xác định'}". ` +
+            `Tồn kho hiện tại: ${currentStock}, yêu cầu: ${requiredStock}`
           )
         }
       }
 
-      // Cập nhật lại tổng tồn kho trong Ingredient
-      const updatedIngredientIds = [...new Set(newIssue.items.map(i => i.ingredient.toString()))]
+      // Cập nhật thông tin phiếu xuất
+      const updateData = {
+        warehouse,
+        reason: reason?.trim() || '',
+        note: note?.trim() || '',
+        items: newItems,
+        updatedBy: req.user._id
+      }
 
-      for (const ingId of updatedIngredientIds) {
-        const totalStockAgg = await IngredientStock.aggregate([
-          { $match: { ingredient: new mongoose.Types.ObjectId(ingId) } },
-          { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
-        ]).session(session)
-        
-        const totalStock = totalStockAgg[0]?.totalQuantity || 0
-        
-        await Ingredient.updateOne(
-          { _id: ingId },
-          { $set: { stock: totalStock } },
-          { session }
+      const updatedIssue = await StockIssue.findByIdAndUpdate(id, updateData, { 
+        new: true, 
+        session,
+        runValidators: true 
+      })
+      if (!updatedIssue) throw new Error('Cập nhật phiếu xuất thất bại')
+
+      // Áp dụng thay đổi tồn kho
+      for (const [key, stockChange] of stockChanges) {
+        if (stockChange.change === 0) continue // Không thay đổi
+
+        await IngredientStock.updateOne(
+          { ingredient: stockChange.ingredient, warehouse: stockChange.warehouse },
+          { $inc: { quantity: stockChange.change } },
+          { upsert: true, session }
         )
       }
 
-      // Populate tham chiếu để trả về cho FE
-      await newIssue.populate('createdBy', 'name username')
-      await newIssue.populate('updatedBy', 'name username')
-      await newIssue.populate('items.ingredient', 'name unit')
-      await newIssue.populate('items.warehouse', 'name location')
+      // Cập nhật tổng stock trong Ingredient
+      const allAffectedIngredients = [...new Set([
+        ...Array.from(stockChanges.values()).map(sc => sc.ingredient.toString())
+      ])]
+      await updateIngredientTotalStock(allAffectedIngredients, session)
 
-      return newIssue
+      // Populate để trả về client
+      await updatedIssue.populate([
+        { path: 'warehouse', select: 'name location' },
+        { path: 'createdBy', select: 'name username' },
+        { path: 'updatedBy', select: 'name username' },
+        { path: 'items.ingredient', select: 'name unit' }
+      ])
+
+      return updatedIssue
     })
 
     responseHelper.success(res, updatedDoc, 'Cập nhật phiếu xuất thành công')
   } catch (err) {
-    console.error('Update stock issue error:', err)
     responseHelper.error(res, err.message)
   }
 }
 
-// DELETE
+// DELETE - Hoàn trả kho và xóa phiếu (được sửa)
 export const deleteStockIssues = async (req, res) => {
   try {
     await withTransaction(async (session) => {
@@ -326,42 +362,50 @@ export const deleteStockIssues = async (req, res) => {
         throw new Error("Không có phiếu nào được chọn")
       }
 
-      // Lấy các phiếu xuất
       const issues = await StockIssue.find({ _id: { $in: ids } }).session(session)
+      if (issues.length === 0) throw new Error("Không tìm thấy phiếu xuất nào")
 
-      // Hoàn tồn kho vào IngredientStock (vì đã trừ khi tạo phiếu)
+      const allAffectedIngredients = new Set()
+
+      // Kiểm tra khóa và hoàn trả kho
       for (const issue of issues) {
         if (issue.isLocked) {
-          throw new Error(`Phiếu xuất ${issue.code} đã bị khóa, không thể xóa`)
+          throw new Error(`Phiếu xuất "${issue.code}" đã bị khóa, không thể xóa`)
         }
 
-        for (const item of issue.items) {
-          const { ingredient, warehouse, quantity } = item
-          await IngredientStock.updateOne(
-            { ingredient, warehouse },
-            { $inc: { quantity: Math.abs(quantity) } },
-            { session }
-          )
+        // Hoàn trả tồn kho nếu phiếu có warehouse và items
+        if (issue.warehouse && issue.items?.length > 0) {
+          for (const item of issue.items) {
+            if (item.ingredient && item.quantity > 0) {
+              // Hoàn trả vào IngredientStock
+              await IngredientStock.updateOne(
+                { ingredient: item.ingredient, warehouse: issue.warehouse },
+                { $inc: { quantity: item.quantity } },
+                { upsert: true, session }
+              )
 
-          await Ingredient.updateOne(
-            { _id: ingredient },
-            { $inc: { stock: Math.abs(quantity) } },
-            { session }
-          )
+              allAffectedIngredients.add(item.ingredient.toString())
+            }
+          }
         }
       }
 
-      // Xóa phiếu
-      await StockIssue.deleteMany({ _id: { $in: ids } }).session(session)
+      // Xóa các phiếu
+      await StockIssue.deleteMany({ _id: { $in: ids } }, { session })
+
+      // Cập nhật tổng stock cho tất cả ingredients bị ảnh hưởng
+      if (allAffectedIngredients.size > 0) {
+        await updateIngredientTotalStock([...allAffectedIngredients], session)
+      }
     })
 
-    responseHelper.success(res, null, "Xóa thành công và hoàn tồn kho")
+    responseHelper.success(res, null, "Xóa phiếu xuất thành công và hoàn trả tồn kho")
   } catch (error) {
     responseHelper.error(res, error.message)
   }
 }
 
-// LOCK
+// LOCK - Khóa phiếu xuất để không thể chỉnh sửa
 export const lockStockIssue = async (req, res) => {
   try {
     const { id } = req.params
@@ -370,14 +414,55 @@ export const lockStockIssue = async (req, res) => {
       return responseHelper.error(res, 'ID không hợp lệ', 400)
     }
 
-    const issue = await StockIssue.findByIdAndUpdate(id, { isLocked: true }, { new: true })
-
+    const issue = await StockIssue.findById(id)
     if (!issue) {
       return responseHelper.error(res, 'Không tìm thấy phiếu xuất', 404)
     }
 
-    responseHelper.success(res, issue, 'Đã khóa phiếu xuất thành công')
+    if (issue.isLocked) {
+      return responseHelper.error(res, 'Phiếu xuất đã được khóa trước đó', 400)
+    }
+
+    // Kiểm tra phiếu có đầy đủ thông tin không
+    if (!issue.warehouse || !issue.items || issue.items.length === 0) {
+      return responseHelper.error(res, 'Không thể khóa phiếu xuất chưa hoàn thành', 400)
+    }
+
+    const updatedIssue = await StockIssue.findByIdAndUpdate(
+      id, 
+      { 
+        isLocked: true,
+        lockedAt: new Date(),
+        lockedBy: req.user._id
+      }, 
+      { new: true }
+    )
+
+    responseHelper.success(res, updatedIssue, 'Đã khóa phiếu xuất thành công')
   } catch (err) {
     responseHelper.error(res, err.message)
+  }
+}
+
+async function updateIngredientTotalStock(ingredientIds, session) {
+  if (!Array.isArray(ingredientIds) || ingredientIds.length === 0) return
+
+  for (const ingId of ingredientIds) {
+    const objectId = mongoose.Types.ObjectId.isValid(ingId) 
+      ? new mongoose.Types.ObjectId(String(ingId)) 
+      : ingId
+      
+    const totalStockAgg = await IngredientStock.aggregate([
+      { $match: { ingredient: objectId } },
+      { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
+    ]).session(session)
+    
+    const totalStock = totalStockAgg[0]?.totalQuantity || 0
+    
+    await Ingredient.updateOne(
+      { _id: objectId },
+      { $set: { stock: totalStock } },
+      { session }
+    )
   }
 }

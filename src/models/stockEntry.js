@@ -4,12 +4,12 @@ const stockEntrySchema = new mongoose.Schema({
   code:      { type: String, default: '' },         // mã phiếu
   date:      { type: Date, default: Date.now },
   supplier:  { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier', default: null },
+  warehouse:  { type: mongoose.Schema.Types.ObjectId, ref: 'Warehouse', default: null },
   items: [{
     ingredient: { type: mongoose.Schema.Types.ObjectId, ref: 'Ingredient', default: null },
     quantity:   { type: Number, default: 0 },
     unitPrice:  { type: Number, default: 0 },
-    total:      { type: Number, default: 0 },
-    warehouse:  { type: mongoose.Schema.Types.ObjectId, ref: 'Warehouse', default: null }
+    total:      { type: Number, default: 0 }
   }],
   total:     { type: Number, default: 0 },
   note:      { type: String, default: '' },
