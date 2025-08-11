@@ -1,6 +1,6 @@
 # Fast_POS
 
-Fast_POS là hệ thống quản lý bán hàng (Point of Sale) dành cho FnB, được xây dựng bằng **Node.js**, **Express**, **MongoDB** và **EJS**.  
+Fast_POS là hệ thống quản lý bán hàng, được xây dựng bằng **Node.js**, **Express**, **MongoDB** và **EJS**.  
 Dự án hỗ trợ đăng nhập, quản lý nguyên liệu, quản lý kho, nhập - xuất hàng, và các tính năng liên quan cho cửa hàng.
 
 ## 📌 Tính năng chính
