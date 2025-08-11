@@ -33,7 +33,6 @@ $(function () {
         }
       })
       .catch((err) => {
-        console.error("Error loading data:", err)
         toastr.error("Không thể load dữ liệu cần thiết")
       })
   
@@ -322,7 +321,6 @@ $(function () {
           }
         },
         error(xhr) {
-          console.error("Save error:", xhr)
           toastr.error(xhr.responseJSON?.message || "Có lỗi xảy ra khi lưu")
         },
       })

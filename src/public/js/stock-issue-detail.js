@@ -33,7 +33,6 @@ $(function () {
       }
     })
     .catch((err) => {
-      console.error("Error loading data:", err)
       toastr.error("Không thể load dữ liệu cần thiết")
     })
 
@@ -276,8 +275,6 @@ $(function () {
     const url = stockIssueId
       ? `/api/inventory/stock-issue/update/${stockIssueId}`
       : "/api/inventory/stock-issue/create"
-
-    console.log("Sending data:", stockIssueData)
       
     $.ajax({
       url,
@@ -302,7 +299,6 @@ $(function () {
         }
       },
       error(xhr) {
-        console.error("Save error:", xhr)
         toastr.error(xhr.responseJSON?.message || "Có lỗi xảy ra khi lưu")
       },
       complete() {

@@ -7,6 +7,7 @@ import withTransaction from "../helpers/withTransaction.js"
 import { generateDocumentCode } from "../helpers/common.js"
 import { lookupRef } from "../helpers/lookupHelper.js"
 import { toVietnamTime } from "../helpers/dateHelper.js"
+import StockHistory from "../models/stockHistory.js"
 
 // GET ALL
 export const getAllStockEntries = async (req, res) => {
@@ -195,7 +196,6 @@ export const getStockEntryById = async (req, res) => {
     
     responseHelper.success(res, stockEntry, 'Lấy thông tin phiếu nhập thành công')
   } catch (err) {
-    console.error('Get stock entry error:', err)
     responseHelper.error(res, err.message)
   }
 }
@@ -329,7 +329,6 @@ export const updateStockEntryFromForm = async (req, res) => {
 
     responseHelper.success(res, updatedDoc, 'Cập nhật phiếu nhập thành công')
   } catch (err) {
-    console.error('Update stock entry error:', err)
     responseHelper.error(res, err.message)
   }
 }
@@ -399,22 +398,81 @@ export const lockStockEntry = async (req, res) => {
       return responseHelper.error(res, 'Phiếu nhập đã được khóa trước đó', 400)
     }
 
-    let updatedEntry = await StockEntry.findByIdAndUpdate(
-      id, 
-      { 
-        isLocked: true,
-        lockedAt: new Date(),
-        lockedBy: req.user._id
-      }, 
-      { new: true }
-    )
-    .populate('lockedBy', 'name username')
+    if (!entry.items || entry.items.length === 0) {
+      return responseHelper.error(res, 'Phiếu nhập không có sản phẩm nào', 400)
+    }
 
-    updatedEntry = updatedEntry.toObject()
-    updatedEntry.lockedAt = toVietnamTime(updatedEntry.lockedAt)
+    // Validate items (với cast an toàn)
+    for (const item of entry.items) {
+      if (!item.ingredient) {
+        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin ingredient', 400)
+      }
+      const qty = Number(item.quantity)
+      if (!Number.isFinite(qty) || qty <= 0) {
+        return responseHelper.error(res, 'Có sản phẩm với số lượng không hợp lệ', 400)
+      }
+    }
 
-    responseHelper.success(res, updatedEntry, 'Đã khóa phiếu nhập thành công')
+    await withTransaction(async (session) => {
+      // update lock state
+      const updatedEntry = await StockEntry.findByIdAndUpdate(
+        id,
+        {
+          isLocked: true,
+          lockedAt: new Date(),
+          lockedBy: req.user._id
+        },
+        { new: true, session }
+      ).populate('lockedBy', 'name username')
+
+      if (!updatedEntry) {
+        throw new Error('Không thể cập nhật phiếu nhập')
+      }
+
+      // chuẩn bị summary và itemsSummary (giữ tối thiểu per-item)
+      const warehouseId = entry.warehouse?._id || entry.warehouse
+      const supplierId = entry.supplier?._id || entry.supplier
+
+      const totalItems = entry.items.length
+      const totalQuantity = entry.items.reduce((sum, item) => {
+        return sum + (Number(item.quantity) || 0)
+      }, 0)
+
+      const itemsSummary = entry.items.map(item => ({
+        ingredient: item.ingredient._id || item.ingredient,
+        quantity: Number(item.quantity) || 0
+      }))
+
+      // tạo stockHistory (dùng các trường tương thích: toWarehouse cho ENTRY)
+      const stockHistory = {
+        transactionType: 'ENTRY',
+        documentType: 'StockEntry',
+        documentId: entry._id,
+        documentCode: entry.code || entry.documentCode || '',
+        toWarehouse: warehouseId || null,
+        fromWarehouse: null,
+        supplier: supplierId || null,
+        totalItems,
+        totalQuantity,
+        items: itemsSummary,
+        reason: 'Stock entry locked',
+        note: entry.note ? `${entry.note} (Locked)` : 'Stock entry locked',
+        transactionDate: entry.date || new Date(),
+        createdBy: req.user._id,
+        updatedBy: null
+      }
+
+      await StockHistory.create([stockHistory], { session })
+    })
+
+    const finalEntry = await StockEntry.findById(id)
+      .populate('lockedBy', 'name username')
+      .populate('items.ingredient', 'name sku unit stock')
+      .populate('warehouse', 'name code')
+      .populate('supplier', 'name code')
+
+    responseHelper.success(res, finalEntry, 'Đã khóa phiếu nhập thành công')
   } catch (err) {
-    responseHelper.error(res, err.message)
+    responseHelper.error(res, err.message || 'Có lỗi xảy ra khi khóa phiếu nhập')
   }
 }

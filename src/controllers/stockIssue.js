@@ -7,6 +7,7 @@ import responseHelper from "../helpers/responseHelper.js"
 import withTransaction from "../helpers/withTransaction.js"
 import { generateDocumentCode } from "../helpers/common.js"
 import { lookupRef } from "../helpers/lookupHelper.js"
+import StockHistory from "../models/stockHistory.js"
 
 // GET ALL
 export const getAllStockIssues = async (req, res) => {
@@ -423,24 +424,75 @@ export const lockStockIssue = async (req, res) => {
       return responseHelper.error(res, 'Phiếu xuất đã được khóa trước đó', 400)
     }
 
-    // Kiểm tra phiếu có đầy đủ thông tin không
     if (!issue.warehouse || !issue.items || issue.items.length === 0) {
       return responseHelper.error(res, 'Không thể khóa phiếu xuất chưa hoàn thành', 400)
     }
 
-    const updatedIssue = await StockIssue.findByIdAndUpdate(
-      id, 
-      { 
-        isLocked: true,
-        lockedAt: new Date(),
-        lockedBy: req.user._id
-      }, 
-      { new: true }
-    )
+    // Validate items
+    for (const item of issue.items) {
+      if (!item.ingredient) {
+        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin ingredient', 400)
+      }
+      const qty = Number(item.quantity)
+      if (!Number.isFinite(qty) || qty <= 0) {
+        return responseHelper.error(res, 'Có sản phẩm với số lượng không hợp lệ', 400)
+      }
+    }
 
-    responseHelper.success(res, updatedIssue, 'Đã khóa phiếu xuất thành công')
+    await withTransaction(async (session) => {
+      // Cập nhật trạng thái khóa
+      const updatedIssue = await StockIssue.findByIdAndUpdate(
+        id,
+        {
+          isLocked: true,
+          lockedAt: new Date(),
+          lockedBy: req.user._id
+        },
+        { new: true, session }
+      ).populate('lockedBy', 'name username')
+
+      if (!updatedIssue) {
+        throw new Error('Không thể cập nhật phiếu xuất')
+      }
+
+      const warehouseId = issue.warehouse?._id || issue.warehouse
+      const totalItems = issue.items.length
+      const totalQuantity = issue.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0)
+
+      const itemsSummary = issue.items.map(item => ({
+        ingredient: item.ingredient._id || item.ingredient,
+        quantity: Number(item.quantity) || 0
+      }))
+
+      const stockHistory = {
+        transactionType: 'ISSUE',
+        documentType: 'StockIssue',
+        documentId: issue._id,
+        documentCode: issue.code || issue.documentCode || '',
+        fromWarehouse: warehouseId || null,
+        toWarehouse: null,
+        totalItems,
+        totalQuantity,
+        items: itemsSummary,
+        reason: 'Stock issue locked',
+        note: issue.note ? `${issue.note} (Locked)` : 'Stock issue locked',
+        transactionDate: issue.date || new Date(),
+        createdBy: req.user._id,
+        updatedBy: null
+      }
+
+      await StockHistory.create([stockHistory], { session })
+    })
+
+    // Lấy phiếu xuất đã cập nhật
+    const finalIssue = await StockIssue.findById(id)
+      .populate('lockedBy', 'name username')
+      .populate('items.ingredient', 'name sku unit stock')
+      .populate('warehouse', 'name code')
+
+    responseHelper.success(res, finalIssue, 'Đã khóa phiếu xuất thành công')
   } catch (err) {
-    responseHelper.error(res, err.message)
+    responseHelper.error(res, err.message || 'Có lỗi xảy ra khi khóa phiếu xuất')
   }
 }
 

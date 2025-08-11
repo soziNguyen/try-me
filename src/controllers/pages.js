@@ -151,12 +151,12 @@ export const ingredientStockPage = (req, res) => {
 }
 
 // Movement
-export const movementPage = (req, res) => {
-    res.render('inventory/stock_movement', 
-        getPageData(req, 'Lịch Sử Nhập - Xuất Kho', 'Movement', 
+export const historyPage = (req, res) => {
+    res.render('inventory/stock_history', 
+        getPageData(req, 'Lịch Sử Nhập - Xuất - Chuyển Kho', 'History', 
             {
                 headerClass: 'admin__header',
-                pageTitle: 'LỊCH SỬ NHẬP - XUẤT KHO'
+                pageTitle: 'LỊCH SỬ NHẬP - XUẤT - CHUYỂN KHO'
             }
         )
     )

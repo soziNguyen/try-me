@@ -92,6 +92,7 @@ export const getIngredientStockList = async (req, res) => {
         updatedAt: 1
       }
     })
+    // pipeline.push({ $match: { quantity: { $gt: 0 } } });
 
     // Lấy dữ liệu và tổng bản ghi
     const data = await IngredientStock.aggregate(pipeline)

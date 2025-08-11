@@ -9,7 +9,7 @@
                 <span>Dashboard</span>
               </a>
             </li>
-            <% const inInventory = ['Ingredient','Category','Warehouse', 'IngredientStock','Supplier','Import','Export', 'Transfer', 'Movement'].includes(page); %>
+            <% const inInventory = ['Ingredient','Category','Warehouse', 'IngredientStock','Supplier','Import','Export', 'History', 'Transfer', 'Movement'].includes(page); %>
             <li class="inventory-accordion">
               <div class="accordion" id="accordionInventory">
                 <div class="accordion-item">
@@ -68,9 +68,9 @@
                         <span>Phiếu Chuyển Kho</span>
                       </a>
                     
-                      <a class="<%= page === 'Movement' ? 'accordion-active' : '' %>" href="/inventory/movements">
+                      <a class="<%= page === 'History' ? 'accordion-active' : '' %>" href="/inventory/stock-histories">
                         <i class="bi bi-clock-history text-primary me-2"></i>
-                        <span>Lịch Sử Nhập/ Xuất</span>
+                        <span>Lịch Sử Giao Dịch</span>
                       </a>
 
                     </div>                      
