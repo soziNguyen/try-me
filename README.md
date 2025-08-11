@@ -27,4 +27,41 @@ Dự án hỗ trợ đăng nhập, quản lý nguyên liệu, quản lý kho, nh
 - **Dotenv**
 
 ## 📂 Cấu trúc thư mục
-<pre> ``` Fast_POS/ │ ├── src/ │ ├── models/ # Mongoose models │ ├── routes/ # Express routes │ ├── controllers/ # Controllers xử lý logic │ ├── views/ # EJS templates │ ├── public/ # Static files (CSS, JS, images) │ └── server.js # File khởi động server │ ├── .env.example # File mẫu cấu hình môi trường ├── package.json └── README.md ``` </pre>
+```
+Fast_POS/ 
+│
+├── src/
+│ ├── models/ # Mongoose models
+│ ├── routes/ # Express routes
+│ ├── controllers/ # Controllers xử lý logic
+│ ├── views/ # EJS templates
+│ ├── public/ # Static files (CSS, JS, images)
+│ ├── app.js          # Khởi tạo và cấu hình Express app (middleware, routes, view engine)
+│ └── server.js # File khởi động server
+├── .env # File mẫu cấu hình môi trường
+├── package.json └── README.md
+```
+
+## ⚙️ Cài đặt
+1. **Clone dự án**
+```bash
+git clone https://github.com/soziNguyen/Fast_POS.git
+cd Fast_POS
+```
+
+2. **Cài dependencies**
+```bash
+npm install
+```
+
+3. **Tạo file .env từ mẫu**
+```env
+PORT=3000
+MONGODB_URI=your_mongodb
+SESSION_SECRET=your_secret
+```
+4. **Chạy dự án**
+```bash
+npm run dev
+
+
