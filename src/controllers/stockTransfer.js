@@ -10,25 +10,6 @@ import { lookupRef } from "../helpers/lookupHelper.js"
 import { toVietnamTime } from "../helpers/dateHelper.js"
 import StockHistory from "../models/stockHistory.js"
 
-// GET ALL
-export const getAllStockTransfers = async (req, res) => {
-  try {
-    const transfers = await StockTransfer.aggregate([
-      { $sort: { createdAt: -1 } },
-      { 
-        $project: { 
-          _id: 1, 
-          code: 1,
-          itemsCount: { $size: "$items" }
-        } 
-      }
-    ])
-    responseHelper.success(res, transfers)
-  } catch (err) {
-    responseHelper.error(res, err.message)
-  }
-}
-
 // DATATABLE SERVER-SIDE
 export const getStockTransfers = async (req, res) => {
   try {

@@ -9,28 +9,6 @@ import { generateDocumentCode } from "../helpers/common.js"
 import { lookupRef } from "../helpers/lookupHelper.js"
 import StockHistory from "../models/stockHistory.js"
 
-// GET ALL
-export const getAllStockIssues = async (req, res) => {
-  try {
-    const issues = await StockIssue.aggregate([
-      {
-        $lookup: {
-          from: "Warehouses",
-          localField: "warehouse",
-          foreignField: "_id",
-          as: "warehouse"
-        }
-      },
-      { $unwind: { path: "$warehouse", preserveNullAndEmptyArrays: true } },
-      { $sort: { createdAt: -1 } },
-      { $project: { _id: 1, code: 1, reason: 1, "warehouse.name": 1 } }
-    ])
-    responseHelper.success(res, issues)
-  } catch (err) {
-    responseHelper.error(res, err.message)
-  }
-}
-
 // DATATABLE SERVER-SIDE
 export const getStockIssues = async (req, res) => {
   try {

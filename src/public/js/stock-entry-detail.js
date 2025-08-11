@@ -64,9 +64,6 @@ $(function () {
       '<option value="" class="text-center">— Chọn kho —</option>' + warehouseOptions
     )
 
-    // Populate first row
-    updateRowDropdowns(0)
-
     // Event handlers
     $("#addItemBtn").on("click", addNewItem)
     $("#stockEntryForm").on("submit", saveStockEntry)
@@ -120,12 +117,15 @@ $(function () {
   }
 
   function updateRowDropdowns(rowIndex) {
+    const $select = $(`select[name="items[${rowIndex}][ingredient]"]`)
+    
     const ingredientOptions = ingredients
       .map((ing) => `<option value="${ing._id}">${ing.name}</option>`)
       .join("")
-    $(`select[name="items[${rowIndex}][ingredient]"]`).html(
+    
+    $select.empty().html(
       '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
-        ingredientOptions
+      ingredientOptions
     )
   }
 
@@ -154,9 +154,13 @@ $(function () {
     </tr>
     `
     $("#itemsTableBody").append(newRow)
-    const $newSelect = $(`select[name="items[${itemCounter}][ingredient]"]`)
-    updateRowDropdowns(itemCounter)
+    
+    const currentRowIndex = itemCounter
+    updateRowDropdowns(currentRowIndex)
+    
+    const $newSelect = $(`select[name="items[${currentRowIndex}][ingredient]"]`)
     initSelect2($newSelect, '— Chọn nguyên liệu —')
+    
     itemCounter++
   }
 
@@ -195,7 +199,9 @@ $(function () {
     $("#note").val(stockEntry.note || "")
 
     if (stockEntry.items && stockEntry.items.length > 0) {
+      // Clear existing rows
       $("#itemsTableBody").empty()
+      
       stockEntry.items.forEach((item, index) => {
         const row = `
         <tr>
@@ -225,14 +231,18 @@ $(function () {
         </tr>
         `
         $("#itemsTableBody").append(row)
-        const $sel = $(`select[name="items[${index}][ingredient]"]`)
+        
         updateRowDropdowns(index)
+        
+        const $sel = $(`select[name="items[${index}][ingredient]"]`)
         $sel.val(item.ingredient?._id || "")
         initSelect2($sel, '— Chọn nguyên liệu —')
       })
-      itemCounter = stockEntry.items.length || 1
+      
+      itemCounter = stockEntry.items.length
       calculateTotalAmount()
     }
+    
     if (stockEntry?.isLocked) {
       $("#btn-lock-entry").prop("disabled", true).html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
     
@@ -296,7 +306,7 @@ $(function () {
       code: formData.get("code"),
       date: formData.get("date"),
       supplier: formData.get("supplier"),
-      warehouse: formData.get("warehouse"), // Lấy warehouse từ main select
+      warehouse: formData.get("warehouse"),
       note: formData.get("note"),
       items: [],
     }
@@ -316,7 +326,6 @@ $(function () {
           quantity,
           unitPrice,
           total: quantity * unitPrice,
-          // Không cần warehouse ở item level nữa
         })
       }
     })
