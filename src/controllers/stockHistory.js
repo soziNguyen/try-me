@@ -50,6 +50,14 @@ export const getStockHistories = async (req, res) => {
             }
           }
         }
+      },
+      // Tính tổng số lượng cho
+      {
+        $addFields: {
+          totalQuantity: {
+            $sum: '$items.quantity'
+          }
+        }
       }
     ];
 
@@ -65,6 +73,16 @@ export const getStockHistories = async (req, res) => {
               $expr: {
                 $regexMatch: {
                   input: { $dateToString: { format: "%d/%m/%Y", date: "$transactionDate" } },
+                  regex: searchValue,
+                  options: "i"
+                }
+              }
+            },
+            // Search theo tổng số lượng
+            {
+              $expr: {
+                $regexMatch: {
+                  input: { $toString: "$totalQuantity" },
                   regex: searchValue,
                   options: "i"
                 }
@@ -92,6 +110,9 @@ export const getStockHistories = async (req, res) => {
       case 'createdBy.username':
         sortObj['createdBy.username'] = sortDir;
         break;
+      case 'totalQuantity': // sort theo tổng số lượng
+        sortObj['totalQuantity'] = sortDir;
+        break;
       default:
         sortObj[sortField] = sortDir;
     }
@@ -110,6 +131,7 @@ export const getStockHistories = async (req, res) => {
         transactionType: 1,
         transactionDate: 1,
         items: 1,
+        totalQuantity: 1,
         fromWarehouse: 1,
         toWarehouse: 1,
         supplier: 1,

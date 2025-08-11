@@ -34,7 +34,7 @@
                   <input type="text" class="form-control" id="createdBy" readonly>
                 </div>
                 <div class="col-md-6">
-                  <label for="reason" class="form-label">Lý do xuất kho</label>
+                  <label for="reason" class="form-label">Lý do xuất kho <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" id="reason" name="reason">
                 </div>
                 <div class="col-md-6">
@@ -85,7 +85,7 @@
                 <i class="bi bi-lock me-2"></i>Xác nhận
               </button>
               <div class="d-flex justify-content-end">
-                <a href="/inventory/stock-issues" class="btn btn-outline-secondary me-2">
+                <a href="/inventory/stock-issues" id="btn-back" class="btn btn-outline-secondary me-2">
                   <i class="bi bi-x-circle me-2"></i>Quay lại
                 </a>
                 <button type="button" id="btn-print-issue" class="btn btn-outline-info me-2">

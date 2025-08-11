@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 import { units } from '../helpers/unitHelper.js';
 
 const ingredientSchema = new mongoose.Schema({
-  sku: { type: String, default: '', unique: true, sparse: true },
-  name:     { type: String, default: '', unique: true, sparse: true },
+  sku: { type: String, default: '' },
+  name:     { type: String, default: '' },
   image:    { type: String, default: ''},
   unit:     { type: String, enum: units, default: null },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'IngredientCategory', default: null },

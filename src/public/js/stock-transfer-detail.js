@@ -324,5 +324,6 @@ $(function () {
           toastr.error(xhr.responseJSON?.message || "Có lỗi xảy ra khi lưu")
         },
       })
-    }  
+    }
+    setupBackButton()
   })

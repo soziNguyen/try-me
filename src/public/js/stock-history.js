@@ -94,15 +94,10 @@ $(function () {
           
         },
         {
-          title: 'Tổng SL',
+          title: 'Tổng Số Lượng',
           className: 'text-center',
-          data: 'items',
-          render: (items) => {
-            if (!items || !Array.isArray(items)) return '0'
-            
-            const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 0), 0)
-            return totalQuantity.toLocaleString()
-          }
+          data: 'totalQuantity',
+          render: (data) => (data || 0).toLocaleString()
         },
         {
           title: 'Người tạo',
@@ -119,7 +114,8 @@ $(function () {
             if (type === 'display') {
               return `
                 <button class="btn btn-sm btn-outline-primary my-1 detail-btn" 
-                        data-id="${row._id}" 
+                        data-id="${row.documentId}"
+                        data-type="${row.transactionType}"
                         title="Xem chi tiết">
                   <i class="bi bi-eye"></i> Chi tiết
                 </button>`
@@ -134,7 +130,23 @@ $(function () {
       initComplete: function () {
         $(document).on('click', '.detail-btn', function () {
           const id = $(this).data('id')
-          // todo
+          const type = $(this).data('type')
+          let url = ''
+
+          switch (type) {
+            case 'ENTRY':
+              url = `/inventory/stock-entry/${id}?from=history`
+              break
+            case 'ISSUE':
+              url = `/inventory/stock-issue/${id}?from=history`
+              break
+            case 'TRANSFER':
+              url = `/inventory/stock-transfer/${id}?from=history`
+            break
+            default:
+              url = `/inventory/stock-entry/${id}?from=history`
+          }
+          window.location.href = url
         })
       }
     })

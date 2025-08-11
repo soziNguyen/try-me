@@ -209,3 +209,23 @@ function createNewRecord(module, data, callback) {
     }
   })
 }
+
+function setupBackButton(btnSelector = '#btn-back') {
+  const btn = document.querySelector(btnSelector)
+  if (!btn) return
+
+  const from = new URLSearchParams(window.location.search).get('from')
+  if (from === 'history') {
+    btn.href = '/inventory/stock-histories'
+    return
+  }
+
+  const path = window.location.pathname
+  if (path.includes('/stock-entry/')) {
+    btn.href = '/inventory/stock-entries'
+  } else if (path.includes('/stock-issue/')) {
+    btn.href = '/inventory/stock-issues'
+  } else if (path.includes('/stock-transfer/')) {
+    btn.href = '/inventory/stock-transfers'
+  }
+}
