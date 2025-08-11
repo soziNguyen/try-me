@@ -52,37 +52,76 @@ function bindEvents() {
     }
   });
 
-            // XAC NHAN
-  document.getElementById('btnConfirmAssignTable').addEventListener('click', async function () {
-    const tableId = this.getAttribute('data-id');
-    if (!tableId) {
-      toastr.warning("Không tìm thấy bàn để giao.");
+const tableGrid = document.getElementById('tableGrid');
+
+tableGrid.addEventListener('click', function(e) {
+  const btnAssign = e.target.closest('.btnAssignTable');
+  if (btnAssign) {
+    e.stopPropagation();
+
+    const card = btnAssign.closest('.table-card');
+    const tableName = card.querySelector('h5').textContent.trim();
+    const capacityText = card.querySelector('div:nth-child(3)').textContent.trim();
+    const areaText = card.querySelector('div:nth-child(4)').textContent.trim();
+
+    // Gán thông tin vào modal
+    document.getElementById('assign-table-question').textContent = `Bạn có chắc chắn muốn giao bàn "${tableName}" không?`;
+    document.getElementById('assign-table-name').textContent = tableName;
+    document.getElementById('assign-table-capacity').textContent = capacityText.replace("Số Lượng Người:", "").trim();
+    document.getElementById('assign-table-area').textContent = areaText.replace("Khu vực:", "").trim();
+
+    // Lưu ID bàn để xử lý sau khi xác nhận
+    const tableId = card.querySelector('.tableCheckbox').getAttribute('data-id');
+    document.getElementById('btnConfirmAssignTable').setAttribute('data-id', tableId);
+
+    // Hiển thị modal
+    const assignModal = new bootstrap.Modal(document.getElementById('assignTableModal'));
+    assignModal.show();
+  }
+});
+
+// Xác nhận giao bàn
+document.getElementById('btnConfirmAssignTable').addEventListener('click', async function () {
+  const tableId = this.getAttribute('data-id');
+  if (!tableId) {
+    toastr.warning("Không tìm thấy bàn để giao.");
+    return;
+  }
+  try {
+    // Tạo order mới (backend cũng cập nhật bàn rồi)
+    const orderResult = await ajax('/api/orders/create', { tableId }, "POST");
+    if (!orderResult || !orderResult.orderId) {
+      toastr.error("Lỗi khi tạo order");
       return;
     }
-    try {
-      const table = await ajax(`/api/tables/${tableId}`, {}, "GET");
-      // Kiểm tra trạng thái bàn
-      if (table.status === "occupied") {
-        toastr.warning("Bàn đã có khách. Không thể giao bàn.");
-        return;
-      }
-      // Cập nhật trạng thái bàn
-      const result = await ajax(`/api/tables/update/${tableId}`, {
-        status: "occupied",
-        checkInTime: new Date().toISOString() //TIME
-      }, "PUT");
-      if (result) {
-        await getTables();
-        const assignModalElement = document.getElementById('assignTableModal');
-        const assignModal = bootstrap.Modal.getInstance(assignModalElement);
-        assignModal.hide();
-        toastr.success("Giao bàn thành công!");
-      }
-    } catch (err) {
-      toastr.error("Lỗi khi giao bàn: " + err.message);
+    // Cập nhật danh sách bàn
+    await getTables();
+    // Đóng modal giao bàn (nên kiểm tra modal tồn tại)
+    const assignModalElement = document.getElementById('assignTableModal');
+    if (assignModalElement) {
+      const assignModal = bootstrap.Modal.getInstance(assignModalElement) || new bootstrap.Modal(assignModalElement);
+      assignModal.hide();
     }
+    toastr.success("Giao bàn thành công!");
+    // Chuyển sang trang gọi món
+    // window.location.href = `/orders?orderId=${orderResult.orderId}`;
+  } catch (err) {
+    toastr.error("Lỗi khi giao bàn: " + err.message);
+  }
   });
 
+  // BTN gọi món (sử dụng event delegation)
+document.addEventListener('click', (e) => {
+  const btnOrder = e.target.closest('.btnOrderFood');
+  if (btnOrder) {
+    const orderId = btnOrder.getAttribute('data-order-id');
+    if (orderId) {
+      window.location.href = `/orders?orderId=${orderId}`;
+    } else {
+      toastr.warning("Bàn chưa có hóa đơn, vui lòng giao bàn trước khi gọi món.");
+    }
+  }
+});
 }
 
 
@@ -154,7 +193,7 @@ tableGrid.innerHTML = tables.map(table =>{
             <i class="bi bi-clock me-1"></i> Giao bàn
           </button>` : ""}
         ${table.status === "occupied" ? `
-          <button class="btnOrderFood btn btn-success btn-sm mt-2 fw-bold shadow-sm" data-id="${table._id}">
+          <button class="btnOrderFood btn btn-success btn-sm mt-2 fw-bold shadow-sm" data-order-id="${table.currentOrderId}">
             <i class="bi bi-clipboard-check me-1"></i> Gọi món
           </button>
       ` : ""}
@@ -177,41 +216,6 @@ tableGrid.innerHTML = tables.map(table =>{
     });
   });
   
-  // BẮT SỰ KIỆN NÚT GIAO BÀN
-    document.querySelectorAll('.btnAssignTable').forEach(button => {
-      button.addEventListener('click', function (e) {
-        e.stopPropagation();
-
-        const card = this.closest('.table-card');
-        const tableName = card.querySelector('h5').textContent.trim();
-        const capacityText = card.querySelector('div:nth-child(3)').textContent.trim();
-        const areaText = card.querySelector('div:nth-child(4)').textContent.trim();
-
-        // GÁN THÔNG TIN VÀO MODAL
-        document.getElementById('assign-table-question').textContent = `Bạn có chắc chắn muốn giao bàn "${tableName}" không?`;
-        document.getElementById('assign-table-name').textContent = tableName;
-        document.getElementById('assign-table-capacity').textContent = capacityText.replace("Số Lượng Người:", "").trim();
-        document.getElementById('assign-table-area').textContent = areaText.replace("Khu vực:", "").trim();
-
-        // Lưu ID bàn để xử lý sau khi xác nhận
-        const tableId = card.querySelector('.tableCheckbox').getAttribute('data-id');
-        document.getElementById('btnConfirmAssignTable').setAttribute('data-id', tableId);
-
-        // HIỂN THỊ MODAL
-        const assignModal = new bootstrap.Modal(document.getElementById('assignTableModal'));
-        assignModal.show();
-      });
-    });
-
-      // NÚT GỌI MÓN
-      document.addEventListener("click", function (e) {
-      if (e.target.classList.contains("btnOrderFood")) {
-        const tableId = e.target.getAttribute("data-id");
-        if (tableId) {
-          window.location.href = `/orders?tableId=${tableId}`;
-        }
-      }
-    });
 }
 
         // TIME ĐÃ NGỒI

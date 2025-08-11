@@ -2,25 +2,29 @@ import mongoose from 'mongoose';
 
 const Schema = mongoose.Schema;
 
-const FoodSchema = new Schema({
-  name: { type: String, required: true, trim: true },
-  price: { type: Number, required: true, min: 0 },
-  description: { type: String, trim: true, default: '' },
-  imageUrl: { type: String, trim: true, default: '' },
+const OrderSchema = new Schema({
+  tableId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Table',
+    required: true
+  },
   status: {
     type: String,
-    enum: ['available', 'unavailable'],
-    default: 'available'
+    enum: ['pending', 'in-progress', 'paid'],
+    default: 'pending'
   },
-  category: {
-    type: String,
-    enum: ['main', 'side', 'drink', 'dessert'],
-    default: 'main'
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  paidAt: {
+    type: Date,
+    default: null
   }
 }, {
-  collection: 'Foods',
+  collection: 'Orders',
   timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
 });
 
-const Food = mongoose.model('Food', FoodSchema);
-export default Food;
+const Order = mongoose.model('Order', OrderSchema);
+export default Order;

@@ -23,8 +23,19 @@ export const ordersPage = (req, res) => {
     )    
 }
 
+export const foodsPage = (req, res) => {
+    res.render('staff/foods', 
+        getPageData(req, 'Quản Lý Món Ăn', 'Orders', 
+            {
+                headerClass: 'staff__header',
+                pageTitle: 'Quản Lý Món Ăn'
+            }
+        )
+    )    
+}
+
 export const billsPage = (req, res) => {
-    res.render('staff/orders', 
+    res.render('staff/bills', 
         getPageData(req, 'Thanh toán', 'Bills', 
             {
                 headerClass: 'staff__header',
