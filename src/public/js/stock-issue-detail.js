@@ -100,17 +100,25 @@ $(function () {
     })
   }
 
-  function addNewItem() {
+  function updateRowDropdowns(rowIndex) {
+    const $select = $(`select[name="items[${rowIndex}][ingredient]"]`)
+    
     const ingredientOptions = ingredients
       .map((ing) => `<option value="${ing._id}">${ing.name}</option>`)
       .join("")
-      
+    
+    $select.empty().html(
+      '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
+      ingredientOptions
+    )
+  }
+
+  function addNewItem() {
     const newRow = `
     <tr>
       <td>
         <select class="form-select form-select-sm select2-ingredient" name="items[${itemCounter}][ingredient]">
           <option value="" class="text-center">— Chọn nguyên liệu —</option>
-          ${ingredientOptions}
         </select>
       </td>
       <td>
@@ -124,8 +132,14 @@ $(function () {
     </tr>
     `
     $("#itemsTableBody").append(newRow)
-    const $newSelect = $(`select[name="items[${itemCounter}][ingredient]"]`)
+    
+    // Update dropdown options và init Select2
+    const currentRowIndex = itemCounter
+    updateRowDropdowns(currentRowIndex)
+    
+    const $newSelect = $(`select[name="items[${currentRowIndex}][ingredient]"]`)
     initSelect2($newSelect, '— Chọn nguyên liệu —')
+    
     itemCounter++
   }
 
@@ -140,18 +154,15 @@ $(function () {
     $("#note").val(stockIssue.note || "")
 
     if (stockIssue.items && stockIssue.items.length > 0) {
+      // Clear existing rows
       $("#itemsTableBody").empty()
+      
       stockIssue.items.forEach((item, index) => {
-        const ingredientOptions = ingredients
-          .map((ing) => `<option value="${ing._id}">${ing.name}</option>`)
-          .join("")
-          
         const row = `
         <tr>
           <td>
             <select class="form-select form-select-sm select2-ingredient" name="items[${index}][ingredient]">
               <option value="" class="text-center">— Chọn nguyên liệu —</option>
-              ${ingredientOptions}
             </select>
           </td>
           <td>
@@ -166,11 +177,16 @@ $(function () {
         </tr>
         `
         $("#itemsTableBody").append(row)
+        
+        // Update dropdown options và set value
+        updateRowDropdowns(index)
+        
         const $sel = $(`select[name="items[${index}][ingredient]"]`)
         $sel.val(item.ingredient?._id || "")
         initSelect2($sel, '— Chọn nguyên liệu —')
       })
-      itemCounter = stockIssue.items.length || 1
+      
+      itemCounter = stockIssue.items.length
     }
 
     if (stockIssue?.isLocked) {
@@ -239,7 +255,7 @@ $(function () {
     const stockIssueData = {
       code: formData.get("code"),
       date: formData.get("date"),
-      warehouse: warehouseId, // Kho chung cho cả phiếu
+      warehouse: warehouseId,
       reason: formData.get("reason"),
       note: formData.get("note"),
       items: [],

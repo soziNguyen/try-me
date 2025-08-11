@@ -7,7 +7,7 @@ import { getIngredientStockList } from '../controllers/ingredientStock.js'
 import { getActiveWarehouses, getWareHouses, createWareHouse, updateWareHouse, deleteWarehouses, forceDeleteWareHouses } from '../controllers/warehouse.js'
 import { getAllStockEntries, getStockEntries, getStockEntryById, createStockEntry, updateStockEntryFromForm, deleteStockEntries, lockStockEntry } from '../controllers/stockEntry.js'
 import { getStockIssues, createStockIssue, getStockIssueById, updateStockIssue, deleteStockIssues, lockStockIssue } from '../controllers/stockIssue.js'
-import { getAllStockTransfers, getStockTransfers, getStockTransferById, createStockTransfer, updateStockTransferFromForm, deleteStockTransfers, lockStockTransfer } from '../controllers/stockTransfer.js'
+import { getStockTransfers, getStockTransferById, createStockTransfer, updateStockTransferFromForm, deleteStockTransfers, lockStockTransfer } from '../controllers/stockTransfer.js'
 import { getStockHistories } from '../controllers/stockHistory.js'
 import isAuthenticated from "../helpers/isAuthenticated.js"
 import isAdmin from '../helpers/isAdmin.js'

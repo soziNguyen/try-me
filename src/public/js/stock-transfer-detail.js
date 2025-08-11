@@ -45,9 +45,6 @@ $(function () {
         initSelect2($(this), '— Chọn nguyên liệu —')
       })
   
-      // Populate first row
-      updateRowDropdowns(0)
-  
       // Event handlers
       $("#addItemBtn").on("click", addNewItem)
       $("#stockTransferForm").on("submit", saveStockTransfer)
@@ -95,24 +92,32 @@ $(function () {
     }
   
     function updateRowDropdowns(rowIndex) {
+      const $ingredientSelect = $(`select[name="items[${rowIndex}][ingredient]"]`)
+      const $fromWarehouseSelect = $(`select[name="items[${rowIndex}][fromWarehouse]"]`)
+      const $toWarehouseSelect = $(`select[name="items[${rowIndex}][toWarehouse]"]`)
+      
+      // Update ingredient options
       const ingredientOptions = ingredients
         .map((ing) => `<option value="${ing._id}">${ing.name}</option>`)
         .join("")
-      $(`select[name="items[${rowIndex}][ingredient]"]`).html(
+      $ingredientSelect.empty().html(
         '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
-          ingredientOptions
+        ingredientOptions
       )
   
+      // Update warehouse options
       const warehouseOptions = warehouses
         .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
         .join("")
-      $(`select[name="items[${rowIndex}][fromWarehouse]"]`).html(
+      
+      $fromWarehouseSelect.empty().html(
         '<option value="" class="text-center">— Chọn kho nguồn —</option>' +
-          warehouseOptions
+        warehouseOptions
       )
-      $(`select[name="items[${rowIndex}][toWarehouse]"]`).html(
+      
+      $toWarehouseSelect.empty().html(
         '<option value="" class="text-center">— Chọn kho đích —</option>' +
-          warehouseOptions
+        warehouseOptions
       )
     }
   
@@ -145,9 +150,14 @@ $(function () {
       </tr>
       `
       $("#itemsTableBody").append(newRow)
-      const $newSelect = $(`select[name="items[${itemCounter}][ingredient]"]`)
-      updateRowDropdowns(itemCounter)
+      
+      // Update dropdown options và init Select2
+      const currentRowIndex = itemCounter
+      updateRowDropdowns(currentRowIndex)
+      
+      const $newSelect = $(`select[name="items[${currentRowIndex}][ingredient]"]`)
       initSelect2($newSelect, '— Chọn nguyên liệu —')
+      
       itemCounter++
     }
   
@@ -160,7 +170,9 @@ $(function () {
       $("#note").val(stockTransfer.note || "")
   
       if (stockTransfer.items && stockTransfer.items.length > 0) {
+        // Clear existing rows
         $("#itemsTableBody").empty()
+        
         stockTransfer.items.forEach((item, index) => {
           const row = `
           <tr>
@@ -191,10 +203,14 @@ $(function () {
           </tr>
           `
           $("#itemsTableBody").append(row)
-          const $sel = $(`select[name="items[${index}][ingredient]"]`)
+          
+          // Update dropdown options và set values
           updateRowDropdowns(index)
+          
+          const $sel = $(`select[name="items[${index}][ingredient]"]`)
           $sel.val(item.ingredient?._id || "")
           initSelect2($sel, '— Chọn nguyên liệu —')
+          
           $(`select[name="items[${index}][fromWarehouse]"]`).val(
             item.fromWarehouse?._id || ""
           )
@@ -202,8 +218,10 @@ $(function () {
             item.toWarehouse?._id || ""
           )
         })
-        itemCounter = stockTransfer.items.length || 1
+        
+        itemCounter = stockTransfer.items.length
       }
+      
       if (stockTransfer?.isLocked) {
         $("#btn-lock-transfer").prop("disabled", true).html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
       
@@ -326,4 +344,4 @@ $(function () {
       })
     }
     setupBackButton()
-  })
+})
