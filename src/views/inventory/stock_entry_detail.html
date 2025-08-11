@@ -30,8 +30,14 @@
                                     <input type="text" class="form-control" id="date" name="date" placeholder="dd/mm/yyyy" readonly>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="supplier" class="form-label">Nhà cung cấp</label>
+                                    <label for="supplier" class="form-label">Nhà cung cấp <span class="text-danger">*</label>
                                     <select class="form-select" id="supplier" name="supplier">
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="warehouse" class="form-label">Kho <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="warehouse" name="warehouse" required>
+                                        <option value="" class="text-center">— Chọn kho —</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -60,7 +66,6 @@
                                             <th width="15%">Số lượng</th>
                                             <th width="15%">Đơn giá (đ)</th>
                                             <th width="15%">Thành tiền</th>
-                                            <th width="20%">Kho</th>
                                             <th width="5%">Xóa</th>
                                         </tr>
                                     </thead>
@@ -98,7 +103,7 @@
                                 <i class="bi bi-lock me-2"></i>Xác nhận
                             </button>
                             <div class="d-flex justify-content-end">
-                                <a href="/inventory/stock-entries" class="btn btn-outline-secondary me-2">
+                                <a href="/inventory/stock-entries" id="btn-back" class="btn btn-outline-secondary me-2">
                                     <i class="bi bi-x-circle me-2"></i>Quay lại
                                 </a>
                                 <button type="button" id="btn-print-entry" class="btn btn-outline-info me-2">

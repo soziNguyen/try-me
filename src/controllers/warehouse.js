@@ -98,7 +98,6 @@ export const getWareHouses = async (req, res) => {
     })
 
   } catch (error) {
-    console.error('Error in getWareHouses:', error)
     return res.status(500).json({
       draw: +req.query.draw || 0,
       recordsTotal: 0,

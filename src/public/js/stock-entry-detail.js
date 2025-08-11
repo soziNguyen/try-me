@@ -36,7 +36,6 @@ $(function () {
       }
     })
     .catch((err) => {
-      console.error("Error loading data:", err)
       toastr.error("Không thể load dữ liệu cần thiết")
     })
 
@@ -55,6 +54,14 @@ $(function () {
       .join("")
     $("#supplier").html(
       '<option value="" class="text-center">— Chọn nhà cung cấp —</option>' + supplierOptions
+    )
+
+    // Populate warehouses dropdown (main warehouse select)
+    const warehouseOptions = warehouses
+      .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
+      .join("")
+    $("#warehouse").html(
+      '<option value="" class="text-center">— Chọn kho —</option>' + warehouseOptions
     )
 
     // Populate first row
@@ -79,7 +86,7 @@ $(function () {
             $("#stockEntryForm")
               .find("input, select, textarea, button")
               .not("#btn-lock-entry, #btn-print-entry")
-              .add("#btn-save-entry, #addItemBtn, #supplier")
+              .add("#btn-save-entry, #addItemBtn, #supplier, #warehouse")
               .prop("disabled", true)
           } else {
             toastr.error(res.message || "Có lỗi xảy ra")
@@ -120,14 +127,6 @@ $(function () {
       '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
         ingredientOptions
     )
-
-    const warehouseOptions = warehouses
-      .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
-      .join("")
-    $(`select[name="items[${rowIndex}][warehouse]"]`).html(
-      '<option value="" class="text-center">— Chọn kho —</option>' +
-        warehouseOptions
-    )
   }
 
   function addNewItem() {
@@ -146,11 +145,6 @@ $(function () {
       </td>
       <td>
         <input type="text" class="form-control form-control-sm" readonly placeholder="0">
-      </td>
-      <td>
-        <select class="form-select form-select-sm" name="items[${itemCounter}][warehouse]">
-          <option value="" class="text-center">— Chọn kho —</option>
-        </select>
       </td>
       <td class="text-center">
         <button type="button" class="btn btn-danger btn-sm remove-item-btn">
@@ -194,6 +188,7 @@ $(function () {
     $("#code").val(stockEntry.code || "")
     $("#date").val(formatDate(stockEntry.date) || "")
     $("#supplier").val(stockEntry.supplier?._id || "")
+    $("#warehouse").val(stockEntry.warehouse?._id || "")
     $("#createdBy")
       .val(stockEntry.createdBy?.name || stockEntry.createdBy?.username || "")
       .data("id", stockEntry.createdBy?._id)
@@ -222,11 +217,6 @@ $(function () {
               (item.total || 0).toLocaleString("vi-VN") + " ₫"
             }" placeholder="0">
           </td>
-          <td>
-            <select class="form-select form-select-sm" name="items[${index}][warehouse]">
-              <option value="" class="text-center">— Chọn kho —</option>
-            </select>
-          </td>
           <td class="text-center">
             <button type="button" class="btn btn-danger btn-sm remove-item-btn">
               <i class="bi bi-trash"></i>
@@ -239,9 +229,6 @@ $(function () {
         updateRowDropdowns(index)
         $sel.val(item.ingredient?._id || "")
         initSelect2($sel, '— Chọn nguyên liệu —')
-        $(`select[name="items[${index}][warehouse]"]`).val(
-          item.warehouse?._id || ""
-        )
       })
       itemCounter = stockEntry.items.length || 1
       calculateTotalAmount()
@@ -252,7 +239,7 @@ $(function () {
       $("#stockEntryForm")
         .find("input, select, textarea, button")
         .not("#btn-lock-entry, #btn-print-entry")
-        .add("#btn-save-entry, #addItemBtn, #supplier")
+        .add("#btn-save-entry, #addItemBtn, #supplier, #warehouse")
         .prop("disabled", true)
     }   
   }
@@ -270,17 +257,15 @@ $(function () {
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
       const quantity = $(this).find('input[name*="[quantity]"]').val()
       const unitPrice = $(this).find('input[name*="[unitPrice]"]').val()
-      const warehouseId = $(this).find('select[name*="[warehouse]"]').val()
   
-      const hasAnyValue = ingredientId || quantity || unitPrice || warehouseId
-      const isComplete = ingredientId && quantity && unitPrice && warehouseId
+      const hasAnyValue = ingredientId || quantity || unitPrice
+      const isComplete = ingredientId && quantity && unitPrice
   
       if (hasAnyValue && !isComplete) {
         const missingFields = []
         if (!ingredientId) missingFields.push("nguyên liệu")
         if (!quantity) missingFields.push("số lượng")
         if (!unitPrice) missingFields.push("đơn giá")
-        if (!warehouseId) missingFields.push("kho")
   
         partialErrors.push(`Dòng ${rowIndex} thiếu ${missingFields.join(", ")}`)
       }
@@ -298,9 +283,8 @@ $(function () {
         const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
         const quantity = $(this).find('input[name*="[quantity]"]').val()
         const unitPrice = $(this).find('input[name*="[unitPrice]"]').val()
-        const warehouseId = $(this).find('select[name*="[warehouse]"]').val()
   
-        if (!ingredientId && !quantity && !unitPrice && !warehouseId) {
+        if (!ingredientId && !quantity && !unitPrice) {
           $(this).remove()
         }
       })
@@ -312,6 +296,7 @@ $(function () {
       code: formData.get("code"),
       date: formData.get("date"),
       supplier: formData.get("supplier"),
+      warehouse: formData.get("warehouse"), // Lấy warehouse từ main select
       note: formData.get("note"),
       items: [],
     }
@@ -324,21 +309,25 @@ $(function () {
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
       const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val())
       const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val())
-      const warehouseId = $(this).find('select[name*="[warehouse]"]').val()
   
-      if (ingredientId && quantity && unitPrice && warehouseId) {
+      if (ingredientId && quantity && unitPrice) {
         stockEntryData.items.push({
           ingredient: ingredientId,
           quantity,
           unitPrice,
           total: quantity * unitPrice,
-          warehouse: warehouseId,
+          // Không cần warehouse ở item level nữa
         })
       }
     })
   
     if (!stockEntryData.supplier) {
       toastr.error("Vui lòng chọn nhà cung cấp", "Lỗi dữ liệu")
+      return
+    }
+
+    if (!stockEntryData.warehouse) {
+      toastr.error("Vui lòng chọn kho", "Lỗi dữ liệu")
       return
     }
   
@@ -365,9 +354,9 @@ $(function () {
         }
       },
       error(xhr) {
-        console.error("Save error:", xhr)
         toastr.error(xhr.responseJSON?.message || "Có lỗi xảy ra khi lưu")
       },
     })
-  }  
+    setupBackButton()
+  }
 })

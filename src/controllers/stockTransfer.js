@@ -8,6 +8,7 @@ import withTransaction from "../helpers/withTransaction.js"
 import { generateDocumentCode } from "../helpers/common.js"
 import { lookupRef } from "../helpers/lookupHelper.js"
 import { toVietnamTime } from "../helpers/dateHelper.js"
+import StockHistory from "../models/stockHistory.js"
 
 // GET ALL
 export const getAllStockTransfers = async (req, res) => {
@@ -188,7 +189,6 @@ export const getStockTransferById = async (req, res) => {
     
     responseHelper.success(res, stockTransfer, 'Lấy thông tin phiếu chuyển kho thành công')
   } catch (err) {
-    console.error('Get stock transfer error:', err)
     responseHelper.error(res, err.message)
   }
 }
@@ -266,7 +266,6 @@ export const updateStockTransferFromForm = async (req, res) => {
             }
           })
       )
-      console.log(newItems)
 
       if (newItems.length === 0) {
         throw new Error('Phải có ít nhất một mặt hàng để chuyển kho')
@@ -415,7 +414,6 @@ export const updateStockTransferFromForm = async (req, res) => {
 
     responseHelper.success(res, updatedDoc, 'Cập nhật phiếu chuyển kho thành công')
   } catch (err) {
-    console.error('Update stock transfer error:', err)
     responseHelper.error(res, err.message)
   }
 }
@@ -600,7 +598,6 @@ export const deleteStockTransfers = async (req, res) => {
       `Xóa thành công ${req.body.ids.length} phiếu chuyển kho và hoàn tác tồn kho`
     )
   } catch (error) {
-    console.error('Delete stock transfers error:', error)
     responseHelper.error(res, error.message)
   }
 }
@@ -623,22 +620,80 @@ export const lockStockTransfer = async (req, res) => {
       return responseHelper.error(res, 'Phiếu chuyển kho đã được khóa trước đó', 400)
     }
 
-    let updatedTransfer = await StockTransfer.findByIdAndUpdate(
-      id, 
-      { 
-        isLocked: true,
-        lockedAt: new Date(),
-        lockedBy: req.user._id
-      }, 
-      { new: true }
-    )
-    .populate('lockedBy', 'name username')
+    if (!transfer.items || transfer.items.length === 0) {
+      return responseHelper.error(res, 'Phiếu chuyển kho không có sản phẩm nào', 400)
+    }
 
-    updatedTransfer = updatedTransfer.toObject()
-    updatedTransfer.lockedAt = toVietnamTime(updatedTransfer.lockedAt)
+    // Validate items
+    for (const item of transfer.items) {
+      if (!item.ingredient) {
+        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin ingredient', 400)
+      }
+      const qty = Number(item.quantity)
+      if (!Number.isFinite(qty) || qty <= 0) {
+        return responseHelper.error(res, 'Có sản phẩm với số lượng không hợp lệ', 400)
+      }
+      if (!item.fromWarehouse || !item.toWarehouse) {
+        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin kho xuất hoặc kho nhận', 400)
+      }
+    }
 
-    responseHelper.success(res, updatedTransfer, 'Đã khóa phiếu chuyển kho thành công')
+    await withTransaction(async (session) => {
+      // Cập nhật trạng thái khóa
+      const updatedTransfer = await StockTransfer.findByIdAndUpdate(
+        id,
+        {
+          isLocked: true,
+          lockedAt: new Date(),
+          lockedBy: req.user._id
+        },
+        { new: true, session }
+      ).populate('lockedBy', 'name username')
+
+      if (!updatedTransfer) {
+        throw new Error('Không thể cập nhật phiếu chuyển kho')
+      }
+
+      // Chuẩn bị stockHistory items
+      const itemsSummary = transfer.items.map(item => ({
+        ingredient: item.ingredient._id || item.ingredient,
+        quantity: Number(item.quantity) || 0,
+        fromWarehouse: item.fromWarehouse._id || item.fromWarehouse,
+        toWarehouse: item.toWarehouse._id || item.toWarehouse,
+      }))
+
+      // Tạo StockHistory record
+      const stockHistory = {
+        transactionType: 'TRANSFER',
+        documentType: 'StockTransfer',
+        documentId: transfer._id,
+        documentCode: transfer.code || '',
+        fromWarehouse: null,  // Tổng thể phiếu thì null, chi tiết từng item có fromWarehouse
+        toWarehouse: null,
+        supplier: null,
+        totalItems: transfer.items.length,
+        totalQuantity: itemsSummary.reduce((sum, i) => sum + i.quantity, 0),
+        items: itemsSummary,
+        reason: 'Stock transfer locked',
+        note: transfer.note ? `${transfer.note} (Locked)` : 'Stock transfer locked',
+        transactionDate: transfer.date || new Date(),
+        createdBy: req.user._id,
+        updatedBy: null
+      }
+
+      await StockHistory.create([stockHistory], { session })
+    })
+
+    // Lấy phiếu chuyển kho đã khóa với thông tin đầy đủ
+    const finalTransfer = await StockTransfer.findById(id)
+      .populate('lockedBy', 'name username')
+      .populate('items.ingredient', 'name sku unit stock')
+      .populate('items.fromWarehouse', 'name code')
+      .populate('items.toWarehouse', 'name code')
+
+    responseHelper.success(res, finalTransfer, 'Đã khóa phiếu chuyển kho thành công')
   } catch (err) {
-    responseHelper.error(res, err.message)
+    responseHelper.error(res, err.message || 'Có lỗi xảy ra khi khóa phiếu chuyển kho')
   }
 }
+

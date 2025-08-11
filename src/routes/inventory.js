@@ -8,7 +8,7 @@ import { getActiveWarehouses, getWareHouses, createWareHouse, updateWareHouse, d
 import { getAllStockEntries, getStockEntries, getStockEntryById, createStockEntry, updateStockEntryFromForm, deleteStockEntries, lockStockEntry } from '../controllers/stockEntry.js'
 import { getStockIssues, createStockIssue, getStockIssueById, updateStockIssue, deleteStockIssues, lockStockIssue } from '../controllers/stockIssue.js'
 import { getAllStockTransfers, getStockTransfers, getStockTransferById, createStockTransfer, updateStockTransferFromForm, deleteStockTransfers, lockStockTransfer } from '../controllers/stockTransfer.js'
-import { getStockMovements } from '../controllers/stockMovement.js'
+import { getStockHistories } from '../controllers/stockHistory.js'
 import isAuthenticated from "../helpers/isAuthenticated.js"
 import isAdmin from '../helpers/isAdmin.js'
 
@@ -23,7 +23,7 @@ router.get('/inventory/warehouses', isAuthenticated, isAdmin, page.warehousePage
 router.get('/inventory/stock-entries', isAuthenticated, isAdmin, page.importPage)
 router.get('/inventory/stock-issues', isAuthenticated, isAdmin, page.exportPage)
 router.get('/inventory/stock-transfers', isAuthenticated, isAdmin, page.transferPage)
-router.get('/inventory/movements', isAuthenticated, isAdmin, page.movementPage)
+router.get('/inventory/stock-histories', isAuthenticated, isAdmin, page.historyPage)
 router.get('/inventory/stock-entry/:id', isAuthenticated, isAdmin, page.newStockEntryPage)
 router.get('/inventory/stock-issue/:id', isAuthenticated, isAdmin, page.newStockIssuePage)
 router.get('/inventory/stock-transfer/:id', isAuthenticated, isAdmin, page.newStockTransferPage)
@@ -86,7 +86,7 @@ router.post('/api/inventory/stock-transfer/lock/:id', isAuthenticated, isAdmin, 
 // 8. Ingredient Stock
 router.get('/api/inventory/ingredient-stock', isAuthenticated, isAdmin, getIngredientStockList)
 
-// 9. Stock Movement
-router.get('/api/inventory/stock-movements', isAuthenticated, isAdmin, getStockMovements)
+// 9. Stock Historys
+router.get('/api/inventory/stock-histories', isAuthenticated, isAdmin, getStockHistories)
 
 export default router
