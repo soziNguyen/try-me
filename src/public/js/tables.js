@@ -53,37 +53,35 @@ function bindEvents() {
   });
 
             // XAC NHAN
-document.getElementById('btnConfirmAssignTable').addEventListener('click', async function () {
-  const tableId = this.getAttribute('data-id');
-  if (!tableId) {
-    toastr.warning("Không tìm thấy bàn để giao.");
-    return;
-  }
-  try {
-    const table = await ajax(`/api/tables/${tableId}`, {}, "GET");
-    // Kiểm tra trạng thái bàn
-    if (table.status === "occupied") {
-      toastr.warning("Bàn đã có khách. Không thể giao bàn.");
+  document.getElementById('btnConfirmAssignTable').addEventListener('click', async function () {
+    const tableId = this.getAttribute('data-id');
+    if (!tableId) {
+      toastr.warning("Không tìm thấy bàn để giao.");
       return;
     }
-    // Cập nhật trạng thái bàn
-    const result = await ajax(`/api/tables/update/${tableId}`, {
-      status: "occupied",
-      checkInTime: new Date().toISOString() //TIME
-    }, "PUT");
-    if (result) {
-      await getTables();
-      const assignModalElement = document.getElementById('assignTableModal');
-      const assignModal = bootstrap.Modal.getInstance(assignModalElement);
-      assignModal.hide();
-      toastr.success("Giao bàn thành công!");
-      // Chuyển đến trang gọi món
-      // window.location.href = `order.html?tableId=${tableId}`;
+    try {
+      const table = await ajax(`/api/tables/${tableId}`, {}, "GET");
+      // Kiểm tra trạng thái bàn
+      if (table.status === "occupied") {
+        toastr.warning("Bàn đã có khách. Không thể giao bàn.");
+        return;
+      }
+      // Cập nhật trạng thái bàn
+      const result = await ajax(`/api/tables/update/${tableId}`, {
+        status: "occupied",
+        checkInTime: new Date().toISOString() //TIME
+      }, "PUT");
+      if (result) {
+        await getTables();
+        const assignModalElement = document.getElementById('assignTableModal');
+        const assignModal = bootstrap.Modal.getInstance(assignModalElement);
+        assignModal.hide();
+        toastr.success("Giao bàn thành công!");
+      }
+    } catch (err) {
+      toastr.error("Lỗi khi giao bàn: " + err.message);
     }
-  } catch (err) {
-    toastr.error("Lỗi khi giao bàn: " + err.message);
-  }
-});
+  });
 
 }
 
@@ -124,7 +122,7 @@ async function getTables(page = 1) {
 
 // ========== STATUS COLOR ==========
 function getBgClassByStatus(status) {
-  if (status === "available") return "bg-success ";       
+  if (status === "available") return "my-orange text-white";       
   return "bg-secondary";                              
 }
 // ========== HIỂN THỊ DANH SÁCH BÀN ==========
@@ -155,6 +153,11 @@ tableGrid.innerHTML = tables.map(table =>{
           <button class ="btnAssignTable btn btn-warning btn-sm mt-2 fw-bold shadow-sm">
             <i class="bi bi-clock me-1"></i> Giao bàn
           </button>` : ""}
+        ${table.status === "occupied" ? `
+          <button class="btnOrderFood btn btn-success btn-sm mt-2 fw-bold shadow-sm" data-id="${table._id}">
+            <i class="bi bi-clipboard-check me-1"></i> Gọi món
+          </button>
+      ` : ""}
       </div>
     </div>
   </div>
@@ -198,6 +201,16 @@ tableGrid.innerHTML = tables.map(table =>{
         const assignModal = new bootstrap.Modal(document.getElementById('assignTableModal'));
         assignModal.show();
       });
+    });
+
+      // NÚT GỌI MÓN
+      document.addEventListener("click", function (e) {
+      if (e.target.classList.contains("btnOrderFood")) {
+        const tableId = e.target.getAttribute("data-id");
+        if (tableId) {
+          window.location.href = `/orders?tableId=${tableId}`;
+        }
+      }
     });
 }
 

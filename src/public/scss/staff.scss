@@ -1,4 +1,4 @@
-
+$orange-800: #9a3412;
 .table-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
@@ -8,4 +8,7 @@
     filter: brightness(1.1);
     cursor: pointer;
   }
+}
+.my-orange {
+  background-color: $orange-800;
 }

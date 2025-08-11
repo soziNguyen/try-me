@@ -11,3 +11,36 @@ export const tablePage = (req, res) => {
         )
     )    
 }
+
+export const ordersPage = (req, res) => {
+    res.render('staff/orders', 
+        getPageData(req, 'Đặt món', 'Orders', 
+            {
+                headerClass: 'staff__header',
+                pageTitle: 'ĐẶT MÓN'
+            }
+        )
+    )    
+}
+
+export const billsPage = (req, res) => {
+    res.render('staff/orders', 
+        getPageData(req, 'Thanh toán', 'Bills', 
+            {
+                headerClass: 'staff__header',
+                pageTitle: 'THANH TOÁN'
+            }
+        )
+    )    
+}
+
+export const schedulePage = (req, res) => {
+    res.render('staff/schedule', 
+        getPageData(req, 'Lịch Làm Việc', 'Schedule', 
+            {
+                headerClass: 'staff__header',
+                pageTitle: `LỊCH LÀM VIỆC của ${req.user.username}`
+            }
+        )
+    )    
+}
