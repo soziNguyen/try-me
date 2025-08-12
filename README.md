@@ -16,7 +16,7 @@ Dự án hỗ trợ đăng nhập, quản lý nguyên liệu, quản lý kho, nh
 - Hỗ trợ đa múi giờ với **moment-timezone**
 
 ## 🛠 Công nghệ sử dụng
-- **Node.js** v20+
+- **Node.js** v18+
 - **Express** v5
 - **MongoDB + Mongoose**
 - **EJS**
