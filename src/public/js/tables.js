@@ -89,7 +89,7 @@ document.getElementById('btnConfirmAssignTable').addEventListener('click', async
   }
   try {
     // Tạo order mới (backend cũng cập nhật bàn rồi)
-    const orderResult = await ajax('/api/orders/create', { tableId }, "POST");
+    const orderResult = await ajax('/api/orders', { tableId }, "POST");
     if (!orderResult || !orderResult.orderId) {
       toastr.error("Lỗi khi tạo order");
       return;

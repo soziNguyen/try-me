@@ -13,18 +13,17 @@ const OrderSchema = new Schema({
     enum: ['pending', 'in-progress', 'paid'],
     default: 'pending'
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
   paidAt: {
     type: Date,
     default: null
   }
 }, {
   collection: 'Orders',
-  timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
+  timestamps: true
 });
+
+OrderSchema.index({ tableId: 1 });
+OrderSchema.index({ status: 1 });
 
 const Order = mongoose.model('Order', OrderSchema);
 export default Order;

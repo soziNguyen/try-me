@@ -9,8 +9,14 @@ import isAuthenticated from "../helpers/isAuthenticated.js";
 
 const router = express.Router();
 
-// --- Quản lý bàn ---
+// --- GET PAGE ---
 router.get('/tables', isAuthenticated, tablePage);
+router.get('/foods', isAuthenticated, foodsPage);
+router.get('/orders', isAuthenticated, ordersPage);
+router.get('/bills', isAuthenticated, billsPage);
+router.get('/schedule', isAuthenticated, schedulePage);
+
+// --- Quản lý bàn ---
 router.get('/api/tables', isAuthenticated, tableController.getTables);
 router.get('/api/tables/:id', isAuthenticated, tableController.getTableById);
 router.post('/api/tables/create', isAuthenticated, tableController.createTable);
@@ -19,24 +25,22 @@ router.post('/api/tables/delete',    isAuthenticated, tableController.deleteTabl
 
 
 // --- Quản lý món ăn ---
-router.get('/foods', isAuthenticated, foodsPage);
 router.get('/api/foods', isAuthenticated, foodController.getFoods);
-router.get('/api/foods/:id', isAuthenticated, foodController.getFoodById);
-router.post('/api/foods', isAuthenticated, foodController.createFood);
-router.put('/api/foods/:id', isAuthenticated, foodController.updateFood);
+router.post('/api/foods/create', isAuthenticated, foodController.createFood);
+router.put('/api/foods/update/:id', isAuthenticated, foodController.updateFood);
 router.post('/api/foods/delete', isAuthenticated, foodController.deleteFoods);
 
 
 // --- Đặt món và quản lý đơn hàng ---
-router.get('/orders', isAuthenticated, ordersPage);
-router.post('/api/orders/create', isAuthenticated, orderController.createOrder);
+
+router.post('/api/orders', isAuthenticated, orderController.createOrder);
 
 
 // --- Thanh toán ---
-router.get('/bills', isAuthenticated, billsPage);
+
 
 
 // --- Lịch làm việc ---
-router.get('/schedule', isAuthenticated, schedulePage);
+
 
 export default router;

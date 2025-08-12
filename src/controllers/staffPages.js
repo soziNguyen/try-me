@@ -25,7 +25,7 @@ export const ordersPage = (req, res) => {
 
 export const foodsPage = (req, res) => {
     res.render('staff/foods', 
-        getPageData(req, 'Quản Lý Món Ăn', 'Orders', 
+        getPageData(req, 'Quản Lý Món Ăn', 'Foods', 
             {
                 headerClass: 'staff__header',
                 pageTitle: 'Quản Lý Món Ăn'
@@ -36,10 +36,10 @@ export const foodsPage = (req, res) => {
 
 export const billsPage = (req, res) => {
     res.render('staff/bills', 
-        getPageData(req, 'Thanh toán', 'Bills', 
+        getPageData(req, 'Hóa Đơn', 'Bills', 
             {
                 headerClass: 'staff__header',
-                pageTitle: 'THANH TOÁN'
+                pageTitle: 'HÓA ĐƠN'
             }
         )
     )    
