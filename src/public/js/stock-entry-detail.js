@@ -133,7 +133,7 @@ $(function () {
     const newRow = `
     <tr>
       <td>
-        <select class="form-select form-select-sm select2-ingredient" name="items[${itemCounter}][ingredient]">
+        <select class="select2-ingredient" name="items[${itemCounter}][ingredient]">
           <option value="" class="text-center">— Chọn nguyên liệu —</option>
         </select>
       </td>
@@ -206,7 +206,7 @@ $(function () {
         const row = `
         <tr>
           <td>
-            <select class="form-select form-select-sm select2-ingredient" name="items[${index}][ingredient]">
+            <select class="select2-ingredient" name="items[${index}][ingredient]">
               <option value="" class="text-center">— Chọn nguyên liệu —</option>
             </select>
           </td>
@@ -366,6 +366,6 @@ $(function () {
         toastr.error(xhr.responseJSON?.message || "Có lỗi xảy ra khi lưu")
       },
     })
-    setupBackButton()
   }
+  setupBackButton()
 })

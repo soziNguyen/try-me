@@ -8,7 +8,7 @@ function handlerAddEvent(tableSelector, btnSelector, module) {
     const $btn = $(this).prop('disabled', true)
     
     $.ajax({
-      url: `/api/inventory/${module}/create`,
+      url: `/api/${module}/create`,
       method: 'POST',
       success(res) {
         toastr.remove()
@@ -49,7 +49,7 @@ function handlerDeleteEvent (tableSelector, btnSelector, checkboxClass, module) 
     }
 
     $.ajax({
-      url: `/api/inventory/${module}/deletes`,
+      url: `/api/${module}/deletes`,
       method: 'POST',
       contentType: 'application/json',
       data: JSON.stringify({ ids: selected }),
@@ -94,7 +94,7 @@ function handlerUpdateEvent(tableSelector, module, transform) {
     }
 
     $.ajax({
-      url: `/api/inventory/${module}/update/${id}`,
+      url: `/api/${module}/update/${id}`,
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(payload),

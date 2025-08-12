@@ -195,7 +195,7 @@ $(function () {
           })
           
           // CHỈ GIỮ LẠI DELETE VÀ CHECKBOX EVENTS
-          handlerDeleteEvent('#stockTransferTable', '#deleteStockTransferBtn', 'stockTransferCheckbox', 'stock-transfer')
+          handlerDeleteEvent('#stockTransferTable', '#deleteStockTransferBtn', 'stockTransferCheckbox', 'inventory/stock-transfer')
           initTableCheckboxEvents('#stockTransferTable', 'stockTransferCheckbox')
         }
       })

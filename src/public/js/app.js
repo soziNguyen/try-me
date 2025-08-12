@@ -199,14 +199,49 @@ function initSelect2($select, placeholder = '— Chọn mục —') {
     $select.select2('destroy');
   }
 
-  $select.css('width', '100%');
+  const parentElement = $select.closest('td');
 
   $select.select2({
     placeholder,
-    allowClear: false,
     width: '100%',
     multiple: false,
     dropdownCssClass: 'no-bullet',
-    dropdownParent: $select.closest('td'),
+    dropdownParent: parentElement.length > 0 ? parentElement : $('body')
   });
+
+  $select.on('select2:open', function() {
+    const dropdown = $('.select2-dropdown');
+    const searchContainer = $('.select2-search--dropdown')
+    const searchInput = $('.select2-search__field');
+    const tdWidth = parentElement.outerWidth();
+    
+    // Force set exact width cho dropdown
+    dropdown.css({
+      'width': Math.floor(tdWidth) + 'px',
+      'min-width': Math.floor(tdWidth) + 'px',
+      'max-width': Math.floor(tdWidth) + 'px'
+    });
+    
+    // Fix search container
+    searchContainer.css({
+      'width': '100%',
+      'padding': '0',
+      'box-sizing': 'border-box'
+    });
+    
+    searchInput.css({
+      'width': `100%`,
+      'box-sizing': 'border-box',
+      margin: '0'
+    });
+    
+    // Set container
+    $('.select2-container--open').css({
+      'width': Math.floor(tdWidth) + 'px'
+    });
+  });
+
+  $('#btn-print').on('click', function() {
+    window.print();
+  })
 }
