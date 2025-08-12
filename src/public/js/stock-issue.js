@@ -177,7 +177,7 @@ $(function () {
 
   
       // các handler
-      handlerDeleteEvent('#stockIssueTable', '#deleteStockIssueBtn', 'stockIssueCheckbox', 'stock-issue')
+      handlerDeleteEvent('#stockIssueTable', '#deleteStockIssueBtn', 'stockIssueCheckbox', 'inventory/stock-issue')
       initTableCheckboxEvents('#stockIssueTable', 'stockIssueCheckbox')
     }
   })

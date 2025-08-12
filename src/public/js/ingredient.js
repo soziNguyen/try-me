@@ -191,9 +191,9 @@ $(function () {
   
     // =======================================================
     // EVENT HANDLER
-    handlerAddEvent('#ingredientTable', '#addIngredientBtn', 'ingredient')
-    handlerDeleteEvent('#ingredientTable', '#deleteIngredientBtn', 'ingredientCheckbox', 'ingredient')
-    handlerUpdateEvent('#ingredientTable', 'ingredient')
+    handlerAddEvent('#ingredientTable', '#addIngredientBtn', 'inventory/ingredient')
+    handlerDeleteEvent('#ingredientTable', '#deleteIngredientBtn', 'ingredientCheckbox', 'inventory/ingredient')
+    handlerUpdateEvent('#ingredientTable', 'inventory/ingredient')
   
     initTableCheckboxEvents('#ingredientTable', 'ingredientCheckbox')
   }

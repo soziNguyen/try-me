@@ -200,3 +200,61 @@ export const newStockTransferPage = (req, res) => {
         })
     )
 }
+
+// =================================================
+// ================== MENU ========================
+
+export const menuPage = (req, res) => {
+    res.render('menu/list', 
+        getPageData(req, 'Quản lý thực đơn', 'Menu', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ THỰC ĐƠN'
+            }
+        )
+    )
+}
+
+export const recipePage = (req, res) => {
+    res.render('menu/recipe', 
+        getPageData(req, 'Quản lý công thức món ăn', 'Recipe', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ CÔNG THỨC MÓN ĂN'
+            }
+        )
+    )
+}
+
+export const menuCategoryPage = (req, res) => {
+    res.render('menu/categories', 
+        getPageData(req, 'Quản lý danh mục món ăn', 'MenuCategory', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ DANH MỤC MÓN ĂN'
+            }
+        )
+    )
+}
+
+export const comboPage = (req, res) => {
+    res.render('menu/combo', 
+        getPageData(req, 'Quản lý combo', 'Combo', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ COMBO'
+            }
+        )
+    )
+}
+
+export const historyPricePage = (req, res) => {
+    res.render('menu/history_price', 
+        getPageData(req, 'Lịch sử thay đổi giá món ăn', 'HistoryPrice', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'LỊCH SỬ THAY ĐỔI GIÁ MÓN ĂN'
+            }
+        )
+    )
+}

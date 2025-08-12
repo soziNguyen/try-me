@@ -1,0 +1,34 @@
+<%- include('../partials/header.html') %>
+<%- include('../partials/admin_sidebar.html') %>
+<div class="admin__content">
+    <h2 class="mb-4 bold semi-bold"><%= pageTitle %></h2>
+
+    <table id="historyPriceTable" class="table table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    <input type="checkbox" id="selectAll">
+                </th>
+                <th>Tên món</th>
+                <th>Giá cũ</th>
+                <th>Giá mới</th>
+                <th>Thời điểm thay đổi</th>
+                <th>Người thay đổi</th>
+                <th>Ghi chú</th>
+            </tr>
+        </thead>
+        <tbody id="historyPriceTableBody">
+
+        </tbody>
+    </table>
+</div>
+
+</div>
+</div>
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<%- include('../partials/commonjs.html') %>
+<script src="/js/sidebar-toggle.js"></script>
+<script src="/js/update-user.js"></script>
+<!-- <script src="/js/data-table.js"></script>
+<script src="/js/ingredient-category.js"></script> -->
+<%- include('../partials/footer.html') %>

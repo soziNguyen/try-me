@@ -102,7 +102,6 @@ table {
 }
 
 select.select2-ingredient {
-  width: 100% !important;
   &.select2-hidden-accessible {
     display: none !important;
   }
@@ -110,33 +109,17 @@ select.select2-ingredient {
 
 .select2-container--default {
   &.select2-container {
+
+    .select2-selection__rendered {
+      display: flex;
+      justify-content: center;
+    }
     .select2-results__options {
       background-color: black;
       color: white;
       list-style: none;
       padding-left: 4px;
       margin: 0;
-    }
-    .select2-results__option {
-      list-style: none;
-    }
-
-  }
-  .select2-selection--single {
-    width: 100% !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    height: auto;
-
-    .select2-selection__rendered {
-      width: 100%;
-      text-align: center;
-    }
-
-    .select2-selection__placeholder {
-      width: 100%;
-      text-align: center;
     }
   }
 }

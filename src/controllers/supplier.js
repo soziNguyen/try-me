@@ -164,7 +164,7 @@ export const forceDeleteSuppliers = async (req, res) => {
 
         await Supplier.deleteMany({ _id: { $in: ids } })
 
-        responseHelper.success(res, 'Đã xóa vĩnh viễn các nhà cung cấp thành công')
+        responseHelper.success(res, null,'Đã xóa vĩnh viễn các nhà cung cấp thành công')
     } catch (error) {
         responseHelper.error(res, error.message)
     }
