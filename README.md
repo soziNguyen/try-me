@@ -63,5 +63,6 @@ SESSION_SECRET=your_secret
 4. **Chạy dự án**
 ```bash
 npm run dev
+```
 
 
