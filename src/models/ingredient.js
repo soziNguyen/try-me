@@ -13,6 +13,7 @@ const ingredientSchema = new mongoose.Schema({
   note:     { type: String, default: '' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true }
 }, 
 {
     collection: "Ingredients", 

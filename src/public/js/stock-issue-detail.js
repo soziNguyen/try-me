@@ -122,7 +122,7 @@ $(function () {
         </select>
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][quantity]" min="0" step="0.01" placeholder="0">
+        <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][quantity]" min="0" step="1" placeholder="0">
       </td>
       <td class="text-center">
         <button type="button" class="btn btn-danger btn-sm remove-item-btn">
@@ -167,7 +167,7 @@ $(function () {
           </td>
           <td>
             <input type="number" class="form-control form-control-sm" name="items[${index}][quantity]" 
-              min="0" step="0.01" value="${item.quantity || ""}" placeholder="0">
+              min="0" step="1" value="${item.quantity || ""}" placeholder="0">
           </td>
           <td class="text-center">
             <button type="button" class="btn btn-danger btn-sm remove-item-btn">

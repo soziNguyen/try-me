@@ -2,12 +2,15 @@ import { Ingredient, units } from '../models/ingredient.js'
 import { parseNumberField, parseStringField } from '../helpers/common.js'
 import responseHelper from '../helpers/responseHelper.js'
 import { lookupUser, lookupRef } from '../helpers/lookupHelper.js'
-import mongoose from 'mongoose'
 
 export const getAllIngredients = async (req, res) => {
   try {
+    const organizationId = req.user.organization
     const pipeline = [
-     { $match: { isActive: true }},
+     { $match: { 
+        isActive: true,
+        organization: organizationId
+      }},
      { $sort: { name: 1 }},
      { $project: {
         _id: 1, name: 1 
@@ -33,6 +36,7 @@ export const ingredientDataAPI = async (req, res) => {
 
     // Base pipeline
     const pipeline = [
+      { $match: { organization: req.user.organization } },
       ...lookupRef('category', 'IngredientCategories', { as: 'category' }),
       ...lookupUser('createdBy'),
       ...lookupUser('updatedBy')
@@ -61,8 +65,7 @@ export const ingredientDataAPI = async (req, res) => {
     }
 
     // Get total count
-    const totalResult = await Ingredient.countDocuments({})
-    const recordsTotal = totalResult
+    const recordsTotal = await Ingredient.countDocuments({ organization: req.user.organization }) 
 
     // Get filtered count
     const countPipeline = [...pipeline, { $count: 'count' }]
@@ -168,7 +171,7 @@ export const createIngredient = async (req, res) => {
       return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
     }
 
-    const ingredientData = { ...req.body, createdBy: req.user._id }
+    const ingredientData = { ...req.body, createdBy: req.user._id, organization: req.user.organization }
 
     const newIngredient = new Ingredient(ingredientData)
     await newIngredient.save()
@@ -196,7 +199,10 @@ export const updateIngredient = async (req, res) => {
       isActive,
       note } = req.body
 
-    const ingredient = await Ingredient.findById(id)
+    const ingredient = await Ingredient.findOne({
+      _id: id,
+      organization: req.user.organization
+    })
     if (!ingredient) {
       return responseHelper.error(res, "Nguyên liệu không tồn tại", 404)
     }
@@ -208,6 +214,7 @@ export const updateIngredient = async (req, res) => {
     if (orConditions.length) {
       const existing = await Ingredient.findOne({
         _id: { $ne: id },
+        organization: req.user.organization,
         $or: orConditions
        })
       if (existing) {
@@ -248,7 +255,10 @@ export const updateIngredient = async (req, res) => {
     const parsedNote = parseStringField(note)
     if (parsedNote) updateData.note = parsedNote
 
-    const updated = await Ingredient.findByIdAndUpdate(id, updateData, { new: true })
+    const updated = await Ingredient.findOneAndUpdate(
+      { _id: id, organization: req.user.organization }, 
+      updateData,
+       { new: true })
       .populate('category', 'name')
       .populate('createdBy', 'username -_id')
       .populate('updatedBy', 'username -_id')
@@ -268,7 +278,8 @@ export const deleteIngredients = async (req, res) => {
     }
 
     const result = await Ingredient.deleteMany({
-      _id: { $in: ids }
+      _id: { $in: ids },
+      organization: req.user.organization
     })
 
     responseHelper.success(res, result.deletedCount, 'Xóa nguyên liệu thành công')

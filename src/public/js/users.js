@@ -2,6 +2,8 @@ const logInForm = document.getElementById("login-form");
 const signUpForm = document.getElementById("signup-form");
 const forgotForm = document.getElementById("forgot-password");
 const resetForm = document.getElementById("reset-form");
+const API_PROVINCE = 'https://esgoo.net/api-tinhthanh-new/1/0.htm'
+const API_COMMUNE = 'https://esgoo.net/api-tinhthanh-new/2';
 
 if (logInForm) {
   // Điền sẵn giá trị từ localStorage khi trang login load
@@ -68,20 +70,39 @@ if (logInForm) {
   signUpForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const { username, email, password, confirmPassword } = getFormData();
+    // Lấy data từ form organization + admin
+    const formData = new FormData(signUpForm);
+    const data = {
+      orgName: formData.get('orgName'),
+      orgEmail: formData.get('orgEmail'),
+      orgPhone: formData.get('orgPhone'),
+      orgProvince: formData.get('orgProvince'),
+      orgCommune: formData.get('orgCommune'),
+      orgStreet: formData.get('orgStreet'),
+      adminUsername: formData.get('adminUsername'),
+      adminEmail: formData.get('adminEmail'),
+      adminPassword: formData.get('adminPassword')
+    };
 
-    const checkInPut = validateUserInput( username, email, password, confirmPassword );
-    if (checkInPut) {
-      toastr.warning(checkInPut);
+    const confirmPassword = formData.get('confirmPassword');
+    
+    // Validate
+    if (data.adminPassword !== confirmPassword) {
+      toastr.warning('Passwords do not match');
+      return;
+    }
+
+    if (!data || Object.values(data).some(value => !value)) {
+      toastr.warning("Please fill out all fields.");
       return;
     }
 
     try {
-      const result = await ajax("/api/users/create", { username, email, password });
+      const result = await ajax("/api/organization/create", data);
       if (result) {
-        toastr.success("Signup successful. Redirecting to login...");
+        toastr.success("Organization created successfully. Redirecting to login...");
         setTimeout(() => {
-          window.location.href = "/login"; // Redirect to login page
+          window.location.href = "/login";
         }, 1000);
       }
     } catch (error) {
@@ -260,7 +281,7 @@ if (logInForm) {
       }
 
       const user = await ajax(`/api/users/${userId}`, {}, "GET");
-      const roles = ['Admin', 'Member'];
+      const roles = ['Admin', 'Org', 'Member'];
       const roleSelect = document.getElementById("new-role");
       roleSelect.innerHTML = "";
 
@@ -432,3 +453,66 @@ function renderTable(users = []) {
         </tr>`
     ).join("");
 }
+
+function listProvinces () {
+  $.getJSON('/data/full_address.json', function (res) {
+    if (res.error == 0 && res.data) {
+
+      const $provinceSelect = $('#orgProvince');
+      $provinceSelect.empty().append('<option value="">— Tỉnh/Thành phố —</option>');
+
+      $.each(res.data, function (key, province) {
+        $provinceSelect.append(`<option value="${province.id}">${province.name}</option>`);
+      })
+
+      initSelect2($provinceSelect, 'Tỉnh/Thành phố');
+    }
+  })
+  .fail(function () {
+    toastr.error("Không thể tải danh sách tỉnh thành.");
+  })
+}
+
+function listCommunes(provinceId) {
+  $.getJSON('/data/full_address.json', function(res) {
+    const $communeSelect = $('#orgCommune');
+    $communeSelect.empty().append('<option value="">— Chọn Xã/Phường —</option>');
+
+    if (res.error === 0 && res.data) {
+      // Tìm đúng tỉnh theo id
+      const province = res.data.find(p => p.id === provinceId);
+      if (province && province.data2) {
+        province.data2.forEach(commune => {
+          $communeSelect.append(
+            `<option value="${commune.id}">${commune.full_name}</option>`
+          );
+        });
+      }
+
+      $communeSelect.prop('disabled', $communeSelect.children().length <= 1);
+      initSelect2($communeSelect, 'Xã/Phường');
+    } else {
+      $communeSelect.prop('disabled', true);
+    }
+  }).fail(function() {
+    toastr.error("Không thể tải danh sách xã/phường.");
+  });
+}
+
+$(document).ready(function() {
+  if (signUpForm) {
+    listProvinces();
+    $('#orgProvince').on('change', function() {
+        const provinceId = $(this).val();
+        if (provinceId) {
+            listCommunes(provinceId);
+        } else {
+            $('#orgCommune')
+                .empty()
+                .append('<option value="">— Chọn Xã/Phường —</option>')
+                .prop('disabled', true);
+            initSelect2($('#orgCommune'), '— Chọn Xã/Phường —');
+        }
+    });
+  }
+});

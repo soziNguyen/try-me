@@ -212,11 +212,11 @@ $(function () {
           </td>
           <td>
             <input type="number" class="form-control form-control-sm" name="items[${index}][quantity]" 
-              min="0" step="0.01" value="${item.quantity || ""}" placeholder="0">
+              min="0" step="1" value="${item.quantity || ""}" placeholder="0">
           </td>
           <td>
             <input type="number" class="form-control form-control-sm" name="items[${index}][unitPrice]" 
-              min="0" step="0.01" value="${item.unitPrice || ""}" placeholder="0">
+              min="0" step="1" value="${item.unitPrice || ""}" placeholder="0">
           </td>
           <td>
             <input type="text" class="form-control form-control-sm" readonly value="${

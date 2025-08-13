@@ -3,7 +3,7 @@ const isAdmin = (req, res, next) => {
       return next()
     } else {
       return res.render('errors/permission', {
-        title: 'Dashboard'
+        title: 'Permission Denied',
       })
     }
   };

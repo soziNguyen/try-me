@@ -10,6 +10,9 @@ const supplierSchema = new mongoose.Schema({
     taxId:   { type: String, default: '' },
     isActive:   { type: Boolean, default: true },
     note:    { type: String, default: '' },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true }
 },
 {
     collection: "Suppliers",

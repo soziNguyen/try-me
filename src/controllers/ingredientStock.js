@@ -14,6 +14,7 @@ export const getIngredientStockList = async (req, res) => {
 
     // Khởi tạo pipeline với lookup
     const pipeline = [
+      { $match: { organization: req.user.organization } },
       ...lookupRef('ingredient', 'Ingredients'),
       ...lookupRef('warehouse', 'Warehouses'),
       ...lookupRef('supplier', 'Suppliers')
@@ -96,7 +97,7 @@ export const getIngredientStockList = async (req, res) => {
 
     // Lấy dữ liệu và tổng bản ghi
     const data = await IngredientStock.aggregate(pipeline)
-    const recordsTotal = await IngredientStock.countDocuments()
+    const recordsTotal = await IngredientStock.countDocuments({ organization: req.user.organization })
 
     return res.json({
       draw,
