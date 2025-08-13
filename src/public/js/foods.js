@@ -1,13 +1,17 @@
 $(function () {
+  let table;
 
-  let showList = [10, 25, 50, 100];
-  const numRows = Math.floor(($(window).height() - $('#foodTableBody').offset().top - 100) / 45);
-  if (!showList.includes(numRows)) {
-    showList.push(numRows);
-  }
-  showList.sort((a, b) => a - b);
+  initDataTable()
 
-  const table = $('#foodTable').DataTable({
+  function initDataTable() {
+    let showList = [10, 25, 50, 100];
+    const numRows = Math.floor(($(window).height() - $('#foodTableBody').offset().top - 100) / 45);
+    if (!showList.includes(numRows)) {
+      showList.push(numRows);
+    }
+    showList.sort((a, b) => a - b);
+
+    table = $('#foodTable').DataTable({
       dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
            'l' +
            'f' +
@@ -15,7 +19,10 @@ $(function () {
            '>' +
            'rt' +
            '<"bottom-bar d-flex justify-content-between mt-3"ip>',
-      order: [],
+      serverSide: true,
+      processing: true,
+      autoWidth: false,
+      order: [[2, 'asc']],
       ajax: {
         url: '/api/foods',
         method: 'GET'
@@ -37,17 +44,14 @@ $(function () {
           data: null,
           orderable: false,
           className: 'text-center',
-          render: (data, type, row) => `<input type="checkbox" class="foodCheckbox" data-id="${row._id}">`
+          render: (data, type, row) =>
+            `<input type="checkbox" class="foodCheckbox" data-id="${row._id}">`
         },
         {
           data: 'image',
           orderable: false,
-          render: (data, type, row) => {
-            if (data) {
-              return `<img src="${data}" alt="${row.name}" style="max-width:50px;">`
-            }
-            return `<img src="/images/default.png" alt="No image" style="max-width:50px;">`
-          }
+          render: (data, type, row) =>
+            `<img src="${data || ''}" alt="${row.name || 'No image'}" style="max-width:50px;">`
         },
         {
           data: 'name',
@@ -55,37 +59,7 @@ $(function () {
             if (type === 'display') {
               return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="name" value="${data}">`
             }
-            return data;
-          }
-        },
-        {
-          data: 'price',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<input type="number" min="0" class="dataInput border-0 w-100 form-control" data-field="price" value="${data}">`
-            }
-            return data;
-          }
-        },
-        {
-          data: 'description',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="description" value="${data}">`
-            }
-            return data;
-          }
-        },
-        {
-          data: 'status',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<select class="dataInput border-0 w-100 form-select" data-field="status">
-                        <option value="available" ${data === 'available' ? 'selected' : ''}>Có sẵn</option>
-                        <option value="unavailable" ${data === 'unavailable' ? 'selected' : ''}>Hết hàng</option>
-                      </select>`
-            }
-            return data;
+            return data
           }
         },
         {
@@ -108,6 +82,36 @@ $(function () {
             return categories[data] || data;
           }
         },
+        {
+          data: 'description',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="description" value="${data}">`
+            }
+            return data
+          }
+        },
+        {
+          data: 'price',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `<input type="number" min="0" class="dataInput border-0 w-100 form-control" data-field="price" value="${data}">`
+            }
+            return data
+          }
+        },
+        {
+          data: 'status',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `<select class="dataInput border-0 w-100 form-select" data-field="status">
+                        <option value="available" ${data === 'available' ? 'selected' : ''}>Có sẵn</option>
+                        <option value="unavailable" ${data === 'unavailable' ? 'selected' : ''}>Hết hàng</option>
+                      </select>`
+            }
+            return data
+          }
+        }
       ],
       rowCallback: function(row, data) {
         $(row).attr('data-id', data._id);
@@ -126,10 +130,10 @@ $(function () {
       }
     });
 
-  // Gọi các hàm sự kiện đã có sẵn của bạn
+    // EVENT HANDLERS
     handlerAddEvent('#foodTable', '#addFoodBtn', 'foods');
     handlerDeleteEvent('#foodTable', '#deleteFoodBtn', 'foodCheckbox', 'foods');
     handlerUpdateEvent('#foodTable', 'foods');
     initTableCheckboxEvents('#foodTable', 'foodCheckbox');
-
+  }
 });

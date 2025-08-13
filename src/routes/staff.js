@@ -20,15 +20,15 @@ router.get('/schedule', isAuthenticated, schedulePage);
 router.get('/api/tables', isAuthenticated, tableController.getTables);
 router.get('/api/tables/:id', isAuthenticated, tableController.getTableById);
 router.post('/api/tables/create', isAuthenticated, tableController.createTable);
-router.put('/api/tables/update/:id', isAuthenticated, tableController.updateTable);
+router.post('/api/tables/update/:id', isAuthenticated, tableController.updateTable);
 router.post('/api/tables/delete',    isAuthenticated, tableController.deleteTables);
 
 
 // --- Quản lý món ăn ---
 router.get('/api/foods', isAuthenticated, foodController.getFoods);
 router.post('/api/foods/create', isAuthenticated, foodController.createFood);
-router.put('/api/foods/update/:id', isAuthenticated, foodController.updateFood);
-router.post('/api/foods/delete', isAuthenticated, foodController.deleteFoods);
+router.post('/api/foods/update/:id', isAuthenticated, foodController.updateFood);
+router.post('/api/foods/deletes', isAuthenticated, foodController.deleteFoods);
 
 
 // --- Đặt món và quản lý đơn hàng ---

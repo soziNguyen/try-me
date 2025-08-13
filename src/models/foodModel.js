@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 const FoodSchema = new Schema({
-  name: { type: String, required: true, trim: true },
-  price: { type: Number, required: true, min: 0 },
+  name: { type: String, default: '' },
+  price: { type: Number, default: '' },
   description: { type: String, trim: true, default: '' },
   image: { type: String, trim: true, default: '' },
   status: {
