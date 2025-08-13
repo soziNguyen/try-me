@@ -4,16 +4,16 @@
       <h3 class="fw-bold mb-4">STAFF MANAGEMENT</h3>
 
       <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="search-form d-flex align-items-center" id="search-container">
+          <input type="text" id="searchUserInput" class="form-control me-2" placeholder="Tìm kiếm..." />
+        </div>
         <div>
           <button class="btn btn-outline-danger me-2" id="deleteManyBtn">
-            <i class="bi bi-trash me-1"></i> Delete
+            <i class="bi bi-trash"></i>
           </button>
           <button class="btn btn-outline-success" id="newUser">
-            <i class="bi bi-person-plus me-1"></i> Add User
+            <i class="bi bi-person-plus"></i>
           </button>
-        </div>
-        <div class="search-form d-flex align-items-center" id="search-container">
-          <input type="text" id="searchUserInput" class="form-control me-2" placeholder="Search" />
         </div>
       </div>
 
@@ -21,12 +21,12 @@
         <thead>
           <tr>
             <th class="t_center"><input type="checkbox" id="selectAll"></th>
-            <th>Username</th>
+            <th>Tên đăng nhập</th>
             <th>Email</th>
-            <th>Role</th>
-            <th>Created At</th>
-            <th>Updated At</th>
-            <th>Action</th>
+            <th>Vai trò</th>
+            <th>Thời gian tạo</th>
+            <th>Thời gian cập nhật</th>
+            <th>Hành động</th>
           </tr>
         </thead>
         <tbody id="userTableBody">
@@ -39,13 +39,13 @@
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Create New User</h5>
+              <h5 class="modal-title">Thêm mới thành viên</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <form id="newUserForm">
                 <div class="mb-3">
-                  <label>Username:</label>
+                  <label>Tên đăng nhập:</label>
                   <input type="text" id="username" class="form-control">
                 </div>
                 <div class="mb-3">
@@ -53,21 +53,21 @@
                   <input type="email" id="email" class="form-control" autocomplete="username">
                 </div>
                 <div class="mb-3">
-                  <label>Password:</label>
+                  <label>Mật khẩu:</label>
                   <input type="password" id="password" class="form-control" autocomplete="new-password">
                 </div>
                 <div class="mb-3">
-                  <label>Confirm Password:</label>
+                  <label>Xác nhận mật khẩu:</label>
                   <input type="password" id="confirm-password" class="form-control" autocomplete="new-password">
                 </div>
               </form>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
-                <i class="bi bi-x-lg"></i> Close
+                <i class="bi bi-x-lg"></i> Đóng
               </button>
               <button id="createUserBtn" class="btn btn-outline-primary">
-                <i class="bi bi-person-plus me-1"></i> Create
+                <i class="bi bi-person-plus me-1"></i> Tạo mới
               </button>
             </div>
           </div>
@@ -86,7 +86,7 @@
             <div class="modal-body">
               <form id="updateUserForm">
                 <div class="mb-3">
-                  <label>Username:</label>
+                  <label>Tên đăng nhập:</label>
                   <input type="text" id="new-username" class="form-control">
                 </div>
                 <div class="mb-3">
@@ -94,15 +94,15 @@
                   <input type="email" id="new-email" class="form-control" autocomplete="username">
                 </div>
                 <div class="mb-3">
-                  <label>New Password:</label>
+                  <label>Mật khẩu mới:</label>
                   <input type="password" id="new-password" class="form-control" autocomplete="new-password">
                 </div>
                 <div class="mb-3">
-                  <label>Confirm Password:</label>
+                  <label>Xác nhận mật khẩu:</label>
                   <input type="password" id="new-confirm-password" class="form-control" autocomplete="new-password">
                 </div>
                 <div class="mb-3">
-                  <label>Role:</label>
+                  <label>Vai trò:</label>
                   <select id="new-role" class="form-control">
                   </select>
                 </div>
@@ -110,10 +110,10 @@
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
-                <i class="bi bi-x-lg"></i> Close
+                <i class="bi bi-x-lg"></i> Đóng
               </button>
               <button id="updateUserBtnForm" class="btn btn-outline-primary">
-                <i class="bi bi-pencil-square me-1"></i> Update
+                <i class="bi bi-pencil-square me-1"></i> Thay đổi
               </button>
             </div>
           </div>

@@ -447,7 +447,7 @@ function renderTable(users = []) {
             <td>${formatDate(user.updatedAt)}</td>
             <td>
                 <button class="updateUserBtn btn btn-outline-info" data-id="${user._id}">
-                    <i class="bi bi-pencil-square"></i> Update
+                    <i class="bi bi-pencil-square"></i>
                 </button>
             </td>
         </tr>`

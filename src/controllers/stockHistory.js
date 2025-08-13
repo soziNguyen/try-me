@@ -13,6 +13,7 @@ export const getStockHistories = async (req, res) => {
     const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1;
 
     const pipeline = [
+      { $match: { organization: req.user.organization } },
       {
         $lookup: {
           from: 'Ingredients',
@@ -142,7 +143,7 @@ export const getStockHistories = async (req, res) => {
     });
 
     const data = await StockHistory.aggregate(pipeline);
-    const recordsTotal = await StockHistory.countDocuments();
+    const recordsTotal = await StockHistory.countDocuments({ organization: req.user.organization });
 
     res.json({
       draw,
