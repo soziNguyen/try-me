@@ -6,7 +6,11 @@ import { lookupRef } from "../helpers/lookupHelper.js"
 export const getActiveWarehouses = async (req, res) => {
   try {
     const warehouses = await Warehouse.aggregate([
-      { $match: { isActive: true } },
+      { $match: { 
+        isActive: true,
+        organization: req.user.organization
+        } 
+      },
       { $sort: { name: 1 } },
       { $project: { _id: 1, name: 1, location: 1 } }
     ])
@@ -28,6 +32,7 @@ export const getWareHouses = async (req, res) => {
 
     // Base pipeline with manager lookup
     const pipeline = [
+      { $match: { organization: req.user.organization } },
       ...lookupRef('manager', 'Users')
     ]
 
@@ -43,8 +48,7 @@ export const getWareHouses = async (req, res) => {
     }
 
     // Get total count
-    const totalResult = await Warehouse.countDocuments({})
-    const recordsTotal = totalResult
+    const recordsTotal = await Warehouse.countDocuments({ organization: req.user.organization }) 
 
     // Get filtered count
     const countPipeline = [...pipeline, { $count: 'count' }]
@@ -110,8 +114,14 @@ export const getWareHouses = async (req, res) => {
 
 export const createWareHouse = async (req, res) => {
   try {
-    const newWareHouse = new Warehouse(req.body)
+    const data = {
+      ...req.body,
+      organization: req.user.organization,
+      createdBy: req.user._id
+    }
+    const newWareHouse = new Warehouse(data)
     await newWareHouse.save()
+
     responseHelper.success(res, null, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -122,7 +132,10 @@ export const updateWareHouse = async (req, res) => {
   try {
     const { id } = req.params
     const { name, location, manager, isActive } = req.body
-    const warehouse = await Warehouse.findById(id)
+    const warehouse = await Warehouse.findOne({
+      _id: id,
+      organization: req.user.organization
+    })
     if (!warehouse) {
         return responseHelper.error(res, "Nhà kho không tồn tại", 404)
     }
@@ -137,7 +150,8 @@ export const updateWareHouse = async (req, res) => {
         const isExisting = await Warehouse.findOne({
             _id: { $ne: id },
             name: { $regex: new RegExp(`^${nameToCheck}$`, 'i') },
-            location: { $regex: new RegExp(`^${locationToCheck}$`, 'i') }
+            location: { $regex: new RegExp(`^${locationToCheck}$`, 'i') },
+            organization: req.user.organization
         });
 
         if (isExisting) {
@@ -152,10 +166,16 @@ export const updateWareHouse = async (req, res) => {
         dataUpdate.manager = manager === "" ? null : manager
       }
     if (isActive !== undefined) dataUpdate.isActive = isActive
+    dataUpdate.updatedBy = req.user._id
 
     if (Object.keys(dataUpdate).length === 0) return
 
-    const updated = await Warehouse.findByIdAndUpdate(id, dataUpdate, { new: true }).populate('manager', 'username')
+    const updated = await Warehouse.findOneAndUpdate(
+      { _id: id, organization: req.user.organization }, 
+      dataUpdate, 
+      { new: true })
+      .populate('manager', 'username')
+      .populate('updatedBy', 'username')
     responseHelper.success(res, updated, "Cập nhật thành công")
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -206,9 +226,13 @@ export const forceDeleteWareHouses = async (req, res) => {
       return responseHelper.error(res, 'Không có nhà kho nào được chọn để xóa', 400)
     }
 
-    await Warehouse.deleteMany({ _id: { $in: ids } })
+    const result = await Warehouse.deleteMany(
+      { 
+        _id: { $in: ids },
+        organization: req.user.organization
+      })
 
-    responseHelper.success(res, 'Đã xóa vĩnh viễn các nhà kho thành công')
+    responseHelper.success(res, { deletedCount: result.deletedCount }, 'Đã xóa vĩnh viễn các nhà kho thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }

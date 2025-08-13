@@ -22,7 +22,8 @@ const stockHistorySchema = new mongoose.Schema({
   note:            { type: String, default: null },
   transactionDate: { type: Date, default: Date.now },
   createdBy:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  updatedBy:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
+  updatedBy:       { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true }
 }, {
   collection: 'StockHistories',
   timestamps: true

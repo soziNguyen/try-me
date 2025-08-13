@@ -101,28 +101,30 @@ table {
   margin: 10px;
 }
 
-select.select2-ingredient {
-  &.select2-hidden-accessible {
-    display: none !important;
-  }
+.select2-hidden-accessible {
+  display: none !important;
 }
 
 .select2-container--default {
-  &.select2-container {
-
-    .select2-selection__rendered {
-      display: flex;
-      justify-content: center;
-    }
-    .select2-results__options {
-      background-color: black;
-      color: white;
-      list-style: none;
-      padding-left: 4px;
-      margin: 0;
-    }
+  .select2-selection__rendered {
+    padding-left: 8px;
+    display: flex;
+    justify-content: flex-start;
+  }
+  .select2-results__options {
+    background-color: black;
+    color: white;
+    list-style: none;
+    padding-left: 4px;
+    margin: 0;
+  }
+  .select2-dropdown {
+    max-height: 200px !important;
+    overflow-y: auto;
   }
 }
+
+
   
 #imageCropModal {
   .modal-body {

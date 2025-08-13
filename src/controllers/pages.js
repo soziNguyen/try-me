@@ -43,7 +43,7 @@ export const resetPasswordPage = async (req, res) => {
 
 // Render Dashboard By Role (Admin / Staff)
 export const dashboard = async (req, res) => {
-    if (req.user && req.user.role === 'Admin') {
+    if (req.user && (req.user.role === 'Admin' || req.user.role === 'Org')) {
         return res.render('users/admin_dashboard', 
             getPageData(req, 'Dashboard', 'Dashboard', { headerClass: 'admin__header' })
         )

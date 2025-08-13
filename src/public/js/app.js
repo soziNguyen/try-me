@@ -240,8 +240,8 @@ function initSelect2($select, placeholder = '— Chọn mục —') {
       'width': Math.floor(tdWidth) + 'px'
     });
   });
-
-  $('#btn-print').on('click', function() {
-    window.print();
-  })
 }
+
+$('#btn-print').on('click', function() {
+  window.print();
+})
