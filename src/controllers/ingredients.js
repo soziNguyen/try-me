@@ -151,7 +151,6 @@ export const ingredientDataAPI = async (req, res) => {
     })
 
   } catch (error) {
-    console.error('Error in ingredientDataAPI:', error)
     return res.status(500).json({
       draw: +req.query.draw || 0,
       recordsTotal: 0,

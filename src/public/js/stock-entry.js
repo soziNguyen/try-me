@@ -120,24 +120,10 @@ $(function () {
           }
         },
         {
-          data: 'items',
+          data: 'warehouse.name',
           className: 'text-center',
           title: 'Kho nhập',
-          render: (items) => {
-            if (!Array.isArray(items) || items.length === 0) return '';
-            const warehouses = items
-              .map(item => item.warehouse?.name)
-              .filter(Boolean);
-        
-            const uniqueWarehouses = [...new Set(warehouses)];
-        
-            if (uniqueWarehouses.length === 0) return '';
-        
-            const display = uniqueWarehouses.slice(0, 3).join(', ');
-            const more = uniqueWarehouses.length > 3 ? '...' : '';
-        
-            return `<span title="${warehouses.join('\n')}">${display} ${more}</span>`;
-          }
+          render: data => data
         },        
         {
           data: 'note',
@@ -192,7 +178,7 @@ $(function () {
         })
         
         // CHỈ GIỮ LẠI DELETE VÀ CHECKBOX EVENTS
-        handlerDeleteEvent('#stockEntryTable', '#deleteStockEntryBtn', 'stockEntryCheckbox', 'stock-entry')
+        handlerDeleteEvent('#stockEntryTable', '#deleteStockEntryBtn', 'stockEntryCheckbox', 'inventory/stock-entry')
         initTableCheckboxEvents('#stockEntryTable', 'stockEntryCheckbox')
       }
     })

@@ -113,9 +113,9 @@ $(function () {
     })
 
     // EVENT HANDLERS
-    handlerAddEvent('#warehouseTable', '#addWarehouseBtn', 'warehouse')
-    handlerDeleteEvent('#warehouseTable', '#deleteWarehouseBtn', 'warehouseCheckbox', 'warehouse')
-    handlerUpdateEvent('#warehouseTable', 'warehouse', (id, field, value) => {
+    handlerAddEvent('#warehouseTable', '#addWarehouseBtn', 'inventory/warehouse')
+    handlerDeleteEvent('#warehouseTable', '#deleteWarehouseBtn', 'warehouseCheckbox', 'inventory/warehouse')
+    handlerUpdateEvent('#warehouseTable', 'inventory/warehouse', (id, field, value) => {
       if (field === 'manager') {
         return { manager: value }
       }

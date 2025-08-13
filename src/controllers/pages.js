@@ -129,6 +129,18 @@ export const exportPage = (req, res) => {
     )
 }
 
+// Stock Transfer
+export const transferPage = (req, res) => {
+    res.render('inventory/stock_transfer',
+        getPageData(req, 'Phiếu Chuyển Kho', 'Transfer', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'PHIẾU CHUYỂN KHO'
+            }
+        )
+    )
+}
+
 export const ingredientStockPage = (req, res) => {
     res.render('inventory/ingredient_stock',
         getPageData(req, 'Quản lý Tồn Kho', 'IngredientStock', {
@@ -139,12 +151,12 @@ export const ingredientStockPage = (req, res) => {
 }
 
 // Movement
-export const movementPage = (req, res) => {
-    res.render('inventory/stock_movement', 
-        getPageData(req, 'Lịch Sử Nhập - Xuất Kho', 'Movement', 
+export const historyPage = (req, res) => {
+    res.render('inventory/stock_history', 
+        getPageData(req, 'Lịch Sử Nhập - Xuất - Chuyển Kho', 'History', 
             {
                 headerClass: 'admin__header',
-                pageTitle: 'LỊCH SỬ NHẬP - XUẤT KHO'
+                pageTitle: 'LỊCH SỬ NHẬP - XUẤT - CHUYỂN KHO'
             }
         )
     )
@@ -163,14 +175,86 @@ export const newStockEntryPage = (req, res) => {
     )
 }
 
+// New Stock Issue
 export const newStockIssuePage = (req, res) => {
     const stockIssueId = req.params.id
     const mode = req.query.mode || ''
 
-    const isNew = mode === 'new' ? 'Tạo phiếu xuất nguyên liệu' : 'Chi Tiết Xuất Nguyên Liệu'
+    const isNew = mode === 'new' ? 'Tạo Phiếu Xuất Kho' : 'Chi Tiết Xuất Kho'
     res.render('inventory/stock_issue_detail', 
         getPageData(req, isNew, 'New Issue Entry', {
             stockIssueId: stockIssueId
         })
+    )
+}
+
+// New Stock Transfer
+export const newStockTransferPage = (req, res) => {
+    const stockTransferId = req.params.id
+    const mode = req.query.mode || ''
+
+    const isNew = mode === 'new' ? 'Tạo Phiếu Chuyển Kho' : 'Chi Tiết Chuyển Kho'
+    res.render('inventory/stock_transfer_detail', 
+        getPageData(req, isNew, 'New Transfer Entry', {
+            stockTransferId: stockTransferId
+        })
+    )
+}
+
+// =================================================
+// ================== MENU ========================
+
+export const menuPage = (req, res) => {
+    res.render('menu/list', 
+        getPageData(req, 'Quản lý thực đơn', 'Menu', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ THỰC ĐƠN'
+            }
+        )
+    )
+}
+
+export const recipePage = (req, res) => {
+    res.render('menu/recipe', 
+        getPageData(req, 'Quản lý công thức món ăn', 'Recipe', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ CÔNG THỨC MÓN ĂN'
+            }
+        )
+    )
+}
+
+export const menuCategoryPage = (req, res) => {
+    res.render('menu/categories', 
+        getPageData(req, 'Quản lý danh mục món ăn', 'MenuCategory', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ DANH MỤC MÓN ĂN'
+            }
+        )
+    )
+}
+
+export const comboPage = (req, res) => {
+    res.render('menu/combo', 
+        getPageData(req, 'Quản lý combo', 'Combo', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ COMBO'
+            }
+        )
+    )
+}
+
+export const historyPricePage = (req, res) => {
+    res.render('menu/history_price', 
+        getPageData(req, 'Lịch sử thay đổi giá món ăn', 'HistoryPrice', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'LỊCH SỬ THAY ĐỔI GIÁ MÓN ĂN'
+            }
+        )
     )
 }

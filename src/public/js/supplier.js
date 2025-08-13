@@ -91,8 +91,8 @@ $(function () {
 
   //====================================================================================  
   // EVENT HANDLER
-  handlerAddEvent('#supplierTable', '#addSupplierBtn', 'supplier')
-  handlerDeleteEvent('#supplierTable', '#deleteSupplierBtn', 'supplierCheckbox', 'supplier')
-  handlerUpdateEvent('#supplierTable', 'supplier')
+  handlerAddEvent('#supplierTable', '#addSupplierBtn', 'inventory/supplier')
+  handlerDeleteEvent('#supplierTable', '#deleteSupplierBtn', 'supplierCheckbox', 'inventory/supplier')
+  handlerUpdateEvent('#supplierTable', 'inventory/supplier')
   initTableCheckboxEvents('#supplierTable', 'supplierCheckbox')
 })

@@ -36,7 +36,7 @@ $(function () {
         order: [],
   
         ajax: {
-          url: '/api/inventory/stock-issue',
+          url: '/api/inventory/stock-issues',
           type: 'GET'
         },
   
@@ -120,20 +120,10 @@ $(function () {
           },
           // warehouse
           {
-            data: 'items',
-            className: 'text-start px-1',
-            title: 'Nhà kho',
-            render: items => {
-              if (!Array.isArray(items) || items.length === 0) return '';
-              const names = items.map(it => it.warehouse?.name).filter(Boolean);
-              const uniqueNames = new Set(names);
-              
-              if (uniqueNames.size === 0) return '';
-              const nameLengths = [...uniqueNames]
-              const firstThree = nameLengths.slice(0, 3).join(', ');
-              const more = nameLengths.length > 3 ? '...' : ''
-              return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`;
-            }
+            data: 'warehouse.name',
+            className: 'text-center',
+            title: 'Kho nhập',
+            render: data => data
           },
           // note
           {
@@ -187,7 +177,7 @@ $(function () {
 
   
       // các handler
-      handlerDeleteEvent('#stockIssueTable', '#deleteStockIssueBtn', 'stockIssueCheckbox', 'stock-issue')
+      handlerDeleteEvent('#stockIssueTable', '#deleteStockIssueBtn', 'stockIssueCheckbox', 'inventory/stock-issue')
       initTableCheckboxEvents('#stockIssueTable', 'stockIssueCheckbox')
     }
   })

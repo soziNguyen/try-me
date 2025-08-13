@@ -3,22 +3,11 @@
 <div class="admin__content">
     <h2 class="mb-4 bold"><%= pageTitle %></h2>
     
-    <table id="stockMovementTable" class="table table-bordered">
+    <table id="stockHistoryTable" class="table table-bordered">
       <thead>
-        <tr>
-          <th><input type="checkbox" id="selectAll"></th>
-          <th>Ngày</th>
-          <th>Loại</th>
-          <th>Nguyên liệu</th>
-          <th>Kho xuất</th>
-          <th>Kho nhận</th>
-          <th>Số lượng</th>
-          <th>Đơn giá</th>
-          <th>Tham chiếu</th>
-          <th>Ghi chú</th>
-        </tr>
       </thead>
-      <tbody id="stockMovementTableBody">
+      
+      <tbody id="stockHistoryTableBody">
       </tbody>
     </table>
 </div>
@@ -30,5 +19,5 @@
 <script src="/js/sidebar-toggle.js"></script>
 <script src="/js/update-user.js"></script>
 <script src="/js/data-table.js"></script>
-<script src="/js/stock-movement.js"></script>
+<script src="/js/stock-history.js"></script>
 <%- include('../partials/footer.html') %>

@@ -8,7 +8,7 @@ function handlerAddEvent(tableSelector, btnSelector, module) {
     const $btn = $(this).prop('disabled', true)
     
     $.ajax({
-      url: `/api/inventory/${module}/create`,
+      url: `/api/${module}/create`,
       method: 'POST',
       success(res) {
         toastr.remove()
@@ -49,7 +49,7 @@ function handlerDeleteEvent (tableSelector, btnSelector, checkboxClass, module) 
     }
 
     $.ajax({
-      url: `/api/inventory/${module}/deletes`,
+      url: `/api/${module}/deletes`,
       method: 'POST',
       contentType: 'application/json',
       data: JSON.stringify({ ids: selected }),
@@ -94,7 +94,7 @@ function handlerUpdateEvent(tableSelector, module, transform) {
     }
 
     $.ajax({
-      url: `/api/inventory/${module}/update/${id}`,
+      url: `/api/${module}/update/${id}`,
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(payload),
@@ -208,4 +208,24 @@ function createNewRecord(module, data, callback) {
       toastr.error(xhr.responseJSON?.message || 'Đã có lỗi xảy ra')
     }
   })
+}
+
+function setupBackButton(btnSelector = '#btn-back') {
+  const btn = document.querySelector(btnSelector)
+  if (!btn) return
+
+  const from = new URLSearchParams(window.location.search).get('from')
+  if (from === 'history') {
+    btn.href = '/inventory/stock-histories'
+    return
+  }
+
+  const path = window.location.pathname
+  if (path.includes('/stock-entry/')) {
+    btn.href = '/inventory/stock-entries'
+  } else if (path.includes('/stock-issue/')) {
+    btn.href = '/inventory/stock-issues'
+  } else if (path.includes('/stock-transfer/')) {
+    btn.href = '/inventory/stock-transfers'
+  }
 }
