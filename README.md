@@ -64,5 +64,9 @@ SESSION_SECRET=your_secret
 ```bash
 npm run dev
 ```
+or
+```bash
+npm start
+```
 
 
