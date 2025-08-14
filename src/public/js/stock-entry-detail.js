@@ -26,6 +26,9 @@ $(function () {
       ingredients = ings
       warehouses = whs
 
+      console.log(suppliers)
+      console.log(warehouses)
+
       initForm()
       if (stockEntry) {
         populateForm(stockEntry)
@@ -36,6 +39,7 @@ $(function () {
       }
     })
     .catch((err) => {
+      // console.error("Error loading initial data:", err)
       toastr.error("Không thể load dữ liệu cần thiết")
     })
 
@@ -52,17 +56,20 @@ $(function () {
     const supplierOptions = suppliers
       .map((sup) => `<option value="${sup._id}">${sup.name}</option>`)
       .join("")
-    $("#supplier").html(
+    const $supplierSelect = $("#supplier").html(
       '<option value="" class="text-center">— Chọn nhà cung cấp —</option>' + supplierOptions
     )
+    initSelect2($supplierSelect, '— Chọn nhà cung cấp —')
 
     // Populate warehouses dropdown (main warehouse select)
     const warehouseOptions = warehouses
       .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
       .join("")
-    $("#warehouse").html(
+    const $warehouseSelected = $("#warehouse").html(
       '<option value="" class="text-center">— Chọn kho —</option>' + warehouseOptions
     )
+
+    initSelect2($warehouseSelected, '— Chọn kho —')
 
     // Event handlers
     $("#addItemBtn").on("click", addNewItem)

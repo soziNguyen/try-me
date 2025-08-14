@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const menuPriceHistorySchema = new mongoose.Schema({
   menuItem:   { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem', required: true },
@@ -10,7 +10,7 @@ const menuPriceHistorySchema = new mongoose.Schema({
 }, {
   collection: "MenuPriceHistory",
   timestamps: false
-});
+})
 
-const MenuPriceHistory = mongoose.model('MenuPriceHistory', menuPriceHistorySchema);
-export { MenuPriceHistory };
+const MenuPriceHistory = mongoose.model('MenuPriceHistory', menuPriceHistorySchema)
+export { MenuPriceHistory }

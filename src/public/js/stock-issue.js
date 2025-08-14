@@ -96,15 +96,15 @@ $(function () {
           className: 'text-start px-1',
           title: 'Nguyên liệu',
           render: (items, type, row) => {
-            if (!Array.isArray(items) || items.length === 0) return '';
-            const names = items.map(it => it.ingredient?.name).filter(Boolean);
-            const uniqueNames  = new Set(names);
+            if (!Array.isArray(items) || items.length === 0) return ''
+            const names = items.map(it => it.ingredient?.name).filter(Boolean)
+            const uniqueNames  = new Set(names)
             
-            if (uniqueNames .size === 0) return '';
+            if (uniqueNames .size === 0) return ''
               const nameLengths = [...uniqueNames]
-              const firstThree = nameLengths.slice(0, 3).join(', ');
+              const firstThree = nameLengths.slice(0, 3).join(', ')
               const more = nameLengths.length > 3 ? '...' : ''
-              return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`;
+              return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`
             }
           },
           // quantity

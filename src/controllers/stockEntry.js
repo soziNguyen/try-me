@@ -319,7 +319,7 @@ export const updateStockEntryFromForm = async (req, res) => {
         { path: 'warehouse', select: 'name location' },
         { path: 'createdBy updatedBy lockedBy', select: 'name username' },
         { path: 'items.ingredient', select: 'name unit' }
-      ]);
+      ])
 
       return newEntry
     })

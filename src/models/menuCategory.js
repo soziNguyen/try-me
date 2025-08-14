@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const menuCategorySchema = new mongoose.Schema({
   name:       { type: String, required: true },
@@ -9,7 +9,7 @@ const menuCategorySchema = new mongoose.Schema({
 }, {
   collection: "MenuCategories",
   timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
-});
+})
 
-const MenuCategory = mongoose.model('MenuCategory', menuCategorySchema);
-export { MenuCategory };
+const MenuCategory = mongoose.model('MenuCategory', menuCategorySchema)
+export { MenuCategory }

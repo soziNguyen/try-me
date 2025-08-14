@@ -1,7 +1,7 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const supplierSchema = new mongoose.Schema({
-    code:    { type: String, unique: true, sparse: true, default: '' }, // mã nhà cung cấp
+    code:    { type: String, default: '' }, // mã nhà cung cấp
     name:    { type: String, default: '' },
     phone:   { type: String, default: '' },
     email:   { type: String, default: '' },
@@ -18,7 +18,7 @@ const supplierSchema = new mongoose.Schema({
     collection: "Suppliers",
     timestamps: { createdAt: 'createdAt', updatedAt : 'updatedAt'}
 }
-);
+)
 
-const Supplier = mongoose.model('Supplier', supplierSchema);
-export default Supplier;
+const Supplier = mongoose.model('Supplier', supplierSchema)
+export default Supplier

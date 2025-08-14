@@ -1,0 +1,189 @@
+<div class="admin__layout">
+  <%- include('../partials/navbar.html') %>
+  <div class="admin__main">
+      <div id="admin__sidebar">
+        <ul>
+            <li class="<%= page === 'Dashboard' ? 'active' : '' %>">
+              <a class="w-100" href="/">
+                <i class="bi bi-speedometer2 text-dark me-2"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <% const inInventory = ['Ingredient','Category','Warehouse', 'IngredientStock','Supplier','Import','Export', 'History', 'Transfer', 'Movement'].includes(page); %>
+            <li class="inventory-accordion">
+              <div class="accordion" id="accordionInventory">
+                <div class="accordion-item">
+                  <h2 class="accordion-header">
+                    <button
+                      class="accordion-button <%= inInventory ? 'active' : '' %> <%= inInventory ? '' : 'collapsed' %>"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#collapseOne"
+                      aria-expanded="<%= inInventory ? 'true' : 'false' %>"
+                      aria-controls="collapseOne">
+                      <i class="bi bi-box-seam text-success-emphasis text-info-emphasis me-2"></i>
+                      <span>Quản lý Kho</span>
+                    </button>
+                  </h2>
+                  <div id="collapseOne" class="accordion-collapse collapse <%= inInventory ? ' show' : '' %>" data-bs-parent="#accordionInventory">
+                    <div class="accordion-body">
+
+                      <a class="<%= page === 'Ingredient' ? 'accordion-active' : '' %>" href="/inventory/ingredients">
+                        <i class="bi bi-basket3 text-danger me-2"></i>
+                        <span>Quản lý Nguyên Liệu</span>
+                      </a>
+                    
+                      <a class="<%= page === 'Category' ? 'accordion-active' : '' %>" href="/inventory/categories">
+                        <i class="bi bi-leaf text-success me-2"></i>
+                        <span>Quản lý Loại Nguyên Liệu</span>
+                      </a>
+
+                      <a class="<%= page === 'IngredientStock' ? 'accordion-active' : '' %>" href="/inventory/inventory-stock">
+                        <i class="bi bi-database-check text-dark me-2"></i>
+                        <span>Quản lý Tồn Kho</span>
+                      </a>
+                    
+                      <a class="<%= page === 'Warehouse' ? 'accordion-active' : '' %>" href="/inventory/warehouses">
+                        <i class="bi bi-building text-warning me-2"></i>
+                        <span>Quản lý Nhà Kho</span>
+                      </a>
+                    
+                      <a class="<%= page === 'Supplier' ? 'accordion-active' : '' %>" href="/inventory/suppliers">
+                        <i class="bi bi-truck text-info me-2"></i>
+                        <span>Quản lý Nhà Cung Cấp</span>
+                      </a>
+                    
+                      <a class="<%= page === 'Import' ? 'accordion-active' : '' %>" href="/inventory/stock-entries">
+                        <i class="bi bi-arrow-down-circle text-success-emphasis me-2"></i>
+                        <span>Phiếu Nhập Kho</span>
+                      </a>
+                    
+                      <a class="<%= page === 'Export' ? 'accordion-active' : '' %>" href="/inventory/stock-issues">
+                        <i class="bi bi-arrow-up-circle text-warning-emphasis me-2"></i>
+                        <span>Phiếu Xuất Kho</span>
+                      </a>
+
+                      <a class="<%= page === 'Transfer' ? 'accordion-active' : '' %>" href="/inventory/stock-transfers">
+                        <i class="bi bi-arrow-left-right me-2"></i>
+                        <span>Phiếu Chuyển Kho</span>
+                      </a>
+                    
+                      <a class="<%= page === 'History' ? 'accordion-active' : '' %>" href="/inventory/stock-histories">
+                        <i class="bi bi-clock-history text-primary me-2"></i>
+                        <span>Lịch Sử Giao Dịch</span>
+                      </a>
+
+                    </div>                      
+                  </div>
+                </div>
+              </div>
+            </li>
+        
+            <% const inMenu = ['Menu','MenuCategory','Recipe','Combo','HistoryPrice'].includes(page); %>
+            <li class="menu-accordion">
+              <div class="accordion" id="accordionMenu">
+                <div class="accordion-item">
+                  <h2 class="accordion-header">
+                    <button
+                      class="accordion-button <%= inMenu ? 'active' : '' %> <%= inMenu ? '' : 'collapsed' %>"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#collapseMenu"
+                      aria-expanded="<%= inMenu ? 'true' : 'false' %>"
+                      aria-controls="collapseMenu">
+                      <i class="bi bi-journal-bookmark text-danger-emphasis me-2"></i>
+                      <span>Quản lý Thực đơn</span>
+                    </button>
+                  </h2>
+                  <div id="collapseMenu" class="accordion-collapse collapse <%= inMenu ? ' show' : '' %>" data-bs-parent="#accordionMenu">
+                    <div class="accordion-body">
+            
+                      <a class="<%= page === 'Menu' ? 'accordion-active' : '' %>" href="/menu/lists">
+                        <i class="bi bi-list-ul me-2 text-success"></i>
+                        <span>Danh sách món</span>
+                      </a>
+            
+                      <a class="<%= page === 'MenuCategory' ? 'accordion-active' : '' %>" href="/menu/categories">
+                        <i class="bi bi-tags me-2 text-info"></i>
+                        <span>Danh mục món</span>
+                      </a>
+            
+                      <a class="<%= page === 'Recipe' ? 'accordion-active' : '' %>" href="/menu/recipes">
+                        <i class="bi bi-clipboard-check me-2 text-danger"></i>
+                        <span>Quản lý công thức</span>
+                      </a>
+            
+                      <a class="<%= page === 'Combo' ? 'accordion-active' : '' %>" href="/menu/combos">
+                        <i class="bi bi-grid me-2 text-warning"></i>
+                        <span>Combo / Set menu</span>
+                      </a>
+            
+                      <a class="<%= page === 'HistoryPrice' ? 'accordion-active' : '' %>" href="/menu/prices">
+                        <i class="bi bi-cash-stack me-2 text-primary"></i>
+                        <span>Lịch sử giá</span>
+                      </a>
+            
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+        
+            <li class="<%= page === 'User' ? 'active' : '' %>">
+              <a class="w-100" href="/users">
+                <i class="bi bi-people text-warning-emphasis me-2"></i>
+                <span>Quản lý Nhân viên</span>
+              </a>
+            </li>
+        
+            <li>
+              <a class="w-100" href="/tax">
+                <i class="bi bi-file-earmark-text text-danger me-2"></i>
+                <span>Thuế</span>
+              </a>
+            </li>
+        
+            <li>
+              <a class="w-100" href="/reports/sales">
+                <i class="bi bi-bar-chart-line text-info me-2"></i>
+                <span>Báo cáo Bán hàng</span>
+              </a>
+            </li>
+
+            <li>
+              <a class="w-100" href="/reports/inventory">
+                <i class="bi bi-box-seam text-info-emphasis me-2"></i>
+                <span>Báo cáo Kho</span>
+              </a>
+            </li>
+
+            <li>
+              <a class="w-100" href="/reports/performance">
+                <i class="bi bi-award text-primary-emphasis me-2"></i>
+                <span>Báo cáo Nhân viên</span>
+              </a>
+            </li>
+
+            <li>
+              <a class="w-100" href="/reports/tax">
+                <i class="bi bi-file-earmark-text text-warning me-2"></i>
+                <span>Báo cáo Thuế</span>
+              </a>
+            </li>
+
+            <li>
+              <a class="w-100" href="/revenue">
+                <i class="bi bi-cash-stack text-success me-2"></i>
+                <span>Theo dõi Doanh thu</span>
+              </a>
+            </li>
+
+            <li>
+              <a class="w-100" href="/coupon">
+                <i class="bi bi-tags text-danger me-2"></i>
+                <span>Mã giảm giá</span>
+              </a>
+            </li>
+        </ul>
+      </div>
+    <%- include('../users/update-user.html') %>

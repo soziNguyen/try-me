@@ -1,0 +1,12 @@
+<%- include('../partials/header.html') %>
+<%- include('../partials/org_sidebar.html') %>
+<div class="admin__content">
+    <h1>Welcome, <%= user.username %></h1>
+</div>
+</div>
+</div>
+<%- include('../partials/commonjs.html') %>
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<script src="/js/update-user.js"></script>
+<script src="/js/sidebar-toggle.js"></script>
+<%- include('../partials/footer.html') %>

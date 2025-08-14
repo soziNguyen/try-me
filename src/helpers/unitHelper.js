@@ -4,5 +4,5 @@ export const units = [
     "cái", "quả", "miếng", "gói", "túi", "hộp", "chai", "bình", "thùng", "lọ", "viên", "bộ",
     "m", "cm", "mm", "m²",
     "bao", "két", "tấm", "cuộn", "vỉ"
-  ];
+  ]
   

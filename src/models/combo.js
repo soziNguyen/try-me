@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const comboSchema = new mongoose.Schema({
   sku: { type: String, default: '' }, // mã combo
@@ -32,7 +32,7 @@ const comboSchema = new mongoose.Schema({
 {
   collection: "Combos",
   timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
-});
+})
 
-const Combo = mongoose.model('Combo', comboSchema);
-export { Combo };
+const Combo = mongoose.model('Combo', comboSchema)
+export { Combo }

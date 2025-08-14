@@ -46,7 +46,6 @@ export const getUsers = async (req, res) => {
             ]
         }
         const users = await User.find(filter).populate('organization', 'name')
-        console.log(users)
         responseHelper.success(res, users)
     } catch (error) {
         responseHelper.error(res, error.message)
@@ -116,7 +115,10 @@ export const updateUser = async (req, res) => {
                 const hashedPassword = await bcrypt.hash(password, 10)
                 updatedFields.password = hashedPassword
         }
-        const updateUser = await User.findOneAndUpdate(id, updatedFields, { new: true })
+        const updateUser = await User.findOneAndUpdate(
+            {_id: id, organization: organizationId }, 
+            updatedFields, 
+            { new: true })
 
         if (!updateUser) {
             return responseHelper.error(res, 'Update failed.', 400)

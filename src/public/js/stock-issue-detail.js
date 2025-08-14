@@ -41,10 +41,12 @@ $(function () {
     const warehouseOptions = warehouses
       .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
       .join("")
-    $("#warehouse").html(
+    const $warehouseSelected = $("#warehouse").html(
       '<option value="" class="text-center">— Chọn kho —</option>' + warehouseOptions
     )
 
+    initSelect2($warehouseSelected, '— Chọn kho —')
+    
     if ($("#itemsTableBody tr").length === 0) {
       addNewItem()
     }

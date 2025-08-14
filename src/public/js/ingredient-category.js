@@ -1,11 +1,11 @@
 $(function () {
 
-  let showList = [10, 25, 50, 100];
-  const numRows = Math.floor(($(window).height() - $('#ingredientCateTableBody').offset().top - 100) / 45);
+  let showList = [10, 25, 50, 100]
+  const numRows = Math.floor(($(window).height() - $('#ingredientCateTableBody').offset().top - 100) / 45)
   if (!showList.includes(numRows)) {
-    showList.push(numRows);
+    showList.push(numRows)
   }
-  showList.sort((a, b) => a - b);
+  showList.sort((a, b) => a - b)
   const table = $('#ingredientCateTable').DataTable({
       dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
       'l' +
@@ -45,7 +45,7 @@ $(function () {
                 if ( type === 'display' ) {
                   return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="name" value="${data}">`
                 }
-                return data;
+                return data
               }
           },
         { data: 'description', 
@@ -53,13 +53,13 @@ $(function () {
             if ( type === 'display' ) {
               return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="description" value="${data}">`
             }
-            return data;
+            return data
           }
         },
       ],
       rowCallback: function(row, data) {
         // Tag row with data-id for update
-        $(row).attr('data-id', data._id);
+        $(row).attr('data-id', data._id)
       },
       initComplete: function () {
         $('.right-group').html(`
@@ -71,9 +71,9 @@ $(function () {
             <i class="bi bi-plus-circle"></i> Thêm
             </button>
           </div>
-        `);
+        `)
       }
-    });
+    })
 
   //====================================================================================  
   // EVENT HANDLER
@@ -81,6 +81,6 @@ $(function () {
   handlerDeleteEvent('#ingredientCateTable', '#deleteIngredientCateBtn', 'ingredientCateCheckbox', 'inventory/category')
   handlerUpdateEvent('#ingredientCateTable', 'inventory/category')
 
-  initTableCheckboxEvents('#ingredientCateTable', 'ingredientCateCheckbox');
+  initTableCheckboxEvents('#ingredientCateTable', 'ingredientCateCheckbox')
 
 })

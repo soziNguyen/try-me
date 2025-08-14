@@ -43,8 +43,12 @@ export const resetPasswordPage = async (req, res) => {
 
 // Render Dashboard By Role (Admin / Staff)
 export const dashboard = async (req, res) => {
-    if (req.user && (req.user.role === 'Admin' || req.user.role === 'Org')) {
-        return res.render('users/admin_dashboard', 
+    if (req.user &&  req.user.role === 'Org') {
+        return res.render('users/org_dashboard', 
+            getPageData(req, 'Dashboard', 'Dashboard', { headerClass: 'admin__header' })
+        )
+    } else if (req.user && req.user.role === 'Admin') {
+        return res.render('admin/dashboard',
             getPageData(req, 'Dashboard', 'Dashboard', { headerClass: 'admin__header' })
         )
     } else {
@@ -254,6 +258,20 @@ export const historyPricePage = (req, res) => {
             {
                 headerClass: 'admin__header',
                 pageTitle: 'LỊCH SỬ THAY ĐỔI GIÁ MÓN ĂN'
+            }
+        )
+    )
+}
+
+// =================================================
+// ================== ADMIN ========================
+
+export const userManagementPage = (req, res) => {
+    res.render('admin/users', 
+        getPageData(req, 'Quản lý người dùng', 'User Management', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ NGƯỜI DÙNG'
             }
         )
     )

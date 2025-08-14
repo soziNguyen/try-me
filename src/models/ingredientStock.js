@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const ingredientStockSchema = new mongoose.Schema({
   ingredient: { type: mongoose.Schema.Types.ObjectId, ref: 'Ingredient', default: null },
@@ -9,10 +9,10 @@ const ingredientStockSchema = new mongoose.Schema({
 }, {
   collection: 'IngredientStocks',
   timestamps: { createdAt: 'createdAt', updatedAt : 'updatedAt'}
-});
+})
 
-ingredientStockSchema.index({ ingredient: 1, warehouse: 1 });
-ingredientStockSchema.index({ createdAt: -1 });
+ingredientStockSchema.index({ ingredient: 1, warehouse: 1 })
+ingredientStockSchema.index({ createdAt: -1 })
 
-const IngredientStock = mongoose.model('IngredientStock', ingredientStockSchema);
-export default IngredientStock;
+const IngredientStock = mongoose.model('IngredientStock', ingredientStockSchema)
+export default IngredientStock

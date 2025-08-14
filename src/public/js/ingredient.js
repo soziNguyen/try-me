@@ -1,6 +1,6 @@
 $(function () {
 
-  let table;
+  let table
   let units = []
   let categories = []
 
@@ -170,6 +170,21 @@ $(function () {
       rowCallback: function(row, data) {
         // Tag row with data-id for update
         $(row).attr('data-id', data._id)
+      },
+      drawCallback: function (settings) {
+        $('#ingredientTable select[data-field]').each(function () {
+          const field = $(this).data('field')
+          const placeholders = {
+            category: '— Chọn danh mục —',
+            unit: '— Chọn đơn vị —'
+          }
+          if (placeholders[field]) {
+            $(this).select2({
+              placeholder: placeholders[field],
+              width: '100%'
+            })
+          }
+        })
       },
       initComplete: function () {
         // const api = this.api()
