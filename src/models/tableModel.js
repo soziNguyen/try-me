@@ -10,12 +10,17 @@ const TableSchema = new Schema({
       default: 'available'
     },
     capacity: { type: Number, default: 4 },
-      area: {
+    area: {
       type: String,
       enum: ['kv1', 'kv2'],
       default: 'kv1'
-  },
-    checkInTime: { type: Date, default: null }
+    },
+    checkInTime: { type: Date, default: null },
+    currentOrderId: { 
+      type: Schema.Types.ObjectId, 
+      ref: 'Order', 
+      default: null 
+    },  
   },
   {
     collection: 'Tables',
