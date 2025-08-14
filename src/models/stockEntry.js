@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const stockEntrySchema = new mongoose.Schema({
   code:      { type: String, default: '' },         // mã phiếu
@@ -24,6 +24,6 @@ const stockEntrySchema = new mongoose.Schema({
     collection: "StockEntries",
     timestamps: { createdAt: 'createdAt', updatedAt : 'updatedAt'}
 }
-);
+)
 const StockEntry = mongoose.model('StockEntry', stockEntrySchema)
-export default StockEntry;
+export default StockEntry

@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
-const Schema = mongoose.Schema;
+const Schema = mongoose.Schema
 
 const TableSchema = new Schema({
     name: { type: String, required: true },
@@ -26,7 +26,7 @@ const TableSchema = new Schema({
     collection: 'Tables',
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
   }
-);
+)
 
-const Table = mongoose.model('Table', TableSchema);
-export default Table;
+const Table = mongoose.model('Table', TableSchema)
+export default Table

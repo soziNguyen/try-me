@@ -117,11 +117,11 @@ function handlerUpdateEvent(tableSelector, module, transform) {
 function initTableCheckboxEvents(tableSelector, checkboxClass) {
   const $table = $(tableSelector)
   const $wrapper = $(`${tableSelector}_wrapper`)
-  const $selectAll = $wrapper.find('#selectAll');
+  const $selectAll = $wrapper.find('#selectAll')
 
   // Click 'tr' event
   $table.on('click', 'tbody tr', function (e) {
-    if ($(e.target).is(`input[type=checkbox], img, input[type=text], input[type=number], button, .dataInput`)) return
+    if ($(e.target).is(`input[type=checkbox], img, input[type=text], input[type=number], button, span, .dataInput, td:nth-child(n+2)`)) return
     const checkbox = $(this).find(`.${checkboxClass}`)
     checkbox.prop('checked', !checkbox.prop('checked')).trigger('change')
   })
@@ -133,11 +133,11 @@ function initTableCheckboxEvents(tableSelector, checkboxClass) {
 
   // Click outside selectAll
   $table.on('click', 'thead th:first-child', function (e) {
-    if ($(e.target).is('input[type=checkbox]')) return;
+    if ($(e.target).is('input[type=checkbox]')) return
     if ($selectAll.length) {
-      $selectAll.prop('checked', !$selectAll.prop('checked')).trigger('change');
+      $selectAll.prop('checked', !$selectAll.prop('checked')).trigger('change')
     }
-  });
+  })
 
   // Sync Select All
   $table.on('change', `.${checkboxClass}`, function () {

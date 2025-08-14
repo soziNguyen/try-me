@@ -13,15 +13,15 @@ import StockHistory from "../models/stockHistory.js"
 // DATATABLE SERVER-SIDE
 export const getStockTransfers = async (req, res) => {
   try {
-    const draw = +req.query.draw || 0;
-    const start = +req.query.start || 0;
-    const length = +req.query.length || 10;
-    const searchValue = (req.query["search[value]"] || "").trim();
-    const colIdx = req.query["order[0][column]"];
-    const sortField = req.query[`columns[${colIdx}][data]`] || "createdAt";
-    const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1;
+    const draw = +req.query.draw || 0
+    const start = +req.query.start || 0
+    const length = +req.query.length || 10
+    const searchValue = (req.query["search[value]"] || "").trim()
+    const colIdx = req.query["order[0][column]"]
+    const sortField = req.query[`columns[${colIdx}][data]`] || "createdAt"
+    const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
 
-    const baseMatch = { organization: req.user.organization };
+    const baseMatch = { organization: req.user.organization }
 
     // Base pipeline (lookup trước khi group)
     const pipeline = [
@@ -31,7 +31,7 @@ export const getStockTransfers = async (req, res) => {
       ...lookupRef("items.fromWarehouse", "Warehouses", { as: "fromWarehouse" }),
       ...lookupRef("items.toWarehouse", "Warehouses", { as: "toWarehouse" }),
       ...lookupRef("createdBy", "Users", { as: "createdBy" })
-    ];
+    ]
 
     // Search nếu có
     if (searchValue) {
@@ -63,7 +63,7 @@ export const getStockTransfers = async (req, res) => {
             }
           ]
         }
-      });
+      })
     }
 
     // Group lại để tránh nhân bản phiếu
@@ -100,10 +100,10 @@ export const getStockTransfers = async (req, res) => {
           lockedBy: { $first: "$lockedBy" }
         }
       }
-    );
+    )
 
     // Sort object
-    const sortObj = { [sortField]: sortDir };
+    const sortObj = { [sortField]: sortDir }
 
     // Dùng $facet để vừa count vừa phân trang
     pipeline.push({
@@ -117,28 +117,28 @@ export const getStockTransfers = async (req, res) => {
           { $limit: length }
         ]
       }
-    });
+    })
 
     // Chạy query
-    const result = await StockTransfer.aggregate(pipeline);
+    const result = await StockTransfer.aggregate(pipeline)
 
-    const recordsFiltered = result[0]?.metadata[0]?.total || 0;
-    const data = result[0]?.data || [];
+    const recordsFiltered = result[0]?.metadata[0]?.total || 0
+    const data = result[0]?.data || []
 
     // Tổng số phiếu không filter
-    const recordsTotal = await StockTransfer.countDocuments(baseMatch);
+    const recordsTotal = await StockTransfer.countDocuments(baseMatch)
 
     res.json({
       draw,
       recordsTotal,
       recordsFiltered,
       data
-    });
+    })
 
   } catch (err) {
-    responseHelper.error(res, err.message);
+    responseHelper.error(res, err.message)
   }
-};
+}
 
 
 // Get Stock Transfer by ID (Detail)

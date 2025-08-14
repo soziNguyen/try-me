@@ -78,15 +78,15 @@ $(function () {
             className: 'text-start px-1',
             title: 'Nguyên liệu',
             render: items => {
-              if (!Array.isArray(items) || items.length === 0) return '';
-              const names = items.map(it => it.ingredient?.name).filter(Boolean);
-              const uniqueNames = new Set(names);
+              if (!Array.isArray(items) || items.length === 0) return ''
+              const names = items.map(it => it.ingredient?.name).filter(Boolean)
+              const uniqueNames = new Set(names)
               
-              if (uniqueNames.size === 0) return '';
+              if (uniqueNames.size === 0) return ''
               const nameLengths = [...uniqueNames]
-              const firstThree = nameLengths.slice(0, 3).join(', ');
+              const firstThree = nameLengths.slice(0, 3).join(', ')
               const more = nameLengths.length > 3 ? '...' : ''
-              return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`;
+              return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`
             }
           },
           {
@@ -104,19 +104,19 @@ $(function () {
             className: 'text-center',
             title: 'Kho nguồn',
             render: (items) => {
-              if (!Array.isArray(items) || items.length === 0) return '';
+              if (!Array.isArray(items) || items.length === 0) return ''
               const fromWarehouses = items
                 .map(item => item.fromWarehouse?.name)
-                .filter(Boolean);
+                .filter(Boolean)
           
-              const uniqueWarehouses = [...new Set(fromWarehouses)];
+              const uniqueWarehouses = [...new Set(fromWarehouses)]
           
-              if (uniqueWarehouses.length === 0) return '';
+              if (uniqueWarehouses.length === 0) return ''
           
-              const display = uniqueWarehouses.slice(0, 2).join(', ');
-              const more = uniqueWarehouses.length > 2 ? '...' : '';
+              const display = uniqueWarehouses.slice(0, 2).join(', ')
+              const more = uniqueWarehouses.length > 2 ? '...' : ''
           
-              return `<span title="${fromWarehouses.join('\n')}">${display} ${more}</span>`;
+              return `<span title="${fromWarehouses.join('\n')}">${display} ${more}</span>`
             }
           },
           {
@@ -124,19 +124,19 @@ $(function () {
             className: 'text-center',
             title: 'Kho đích',
             render: (items) => {
-              if (!Array.isArray(items) || items.length === 0) return '';
+              if (!Array.isArray(items) || items.length === 0) return ''
               const toWarehouses = items
                 .map(item => item.toWarehouse?.name)
-                .filter(Boolean);
+                .filter(Boolean)
           
-              const uniqueWarehouses = [...new Set(toWarehouses)];
+              const uniqueWarehouses = [...new Set(toWarehouses)]
           
-              if (uniqueWarehouses.length === 0) return '';
+              if (uniqueWarehouses.length === 0) return ''
           
-              const display = uniqueWarehouses.slice(0, 2).join(', ');
-              const more = uniqueWarehouses.length > 2 ? '...' : '';
+              const display = uniqueWarehouses.slice(0, 2).join(', ')
+              const more = uniqueWarehouses.length > 2 ? '...' : ''
           
-              return `<span title="${toWarehouses.join('\n')}">${display} ${more}</span>`;
+              return `<span title="${toWarehouses.join('\n')}">${display} ${more}</span>`
             }
           },        
           {
@@ -144,8 +144,8 @@ $(function () {
             title: 'Ghi chú',
             className: 'text-center',
             render: (data) => {
-              if (!data || data.length <= 20) return data || '';
-              return `<span title="${data}">${data.substring(0, 20)}...</span>`;
+              if (!data || data.length <= 20) return data || ''
+              return `<span title="${data}">${data.substring(0, 20)}...</span>`
             }
           },
           {

@@ -1,6 +1,6 @@
 $(function () {
   let managers = []
-  let table;
+  let table
 
   Promise.all([
     fetchData('users')
@@ -98,6 +98,10 @@ $(function () {
       rowCallback: function(row, data) {
         $(row).attr('data-id', data._id)
       },
+      drawCallback: function (settings) {
+        const selector = $('#warehouseTable select[data-field]')
+        initSelect2(selector, '— Chọn quản lý —')
+      },  
       initComplete: function () {
         $('.right-group').html(`
           <div class="btn-group flex-wrap">

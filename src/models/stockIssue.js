@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const stockIssueSchema = new mongoose.Schema({
   code:      { type: String, default: '' },
@@ -23,5 +23,5 @@ const stockIssueSchema = new mongoose.Schema({
 }
 )
 
-const StockIssue = mongoose.model('StockIssue', stockIssueSchema);
+const StockIssue = mongoose.model('StockIssue', stockIssueSchema)
 export default StockIssue

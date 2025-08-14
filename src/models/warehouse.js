@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const warehouseSchema = new mongoose.Schema({
   name: { type: String, default: '' },
@@ -13,7 +13,7 @@ const warehouseSchema = new mongoose.Schema({
     collection: "Warehouses", 
     timestamps: { createdAt: 'createdAt', updatedAt : 'updatedAt'}
 }
-);
+)
 
-const Warehouse = mongoose.model('Warehouse', warehouseSchema);
-export default Warehouse;
+const Warehouse = mongoose.model('Warehouse', warehouseSchema)
+export default Warehouse

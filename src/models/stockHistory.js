@@ -29,7 +29,6 @@ const stockHistorySchema = new mongoose.Schema({
   timestamps: true
 })
 
-// Index có thể thêm cho các trường thường dùng tìm kiếm
 stockHistorySchema.index({ documentId: 1 })
 stockHistorySchema.index({ transactionDate: -1 })
 stockHistorySchema.index({ transactionType: 1, transactionDate: -1 })

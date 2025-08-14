@@ -6,6 +6,6 @@ const isAdmin = (req, res, next) => {
         title: 'Permission Denied',
       })
     }
-  };
+  }
   
-export default isAdmin;
+export default isAdmin

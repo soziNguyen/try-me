@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const menuItemSchema = new mongoose.Schema({
-  name:        { type: String, required: true },
-  description: { type: String, default: '' },
   image:       { type: String, default: '' },
+  name:        { type: String, required: true },
   category:    { type: mongoose.Schema.Types.ObjectId, ref: 'MenuCategory', required: true },
+  description: { type: String, default: '' },
   currentPrice:{ type: Number, required: true },
   isActive:    { type: Boolean, default: true },
   createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -12,7 +12,7 @@ const menuItemSchema = new mongoose.Schema({
 }, {
   collection: "MenuItems",
   timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
-});
+})
 
-const MenuItem = mongoose.model('MenuItem', menuItemSchema);
-export { MenuItem };
+const MenuItem = mongoose.model('MenuItem', menuItemSchema)
+export { MenuItem }

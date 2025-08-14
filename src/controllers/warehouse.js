@@ -152,7 +152,7 @@ export const updateWareHouse = async (req, res) => {
             name: { $regex: new RegExp(`^${nameToCheck}$`, 'i') },
             location: { $regex: new RegExp(`^${locationToCheck}$`, 'i') },
             organization: req.user.organization
-        });
+        })
 
         if (isExisting) {
             return responseHelper.error(res, `Nhà kho ${nameToCheck} đã tồn tại ở địa điểm ${locationToCheck}`)

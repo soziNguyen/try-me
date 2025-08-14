@@ -110,15 +110,18 @@ $(function () {
         .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
         .join("")
       
-      $fromWarehouseSelect.empty().html(
+      const $fSelected = $fromWarehouseSelect.empty().html(
         '<option value="" class="text-center">— Chọn kho nguồn —</option>' +
         warehouseOptions
       )
+
+      initSelect2($fSelected, '— Chọn kho nguồn —')
       
-      $toWarehouseSelect.empty().html(
+      const tSelected = $toWarehouseSelect.empty().html(
         '<option value="" class="text-center">— Chọn kho đích —</option>' +
         warehouseOptions
       )
+      initSelect2(tSelected, '— Chọn kho đích —')
     }
   
     function addNewItem() {

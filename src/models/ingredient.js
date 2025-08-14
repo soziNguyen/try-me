@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { units } from '../helpers/unitHelper.js';
+import mongoose from 'mongoose'
+import { units } from '../helpers/unitHelper.js'
 
 const ingredientSchema = new mongoose.Schema({
   sku: { type: String, default: '' },
@@ -19,7 +19,24 @@ const ingredientSchema = new mongoose.Schema({
     collection: "Ingredients", 
     timestamps: { createdAt: 'createdAt', updatedAt : 'updatedAt'}
 }
-);
+)
 
-const Ingredient = mongoose.model('Ingredient', ingredientSchema);
-export { Ingredient, units};
+ingredientSchema.index(
+  { organization: 1, sku: 1 }, 
+  { 
+    unique: true,
+    partialFilterExpression: { 
+      sku: { $exists: true, $ne: "" } 
+    }
+  })
+ingredientSchema.index(
+  { organization: 1, name: 1 }, 
+  { 
+    unique: true,
+    partialFilterExpression: { 
+      name: { $exists: true, $ne: "" } 
+    }
+  })
+
+const Ingredient = mongoose.model('Ingredient', ingredientSchema)
+export { Ingredient, units}

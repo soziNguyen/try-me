@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { units } from '../helpers/unitHelper.js';
+import mongoose from 'mongoose'
+import { units } from '../helpers/unitHelper.js'
 
 const recipeSchema = new mongoose.Schema({
   menuItem:    { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem', required: true },
@@ -17,7 +17,7 @@ const recipeSchema = new mongoose.Schema({
 }, {
   collection: "Recipes",
   timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
-});
+})
 
-const Recipe = mongoose.model('Recipe', recipeSchema);
-export { Recipe };
+const Recipe = mongoose.model('Recipe', recipeSchema)
+export { Recipe }

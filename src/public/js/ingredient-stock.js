@@ -1,10 +1,10 @@
 $(function () {
-    let showList = [10, 25, 50, 100];
-    const numRows = Math.floor(($(window).height() - $('#ingredientStockTableBody').offset().top - 100) / 45);
+    let showList = [10, 25, 50, 100]
+    const numRows = Math.floor(($(window).height() - $('#ingredientStockTableBody').offset().top - 100) / 45)
     if (!showList.includes(numRows)) {
-      showList.push(numRows);
+      showList.push(numRows)
     }
-    showList.sort((a, b) => a - b);
+    showList.sort((a, b) => a - b)
   
     $('#ingredientStockTable').DataTable({
       serverSide: true,
@@ -44,9 +44,9 @@ $(function () {
           data: 'supplier.name',
           render: (data, type, row) => {
             if (row.supplier?.name) {
-              return `<span class="badge bg-success">${row.supplier.name}</span>`;
+              return `<span class="badge bg-success">${row.supplier.name}</span>`
             }
-            return `<span class="badge bg-info">Chuyển kho</span>`;
+            return `<span class="badge bg-info">Chuyển kho</span>`
           },
         },
       ],
@@ -62,6 +62,6 @@ $(function () {
         zeroRecords: 'Không tìm thấy kết quả phù hợp',
         emptyTable: 'Không có dữ liệu trong bảng',
       },
-    });
-  });
+    })
+  })
   

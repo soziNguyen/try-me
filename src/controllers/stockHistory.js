@@ -1,16 +1,16 @@
-import { lookupRef, lookupUser } from '../helpers/lookupHelper.js';
-import responseHelper from '../helpers/responseHelper.js';
-import StockHistory from '../models/stockHistory.js';
+import { lookupRef, lookupUser } from '../helpers/lookupHelper.js'
+import responseHelper from '../helpers/responseHelper.js'
+import StockHistory from '../models/stockHistory.js'
 
 export const getStockHistories = async (req, res) => {
   try {
-    const draw = +req.query.draw || 0;
-    const start = +req.query.start || 0;
-    const length = +req.query.length || 10;
-    const searchValue = (req.query["search[value]"] || "").trim();
-    const colIdx = req.query["order[0][column]"];
-    const sortField = req.query[`columns[${colIdx}][data]`] || "transactionDate";
-    const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1;
+    const draw = +req.query.draw || 0
+    const start = +req.query.start || 0
+    const length = +req.query.length || 10
+    const searchValue = (req.query["search[value]"] || "").trim()
+    const colIdx = req.query["order[0][column]"]
+    const sortField = req.query[`columns[${colIdx}][data]`] || "transactionDate"
+    const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
 
     const pipeline = [
       { $match: { organization: req.user.organization } },
@@ -60,7 +60,7 @@ export const getStockHistories = async (req, res) => {
           }
         }
       }
-    ];
+    ]
 
     // Search filter
     if (searchValue) {
@@ -91,37 +91,37 @@ export const getStockHistories = async (req, res) => {
             }
           ]
         }
-      });
+      })
     }
 
     // Count after filter
-    const countPipeline = [...pipeline, { $count: "count" }];
-    const countResult = await StockHistory.aggregate(countPipeline);
-    const recordsFiltered = countResult[0]?.count || 0;
+    const countPipeline = [...pipeline, { $count: "count" }]
+    const countResult = await StockHistory.aggregate(countPipeline)
+    const recordsFiltered = countResult[0]?.count || 0
 
     // Sort
-    const sortObj = {};
+    const sortObj = {}
     switch (sortField) {
       case 'documentCode':
-        sortObj['documentCode'] = sortDir;
-        break;
+        sortObj['documentCode'] = sortDir
+        break
       case 'transactionType':
-        sortObj['transactionType'] = sortDir;
-        break;
+        sortObj['transactionType'] = sortDir
+        break
       case 'createdBy.username':
-        sortObj['createdBy.username'] = sortDir;
-        break;
+        sortObj['createdBy.username'] = sortDir
+        break
       case 'totalQuantity': // sort theo tổng số lượng
-        sortObj['totalQuantity'] = sortDir;
-        break;
+        sortObj['totalQuantity'] = sortDir
+        break
       default:
-        sortObj[sortField] = sortDir;
+        sortObj[sortField] = sortDir
     }
-    pipeline.push({ $sort: sortObj });
+    pipeline.push({ $sort: sortObj })
 
     // Pagination
-    pipeline.push({ $skip: start });
-    pipeline.push({ $limit: length });
+    pipeline.push({ $skip: start })
+    pipeline.push({ $limit: length })
 
     // Project final fields
     pipeline.push({
@@ -140,18 +140,18 @@ export const getStockHistories = async (req, res) => {
         reason: 1,
         note: 1
       }
-    });
+    })
 
-    const data = await StockHistory.aggregate(pipeline);
-    const recordsTotal = await StockHistory.countDocuments({ organization: req.user.organization });
+    const data = await StockHistory.aggregate(pipeline)
+    const recordsTotal = await StockHistory.countDocuments({ organization: req.user.organization })
 
     res.json({
       draw,
       recordsTotal,
       recordsFiltered,
       data
-    });
+    })
   } catch (err) {
-    responseHelper.error(res, err.message);
+    responseHelper.error(res, err.message)
   }
-};
+}
