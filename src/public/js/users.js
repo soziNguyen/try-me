@@ -188,8 +188,9 @@ if (logInForm) {
   })
 
   document.getElementById("userTableBody").addEventListener("click", async (event) => {
-    if (event.target.classList.contains("updateUserBtn")) { // event.target.id === ""
-      const userId = event.target.getAttribute("data-id")
+    const btn = event.target.closest(".updateUserBtn")
+    if (btn) {
+      const userId = btn.getAttribute("data-id")
       if (userId) {
         await updateUser(userId)
       }

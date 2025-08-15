@@ -4,6 +4,7 @@ import inventoryRoutes from './inventory.js'
 import adminRoutes from './admin.js'
 import menuRoutes from './menu.js'
 import staffRRoutes from './staff.js'
+import organizationRoutes from './organization.js'
 import uploadRouter from './upload.js'
 
 const router = express.Router()
@@ -13,6 +14,7 @@ router.use('/', inventoryRoutes)
 router.use('/', menuRoutes)
 router.use('/', staffRRoutes)
 router.use('/', adminRoutes)
+router.use('/', organizationRoutes)
 router.use('/', uploadRouter)
 
 export default router
