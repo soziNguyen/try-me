@@ -1,5 +1,5 @@
 <div class="admin__layout">
-    <%- include('../partials/navbar.html') %>
+    <%- include('../partials/admin_navbar.html') %>
     <div class="admin__main">
         <div id="admin__sidebar">
           <ul>
@@ -17,14 +17,14 @@
                 </a>
               </li>
           
-              <li>
+              <li class="<%= page === 'Org Management' ? 'active' : '' %>">
                 <a class="w-100" href="/organizations">
                   <i class="bi bi-building text-danger me-2"></i>
                   <span>Quản lý Tổ chức</span>
                 </a>
               </li>
           
-              <li>
+              <li class="<%= page === 'Audit' ? 'active' : '' %>">
                 <a class="w-100" href="/audit-logs">
                   <i class="bi bi-journal-text text-info me-2"></i>
                   <span>Nhật ký hoạt động</span>
