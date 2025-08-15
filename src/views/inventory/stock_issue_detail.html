@@ -52,7 +52,7 @@
                 <h5 class="text-danger mb-0">
                   <i class="bi bi-list-ul me-2"></i>Danh sách nguyên liệu
                 </h5>
-                <button type="button" class="btn btn-success btn-sm" id="addItemBtn">
+                <button type="button" class="btn btn-success btn-sm no-print" id="addItemBtn">
                   <i class="bi bi-plus-circle me-1"></i>Thêm nguyên liệu
                 </button>
               </div>
@@ -61,9 +61,9 @@
                 <table class="table table-bordered">
                   <thead class="table-danger">
                     <tr>
-                      <th width="30%">Nguyên liệu</th>
-                      <th width="15%">Số lượng</th>
-                      <th width="5%">Xóa</th>
+                      <th>Nguyên liệu</th>
+                      <th>Số lượng</th>
+                      <th class="no-print">Xóa</th>
                     </tr>
                   </thead>
                   <tbody id="itemsTableBody">
@@ -81,17 +81,17 @@
 
             <!-- Buttons -->
             <div class="d-flex gap-2 justify-content-between">
-              <button type="button" id="btn-lock-issue" class="btn btn-outline-danger">
+              <button type="button" id="btn-lock-issue" class="btn btn-outline-danger no-print">
                 <i class="bi bi-lock me-2"></i>Xác nhận
               </button>
               <div class="d-flex justify-content-end">
-                <a href="/inventory/stock-issues" id="btn-back" class="btn btn-outline-secondary me-2">
+                <a href="/inventory/stock-issues" id="btn-back" class="btn btn-outline-secondary me-2 no-print">
                   <i class="bi bi-x-circle me-2"></i>Quay lại
                 </a>
-                <button type="button" id="btn-print" class="btn btn-outline-info me-2">
+                <button type="button" id="btn-print" class="btn btn-outline-info me-2 no-print">
                   <i class="bi bi-printer me-2"></i>In phiếu
                 </button>
-                <button type="submit" id="btn-save-issue" class="btn btn-danger">
+                <button type="submit" id="btn-save-issue" class="btn btn-danger no-print">
                   <i class="bi bi-check-circle me-2"></i>Lưu phiếu
                 </button>
               </div>
