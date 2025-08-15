@@ -39,6 +39,23 @@ function formatDate(dateString) {
   return `${dd}/${mm}/${yyyy}`
 }
 
+// Format phone Num
+function formatToInternational(phone) {
+  if (!phone) return phone
+
+  phone = phone.replace(/\D/g, '')
+
+  if (phone.startsWith('0')) {
+    phone = phone.substring(1)
+  }
+
+  if (phone.startsWith('84')) {
+    return '+' + phone
+  }
+
+  return '+84' + phone
+}
+
 // remove accents
 function removeAccents(str) {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D")
@@ -198,19 +215,25 @@ function initSelect2($select, placeholder = '— Chọn mục —') {
   if ($select.hasClass('select2-hidden-accessible')) {
     $select.select2('destroy')
   }
-
   if (!$select.length) return
 
-  // const signUpForm = $('#signup-form')
-  const parentElement = $select.closest('td')
+  // Xác định dropdownParent
+  let parentElement = $select.closest('.modal')
+  if (!parentElement.length) {
+    parentElement = $select.closest('td')
+  }
+  if (!parentElement.length) {
+    parentElement = $('body')
+  }
 
   $select.select2({
     placeholder,
     width: '100%',
     multiple: false,
     dropdownCssClass: 'no-bullet',
-    dropdownParent: parentElement.length > 0 ? parentElement : $('body')
+    dropdownParent: parentElement
   })
+  
   const $form = $select.closest('form')
   if ($form.length) {
     $select.next('.select2-container').find('.select2-selection').addClass('form-control');
@@ -220,3 +243,20 @@ function initSelect2($select, placeholder = '— Chọn mục —') {
 $('#btn-print').on('click', function() {
   window.print()
 })
+
+function loadOrganizations($select, selectedId = '') {
+  return fetchData('organizations')
+    .then(organizations => {
+      $select.empty().append(new Option('— Chọn tổ chức —', ''))
+      organizations.forEach(org => {
+        $select.append(new Option(org.name, org._id))
+      })
+      if (selectedId) {
+        $select.val(selectedId).trigger('change')
+      }
+      initSelect2($select, '— Chọn tổ chức —')
+    })
+    .catch(() => {
+      toastr.error('Không thể tải danh sách tổ chức')
+    })
+}

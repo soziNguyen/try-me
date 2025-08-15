@@ -40,6 +40,10 @@
                   <input type="email" id="email" class="form-control" autocomplete="username">
                 </div>
                 <div class="mb-3">
+                  <label for="organizations">Tổ chức:</label>
+                  <select id="organizations" class="form-select"></select>
+                </div>
+                <div class="mb-3">
                   <label>Mật khẩu:</label>
                   <input type="password" id="password" class="form-control" autocomplete="new-password">
                 </div>
@@ -53,7 +57,7 @@
               <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
                 <i class="bi bi-x-lg"></i> Đóng
               </button>
-              <button id="createUserBtn" class="btn btn-outline-primary">
+              <button type="submit" id="createUserBtn" form="newUserForm" class="btn btn-outline-primary">
                 <i class="bi bi-person-plus me-1"></i> Tạo mới
               </button>
             </div>
@@ -81,6 +85,15 @@
                   <input type="email" id="new-email" class="form-control" autocomplete="username">
                 </div>
                 <div class="mb-3">
+                  <label for="new-organizations">Tổ chức:</label>
+                  <select id="new-organizations" class="form-select"></select>
+                </div>
+                <div class="mb-3">
+                  <label for="new-role">Vai trò:</label>
+                  <select id="new-role" class="form-control">
+                  </select>
+                </div>
+                <div class="mb-3">
                   <label>Mật khẩu mới:</label>
                   <input type="password" id="new-password" class="form-control" autocomplete="new-password">
                 </div>
@@ -88,18 +101,13 @@
                   <label>Xác nhận mật khẩu:</label>
                   <input type="password" id="new-confirm-password" class="form-control" autocomplete="new-password">
                 </div>
-                <div class="mb-3">
-                  <label>Vai trò:</label>
-                  <select id="new-role" class="form-control">
-                  </select>
-                </div>
               </form>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
                 <i class="bi bi-x-lg"></i> Đóng
               </button>
-              <button id="updateUserBtnForm" class="btn btn-outline-primary">
+              <button type="submit" id="updateUserBtnForm" form="updateUserForm" class="btn btn-outline-primary">
                 <i class="bi bi-pencil-square me-1"></i> Thay đổi
               </button>
             </div>
@@ -114,5 +122,7 @@
   <%- include('../partials/commonjs.html')%>
   <script src="/js/update-user.js"></script>
   <script src="/js/sidebar-toggle.js"></script>
+  <script src="/js/data-table.js"></script>
+  <script src="/js/admin-org.js"></script>
   <script src="/js/admin.js"></script>
   <%- include('../partials/footer.html') %>

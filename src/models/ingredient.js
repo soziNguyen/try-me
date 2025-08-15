@@ -28,7 +28,8 @@ ingredientSchema.index(
     partialFilterExpression: { 
       sku: { $exists: true, $ne: "" } 
     }
-  })
+  }
+)
 ingredientSchema.index(
   { organization: 1, name: 1 }, 
   { 
@@ -36,7 +37,8 @@ ingredientSchema.index(
     partialFilterExpression: { 
       name: { $exists: true, $ne: "" } 
     }
-  })
+  }
+)
 
 const Ingredient = mongoose.model('Ingredient', ingredientSchema)
 export { Ingredient, units}

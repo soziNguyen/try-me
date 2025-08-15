@@ -276,3 +276,25 @@ export const userManagementPage = (req, res) => {
         )
     )
 }
+
+export const orgManagementPage = (req, res) => {
+    res.render('admin/organizations', 
+        getPageData(req, 'Quản lý Tổ chức', 'Org Management', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ TỔ CHỨC'
+            }
+        )
+    )
+}
+
+export const auditPage = (req, res) => {
+    res.render('admin/audit_log', 
+        getPageData(req, 'Nhật ký hoạt động', 'Activity', 
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'NHẬT KÝ HOẠT ĐỘNG'
+            }
+        )
+    )
+}
