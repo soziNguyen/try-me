@@ -61,6 +61,7 @@ export const getAllUsers = async (req, res) => {
           email: 1,
           role: 1,
           organization: { 
+            _id: "$organization._id",
             name: { $ifNull: ["$organization.name", ""] },
             province: "$organization.province"
            },
@@ -211,4 +212,23 @@ export const deleteUsers = async (req, res) => {
   } catch (error) {
     responseHelper.error(res, error.message)
   }
+}
+
+export const setOrg = (req, res) => {
+  const { orgId } = req.body
+  if (!orgId) return responseHelper.error(res, 'Không tìm thấy tổ chức', 404)
+
+  if (req.session) {
+    req.session.currentOrg = orgId
+  }
+
+  res.json({ ok: true, currentOrg: orgId })
+}
+
+
+export const exitOrg = (req, res) => {
+  if (req.session) {
+      delete req.session.currentOrg
+  }
+  res.redirect('/')
 }

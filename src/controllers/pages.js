@@ -1,4 +1,5 @@
 import { getPageData } from '../helpers/pageDataHelper.js'
+import { getCurrentOrg } from "../helpers/orgHelper.js"
 
 //=============================================
 //================= USER ======================
@@ -48,8 +49,20 @@ export const dashboard = async (req, res) => {
             getPageData(req, 'Dashboard', 'Dashboard', { headerClass: 'admin__header' })
         )
     } else if (req.user && req.user.role === 'Admin') {
-        return res.render('admin/dashboard',
-            getPageData(req, 'Dashboard', 'Dashboard', { headerClass: 'admin__header' })
+        const currentOrg = getCurrentOrg(req)
+
+        if (currentOrg) {
+            // Admin nhưng đã chọn tổ chức => hiển thị như Org
+            return res.render(
+                "users/org_dashboard",
+                getPageData(req, "Dashboard", "Dashboard", { headerClass: "admin__header", currentOrg })
+            )
+        }
+
+        // Admin chưa chọn tổ chức => dashboard Admin
+        return res.render(
+            "admin/dashboard",
+            getPageData(req, "Dashboard", "Dashboard", { headerClass: "admin__header" })
         )
     } else {
         return res.render('users/staff_dashboard', 

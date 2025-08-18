@@ -1,6 +1,7 @@
 import { lookupRef, lookupUser } from '../../../helpers/lookupHelper.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import StockHistory from './model.js'
+import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
 export const getStockHistories = async (req, res) => {
   try {
@@ -12,8 +13,11 @@ export const getStockHistories = async (req, res) => {
     const sortField = req.query[`columns[${colIdx}][data]`] || "transactionDate"
     const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
 
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
     const pipeline = [
-      { $match: { organization: req.user.organization } },
+      { $match: { organization: organizationId } },
       {
         $lookup: {
           from: 'Ingredients',
@@ -143,7 +147,7 @@ export const getStockHistories = async (req, res) => {
     })
 
     const data = await StockHistory.aggregate(pipeline)
-    const recordsTotal = await StockHistory.countDocuments({ organization: req.user.organization })
+    const recordsTotal = await StockHistory.countDocuments({ organization: organizationId })
 
     res.json({
       draw,

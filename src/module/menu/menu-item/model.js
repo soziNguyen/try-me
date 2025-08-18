@@ -1,18 +1,24 @@
 import mongoose from 'mongoose'
 
 const menuItemSchema = new mongoose.Schema({
+  name:        { type: String, default: '' },
   image:       { type: String, default: '' },
-  name:        { type: String, required: true },
-  category:    { type: mongoose.Schema.Types.ObjectId, ref: 'MenuCategory', required: true },
   description: { type: String, default: '' },
-  currentPrice:{ type: Number, required: true },
+  price:{ type: Number, default: 0 },
   isActive:    { type: Boolean, default: true },
-  createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  updatedBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
+  category:    { type: mongoose.Schema.Types.ObjectId, ref: 'MenuCategory', default: null },
+  createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  updatedBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', default: null },
 }, {
   collection: "MenuItems",
   timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
 })
+
+menuItemSchema.index(
+  { organization: 1, category: 1, name: 1 },
+  { unique: true, partialFilterExpression: { name: { $exists: true, $ne: '' } } }
+)
 
 const MenuItem = mongoose.model('MenuItem', menuItemSchema)
 export { MenuItem }

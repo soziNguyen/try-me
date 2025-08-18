@@ -1,14 +1,18 @@
 import responseHelper from "../../../helpers/responseHelper.js"
 import Warehouse from "./model.js"
 import { lookupRef } from "../../../helpers/lookupHelper.js"
+import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
 
 export const getActiveWarehouses = async (req, res) => {
   try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
     const warehouses = await Warehouse.aggregate([
       { $match: { 
         isActive: true,
-        organization: req.user.organization
+        organization: organizationId
         } 
       },
       { $sort: { name: 1 } },
@@ -30,9 +34,12 @@ export const getWareHouses = async (req, res) => {
     const sortField = req.query[`columns[${colIdx}][data]`] || "createdAt"
     const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
 
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
     // Base pipeline with manager lookup
     const pipeline = [
-      { $match: { organization: req.user.organization } },
+      { $match: { organization: organizationId } },
       ...lookupRef('manager', 'Users')
     ]
 
@@ -48,7 +55,7 @@ export const getWareHouses = async (req, res) => {
     }
 
     // Get total count
-    const recordsTotal = await Warehouse.countDocuments({ organization: req.user.organization }) 
+    const recordsTotal = await Warehouse.countDocuments({ organization: organizationId }) 
 
     // Get filtered count
     const countPipeline = [...pipeline, { $count: 'count' }]
@@ -114,9 +121,12 @@ export const getWareHouses = async (req, res) => {
 
 export const createWareHouse = async (req, res) => {
   try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
     const data = {
       ...req.body,
-      organization: req.user.organization,
+      organization: organizationId,
       createdBy: req.user._id
     }
     const newWareHouse = new Warehouse(data)
@@ -132,9 +142,13 @@ export const updateWareHouse = async (req, res) => {
   try {
     const { id } = req.params
     const { name, location, manager, isActive } = req.body
+
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
     const warehouse = await Warehouse.findOne({
       _id: id,
-      organization: req.user.organization
+      organization: organizationId
     })
     if (!warehouse) {
         return responseHelper.error(res, "Nhà kho không tồn tại", 404)
@@ -151,7 +165,7 @@ export const updateWareHouse = async (req, res) => {
             _id: { $ne: id },
             name: { $regex: new RegExp(`^${nameToCheck}$`, 'i') },
             location: { $regex: new RegExp(`^${locationToCheck}$`, 'i') },
-            organization: req.user.organization
+            organization: organizationId
         })
 
         if (isExisting) {
@@ -171,7 +185,7 @@ export const updateWareHouse = async (req, res) => {
     if (Object.keys(dataUpdate).length === 0) return
 
     const updated = await Warehouse.findOneAndUpdate(
-      { _id: id, organization: req.user.organization }, 
+      { _id: id, organization: organizationId }, 
       dataUpdate, 
       { new: true })
       .populate('manager', 'username')
@@ -185,6 +199,8 @@ export const updateWareHouse = async (req, res) => {
 export const deleteWarehouses = async (req, res) => {
   try {
     const { ids } = req.body
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
         return responseHelper.error(res, "Không có nhà kho nào được chọn để xóa", 400)
@@ -221,7 +237,10 @@ export const restoreWarehouses = async (req, res) => {
 
 export const forceDeleteWareHouses = async (req, res) => {
   try {
-      const { ids } = req.body
+    const { ids } = req.body
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+      
     if (!Array.isArray(ids) || ids.length === 0) {
       return responseHelper.error(res, 'Không có nhà kho nào được chọn để xóa', 400)
     }
@@ -229,7 +248,7 @@ export const forceDeleteWareHouses = async (req, res) => {
     const result = await Warehouse.deleteMany(
       { 
         _id: { $in: ids },
-        organization: req.user.organization
+        organization: organizationId
       })
 
     responseHelper.success(res, { deletedCount: result.deletedCount }, 'Đã xóa vĩnh viễn các nhà kho thành công')
