@@ -121,9 +121,14 @@ $(function () {
         },
         {
           data: 'warehouse.name',
-          className: 'text-center',
+          className: 'text-start px-1',
           title: 'Kho nhập',
-          render: data => data
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return data ? `${row.warehouse.name} - ${row.warehouse.location}` : ''
+            }
+            return row.warehouse.name
+          }
         },        
         {
           data: 'note',

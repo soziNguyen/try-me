@@ -4,6 +4,7 @@ import withTransaction from "../../helpers/withTransaction.js"
 import responseHelper from "../../helpers/responseHelper.js"
 import validator from 'validator'
 import { formatPhoneNumber, validatePhoneNumber, displayPhoneNumber, getPhoneType } from '../../helpers/validator.js'
+import { getPageData } from "../../helpers/pageDataHelper.js"
 
 export const createOrganization = async (req, res) => {
   try {
@@ -251,6 +252,32 @@ export const deleteOrgs = async (req, res) => {
     })
 
     responseHelper.success(res, result.deletedCount, 'Xóa tổ chức thành công')
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
+export const getOrgDashboard = async (req, res) => {
+  try {
+    const { orgId } = req.params
+
+    const organization = await Organization.findById(orgId)
+    if (!organization) {
+      responseHelper.error(res, 'Tổ chức không tồn tại', 404)
+    }
+
+    if (req.user.role === 'Admin' || 
+        (req.user.role === 'Org' && String(req.user.organization) === String(orgId))) {
+
+      return res.render('users/org_dashboard',
+        getPageData(req, `Dashboard - ${organization.name}`, 'Dashboard', {
+          headerClass: 'admin__header',
+          currentOrg: organization
+        })
+      )
+    }
+
+    return res.status(403).render('errors/permission', { message: "Bạn không có quyền truy cập tổ chức này" })
   } catch (error) {
     responseHelper.error(res, error.message)
   }

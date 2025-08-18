@@ -7,8 +7,8 @@ import responseHelper from "../../../helpers/responseHelper.js"
 import withTransaction from "../../../helpers/withTransaction.js"
 import { generateDocumentCode } from "../../../helpers/common.js"
 import { lookupRef } from "../../../helpers/lookupHelper.js"
-import { toVietnamTime } from "../../../helpers/dateHelper.js"
 import StockHistory from "../stock-history/model.js"
+import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
 // DATATABLE SERVER-SIDE
 export const getStockTransfers = async (req, res) => {
@@ -21,7 +21,10 @@ export const getStockTransfers = async (req, res) => {
     const sortField = req.query[`columns[${colIdx}][data]`] || "createdAt"
     const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
 
-    const baseMatch = { organization: req.user.organization }
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
+    const baseMatch = { organization: organizationId }
 
     // Base pipeline (lookup trước khi group)
     const pipeline = [
@@ -149,10 +152,13 @@ export const getStockTransferById = async (req, res) => {
     if (!mongoose.isValidObjectId(id)) {
       return responseHelper.error(res, 'ID không hợp lệ', 400)
     }
+
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
     
     const stockTransfer = await StockTransfer.findOne({
       _id: id,
-      organization: req.user.organization
+      organization: organizationId
     })
       .populate('createdBy', 'name username')
       .populate('updatedBy', 'name username')
@@ -175,6 +181,8 @@ export const getStockTransferById = async (req, res) => {
 // CREATE
 export const createStockTransfer = async (req, res) => {
   try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
     const transfer = await withTransaction(async (session) => {
       const code = await generateDocumentCode(StockTransfer, 'ST')
       const date = new Date()
@@ -182,7 +190,7 @@ export const createStockTransfer = async (req, res) => {
         code: code,
         date: date,
         createdBy: req.user._id,
-        organization: req.user.organization
+        organization: organizationId
        })
       await doc.save(session ? { session } : {})
       return doc
@@ -202,10 +210,13 @@ export const updateStockTransferFromForm = async (req, res) => {
         throw new Error('ID không hợp lệ')
       }
 
+      const organizationId = getCurrentOrg(req)
+      if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
       // Lấy phiếu chuyển kho cũ
       const oldTransfer = await StockTransfer.findOne({
         _id: id,
-        organization: req.user.organization
+        organization: organizationId
       }).session(session)
       if (!oldTransfer) throw new Error('Phiếu chuyển kho không tồn tại')
 
@@ -234,15 +245,15 @@ export const updateStockTransferFromForm = async (req, res) => {
             const [ingredient, fromWarehouse, toWarehouse] = await Promise.all([
               Ingredient.findOne({
                 _id: item.ingredient,
-                organization: req.user.organization
+                organization: organizationId
               }).session(session),
               Warehouse.findOne({
                 _id: item.fromWarehouse,
-                organization: req.user.organization
+                organization: organizationId
               }).session(session),
               Warehouse.findOne({ 
                 _id: item.toWarehouse, 
-                organization: req.user.organization
+                organization: organizationId
               }).session(session)
             ])
 
@@ -299,7 +310,7 @@ export const updateStockTransferFromForm = async (req, res) => {
         const currentStock = await IngredientStock.findOne({
           ingredient: ingredientId,
           warehouse: warehouseId,
-          organization: req.user.organization
+          organization: organizationId
         }).session(session)
 
         const currentQuantity = currentStock?.quantity || 0
@@ -309,11 +320,11 @@ export const updateStockTransferFromForm = async (req, res) => {
           const [ingredient, warehouse] = await Promise.all([
             Ingredient.findOne({
               _id: ingredientId, 
-              organization: req.user.organization
+              organization: organizationId
             }).select('name').session(session),
             Warehouse.findOne({ 
               _id: warehouseId,
-              organization: req.user.organization
+              organization: organizationId
             }).select('name').session(session)
           ])
           
@@ -336,7 +347,7 @@ export const updateStockTransferFromForm = async (req, res) => {
 
       const updatedTransfer = await StockTransfer.findOneAndUpdate({ 
         _id: id, 
-        organization: req.user.organization }, 
+        organization: organizationId }, 
         updateData, { 
         new: true, 
         session 
@@ -352,7 +363,7 @@ export const updateStockTransferFromForm = async (req, res) => {
         if (netChange > 0) {
           // Tăng tồn kho
           await IngredientStock.updateOne(
-            { ingredient: ingredientId, warehouse: warehouseId, organization: req.user.organization },
+            { ingredient: ingredientId, warehouse: warehouseId, organization: organizationId },
             { 
               $inc: { quantity: netChange },
               $setOnInsert: { 
@@ -366,7 +377,7 @@ export const updateStockTransferFromForm = async (req, res) => {
         } else {
           // Giảm tồn kho
           await IngredientStock.updateOne(
-            { ingredient: ingredientId, warehouse: warehouseId, organization: req.user.organization },
+            { ingredient: ingredientId, warehouse: warehouseId, organization: organizationId },
             { $inc: { quantity: netChange } },
             { session }
           )
@@ -382,14 +393,14 @@ export const updateStockTransferFromForm = async (req, res) => {
       await Promise.all(
         affectedIngredientIds.map(async (ingId) => {
           const totalStockAgg = await IngredientStock.aggregate([
-            { $match: { ingredient: new mongoose.Types.ObjectId(ingId), organization: req.user.organization } },
+            { $match: { ingredient: new mongoose.Types.ObjectId(ingId), organization: organizationId } },
             { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
           ]).session(session)
           
           const totalStock = Math.max(0, totalStockAgg[0]?.totalQuantity || 0)
           
           return Ingredient.updateOne(
-            { _id: ingId, organization: req.user.organization },
+            { _id: ingId, organization: organizationId },
             { $set: { stock: totalStock, updatedAt: new Date() } },
             { session }
           )
@@ -398,7 +409,7 @@ export const updateStockTransferFromForm = async (req, res) => {
 
       // Dọn dẹp các record có quantity = 0
       await IngredientStock.deleteMany(
-        { organization: req.user.organization, quantity: { $lte: 0 } },
+        { organization: organizationId, quantity: { $lte: 0 } },
         { session }
       )
 
@@ -423,6 +434,9 @@ export const updateStockTransferFromForm = async (req, res) => {
 // DELETE
 export const deleteStockTransfers = async (req, res) => {
   try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
     await withTransaction(async (session) => {
       const { ids } = req.body
       if (!Array.isArray(ids) || ids.length === 0) {
@@ -438,7 +452,7 @@ export const deleteStockTransfers = async (req, res) => {
       // Lấy các phiếu chuyển kho với populate để có thông tin chi tiết
       const transfers = await StockTransfer.find({ 
         _id: { $in: validIds },
-        organization: req.user.organization
+        organization: organizationId
       })
         .populate('items.ingredient', 'name')
         .populate('items.fromWarehouse', 'name')
@@ -500,7 +514,7 @@ export const deleteStockTransfers = async (req, res) => {
         const currentStock = await IngredientStock.findOne({
           ingredient: ingredientId,
           warehouse: warehouseId,
-          organization: req.user.organization
+          organization: organizationId
         }).session(session)
 
         const currentQuantity = currentStock?.quantity || 0
@@ -549,7 +563,7 @@ export const deleteStockTransfers = async (req, res) => {
         
         stockUpdatePromises.push(
           IngredientStock.updateOne(
-            { ingredient: ingredientId, warehouse: warehouseId, organization: req.user.organization },
+            { ingredient: ingredientId, warehouse: warehouseId, organization: organizationId },
             { $inc: { quantity: change } },
             { session }
           )
@@ -561,14 +575,14 @@ export const deleteStockTransfers = async (req, res) => {
       // CẬP NHẬT TỔNG TỒN KHO TRONG INGREDIENT
       const ingredientUpdatePromises = Array.from(affectedIngredients).map(async (ingredientId) => {
         const totalStockAgg = await IngredientStock.aggregate([
-          { $match: { ingredient: new mongoose.Types.ObjectId(String(ingredientId)), organization: req.user.organization } },
+          { $match: { ingredient: new mongoose.Types.ObjectId(String(ingredientId)), organization: organizationId } },
           { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
         ]).session(session)
         
         const totalStock = Math.max(0, totalStockAgg[0]?.totalQuantity || 0)
         
         return Ingredient.updateOne(
-          { _id: ingredientId, organization: req.user.organization },
+          { _id: ingredientId, organization: organizationId },
           { 
             $set: { 
               stock: totalStock,
@@ -583,13 +597,13 @@ export const deleteStockTransfers = async (req, res) => {
 
       // DỌN DẸP CÁC RECORD CÓ QUANTITY <= 0
       await IngredientStock.deleteMany(
-        { organization: req.user.organization, quantity: { $lte: 0 } },
+        { organization: organizationId, quantity: { $lte: 0 } },
         { session }
       )
 
       // XÓA CÁC PHIẾU CHUYỂN KHO
       const deleteResult = await StockTransfer.deleteMany(
-        { _id: { $in: validIds }, organization: req.user.organization },
+        { _id: { $in: validIds }, organization: organizationId },
         { session }
       )
 
@@ -617,9 +631,12 @@ export const lockStockTransfer = async (req, res) => {
       return responseHelper.error(res, 'ID không hợp lệ', 400)
     }
 
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
     const transfer = await StockTransfer.findOne({
       _id: id,
-      organization: req.user.organization
+      organization: organizationId
     })
     if (!transfer) {
       return responseHelper.error(res, 'Không tìm thấy phiếu chuyển kho', 404)
@@ -652,7 +669,7 @@ export const lockStockTransfer = async (req, res) => {
       const updatedTransfer = await StockTransfer.findOneAndUpdate(
         {
           _id: id,
-          organization: req.user.organization
+          organization: organizationId
         },
         {
           isLocked: true,
@@ -691,7 +708,7 @@ export const lockStockTransfer = async (req, res) => {
         transactionDate: transfer.date || new Date(),
         createdBy: req.user._id,
         updatedBy: null,
-        organization: req.user.organization
+        organization: organizationId
       }
 
       await StockHistory.create([stockHistory], { session })
@@ -700,7 +717,7 @@ export const lockStockTransfer = async (req, res) => {
     // Lấy phiếu chuyển kho đã khóa với thông tin đầy đủ
     const finalTransfer = await StockTransfer.findOne({
       _id: id,
-      organization: req.user.organization
+      organization: organizationId
     })
       .populate('lockedBy', 'name username')
       .populate('items.ingredient', 'name sku unit stock')

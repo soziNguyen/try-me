@@ -1,12 +1,16 @@
 import Supplier from "./model.js"
 import responseHelper from "../../../helpers/responseHelper.js"
 import { lookupRef, lookupUser } from "../../../helpers/lookupHelper.js"
+import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
 export const getAllSuppliers = async (req, res) => {
     try {
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
          const suppliers = await Supplier.find(
             { isActive: true,
-              organization: req.user.organization
+              organization: organizationId
             })
             .select('_id name')
             .sort({ name: 1 })
@@ -28,8 +32,11 @@ export const getSuppliers = async (req, res) => {
 
         const fieldToSearch = ['code', 'name', 'phone', 'email', 'country', 'address', 'taxId', 'note']
 
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
         const pipeline = [
-            { $match: { organization: req.user.organization } },
+            { $match: { organization: organizationId } },
             ...lookupUser('createdBy'),
             ...lookupUser('updatedBy')
         ]
@@ -45,7 +52,7 @@ export const getSuppliers = async (req, res) => {
         const countResult = await Supplier.aggregate(countPipeline)
         const recordsFiltered = countResult[0]?.count || 0
 
-        const recordsTotal = await Supplier.countDocuments({ organization: req.user.organization })
+        const recordsTotal = await Supplier.countDocuments({ organization: organizationId })
 
         pipeline.push(
             { $sort: { [sortField]: sortDir } },
@@ -85,10 +92,13 @@ export const getSuppliers = async (req, res) => {
 
 export const createSupplier = async (req, res) => {
     try {
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
         const data = {
             ...req.body,
             createdBy: req.user._id,
-            organization: req.user.organization,
+            organization: organizationId,
           }
         const newSupplier = new Supplier(data)
         await newSupplier.save()
@@ -103,9 +113,12 @@ export const updateSupplier = async (req, res) => {
         const { id } = req.params
         const { code, name, phone, email, country, address, taxId, isActive, note } = req.body
 
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
         const supplier = await Supplier.findOne({
             _id: id,
-            organization: req.user.organization
+            organization: organizationId
         })
         if (!supplier) {
             return responseHelper.error(res, "Khách hàng không tồn tại", 404)
@@ -118,7 +131,7 @@ export const updateSupplier = async (req, res) => {
         if (conditions.length > 0) {
             const existing = await Supplier.findOne({
                 _id: { $ne: id },
-                organization: req.user.organization,
+                organization: organizationId,
                 $or: conditions
             })
 
@@ -141,7 +154,7 @@ export const updateSupplier = async (req, res) => {
         dataUpdate.updatedBy = req.user._id
 
         const updated = await Supplier.findOneAndUpdate(
-            {_id: id, organization: req.user.organization}, 
+            {_id: id, organization: organizationId}, 
             dataUpdate, 
             { new: true }
         )
@@ -187,13 +200,16 @@ export const restoreSuppliers = async (req, res) => {
 export const forceDeleteSuppliers = async (req, res) => {
     try {
         const { ids } = req.body
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
         if (!Array.isArray(ids) || ids.length === 0) {
             return responseHelper.error(res, 'Không có nhà cung cấp nào được chọn để xóa', 400)
         }
 
         const result = await Supplier.deleteMany({
              _id: { $in: ids },
-            organization: req.user.organization
+            organization: organizationId
             })
 
         responseHelper.success(res, result.deletedCount, 'Đã xóa vĩnh viễn các nhà cung cấp thành công')

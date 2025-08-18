@@ -28,8 +28,13 @@ $(function () {
         },
         {
           data: 'warehouse.name',
-          render: (data, type, row) =>
-            `<span class="text">${row.warehouse?.name || ''}</span>`,
+          className: 'text-start px-1',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return data ? `<span>${row.warehouse.name} - ${row.warehouse.location}</span>` : ''
+            }
+            return row.warehouse.name
+          }
         },
         {
           data: 'quantity',

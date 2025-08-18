@@ -1,7 +1,16 @@
 $(function () {
     let table
-    
-    const editableFields = ['name','email','phone','province','commune','street'];
+    const editableFields = ['name','email','phone'];
+    let provinceLists = []
+    let communeLists = []
+
+    $.getJSON('data/full_address.json', function (res) {
+      if (res.error == 0 && res.data) {
+        provinceLists = res.data
+        communeLists = provinceLists.flatMap(province => province.data2 || [])
+      }
+    })
+
     let showList = [10, 25, 50, 100]
     const numRows = Math.floor(($(window).height() - $('#orgTableBody').offset().top - 100) / 45)
     if (!showList.includes(numRows)) {
@@ -54,6 +63,36 @@ $(function () {
             return inputRenderer(field)(data, type, row)
           }
         })),
+        {
+          data: 'province',
+          className: 'text-start px-1',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              const provinceObj = provinceLists.find(p => p.id === data)
+              return provinceObj ? provinceObj.name : ''
+            }
+            return data
+          }
+        },
+        {
+          data: 'commune',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              const communeObj = communeLists.find(p => p.id === data)
+              return communeObj ? communeObj.name : ''
+            }
+            return data
+          }
+        },
+        {
+          data: 'street',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return data ? data : ''
+            }
+            return data
+          }
+        },
         {
           data: 'isActive',
           className: 'text-center',

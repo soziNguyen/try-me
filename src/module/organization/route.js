@@ -7,6 +7,7 @@ import { isPermit } from '../../helpers/isPermit.js'
 
 const router = express.Router()
 
+router.get('/org/:orgId/dashboard', isAuthenticated, org.getOrgDashboard)
 router.get('/organizations', isAuthenticated, isAdmin, orgManagementPage) // get Page
 router.get('/api/organizations', isAuthenticated, isPermit('Admin', 'Org'), org.getActiveOrganizations) // get all organizations
 router.get('/api/organizations/get', isAuthenticated, isAdmin, org.getAllOrganizations) // get all organizations

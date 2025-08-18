@@ -147,6 +147,12 @@ table tbody td .form-select-sm {
   z-index: 10;
 }
 
+.ms-5 .select2-container--default {
+  border: 1px solid rgb(220, 53, 69);
+  border-radius: 6px;
+  padding: 2px 10px !important;
+}
+
 #imageCropModal .modal-body {
   min-height: 300px;
   display: -webkit-box;
