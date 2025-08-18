@@ -40,7 +40,8 @@ Fast_POS/
 │ ├── app.js          # Khởi tạo và cấu hình Express app (middleware, routes, view engine)
 │ └── server.js # File khởi động server
 ├── .env # File mẫu cấu hình môi trường
-├── package.json └── README.md
+├── package.json
+└── README.md
 ```
 
 ## ⚙️ Cài đặt
