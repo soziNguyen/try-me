@@ -1,7 +1,6 @@
 $(function () {
 
     let table
-    let units = []
     let categories = []
   
     Promise.all([
@@ -75,7 +74,7 @@ $(function () {
             data: 'name',
             render: (data, type, row) => {
               if (type === 'display') {
-                return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="sku" value="${data ?? ''}">`
+                return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="name" value="${data ?? ''}">`
               }
               return data
             }
@@ -84,16 +83,25 @@ $(function () {
             data: 'category',
             render: (data, type, row) => {
               if (type === 'display') {
-                return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="name" value="${data ?? ''}">`
+                const selectedCategoryId = data?._id || ''
+                const options = categories.map(cat => {
+                  return `<option value="${cat._id}"${selectedCategoryId === cat._id ? ' selected' : ''}>${cat.name}</option>`
+                })
+                return `
+                <select class="dataInput form-select form-select-sm" data-field="category" data-current="${selectedCategoryId}">
+                  <option value="">— Chọn danh mục —</option>
+                  ${options}
+                </select>
+                `
               }
-              return data
+              return data?.name || ''
             }
           },
           {
             data: 'price',
             render: (data, type, row) => {
               if (type === 'display') {
-                return `<input type="number" class="form-control-plaintext text-center" value="${data ?? 0}" readonly>`
+                return `<input type="number" class="dataInput text-center border-0 w-100 form-control" data-field="price" value="${data ?? 0}">`
               }
               return data
             }
@@ -102,15 +110,7 @@ $(function () {
             data: 'description',
             render: (data, type, row) => {
               if (type === 'display') {
-                const opts = units.map(unit => {
-                  const selected = unit === data ? 'selected' : ''
-                  return `<option value="${unit}" ${selected}>${unit}</option>`
-                }).join('')
-                return `
-                  <select class="dataInput form-select form-select-sm" data-field="unit" data-id="${row._id}">
-                    <option value="">— Chọn đơn vị —</option>
-                    ${opts}
-                  </select>`
+                return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="description" value="${data ?? ''}">`
               }
               return data
             }
@@ -131,18 +131,8 @@ $(function () {
           $(row).attr('data-id', data._id)
         },
         drawCallback: function (settings) {
-          $('#menuTable select[data-field]').each(function () {
-            const field = $(this).data('field')
-            const placeholders = {
-              category: '— Chọn danh mục —',
-              unit: '— Chọn đơn vị —'
-            }
-            if (placeholders[field]) {
-              $(this).select2({
-                placeholder: placeholders[field],
-                width: '100%'
-              })
-            }
+          $('#menuTable select.dataInput').each(function() {
+            initSelect2($(this), '— Chọn danh mục —')
           })
         },
         initComplete: function () {
@@ -241,7 +231,7 @@ $(function () {
             const id = row.data('id')
             if (id) {
               $.ajax({
-                url: `/api/inventory/ingredient/update/${id}`,
+                url: `/api/menu/update/${id}`,
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({ image: imgUrl }),

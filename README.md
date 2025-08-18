@@ -30,12 +30,13 @@ Dự án hỗ trợ đăng nhập, quản lý nguyên liệu, quản lý kho, nh
 ```
 Fast_POS/ 
 │
+├── public/ # Static files (CSS, JS, images)
 ├── src/
-│ ├── models/ # Mongoose models
-│ ├── routes/ # Express routes
-│ ├── controllers/ # Controllers xử lý logic
+│ ├── module 
+│ │  ├── controller # Controllers xử lý logic
+│ │  ├── models # Mongoose models
+│ │  └── routes/ # Express routes
 │ ├── views/ # EJS templates
-│ ├── public/ # Static files (CSS, JS, images)
 │ ├── app.js          # Khởi tạo và cấu hình Express app (middleware, routes, view engine)
 │ └── server.js # File khởi động server
 ├── .env # File mẫu cấu hình môi trường
