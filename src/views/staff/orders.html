@@ -3,8 +3,10 @@
 
     <div class="staff__content">
       <h2><%= pageTitle %></h2>
-      
-    </div>
+        <h4>Bàn đang hoạt động</h4>
+        <div id="tableGrid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mt-4"></div>
+        
+      </div>
 <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
 
 
@@ -12,4 +14,5 @@
 <%- include('../partials/commonjs.html') %>
 <script src="/js/sidebar-toggle.js"></script>
 <script src="/js/update-user.js"></script>
+<script src="/js/order.js"></script>
 <%- include('../partials/footer.html') %>

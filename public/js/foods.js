@@ -2,6 +2,50 @@ $(function () {
   let table;
 
   initDataTable()
+  let currentImgCell = null;
+
+  $('#foodTable').on('click', 'img', function () {
+    currentImgCell = $(this).closest('td');
+
+    $('<input type="file" accept="image/*">').on('change', function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      $.ajax({
+        url: '/api/upload',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: res => {
+          const imgUrl = '/' + res.file.path.replace(/\\/g, '/');
+          const timestamp = new Date().getTime();
+
+          // Cập nhật ảnh trong bảng
+          currentImgCell.find('img').attr('src', imgUrl + '?t=' + timestamp);
+
+          // Gửi API để lưu ảnh vào DB
+          const row = currentImgCell.closest('tr');
+          const id = row.data('id');
+          if (id) {
+            $.ajax({
+              url: `/api/foods/update/${id}`,
+              method: 'POST',
+              contentType: 'application/json',
+              data: JSON.stringify({ image: imgUrl }),
+              success: () => toastr.success('Cập nhật ảnh thành công'),
+              error: () => toastr.error('Lỗi khi cập nhật ảnh'),
+            });
+          }
+        },
+        error: () => toastr.error('Lỗi upload ảnh'),
+      });
+    }).trigger('click');
+  });
+
 
   function initDataTable() {
     let showList = [10, 25, 50, 100];
@@ -40,79 +84,81 @@ $(function () {
       },
       pageLength: numRows,
       columns: [
-        {
-          data: null,
-          orderable: false,
-          className: 'text-center',
-          render: (data, type, row) =>
-            `<input type="checkbox" class="foodCheckbox" data-id="${row._id}">`
-        },
-        {
-          data: 'image',
-          orderable: false,
-          render: (data, type, row) =>
-            `<img src="${data || ''}" alt="${row.name || 'No image'}" style="max-width:50px;">`
-        },
-        {
-          data: 'name',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="name" value="${data}">`
-            }
-            return data
+      {
+        data: null,
+        orderable: false,
+        className: 'text-center',
+        render: (data, type, row) =>
+          `<input type="checkbox" class="foodCheckbox" data-id="${row._id}">`
+      },
+      {
+        data: 'image',
+        orderable: false,
+        className: 'text-center align-middle', 
+        render: (data, type, row) =>
+          `<img src="${data || ''}" alt="${row.name || 'No image'}" style="width: 100%; height: 50px; object-fit: cover;">`
+      },
+      {
+        data: 'name',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="name" value="${data ?? ''}">`
           }
-        },
-        {
-          data: 'category',
-          render: (data, type, row) => {
-            const categories = {
-              main: 'Món chính',
-              side: 'Món phụ',
-              drink: 'Đồ uống',
-              dessert: 'Tráng miệng'
-            };
-            if (type === 'display') {
-              return `<select class="dataInput border-0 w-100 form-select" data-field="category">
-                        <option value="main" ${data === 'main' ? 'selected' : ''}>Món chính</option>
-                        <option value="side" ${data === 'side' ? 'selected' : ''}>Món phụ</option>
-                        <option value="drink" ${data === 'drink' ? 'selected' : ''}>Đồ uống</option>
-                        <option value="dessert" ${data === 'dessert' ? 'selected' : ''}>Tráng miệng</option>
-                      </select>`
-            }
-            return categories[data] || data;
-          }
-        },
-        {
-          data: 'description',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="description" value="${data}">`
-            }
-            return data
-          }
-        },
-        {
-          data: 'price',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<input type="number" min="0" class="dataInput border-0 w-100 form-control" data-field="price" value="${data}">`
-            }
-            return data
-          }
-        },
-        {
-          data: 'status',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<select class="dataInput border-0 w-100 form-select" data-field="status">
-                        <option value="available" ${data === 'available' ? 'selected' : ''}>Có sẵn</option>
-                        <option value="unavailable" ${data === 'unavailable' ? 'selected' : ''}>Hết hàng</option>
-                      </select>`
-            }
-            return data
-          }
+          return data
         }
-      ],
+      },
+      {
+        data: 'category',
+        render: (data, type, row) => {
+          const categories = {
+            main: 'Món chính',
+            side: 'Món phụ',
+            drink: 'Đồ uống',
+            dessert: 'Tráng miệng'
+          };
+          if (type === 'display') {
+            return `<select class="dataInput border-0 w-100 form-select" data-field="category">
+                      <option value="main" ${data === 'main' ? 'selected' : ''}>Món chính</option>
+                      <option value="side" ${data === 'side' ? 'selected' : ''}>Món phụ</option>
+                      <option value="drink" ${data === 'drink' ? 'selected' : ''}>Đồ uống</option>
+                      <option value="dessert" ${data === 'dessert' ? 'selected' : ''}>Tráng miệng</option>
+                    </select>`
+          }
+          return categories[data] || data || '';
+        }
+      },
+      {
+        data: 'description',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="description" value="${data ?? ''}">`
+          }
+          return data
+        }
+      },
+      {
+        data: 'price',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<input type="number" min="0" class="dataInput border-0 w-100 form-control" data-field="price" value="${data ?? 0}">`
+          }
+          return data
+        }
+      },
+      {
+        data: 'status',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<select class="dataInput border-0 w-100 form-select" data-field="status">
+                      <option value="available" ${data === 'available' ? 'selected' : ''}>Có sẵn</option>
+                      <option value="unavailable" ${data === 'unavailable' ? 'selected' : ''}>Hết hàng</option>
+                    </select>`
+          }
+          return data || '';
+        }
+      }
+    ],
+
       rowCallback: function(row, data) {
         $(row).attr('data-id', data._id);
       },
