@@ -11,9 +11,11 @@ import stockTransferRoutes from '../module/stock-transaction/stock-transfer/rout
 import stockHistoryRoutes from '../module/stock-transaction/stock-history/route.js'
 import supplierRoutes from '../module/inventory/supplier/route.js'
 import warehouseRoutes from '../module/inventory/warehouse/route.js'
+import tableRoutes from '../module/table/route.js'
+import foodRoutes from '../module/food/route.js'
+import orderRoutes from '../module/order/route.js'
 import inventoryRoutes from './inventory.js'
 import menuRoutes from './menu.js'
-import staffRRoutes from './staff.js'
 import uploadRouter from './upload.js'
 
 const router = express.Router()
@@ -32,8 +34,9 @@ router.use('/', supplierRoutes)
 router.use('/', warehouseRoutes)
 router.use('/', inventoryRoutes)
 router.use('/', menuRoutes)
-router.use('/', staffRRoutes)
 router.use('/', organizationRoutes)
 router.use('/', uploadRouter)
-
+router.use('/', tableRoutes)
+router.use('/', foodRoutes)
+router.use('/', orderRoutes)
 export default router
