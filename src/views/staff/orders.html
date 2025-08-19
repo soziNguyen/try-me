@@ -3,10 +3,42 @@
 
     <div class="staff__content">
       <h2><%= pageTitle %></h2>
-        <h4>Bàn đang hoạt động</h4>
-        <div id="tableGrid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mt-4"></div>
-        
+      <div class="container mt-4">
+        <div class="row">
+
+          <div class="col-lg-8">
+            <h3>🍽️ Danh sách thực đơn</h3>
+            <div id="foodMenu" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+              <!-- Món ăn sẽ được render ở đây -->
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <h3 id="orderTitle">🧾 Hóa đơn</h3>
+            <div id="orderSummary" class="card p-3 shadow-sm">
+              <table class="table table-bordered table-sm">
+                <thead class="table-light">
+                  <tr>
+                    <th>Món</th>
+                    <th>Số Lượng</th>
+                    <th>Đơn giá</th>
+                    <th>Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody id="orderItems">
+                  
+                </tbody>
+              </table>
+              <hr>
+              <div class="text-end fw-bold">
+                Tổng cộng: <span id="totalAmount">0đ</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
+    </div>
 <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
 
 
