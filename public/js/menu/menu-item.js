@@ -16,7 +16,7 @@ $(function () {
   
     // Render dataTable
     let showList = [10, 25, 50, 100]
-    const numRows = Math.floor(($(window).height() - $('#menuTableBody').offset().top - 100) / 45)
+    const numRows = Math.floor(($(window).height() - $('#menuTableBody').offset().top - 100) / 70)
     if (!showList.includes(numRows)) {
       showList.push(numRows)
     }
@@ -101,7 +101,8 @@ $(function () {
             data: 'price',
             render: (data, type, row) => {
               if (type === 'display') {
-                return `<input type="number" class="dataInput text-center border-0 w-100 form-control" data-field="price" value="${data ?? 0}">`
+                return `<input type="number" class="dataInput text-center border-0 w-100 form-control" 
+                        data-field="price" value="${data ?? 0}" min="0" step="0.1" placeholder="0">`
               }
               return data
             }

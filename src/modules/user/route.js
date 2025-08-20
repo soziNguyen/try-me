@@ -1,6 +1,6 @@
 import express from 'express'
 import * as userController from './controller.js'
-import { userPage, logInPage, signUpPage, forgotPasswordPage, resetPasswordPage, dashboard } from '../../controllers/pages.js'
+import { userPage, logInPage, signUpPage, forgotPasswordPage, resetPasswordPage, dashboard } from '../../pages/index.js'
 
 import isAuthenticated from "../../helpers/isAuthenticated.js"
 import { isPermit } from '../../helpers/isPermit.js'

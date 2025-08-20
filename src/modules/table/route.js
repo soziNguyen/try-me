@@ -1,7 +1,6 @@
 import express from 'express';
 import * as tableController from './controller.js';
-import { tablePage } 
-from '../../controllers/staffPages.js';
+import { tablePage } from '../../pages/staffPages.js';
 import isAuthenticated from "../../helpers/isAuthenticated.js"
 
 const router = express.Router();

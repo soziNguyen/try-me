@@ -1,7 +1,6 @@
 import express from 'express';
 import * as orderController from './controller.js';
-import { ordersPage } 
-from '../../controllers/staffPages.js';
+import { ordersPage } from '../../pages/staffPages.js';
 import isAuthenticated from "../../helpers/isAuthenticated.js"
 
 const router = express.Router();

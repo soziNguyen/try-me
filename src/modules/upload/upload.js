@@ -1,4 +1,4 @@
-import upload from "../helpers/uploadHelper.js"
+import upload from "./helper.js"
 
 const uploadFile = (req, res) => {
   res.json({ file: req.file })
