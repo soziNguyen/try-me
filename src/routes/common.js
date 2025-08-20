@@ -13,9 +13,9 @@ import supplierRoutes from '../module/inventory/supplier/route.js'
 import warehouseRoutes from '../module/inventory/warehouse/route.js'
 import menuCategoryRoutes from '../module/menu/menu-category/route.js'
 import menuItemRoutes from '../module/menu/menu-item/route.js'
-// import tableRoutes from '../module/table/route.js'
-// import foodRoutes from '../module/food/route.js'
-// import orderRoutes from '../module/order/route.js'
+import tableRoutes from '../module/table/route.js'
+import foodRoutes from '../module/food/route.js'
+import orderRoutes from '../module/order/route.js'
 import inventoryRoutes from './inventory.js'
 import menuRoutes from './menu.js'
 import staffRRoutes from './staff.js'
@@ -42,7 +42,7 @@ router.use('/', organizationRoutes)
 router.use('/', menuCategoryRoutes)
 router.use('/', menuItemRoutes)
 router.use('/', uploadRouter)
-// router.use('/', tableRoutes)
-// router.use('/', foodRoutes)
-// router.use('/', orderRoutes)
+router.use('/', tableRoutes)
+router.use('/', foodRoutes)
+router.use('/', orderRoutes)
 export default router
