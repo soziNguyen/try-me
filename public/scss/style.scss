@@ -46,6 +46,11 @@ body {
       padding: 1rem;
       transition: width 0.3s;
       font-size: 1.25rem;
+      overflow-y: auto;
+
+      /* --- Firefox --- */
+      scrollbar-width: none;
+      -ms-overflow-style: none;  // IE / Edge legacy
 
       ul {
         list-style: none;

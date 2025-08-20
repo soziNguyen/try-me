@@ -1,8 +1,14 @@
 $(function () {
 
   let table
+  let fullData = []
 
   loadOrganizations($('#organizations'))
+  $.getJSON('data/full_address.json', (res) => {
+    if (res.error == 0 && res.data) {
+      fullData = res.data
+    }
+  })
   
   const dataFields = ['username', 'email', 'role']
   let showList = [10, 25, 50, 100]
@@ -61,11 +67,15 @@ $(function () {
       }),
       {
         data: 'organization',
+        className: 'text-start px-1',
         render: function (data, type, row) {
           if (type === 'display') {
-            return data ? `${row.organization.name} ${row.organization.province ? - row.organization.province : ''}` : ''
+            if (!data) return ''
+            const provinceObj = fullData.find(p => p.id === data.province)
+            const provinceName = provinceObj ? provinceObj.name : ''
+            return `${data.name}${provinceName ? ' - ' + provinceName : ''}`
           }
-          return data
+          return data._id || null
         }
       },
       {

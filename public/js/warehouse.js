@@ -66,6 +66,7 @@ $(function () {
         },
         {
           data: 'manager',
+          className: 'px-1',
           name: 'manager.username',
           render: function (data, type, row) {
             if (type === 'display') {

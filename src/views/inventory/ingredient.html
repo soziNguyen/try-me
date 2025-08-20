@@ -26,23 +26,7 @@
 
 </div>
 </div>
-<div class="modal fade" id="imageCropModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Cắt ảnh</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body text-center">
-        <input type="file" id="imageInput" accept="image/*" class="d-none">
-        <img id="imagePreview" style="max-width: 100%; max-height: 400px;" />
-      </div>
-      <div class="modal-footer">
-        <button id="cropBtn" class="btn btn-primary">Lưu</button>
-      </div>
-    </div>
-  </div>
-</div>
+<%- include('../partials/cropper_modal.html') %>
 <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
 <%- include('../partials/commonjs.html') %>
 <script src="/js/sidebar-toggle.js"></script>

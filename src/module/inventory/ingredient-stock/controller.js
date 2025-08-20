@@ -1,6 +1,7 @@
 import IngredientStock from './model.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupRef } from '../../../helpers/lookupHelper.js'
+import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
 export const getIngredientStockList = async (req, res) => {
   try {
@@ -12,9 +13,12 @@ export const getIngredientStockList = async (req, res) => {
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
     // Khởi tạo pipeline với lookup
     const pipeline = [
-      { $match: { organization: req.user.organization } },
+      { $match: { organization: organizationId } },
       ...lookupRef('ingredient', 'Ingredients'),
       ...lookupRef('warehouse', 'Warehouses'),
       ...lookupRef('supplier', 'Suppliers')
@@ -84,7 +88,8 @@ export const getIngredientStockList = async (req, res) => {
           unit: "$ingredient.unit"
         },
         warehouse: {
-          name: "$warehouse.name"
+          name: "$warehouse.name",
+          location: "$warehouse.location"
         },
         supplier: {
           name: "$supplier.name"
@@ -97,7 +102,7 @@ export const getIngredientStockList = async (req, res) => {
 
     // Lấy dữ liệu và tổng bản ghi
     const data = await IngredientStock.aggregate(pipeline)
-    const recordsTotal = await IngredientStock.countDocuments({ organization: req.user.organization })
+    const recordsTotal = await IngredientStock.countDocuments({ organization: organizationId })
 
     return res.json({
       draw,

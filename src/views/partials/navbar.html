@@ -10,6 +10,7 @@
         <li class="px-3 mb-3">
             <span><%= user.username %></span>
             <span><%= user.email %></span>
+            <span><%= user.role %></span>
         </li>
         <li id="change-password">
             <a class="w-100 dropdown-item">
@@ -21,6 +22,16 @@
             <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
             </a>
         </li>
+        <% if(user.role === 'Admin' && session.currentOrg) { %>
+            <li id="back-to-admin">
+                <form method="POST" action="/api/admin/exit-org">
+                  <button type="submit" class="dropdown-item w-100">
+                    <i class="bi bi-arrow-left-circle me-2"></i> Quay lại Admin
+                  </button>
+                </form>
+            </li>
+        <% } %>        
+        
         </ul>
     </div>   
 </div>

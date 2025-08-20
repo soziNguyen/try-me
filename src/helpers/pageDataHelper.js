@@ -5,5 +5,7 @@ export const getPageData = (req, title, page = '', extra = {}) => {
         base.currentUserId = req.user._id.toString()
         base.currentUserName = req.user.username || ''
     }
+
+    base.session = req.session
     return base
 }

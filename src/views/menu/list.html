@@ -9,14 +9,15 @@
                 <th>
                     <input type="checkbox" id="selectAll">
                 </th>
+                <th>Ảnh</th>
                 <th>Tên</th>
                 <th>Danh mục</th>
+                <th>Giá</th>
                 <th>Mô tả</th>
-                <th>Giá hiện tại</th>
                 <th>Trạng thái</th>
             </tr>
         </thead>
-        <tbody id="menuTable">
+        <tbody id="menuTableBody">
 
         </tbody>
     </table>
@@ -24,10 +25,11 @@
 
 </div>
 </div>
+<%- include('../partials/cropper_modal.html') %>
 <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
 <%- include('../partials/commonjs.html') %>
 <script src="/js/sidebar-toggle.js"></script>
 <script src="/js/update-user.js"></script>
-<!-- <script src="/js/data-table.js"></script>
-<script src="/js/ingredient-category.js"></script> -->
+<script src="/js/data-table.js"></script>
+<script src="/js/menu-item.js"></script>
 <%- include('../partials/footer.html') %>

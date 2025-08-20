@@ -8,6 +8,7 @@ import withTransaction from "../../../helpers/withTransaction.js"
 import { generateDocumentCode } from "../../../helpers/common.js"
 import { lookupRef } from "../../../helpers/lookupHelper.js"
 import StockHistory from "../stock-history/model.js"
+import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
 // DATATABLE SERVER-SIDE
 export const getStockIssues = async (req, res) => {
@@ -20,8 +21,11 @@ export const getStockIssues = async (req, res) => {
     const sortField = req.query[`columns[${colIdx}][data]`] || "createdAt"
     const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
 
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
     const pipeline = [
-      { $match: { organization: req.user.organization } },
+      { $match: { organization: organizationId } },
       ...lookupRef('warehouse', 'Warehouses'),
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
       ...lookupRef('items.ingredient', 'Ingredients', { as: 'ingredient' }),
@@ -93,7 +97,7 @@ export const getStockIssues = async (req, res) => {
     )
 
     // Đếm sau lọc
-    const recordsTotal = await StockIssue.countDocuments({ organization: req.user.organization })
+    const recordsTotal = await StockIssue.countDocuments({ organization: organizationId })
     const countPipeline = [...pipeline, { $count: "count" }]
     const countResult = await StockIssue.aggregate(countPipeline)
     const recordsFiltered = countResult[0]?.count || 0
@@ -159,10 +163,13 @@ export const getStockIssueById = async (req, res) => {
     if (!mongoose.isValidObjectId(id)) {  
       return responseHelper.error(res, 'ID không hợp lệ', 400)
     }
+
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
     
     const stockIssue = await StockIssue.findOne({
       _id: id,
-      organization: req.user.organization
+      organization: organizationId
     })
       .populate([
       { path: 'warehouse', select: 'name location' },
@@ -185,9 +192,8 @@ export const getStockIssueById = async (req, res) => {
 export const createStockIssue = async (req, res) => {
   try {
 
-    if (!req.user?.organization) {
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-    }
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
     const issue = await withTransaction(async (session) => {
       const code = await generateDocumentCode(StockIssue, 'SI')
@@ -196,7 +202,7 @@ export const createStockIssue = async (req, res) => {
         code: code,
         date: date,
         createdBy: req.user._id,
-        organization: req.user.organization
+        organization: organizationId
        })
       await doc.save({ session })
       return doc
@@ -210,6 +216,9 @@ export const createStockIssue = async (req, res) => {
 // UPDATE (form)
 export const updateStockIssue = async (req, res) => {
   try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
     const updatedDoc = await withTransaction(async (session) => {
       const { id } = req.params
       if (!mongoose.isValidObjectId(id)) {
@@ -218,7 +227,7 @@ export const updateStockIssue = async (req, res) => {
 
       const oldIssue = await StockIssue.findOne({
         _id: id,
-        organization: req.user.organization
+        organization: organizationId
       })
       .session(session)
 
@@ -283,7 +292,7 @@ export const updateStockIssue = async (req, res) => {
         const stock = await IngredientStock.findOne({
           ingredient: stockChange.ingredient,
           warehouse: stockChange.warehouse,
-          organization: req.user.organization
+          organization: organizationId
         }).session(session)
 
         const currentStock = stock?.quantity || 0
@@ -291,11 +300,11 @@ export const updateStockIssue = async (req, res) => {
         
         if (currentStock < requiredStock) {
           const ingredientDoc = await Ingredient.findOne(
-            { _id: stockChange.ingredient, organization: req.user.organization }
+            { _id: stockChange.ingredient, organization: organizationId }
             , 'name')
             .session(session)
           const warehouseDoc = await Warehouse.findOne(
-            { _id: stockChange.warehouse, organization: req.user.organization }
+            { _id: stockChange.warehouse, organization: organizationId }
             , 'name')
             .session(session)
           throw new Error(
@@ -315,7 +324,7 @@ export const updateStockIssue = async (req, res) => {
       }
 
       const updatedIssue = await StockIssue.findOneAndUpdate(
-        { _id: id, organization: req.user.organization },
+        { _id: id, organization: organizationId },
         updateData, { 
         new: true, 
         session,
@@ -328,7 +337,7 @@ export const updateStockIssue = async (req, res) => {
         if (stockChange.change === 0) continue // Không thay đổi
 
         await IngredientStock.updateOne(
-          { ingredient: stockChange.ingredient, warehouse: stockChange.warehouse, organization: req.user.organization },
+          { ingredient: stockChange.ingredient, warehouse: stockChange.warehouse, organization: organizationId },
           { $inc: { quantity: stockChange.change } },
           { upsert: true, session }
         )
@@ -338,7 +347,7 @@ export const updateStockIssue = async (req, res) => {
       const allAffectedIngredients = [...new Set([
         ...Array.from(stockChanges.values()).map(sc => sc.ingredient.toString())
       ])]
-      await updateIngredientTotalStock(allAffectedIngredients, req.user.organization, session)
+      await updateIngredientTotalStock(allAffectedIngredients, organizationId, session)
 
       // Populate để trả về client
       await updatedIssue.populate([
@@ -360,6 +369,8 @@ export const updateStockIssue = async (req, res) => {
 // DELETE - Hoàn trả kho và xóa phiếu (được sửa)
 export const deleteStockIssues = async (req, res) => {
   try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
     await withTransaction(async (session) => {
       const { ids } = req.body
       if (!Array.isArray(ids) || ids.length === 0) {
@@ -368,7 +379,7 @@ export const deleteStockIssues = async (req, res) => {
 
       const issues = await StockIssue.find({
          _id: { $in: ids },
-         organization: req.user.organization
+         organization: organizationId
         })
         .session(session)
       if (issues.length === 0) throw new Error("Không tìm thấy phiếu xuất nào")
@@ -387,7 +398,7 @@ export const deleteStockIssues = async (req, res) => {
             if (item.ingredient && item.quantity > 0) {
               // Hoàn trả vào IngredientStock
               await IngredientStock.updateOne(
-                { ingredient: item.ingredient, warehouse: issue.warehouse, organization: req.user.organization },
+                { ingredient: item.ingredient, warehouse: issue.warehouse, organization: organizationId },
                 { $inc: { quantity: item.quantity } },
                 { upsert: true, session }
               )
@@ -401,13 +412,13 @@ export const deleteStockIssues = async (req, res) => {
       // Xóa các phiếu
       await StockIssue.deleteMany({
          _id: { $in: ids },
-         organization: req.user.organization
+         organization: organizationId
         }, 
          { session })
 
       // Cập nhật tổng stock cho tất cả ingredients bị ảnh hưởng
       if (allAffectedIngredients.size > 0) {
-        await updateIngredientTotalStock([...allAffectedIngredients], req.user.organization, session)
+        await updateIngredientTotalStock([...allAffectedIngredients], organizationId, session)
       }
     })
 
@@ -426,9 +437,12 @@ export const lockStockIssue = async (req, res) => {
       return responseHelper.error(res, 'ID không hợp lệ', 400)
     }
 
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
     const issue = await StockIssue.findOne({
       _id: id,
-      organization: req.user.organization
+      organization: organizationId
     })
     
     if (!issue) {
@@ -460,7 +474,7 @@ export const lockStockIssue = async (req, res) => {
       finalIssue = await StockIssue.findOneAndUpdate(
         {
           _id: id,
-          organization: req.user.organization
+          organization: organizationId
         },
         {
           isLocked: true,
@@ -503,7 +517,7 @@ export const lockStockIssue = async (req, res) => {
         transactionDate: finalIssue.date || new Date(),
         createdBy: req.user._id,
         updatedBy: null,
-        organization: req.user.organization
+        organization: organizationId
       }
 
       await StockHistory.create([stockHistory], { session })

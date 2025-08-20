@@ -1,18 +1,18 @@
-#ingredientStockTable_wrapper, #ingredientTable_wrapper {
+#ingredientStockTable_wrapper, #ingredientTable_wrapper, #menuTable_wrapper {
   .dt-search {
     .dt-input {
       margin-right: 0 !important;   
     }
   }
-  #ingredientTable, #ingredientStockTable {
+  #ingredientTable, #ingredientStockTable, #menuTable {
     width: 100%;
-    #ingredientTableBody, #ingredientStockTableBody {
+    #ingredientTableBody, #ingredientStockTableBody, #menuTableBody {
       td {
         text-align: center;
         vertical-align: middle;
         padding: 0 !important;
 
-        img.ingredient-image {
+        img.ingredient-image, img.menu-image{
           width: 70px;
           height: 70px;
           object-fit: cover;
@@ -179,6 +179,14 @@ table {
     z-index: 10;
   }
 }
+
+.ms-5 {
+  .select2-container--default {
+    border: 1px solid rgb(220, 53, 69);
+    border-radius: 6px;
+    padding: 2px 10px !important;
+  }
+}
   
 #imageCropModal {
   .modal-body {
@@ -195,6 +203,12 @@ table {
       display: block;
     }
   }
+}
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 @media (max-width: 767px) {
