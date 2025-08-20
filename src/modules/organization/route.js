@@ -1,5 +1,5 @@
 import express from 'express'
-import { orgManagementPage } from '../../controllers/pages.js'
+import { orgManagementPage } from '../../pages/index.js'
 import * as org from './controller.js'
 import isAuthenticated from "../../helpers/isAuthenticated.js"
 import isAdmin from '../../helpers/isAdmin.js'

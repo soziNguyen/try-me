@@ -1,5 +1,5 @@
 import express from 'express'
-import * as page from '../controllers/pages.js'
+import * as page from '../pages/index.js'
 import isAuthenticated from "../helpers/isAuthenticated.js"
 import { isPermit } from '../helpers/isPermit.js'
 

@@ -1,6 +1,6 @@
 import passport from "passport"
 import { Strategy as LocalStrategy } from "passport-local"
-import User from "../module/user/model.js"
+import User from "../modules/user/model.js"
 
 passport.use(
     new LocalStrategy(

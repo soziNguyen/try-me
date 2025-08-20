@@ -57,7 +57,7 @@ $(function () {
               </select>
             </td>
             <td>
-              <input type="number" class="form-control form-control-sm" name="items[${rowIndex}][quantity]" min="0" step="0.1" value="${item.quantity || ''}">
+              <input type="number" class="form-control form-control-sm" name="items[${rowIndex}][quantity]" min="0" step="0.1" value="${item.quantity || ''}" placeholder="0">
             </td>
             <td>
               <select class="form-select form-select-sm select2-unit" name="items[${rowIndex}][unit]">

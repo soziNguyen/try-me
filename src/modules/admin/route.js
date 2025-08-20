@@ -1,7 +1,7 @@
 import express from "express"
 import isAdmin from "../../helpers/isAdmin.js"
 import isAuthenticated from "../../helpers/isAuthenticated.js"
-import { userManagementPage, auditPage } from "../../controllers/pages.js" 
+import { userManagementPage, auditPage } from "../../pages/index.js" 
 import { getAllUsers, getUserById, createUser, updateUser, deleteUsers, setOrg, exitOrg } from "./controller.js"
 
 const router = express.Router()
