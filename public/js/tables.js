@@ -103,8 +103,6 @@ document.getElementById('btnConfirmAssignTable').addEventListener('click', async
       assignModal.hide();
     }
     toastr.success("Giao bàn thành công!");
-    // Chuyển sang trang gọi món
-    // window.location.href = `/orders?orderId=${orderResult.orderId}`;
   } catch (err) {
     toastr.error("Lỗi khi giao bàn: " + err.message);
   }
@@ -161,9 +159,14 @@ async function getTables(page = 1) {
 
 // ========== STATUS COLOR ==========
 function getBgClassByStatus(status) {
-  if (status === "available") return "my-orange text-white";       
-  return "bg-secondary";                              
+  switch (status) {
+    case "available": return "my-orange text-white";
+    case "occupied": return "bg-secondary";
+    case "maintenance": return "bg-dark text-white";
+    default: return "bg-light";
+  }
 }
+
 // ========== HIỂN THỊ DANH SÁCH BÀN ==========
 function renderTableList(tables = []) {
   const tableGrid = document.getElementById("tableGrid");
@@ -173,7 +176,7 @@ function renderTableList(tables = []) {
     return;
   }
 
-tableGrid.innerHTML = tables.map(table =>{ 
+  tableGrid.innerHTML = tables.map(table =>{ 
    const bgClass = getBgClassByStatus(table.status);
   return `
   <div class="col">
@@ -201,7 +204,7 @@ tableGrid.innerHTML = tables.map(table =>{
     </div>
   </div>
   `;
-}).join("");
+  }).join("");
 
 
   document.querySelectorAll('.table-card').forEach(card => {
@@ -301,7 +304,7 @@ async function updateTable(tableId) {
       };
 
       try {
-        const result = await ajax(`/api/tables/update/${tableId}`, dataUpdate, "PUT");
+        const result = await ajax(`/api/tables/update/${tableId}`, dataUpdate, "POST");
         if (result) {
           toastr.success("Cập nhật thành công");
           updateTableModal.hide();

@@ -1,5 +1,5 @@
-import Food from "../models/foodModel.js";
-import responseHelper from "../helpers/responseHelper.js";
+import Food from "./model.js";
+import responseHelper from '../../helpers/responseHelper.js'
 
 export const getFoods = async (req, res) => {
     try {
@@ -140,3 +140,4 @@ export const deleteFoods = async (req, res) => {
         responseHelper.error(res, err.message);
     }
 }
+
