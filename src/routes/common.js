@@ -15,6 +15,7 @@ import tableRoutes from '../module/table/route.js'
 import orderRoutes from '../module/order/route.js'
 import menuCategoryRoutes from '../module/menu/menu-category/route.js'
 import menuItemRoutes from '../module/menu/menu-item/route.js'
+import recipeRoutes from '../module/menu/recipe/route.js'
 import inventoryRoutes from './inventory.js'
 import menuRoutes from './menu.js'
 import uploadRouter from './upload.js'
@@ -38,6 +39,7 @@ router.use('/', menuRoutes)
 router.use('/', organizationRoutes)
 router.use('/', menuCategoryRoutes)
 router.use('/', menuItemRoutes)
+router.use('/', recipeRoutes)
 router.use('/', uploadRouter)
 router.use('/', tableRoutes)
 router.use('/', orderRoutes)

@@ -276,6 +276,21 @@ export const historyPricePage = (req, res) => {
     )
 }
 
+export const newRecipePage = (req, res) => {
+    const recipeId = req.params.id
+    const mode = req.query.mode || ''
+
+    const isNew = mode === 'new' ? 'Thêm mới công thức' : 'Chi Tiết Công Thức'
+
+    res.render('menu/add_recipe', 
+        getPageData(req, isNew, 'New Recipe', {
+            headerClass: 'admin__header',
+            pageTitle: 'QUẢN LÝ CÔNG THỨC',
+            recipeId: recipeId
+        })
+    )
+}
+
 // =================================================
 // ================== ADMIN ========================
 
