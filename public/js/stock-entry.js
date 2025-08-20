@@ -127,7 +127,7 @@ $(function () {
             if (type === 'display') {
               return data ? `${row.warehouse.name} - ${row.warehouse.location}` : ''
             }
-            return row.warehouse.name
+            return row.warehouse?.name || ''
           }
         },        
         {

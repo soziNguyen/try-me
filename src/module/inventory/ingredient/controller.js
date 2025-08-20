@@ -15,7 +15,7 @@ export const getAllIngredients = async (req, res) => {
       }},
      { $sort: { name: 1 }},
      { $project: {
-        _id: 1, name: 1 
+        _id: 1, name: 1, unit: 1
         } 
       }
     ]
