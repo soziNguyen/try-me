@@ -1,16 +1,27 @@
 import Order from './model.js';
 import Table from '../table/model.js';
-import Food from '../food/model.js'
-import responseHelper from '../../helpers/responseHelper.js'
+import { MenuItem } from '../menu/menu-item/model.js';
+import responseHelper from '../../helpers/responseHelper.js';
+import { getCurrentOrg } from '../../helpers/orgHelper.js';
 
 export const createOrder = async (req, res) => {
   try {
+    const organizationId = getCurrentOrg(req);
+    if (!organizationId) {
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400);
+    }
+
     const { tableId } = req.body;
     const table = await Table.findById(tableId);
-    if (!table) return responseHelper.error(res, 'Bàn không tồn tại', 404);
-    if (table.status === 'occupied') return responseHelper.error(res, 'Bàn đã có khách', 400);
+    
+    if (!table) return responseHelper.error(res, 'Bàn không tồn tại', 404); 
+    if (table.status === 'occupied') return responseHelper.error(res, 'Bàn đã có khách', 400); 
 
-    const newOrder = await Order.create({ tableId, status: 'open' });
+    const newOrder = await Order.create({
+      tableId,
+      status: 'open',
+      organization: organizationId, 
+    });
 
     table.status = 'occupied';
     table.checkInTime = new Date();
@@ -19,7 +30,7 @@ export const createOrder = async (req, res) => {
 
     responseHelper.success(res, { orderId: newOrder._id, tableId: table._id });
   } catch (error) {
-    responseHelper.error(res, error.message);
+    responseHelper.error(res, error.message); 
   }
 };
 
@@ -27,8 +38,8 @@ export const getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
     const order = await Order.findById(orderId)
-      .populate('tableId', 'name area') 
-      .populate('items.foodId', 'name price'); 
+      .populate('tableId', 'name area')
+      .populate('items.foodId', 'name price');
 
     if (!order) return res.status(404).json({ message: 'Order không tồn tại' });
 
@@ -37,7 +48,6 @@ export const getOrderById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 export const addItemToOrder = async (req, res) => {
   try {
@@ -52,8 +62,8 @@ export const addItemToOrder = async (req, res) => {
     if (!order) return responseHelper.error(res, 'Order không tồn tại', 404);
     if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400);
 
-    const food = await Food.findById(foodId);
-    if (!food) return responseHelper.error(res, 'Món ăn không tồn tại', 404);
+    const menuItem = await MenuItem.findById(foodId);
+    if (!menuItem) return responseHelper.error(res, 'Món ăn không tồn tại', 404);
 
     const existingItem = order.items.find(item => item.foodId.toString() === foodId);
     if (existingItem) {
@@ -62,12 +72,13 @@ export const addItemToOrder = async (req, res) => {
       order.items.push({
         foodId,
         quantity,
-        price: food.price  
+        price: menuItem.price,
       });
     }
 
     await order.save();
     await order.populate('items.foodId', 'name price');
+
     responseHelper.success(res, order);
   } catch (error) {
     console.error('Lỗi khi thêm món:', error); 
@@ -93,16 +104,14 @@ export const updateItemQuantity = async (req, res) => {
 
     item.quantity = quantity;
     await order.save();
-
     await order.populate('items.foodId', 'name price');
+
     responseHelper.success(res, order);
   } catch (error) {
     console.error('Lỗi khi cập nhật số lượng:', error);
     responseHelper.error(res, 'Lỗi server nội bộ', 500);
   }
 };
-
-
 
 export const removeItemFromOrder = async (req, res) => {
   try {
@@ -118,6 +127,7 @@ export const removeItemFromOrder = async (req, res) => {
     order.items.splice(itemIndex, 1); 
     await order.save();
     await order.populate('items.foodId', 'name price');
+
     responseHelper.success(res, order);
   } catch (error) {
     console.error('Lỗi khi xóa món:', error);

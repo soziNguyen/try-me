@@ -1,10 +1,16 @@
 import Table from './model.js';
 import responseHelper from "../../helpers/responseHelper.js"
 import paginationHelper from '../../helpers/paginationHelper.js';
+import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
 export const tablePage = async (req, res) => {
     try {
-        const tables = await Table.find();
+      const organizationId = getCurrentOrg(req)
+      if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
+        const tables = await Table.find({
+          organization: organizationId
+        });
         responseHelper.success(res, tables)
     } catch (err) {
         console.error(err);
@@ -17,8 +23,12 @@ export const tablePage = async (req, res) => {
 export const createTable = async (req, res) => {
     try {
         const { name, status, capacity, area } = req.body;
-
-        const exist = await Table.findOne({ name });
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+        const exist = await Table.findOne({ 
+          name,
+          organization: organizationId 
+      });
 
     if (exist) {
       return responseHelper.error(res, 'Tên bàn đã tồn tại.', 400);
@@ -28,6 +38,7 @@ export const createTable = async (req, res) => {
       status,
       capacity: capacity || undefined,
       area: area || undefined,
+      organization: organizationId 
     });
 
     responseHelper.success(res, newTable);
@@ -39,12 +50,19 @@ export const createTable = async (req, res) => {
 // [GET] /api/tables
 export const getTables = async (req, res) => {
   try {
-    const { page, limit, status } = req.query; 
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    const { page, limit, status, area  } = req.query; 
     const { currentPage, perPage, skip } = paginationHelper(page || 1, limit || 100);
 
-    const filter = {};
+    const filter = {
+    organization: organizationId
+    };
     if (status) {
       filter.status = status; 
+    }
+    if (area) {
+    filter.area = new RegExp(`^${area}$`, 'i');
     }
 
     const [tables, totalItems] = await Promise.all([
@@ -70,10 +88,15 @@ export const getTables = async (req, res) => {
 
 
 export const getTableById = async (req, res) => {
-  const { id } = req.params;
-
   try {
-    const table = await Table.findById(id);
+    const { id } = req.params;
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+      
+    const table = await Table.findOne({
+      _id: id,
+      organization: organizationId
+    });
     if (!table) {
       return responseHelper.error(res, 'Table Not Found', 404);
     }
@@ -85,62 +108,75 @@ export const getTableById = async (req, res) => {
 
   // UPDATE
 export const updateTable = async (req, res) => {
-    try {
-        const { name, status, capacity, area, checkInTime } = req.body;
-        const { id } = req.params;
+  try {
+    const { name, status, capacity, area, checkInTime } = req.body;
+    const { id } = req.params;
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
-        // Kiểm tra bàn có tồn tại không
-        const tableExist = await Table.findById(id);
-        if (!tableExist) {
-            return responseHelper.error(res, 'Không tìm thấy bàn.', 404);
-        }
-
-        // Kiểm tra trùng tên bàn (trừ chính bản thân nó)
-        const duplicated = await Table.findOne({
-            name,
-            _id: { $ne: id }
-        });
-
-        if (duplicated) {
-            return responseHelper.error(res, 'Tên bàn đã tồn tại.', 400);
-        }
-
-        // Tạo đối tượng dữ liệu mới cần update
-        const updatedFields = {
-            name,
-            status,
-            capacity,
-            area
-        };
-        if (checkInTime) {
-            updatedFields.checkInTime = checkInTime;
-        }
-
-        const updatedTable = await Table.findByIdAndUpdate(id, updatedFields, { new: true });
-
-        if (!updatedTable) {
-            return responseHelper.error(res, 'Cập nhật thất bại.', 400);
-        }
-
-        responseHelper.success(res, updatedTable);
-    } catch (error) {
-        console.error('Lỗi khi cập nhật bàn:', error);
-        responseHelper.error(res, error.message || 'Lỗi máy chủ.');
+    // Kiểm tra bàn có tồn tại & thuộc tổ chức không
+    const tableExist = await Table.findOne({
+      _id: id,
+      organization: organizationId
+    });
+    if (!tableExist) {
+      return responseHelper.error(res, 'Không tìm thấy bàn.', 404);
     }
+
+    // Kiểm tra trùng tên bàn (trừ chính bản thân nó) trong cùng tổ chức
+    const duplicated = await Table.findOne({
+      name,
+      organization: organizationId,
+      _id: { $ne: id }
+    });
+
+    if (duplicated) {
+      return responseHelper.error(res, 'Tên bàn đã tồn tại.', 400);
+    }
+
+    // Tạo đối tượng dữ liệu mới cần update
+    const updatedFields = {
+      name,
+      status,
+      capacity,
+      area
+    };
+    if (checkInTime) {
+      updatedFields.checkInTime = checkInTime;
+    }
+
+    const updatedTable = await Table.findOneAndUpdate(
+      { _id: id, organization: organizationId },
+      updatedFields,
+      { new: true }
+    );
+
+    if (!updatedTable) {
+      return responseHelper.error(res, 'Cập nhật thất bại.', 400);
+    }
+
+    responseHelper.success(res, updatedTable);
+  } catch (error) {
+    console.error('Lỗi khi cập nhật bàn:', error);
+    responseHelper.error(res, error.message || 'Lỗi máy chủ.');
+  }
 };
 
 
     // DELETE TABLE
-    export const deleteTables = async (req, res) => {
+export const deleteTables = async (req, res) => {
   try {
     const { tableIds } = req.body;
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
     if (!tableIds || tableIds.length === 0) {
       return responseHelper.error(res, 'Không có bàn nào được chọn.', 400);
     }
 
     const result = await Table.deleteMany({
-      _id: { $in: tableIds }
+      _id: { $in: tableIds },
+      organization: organizationId
     });
 
     if (result.deletedCount === 0) {

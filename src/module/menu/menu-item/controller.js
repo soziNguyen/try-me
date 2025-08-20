@@ -11,10 +11,6 @@ export const getActiveMenus = async (req, res) => {
         const pipeline = [
             { $match: { isActive: true, organization: organizationId } },
             { $sort: { name: 1}},
-            { $project: {
-                _id: 1,
-                name: 1
-            }}
         ]
 
         const menu = await MenuItem.aggregate(pipeline)
