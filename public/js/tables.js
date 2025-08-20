@@ -40,13 +40,13 @@ function bindEvents() {
 
     try {
       const data = await ajax('/api/tables/create', { name, status, capacity, area });
-
+      console.log(data.area)
       if (!data) return;
       toastr.success('Thêm bàn thành công!');
       formAddTable.reset();
       formAddTable.classList.add('d-none');
       btnShowForm.textContent = '+ Thêm bàn';
-    await getTables();
+      await getTables(1, (data.area === 'kv1') ? 'kv1' : 'kv2');
     } catch (error) {
       toastr.error(error.message); 
     }
@@ -83,19 +83,22 @@ tableGrid.addEventListener('click', function(e) {
 // Xác nhận giao bàn
 document.getElementById('btnConfirmAssignTable').addEventListener('click', async function () {
   const tableId = this.getAttribute('data-id');
+  const area = document.getElementById('assign-table-area').textContent
+  console.log(area);
+  
   if (!tableId) {
     toastr.warning("Không tìm thấy bàn để giao.");
     return;
   }
   try {
-    // Tạo order mới (backend cũng cập nhật bàn rồi)
     const orderResult = await ajax('/api/orders', { tableId }, "POST");
     if (!orderResult || !orderResult.orderId) {
       toastr.error("Lỗi khi tạo order");
       return;
     }
+    
     // Cập nhật danh sách bàn
-    await getTables();
+    await getTables(1, (area === 'kv1') ? 'kv1' : 'kv2'); 
     // Đóng modal giao bàn (nên kiểm tra modal tồn tại)
     const assignModalElement = document.getElementById('assignTableModal');
     if (assignModalElement) {
@@ -120,13 +123,22 @@ document.addEventListener('click', (e) => {
     }
   }
 });
+
+document.getElementById("btnkv1").addEventListener("click", () => {
+  getTables(1, "KV1"); 
+});
+
+document.getElementById("btnkv2").addEventListener("click", () => {
+  getTables(1, "KV2"); 
+});
+
 }
 
 
 // ========== CHƯƠNG TRÌNH CHÍNH ==========
 document.addEventListener('DOMContentLoaded', async () => {
   bindEvents();      
-  await getTables(); 
+  await getTables(1, "KV1"); 
   setInterval(updateSeatedTimes, 1000);
   paginationHandle((page, limit) => {
   getTables(page);
@@ -139,10 +151,15 @@ let tableData = [];
 let currentPage = 1;
 const limit = 8;
 
-async function getTables(page = 1) {
+async function getTables(page = 1, area = "") {
   try {
     currentPage = page;
-    const res = await ajax(`/api/tables?page=${page}&limit=${limit}`, {}, "GET");
+    let url = `/api/tables?page=${page}&limit=${limit}`;
+    if (area) {
+      url += `&area=${encodeURIComponent(area)}`;
+    }
+
+    const res = await ajax(url, {}, "GET");
 
     if (res) {
       const { tables, pagination } = res;
@@ -308,7 +325,7 @@ async function updateTable(tableId) {
         if (result) {
           toastr.success("Cập nhật thành công");
           updateTableModal.hide();
-          await getTables(); 
+          await getTables(1, (result.area === 'kv1') ? "kv1" : 'kv2'); 
         }
       } catch (err) {
         toastr.error(err.message);
@@ -340,7 +357,7 @@ async function deleteTables() {
 
     if (result) {
       toastr.success("Đã xóa bàn thành công!");
-      await getTables(); 
+      await getTables(1, "KV1"); 
 
     const selectAll = document.getElementById("selectAllTable");
     if (selectAll) {
