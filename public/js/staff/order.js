@@ -79,7 +79,6 @@ document.getElementById('tableGrid').addEventListener('click', async (e) => {
   const orderId = btnTable.getAttribute('data-order-id');
   const status = btnTable.getAttribute('data-status');
 
-  console.log({ tableId, orderId, status });
   if (status === 'available') {
     if (confirm(`Bạn có muốn tạo order và gọi món cho bàn này không?`)) {
       try {

@@ -23,6 +23,24 @@ const getStorage = () => {
   })
 }
 
+export const deleteFile = async (filePath) => {
+  if (!filePath) return
+  const fullPath = path.join(process.cwd(), filePath)
+
+  return new Promise((resolve, reject) => {
+    fs.access(fullPath, fs.constants.F_OK, (err) => {
+      if (err) return resolve() // file không tồn tại, bỏ qua
+      fs.unlink(fullPath, (err) => {
+        if (err) {
+          console.error('Lỗi xóa file:', err)
+          return reject(err)
+        }
+        resolve()
+      })
+    })
+  })
+}
+
 // Hàm khởi tạo multer
 const upload = multer({ storage: getStorage() })
 

@@ -1,24 +1,24 @@
-#ingredientStockTable_wrapper, #ingredientTable_wrapper, #menuTable_wrapper {
+#ingredientStockTable_wrapper, #ingredientTable_wrapper, #menuTable_wrapper, #comboTable_wrapper {
   .dt-search {
     .dt-input {
       margin-right: 0 !important;   
     }
   }
-  #ingredientTable, #ingredientStockTable, #menuTable {
+  #ingredientTable, #ingredientStockTable, #menuTable, #comboTable {
     width: 100%;
-    #ingredientTableBody, #ingredientStockTableBody, #menuTableBody {
+    #ingredientTableBody, #ingredientStockTableBody, #menuTableBody, #comboTableBody {
       td {
         text-align: center;
         vertical-align: middle;
         padding: 0 !important;
 
-        img.ingredient-image, img.menu-image{
+        img.ingredient-image, img.menu-image, img.combo-image{
           width: 70px;
           height: 70px;
           object-fit: cover;
           margin: 0 auto;
           cursor: pointer;
-          padding: .375rem 0.375rem;
+          padding: .375rem;
         }
 
         select.form-select-sm {

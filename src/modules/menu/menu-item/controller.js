@@ -1,5 +1,6 @@
 import { MenuItem } from './model.js'
 import responseHelper from '../../../helpers/responseHelper.js'
+import { deleteFile } from '../../upload/helper.js'
 import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
@@ -199,6 +200,7 @@ export const updateMenu = async (req, res) => {
 
       const dataUpdate = { updatedBy: req.user._id }
 
+      const oldImage = menu.image
       if (image !== undefined) dataUpdate.image = image
       if (name !== undefined) dataUpdate.name = name
       if (category !== undefined) dataUpdate.category = category
@@ -217,6 +219,14 @@ export const updateMenu = async (req, res) => {
       .populate('category', 'name')
       .populate('createdBy', 'username -_id')
       .populate('updatedBy', 'username -_id')
+
+      if (oldImage && oldImage !== updated.image) {
+        try {
+          await deleteFile(oldImage)
+        } catch (err) {
+          console.error('Không xóa được file cũ:', err)
+        }
+      }
 
       responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
