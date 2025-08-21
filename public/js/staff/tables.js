@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ========== LẤY DỮ LIỆU TỪ SERVER ==========
 let tableData = [];
 let currentPage = 1;
-const limit = 8;
+const limit = 20;
 
 async function getTables(page = 1, area = "") {
   try {

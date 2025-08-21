@@ -12,3 +12,28 @@ $orange-800: #9a3412;
 .my-orange {
   background-color: $orange-800;
 }
+
+.table-order {
+  position: relative;
+
+  #tableGrid {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-color: transparent;
+    transition: all 0.3s ease;
+
+    &.show {
+      display: flex;        
+      flex-wrap: wrap;     
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 10;
+      background-color: #fff;
+    }
+  }
+}
