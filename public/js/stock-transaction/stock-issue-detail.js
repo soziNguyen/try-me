@@ -3,6 +3,7 @@ $(function () {
   let warehouses = []
   let stockIssueId = null
   let itemCounter = 1
+  const disableStockIssueSave = setupSaveButtonWatcher("#stockIssueForm", "#btn-save-issue")
 
   // Lấy stockIssueId từ URL
   const urlPath = window.location.pathname
@@ -299,28 +300,17 @@ $(function () {
       method: "POST",
       contentType: "application/json",
       data: JSON.stringify(stockIssueData),
-      beforeSend: function() {
-        $("#btn-save-issue").prop("disabled", true).text("Đang lưu...")
-      },
       success(res) {
         if (res.success) {
+          toastr.remove()
           toastr.success(res.message || "Lưu phiếu xuất thành công")
-          
-          // Nếu là tạo mới, chuyển sang trang edit
-          if (!stockIssueId && res.data?.id) {
-            setTimeout(() => {
-              window.location.href = `/inventory/stock-issue/${res.data.id}`
-            }, 1500)
-          }
+          disableStockIssueSave()
         } else {
           toastr.error(res.message || "Có lỗi xảy ra")
         }
       },
       error(xhr) {
         toastr.error(xhr.responseJSON?.message || "Có lỗi xảy ra khi lưu")
-      },
-      complete() {
-        $("#btn-save-issue").prop("disabled", false).html('<i class="bi bi-check-circle me-2"></i>Lưu phiếu')
       }
     })
   }

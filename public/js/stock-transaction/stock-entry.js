@@ -129,7 +129,13 @@ $(function () {
             }
             return row.warehouse?.name || ''
           }
-        },        
+        },
+        {
+          data: 'createdBy',
+          title: 'Người tạo',
+          className: 'text-center',
+          render: (data) => data || ''
+        },      
         {
           data: 'note',
           title: 'Ghi chú',

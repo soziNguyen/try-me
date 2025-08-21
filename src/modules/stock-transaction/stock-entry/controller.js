@@ -5,7 +5,7 @@ import { Ingredient } from "../../inventory/ingredient/model.js"
 import responseHelper from "../../../helpers/responseHelper.js"
 import withTransaction from "../../../helpers/withTransaction.js"
 import { generateDocumentCode } from "../../../helpers/common.js"
-import { lookupRef } from "../../../helpers/lookupHelper.js"
+import { lookupRef, lookupUser } from "../../../helpers/lookupHelper.js"
 import StockHistory from "../stock-history/model.js"
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
@@ -42,17 +42,18 @@ export const getStockEntries = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
-    const pipeline = [
+    const basePipeline = [
       { $match: { organization: organizationId } },
-      ...lookupRef('supplier', 'Suppliers'),
-      ...lookupRef('warehouse', 'Warehouses'),
-      { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
-      ...lookupRef('items.ingredient', 'Ingredients', { as: 'ingredient' }),
-    ]    
+      ...lookupRef("supplier", "Suppliers"),
+      ...lookupRef("warehouse", "Warehouses"),
+      { $unwind: { path: "$items", preserveNullAndEmptyArrays: true } },
+      ...lookupRef("items.ingredient", "Ingredients", { as: "ingredient" }),
+      ...lookupUser("createdBy")
+    ]
 
     // Search before grouping
     if (searchValue) {
-      pipeline.push({
+      basePipeline.push({
         $match: {
           $or: [
             { code: { $regex: searchValue, $options: "i" } },
@@ -60,7 +61,6 @@ export const getStockEntries = async (req, res) => {
             { "supplier.name": { $regex: searchValue, $options: "i" } },
             { "warehouse.name": { $regex: searchValue, $options: "i" } },
             { "ingredient.name": { $regex: searchValue, $options: "i" } },
-            { "items.quantity": { $regex: searchValue, $options: "i" } },
             {
               $expr: {
                 $regexMatch: {
@@ -69,7 +69,7 @@ export const getStockEntries = async (req, res) => {
                 }
               }
             },
-            { 
+            {
               $expr: {
                 $regexMatch: {
                   input: { $dateToString: { format: "%d/%m/%Y", date: "$date" } },
@@ -83,8 +83,8 @@ export const getStockEntries = async (req, res) => {
       })
     }
 
-    // Thêm addFields và group
-    pipeline.push(
+    // Add fields + Group
+    basePipeline.push(
       {
         $addFields: {
           "items.ingredient": {
@@ -102,55 +102,57 @@ export const getStockEntries = async (req, res) => {
           supplier: { $first: "$supplier" },
           warehouse: { $first: "$warehouse" },
           createdAt: { $first: "$createdAt" },
+          createdBy: { $first: "$createdBy.username" },
           items: { $push: "$items" },
           isLocked: { $first: "$isLocked" },
           lockedAt: { $first: "$lockedAt" },
-          lockedBy: { $first: "$lockedBy" }
+          lockedBy: { $first: "$lockedBy" },
+          subTotal: { $first: "$subTotal" },
+          taxRate: { $first: "$taxRate" },
+          taxAmount: { $first: "$taxAmount" },
+          grandTotal: { $first: "$grandTotal" }
         }
       }
     )
 
-    // Đếm sau lọc
-    const countPipeline = [...pipeline, { $count: "count" }]
+    // Count pipeline (KHÔNG sort/pagination)
+    const countPipeline = [...basePipeline, { $count: "count" }]
     const countResult = await StockEntry.aggregate(countPipeline)
     const recordsFiltered = countResult[0]?.count || 0
 
     // Sort
     const sortObj = {}
     switch (sortField) {
-      case 'supplier.name':
-      case 'supplier':
-        sortObj['supplier.name'] = sortDir
+      case "supplier.name":
+      case "supplier":
+        sortObj["supplier.name"] = sortDir
         break
-      case 'warehouse.name':
-      case 'warehouse':
-        sortObj['warehouse.name'] = sortDir
+      case "warehouse.name":
+      case "warehouse":
+        sortObj["warehouse.name"] = sortDir
         break
-      case 'code':
-        sortObj['code'] = sortDir
+      case "code":
+        sortObj["code"] = sortDir
         break
-      case 'note':
-        sortObj['note'] = sortDir
+      case "note":
+        sortObj["note"] = sortDir
         break
-      case 'date':
-        sortObj['date'] = sortDir
+      case "date":
+        sortObj["date"] = sortDir
         break
       default:
         sortObj[sortField] = sortDir
     }
-    pipeline.push({ $sort: sortObj })
 
-    // Pagination
-    pipeline.push({ $skip: start })
-    pipeline.push({ $limit: length })
+    // Final pipeline with sort + pagination
+    const dataPipeline = [
+      ...basePipeline,
+      { $sort: sortObj },
+      { $skip: start },
+      { $limit: length }
+    ]
 
-    pipeline.push({
-      $project: {
-        ingredient: 0
-      }
-    })
-
-    const data = await StockEntry.aggregate(pipeline)
+    const data = await StockEntry.aggregate(dataPipeline)
     const recordsTotal = await StockEntry.countDocuments({ organization: organizationId })
 
     res.json({
@@ -212,7 +214,7 @@ export const createStockEntry = async (req, res) => {
         createdBy: req.user._id,
         organization: organizationId
        })
-      await doc.save(session ? { session } : {})
+       await doc.save({ session })
       return doc
     })
     responseHelper.success(res, { id: entry._id, code: entry.code }, "Khởi tạo phiếu nhập thành công")
@@ -257,14 +259,14 @@ export const updateStockEntryFromForm = async (req, res) => {
 
       // Lấy dữ liệu mới từ form
       const { supplier, warehouse, note, items: rawItems = [] } = req.body
-      let totalAmount = 0
+      let subTotal  = 0
 
       // Chuẩn hóa dữ liệu items và tính tổng tiền
       const items = rawItems.map(item => {
         const quantity = parseFloat(item.quantity) || 0
         const unitPrice = parseFloat(item.unitPrice) || 0
         const itemTotal = quantity * unitPrice
-        totalAmount += itemTotal
+        subTotal  += itemTotal
 
         return {
           ingredient: item.ingredient,
@@ -274,12 +276,19 @@ export const updateStockEntryFromForm = async (req, res) => {
         }
       })
 
+      const taxRate = oldEntry.taxRate || 0.08
+      const taxAmount = subTotal * taxRate
+      const grandTotal = subTotal + taxAmount
+
       const updateData = {
         supplier,
         warehouse,
         note,
         items,
-        total: totalAmount,
+        subTotal,
+        taxRate,
+        taxAmount,
+        grandTotal,
         updatedBy: req.user._id
       }
 

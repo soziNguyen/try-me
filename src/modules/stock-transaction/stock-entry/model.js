@@ -11,7 +11,10 @@ const stockEntrySchema = new mongoose.Schema({
     unitPrice:  { type: Number, default: 0 },
     total:      { type: Number, default: 0 }
   }],
-  total:     { type: Number, default: 0 },
+  subTotal:     { type: Number, default: 0 },
+  taxRate:    { type: Number, default: 0.08 }, // mặc định 8%
+  taxAmount:  { type: Number, default: 0 },  // số tiền thuế
+  grandTotal: { type: Number, default: 0 },  // tổng cuối cùng = subTotal + taxAmount
   note:      { type: String, default: '' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

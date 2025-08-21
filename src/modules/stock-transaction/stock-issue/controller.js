@@ -6,7 +6,7 @@ import Warehouse from "../../inventory/warehouse/model.js"
 import responseHelper from "../../../helpers/responseHelper.js"
 import withTransaction from "../../../helpers/withTransaction.js"
 import { generateDocumentCode } from "../../../helpers/common.js"
-import { lookupRef } from "../../../helpers/lookupHelper.js"
+import { lookupRef, lookupUser } from "../../../helpers/lookupHelper.js"
 import StockHistory from "../stock-history/model.js"
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
@@ -29,6 +29,7 @@ export const getStockIssues = async (req, res) => {
       ...lookupRef('warehouse', 'Warehouses'),
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
       ...lookupRef('items.ingredient', 'Ingredients', { as: 'ingredient' }),
+      ...lookupUser('createdBy')
     ]    
 
     // Search before grouping
@@ -82,6 +83,7 @@ export const getStockIssues = async (req, res) => {
           date: { $first: "$date" },
           warehouse: { $first: "$warehouse" },
           createdAt: { $first: "$createdAt" },
+          createdBy: { $first: "$createdBy.username" },
           items: { 
             $push: {
               $cond: {

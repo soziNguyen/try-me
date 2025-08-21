@@ -138,6 +138,12 @@ $(function () {
           
               return `<span title="${toWarehouses.join('\n')}">${display} ${more}</span>`
             }
+          },
+          {
+            data: 'createdBy',
+            title: 'Người tạo',
+            className: 'text-center',
+            render: (data) => data || ''
           },        
           {
             data: 'note',

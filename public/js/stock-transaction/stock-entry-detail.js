@@ -4,6 +4,7 @@ $(function () {
   let warehouses = []
   let stockEntryId = null
   let itemCounter = 1
+  const disableStockEntrySave = setupSaveButtonWatcher("#stockEntryForm", "#btn-save-entry")
 
   // Lấy stockEntryId từ URL
   const urlPath = window.location.pathname
@@ -116,7 +117,7 @@ $(function () {
         return
       }
       $row.remove()
-      calculateTotalAmount()
+      calculateTotals()
     })
   }
 
@@ -177,19 +178,24 @@ $(function () {
     const total = quantity * unitPrice
 
     row.find("input[readonly]").val(total.toLocaleString("vi-VN") + " ₫")
-    calculateTotalAmount()
+    calculateTotals()
   }
 
-  function calculateTotalAmount() {
-    let totalAmount = 0
+  function calculateTotals() {
+    let subtotal = 0
     $("#itemsTableBody tr").each(function () {
-      const quantity =
-        parseFloat($(this).find('input[name*="[quantity]"]').val()) || 0
-      const unitPrice =
-        parseFloat($(this).find('input[name*="[unitPrice]"]').val()) || 0
-      totalAmount += quantity * unitPrice
+      const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val()) || 0
+      const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val()) || 0
+      subtotal += quantity * unitPrice
     })
-    $("#totalAmount").text(totalAmount.toLocaleString("vi-VN") + " ₫")
+  
+    const tax = Math.round(subtotal * 0.08) // 8%
+    const total = subtotal + tax
+  
+    // Update giao diện
+    $("#subtotalAmount").text(subtotal.toLocaleString("vi-VN") + " ₫")
+    $("#taxAmount").text(tax.toLocaleString("vi-VN") + " ₫")
+    $("#totalAmount").text(total.toLocaleString("vi-VN") + " ₫")
   }
 
   function populateForm(stockEntry) {
@@ -244,7 +250,7 @@ $(function () {
       })
       
       itemCounter = stockEntry.items.length
-      calculateTotalAmount()
+      calculateTotals()
     }
     
     if (stockEntry?.isLocked) {
@@ -305,7 +311,7 @@ $(function () {
     }
   
     // Thu thập dữ liệu từ form
-    const formData = new FormData(this)
+    const formData = new FormData(e.target)
     const stockEntryData = {
       code: formData.get("code"),
       date: formData.get("date"),
@@ -319,17 +325,21 @@ $(function () {
       stockEntryData.createdBy = $("#createdBy").data("id") || "<%= currentUserId %>"
     }
   
+    let subTotal = 0
     $("#itemsTableBody tr").each(function () {
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
       const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val())
       const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val())
   
       if (ingredientId && quantity && unitPrice) {
+        const itemTotal = quantity * unitPrice
+        subTotal += itemTotal
+  
         stockEntryData.items.push({
           ingredient: ingredientId,
           quantity,
           unitPrice,
-          total: quantity * unitPrice,
+          total: itemTotal,
         })
       }
     })
@@ -338,7 +348,7 @@ $(function () {
       toastr.error("Vui lòng chọn nhà cung cấp", "Lỗi dữ liệu")
       return
     }
-
+  
     if (!stockEntryData.warehouse) {
       toastr.error("Vui lòng chọn kho", "Lỗi dữ liệu")
       return
@@ -348,6 +358,16 @@ $(function () {
       toastr.error("Phải có ít nhất 1 dòng nguyên liệu hợp lệ", "Lỗi dữ liệu")
       return
     }
+  
+    // ===== TÍNH TỔNG =====
+    const taxRate = 0.08
+    const taxAmount = subTotal * taxRate
+    const grandTotal = subTotal + taxAmount
+  
+    stockEntryData.subTotal = subTotal
+    stockEntryData.taxRate = taxRate
+    stockEntryData.taxAmount = taxAmount
+    stockEntryData.grandTotal = grandTotal
   
     // Gửi AJAX
     const url = stockEntryId
@@ -361,7 +381,9 @@ $(function () {
       data: JSON.stringify(stockEntryData),
       success(res) {
         if (res.success) {
+          toastr.remove()
           toastr.success(res.message || "Lưu phiếu nhập thành công")
+          disableStockEntrySave()
         } else {
           toastr.error(res.message || "Có lỗi xảy ra")
         }
@@ -370,6 +392,6 @@ $(function () {
         toastr.error(xhr.responseJSON?.message || "Có lỗi xảy ra khi lưu")
       },
     })
-  }
+  }  
   setupBackButton()
 })
