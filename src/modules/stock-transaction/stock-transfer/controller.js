@@ -96,7 +96,7 @@ export const getStockTransfers = async (req, res) => {
           note: { $first: "$note" },
           date: { $first: "$date" },
           createdAt: { $first: "$createdAt" },
-          createdBy: { $first: "$createdBy" },
+          createdBy: { $first: "$createdBy.username" },
           items: { $push: "$items" },
           isLocked: { $first: "$isLocked" },
           lockedAt: { $first: "$lockedAt" },

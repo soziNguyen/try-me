@@ -176,52 +176,52 @@ export const createMenu = async (req, res) => {
 }
 
 export const updateMenu = async (req, res) => {
-    try {
-        const { id } = req.params
-        const { image, name, category, price, description, isActive } = req.body
+  try {
+      const { id } = req.params
+      const { image, name, category, price, description, isActive } = req.body
 
-        const organizationId = getCurrentOrg(req)
-        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+      const organizationId = getCurrentOrg(req)
+      if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
-        const menu = await MenuItem.findOne({
-            _id: id,
-            organization: organizationId
-        })
+      const menu = await MenuItem.findOne({
+          _id: id,
+          organization: organizationId
+      })
 
-        if (!menu) return responseHelper.error(res, "Thực đơn không tồn tại", 404)
-        const existing = await MenuItem.findOne({
-            _id: { $ne: id },
-            name,
-            organization: organizationId
-        })
+      if (!menu) return responseHelper.error(res, "Thực đơn không tồn tại", 404)
+      const existing = await MenuItem.findOne({
+          _id: { $ne: id },
+          name,
+          organization: organizationId
+      })
 
-        if (existing) return responseHelper.error(res, 'Thực đơn đã tồn tại', 400)
+      if (existing) return responseHelper.error(res, 'Thực đơn đã tồn tại', 400)
 
-        const dataUpdate = { updatedBy: req.user._id }
+      const dataUpdate = { updatedBy: req.user._id }
 
-        if (image !== undefined) dataUpdate.image = image
-        if (name !== undefined) dataUpdate.name = name
-        if (category !== undefined) dataUpdate.category = category
-        if (price !== undefined) dataUpdate.price = price
-        if (description !== undefined) dataUpdate.description = description
-        if (isActive !== undefined) dataUpdate.isActive = isActive
+      if (image !== undefined) dataUpdate.image = image
+      if (name !== undefined) dataUpdate.name = name
+      if (category !== undefined) dataUpdate.category = category
+      if (price !== undefined) dataUpdate.price = price
+      if (description !== undefined) dataUpdate.description = description
+      if (isActive !== undefined) dataUpdate.isActive = isActive
 
-        if (Object.keys(dataUpdate).length == 0) return
+      if (Object.keys(dataUpdate).length == 0) return
 
-        const updated = await MenuItem.findOneAndUpdate({
-            _id: id, organization: organizationId
-        },
-        dataUpdate,
-        { new: true }
-        )
-        .populate('category', 'name')
-        .populate('createdBy', 'username -_id')
-        .populate('updatedBy', 'username -_id')
+      const updated = await MenuItem.findOneAndUpdate({
+          _id: id, organization: organizationId
+      },
+      dataUpdate,
+      { new: true }
+      )
+      .populate('category', 'name')
+      .populate('createdBy', 'username -_id')
+      .populate('updatedBy', 'username -_id')
 
-        responseHelper.success(res, updated, 'Cập nhật thành công')
-    } catch (error) {
-        responseHelper.error(res, error.message)
-    }
+      responseHelper.success(res, updated, 'Cập nhật thành công')
+  } catch (error) {
+      responseHelper.error(res, error.message)
+  }
 }
 
 export const deleteMenus = async (req, res) => {

@@ -229,3 +229,30 @@ function setupBackButton(btnSelector = '#btn-back') {
     btn.href = '/inventory/stock-transfers'
   }
 }
+
+function setupSaveButtonWatcher(formSelector, saveBtnSelector) {
+  const $form = $(formSelector)
+  const $saveBtn = $(saveBtnSelector)
+
+  // Sau khi lưu thành công thì disable nút, đổi text thành "Đã lưu"
+  function disableSave() {
+    $saveBtn.prop("disabled", true).html('<i class="bi bi-check-circle me-2"></i>Đã lưu')
+  }
+
+  // Khi có thay đổi trong form thì bật lại nút
+  function enableSave() {
+    $saveBtn.prop("disabled", false).html('<i class="bi bi-check-circle me-2"></i>Lưu phiếu')
+  }
+
+  // Bất kỳ thay đổi nào trên input/select/textarea
+  $form.on("input change", "input, select, textarea", enableSave)
+
+  // Khi thêm dòng nguyên liệu
+  $(document).on("click", `${formSelector} .addItemBtn`, enableSave)
+
+  // Khi xóa dòng nguyên liệu
+  $(document).on("click", `${formSelector} .remove-item-btn`, enableSave)
+
+  // Trả về hàm disableSave để gọi ở success(res)
+  return disableSave
+}

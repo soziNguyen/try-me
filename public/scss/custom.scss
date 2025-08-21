@@ -46,7 +46,7 @@
     }
   }
 }
-#ingredientStockTableBody {
+#ingredientStockTableBody, #comboTableBody {
   span {
     display: block;
     padding: .5rem .75rem !important;
@@ -203,6 +203,18 @@ table {
       display: block;
     }
   }
+}
+
+textarea {
+  resize: none;          
+  overflow-y: hidden;   
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE, Edge cũ
+
+  &::-webkit-scrollbar {
+    display: none;       // Chrome, Safari
+  }
+  
 }
 
 input[type=number]::-webkit-outer-spin-button,

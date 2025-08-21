@@ -33,7 +33,7 @@
   text-align: right;
 }
 
-#ingredientStockTableBody span {
+#ingredientStockTableBody span, #comboTableBody span {
   display: block;
   padding: 0.5rem 0.75rem !important;
 }
@@ -171,6 +171,16 @@ table tbody td .form-select-sm {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+textarea {
+  resize: none;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+textarea::-webkit-scrollbar {
+  display: none;
 }
 
 input[type=number]::-webkit-outer-spin-button,

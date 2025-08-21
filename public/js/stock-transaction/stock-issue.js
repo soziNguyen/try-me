@@ -125,6 +125,12 @@ $(function () {
             title: 'Kho nhập',
             render: data => data
           },
+          {
+            data: 'createdBy',
+            title: 'Người tạo',
+            className: 'text-center',
+            render: (data) => data || ''
+          },    
           // note
           {
             data: 'note',

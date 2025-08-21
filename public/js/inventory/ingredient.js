@@ -17,7 +17,7 @@ $(function () {
 
   // Render dataTable
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#ingredientTableBody').offset().top - 100) / 45)
+  const numRows = Math.floor(($(window).height() - $('#ingredientTableBody').offset().top - 100) / 70)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -35,8 +35,8 @@ $(function () {
       '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
-      autoWidth: false,
-      // scrollX: true,
+      autoWidth: true,
+      scrollX: true,
       order: [],
       ajax: {
         url: '/api/inventory/ingredient',

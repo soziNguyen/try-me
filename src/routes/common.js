@@ -18,6 +18,7 @@ import menuItemRoutes from '../modules/menu/menu-item/route.js'
 import recipeRoutes from '../modules/menu/recipe/route.js'
 import inventoryRoutes from './inventory.js'
 import menuRoutes from './menu.js'
+import comboRoute from '../modules/menu/combo/route.js'
 import uploadRouter from '../modules/upload/route.js'
 
 const router = express.Router()
@@ -40,6 +41,7 @@ router.use('/', organizationRoutes)
 router.use('/', menuCategoryRoutes)
 router.use('/', menuItemRoutes)
 router.use('/', recipeRoutes)
+router.use('/', comboRoute)
 router.use('/', uploadRouter)
 router.use('/', tableRoutes)
 router.use('/', orderRoutes)

@@ -260,3 +260,13 @@ function loadOrganizations($select, selectedId = '') {
       toastr.error('Không thể tải danh sách tổ chức')
     })
 }
+
+document.querySelectorAll("textarea").forEach(textarea => {
+  textarea.style.height = "auto"; // reset trước
+  textarea.style.height = textarea.scrollHeight + "px";
+
+  textarea.addEventListener("input", () => {
+    textarea.style.height = "auto"; // reset trước khi tính lại
+    textarea.style.height = textarea.scrollHeight + "px";
+  });
+});

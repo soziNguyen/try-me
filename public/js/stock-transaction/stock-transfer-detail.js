@@ -3,6 +3,7 @@ $(function () {
     let warehouses = []
     let stockTransferId = null
     let itemCounter = 1
+    const disableStockTransferSave = setupSaveButtonWatcher("#stockTransferForm", "#btn-save-transfer")
   
     // Lấy stockTransferId từ URL
     const urlPath = window.location.pathname
@@ -336,7 +337,9 @@ $(function () {
         data: JSON.stringify(stockTransferData),
         success(res) {
           if (res.success) {
+            toastr.remove()
             toastr.success(res.message || "Lưu phiếu chuyển kho thành công")
+            disableStockTransferSave()
           } else {
             toastr.error(res.message || "Có lỗi xảy ra")
           }
