@@ -1,4 +1,5 @@
 import { Ingredient, units } from './model.js'
+import { deleteFile } from '../../upload/helper.js'
 import { parseNumberField, parseStringField } from '../../../helpers/common.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
@@ -196,15 +197,7 @@ export const createIngredient = async (req, res) => {
 export const updateIngredient = async (req, res) => {
   try {
     const { id } = req.params
-    const {
-      sku,
-      name,
-      image,
-      unit,
-      category,
-      expirationDays,
-      isActive,
-      note } = req.body
+    const { sku, name, image, unit, category, expirationDays, isActive, note } = req.body
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
@@ -242,6 +235,7 @@ export const updateIngredient = async (req, res) => {
     const parsedName = parseStringField(name)
     if (parsedName) updateData.name = parsedName
 
+    const oldImage = ingredient.image
     const parsedImage = parseStringField(image)
     if (parsedImage) updateData.image = parsedImage
 
@@ -270,6 +264,14 @@ export const updateIngredient = async (req, res) => {
       .populate('createdBy', 'username -_id')
       .populate('updatedBy', 'username -_id')
       .lean()
+
+    if (oldImage && oldImage !== updateData.image) {
+      try {
+        await deleteFile(oldImage)
+      } catch (err) {
+        console.error('Không xóa được file cũ:', err)
+      }
+    }
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (err) {
     return responseHelper.error(res, err.message)

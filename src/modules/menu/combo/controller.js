@@ -1,4 +1,5 @@
 import { Combo } from './model.js'
+import { deleteFile } from '../../upload/helper.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
@@ -81,7 +82,6 @@ export const getCombos = async (req, res) => {
 
     // tổng số record
     const recordsTotal = await Combo.countDocuments({ organization: organizationId })
-    console.log(recordsTotal)
 
     // tổng số record sau filter
     const countFiltered = await Combo.aggregate(pipeline.concat([{ $count: "count" }]))
@@ -177,22 +177,30 @@ export const updateCombo = async (req, res) => {
             if (!it.menuItem || !it.quantity) {
                 return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin', 400)
             }
-
             if (it.quantity <= 0) {
                 return responseHelper.error(res, 'Số lượng phải lớn hơn 0', 400)
             }
+        }
+
+        // Lấy combo cũ để so sánh ảnh
+        const combo = await Combo.findOne({ _id: id, organization: organizationId })
+        if (!combo) return responseHelper.error(res, "Không tìm thấy công thức", 404)
+
+        // Xóa file cũ nếu có và khác file mới
+        if (combo.image && combo.image !== image) {
+          try {
+            await deleteFile(combo.image)
+          } catch (err) {
+            // console.error('Không xóa được file cũ:', err)
+          }
         }
 
         const updated = await Combo.findOneAndUpdate(
             { _id: id, organization: organizationId },
             { sku, name, image, items, price, note },
             { new: true }
-        )
-        .populate('items.menuItem', '_id name')
+        ).populate('items.menuItem', '_id name')
 
-        if (!updated) {
-            return responseHelper.error(res, "Không tìm thấy công thức", 404)
-        }
         responseHelper.success(res, updated, "Cập nhật thành công")
     } catch (error) {
         responseHelper.error(res, error.message)

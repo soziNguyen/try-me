@@ -71,7 +71,6 @@ $(function () {
             className: 'text-start px-1',
             title: 'Nguyên liệu',
             render: items => {
-              console.log(items)
               if (!Array.isArray(items) || items.length === 0) return ''
               const names = items.map(it => it.ingredient?.name).filter(Boolean)
               const uniqueNames = new Set(names)
