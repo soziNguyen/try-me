@@ -1,40 +1,40 @@
-'use strict';
+'use strict'
 
 $(function () {
 
-  let table;
-  let menuItem = [];
-  let cropper = null;
-  let currentImageFile = null;
-  let croppedImageUrl = null;
-  let croppedImageFile = null;
+  let table
+  let menuItem = []
+  let cropper = null
+  let currentImageFile = null
+  let croppedImageUrl = null
+  let croppedImageFile = null
 
   Promise.all([
     fetchData('menu/get/active')
   ])
-  .then(([items]) => {
-    menuItem = items;
-    initDataTable();
-  })
-  .catch(err => {
-    toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err);
-    initDataTable(); // Vẫn khởi tạo tránh treo giao diện
-  });
+    .then(([items]) => {
+      menuItem = items
+      initDataTable()
+    })
+    .catch(err => {
+      toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
+      initDataTable() // Vẫn khởi tạo tránh treo giao diện
+    })
 
-  let showList = [10, 25, 50, 100];
-  const numRows = Math.floor(($(window).height() - ($('#comboTableBody').offset() ? $('#comboTableBody').offset().top : 200) - 100) / 71);
-  if (!showList.includes(numRows) && numRows > 0) showList.push(numRows);
-  showList.sort((a, b) => a - b);
+  let showList = [10, 25, 50, 100]
+  const numRows = Math.floor(($(window).height() - ($('#comboTableBody').offset() ? $('#comboTableBody').offset().top : 200) - 100) / 71)
+  if (!showList.includes(numRows) && numRows > 0) showList.push(numRows)
+  showList.sort((a, b) => a - b)
 
-  function initDataTable () {
+  function initDataTable() {
     table = $('#comboTable').DataTable({
       dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
-           'l' +
-           'f' +
-           '<"right-group d-flex align-items-center btn-group flex-wrap">' +
-           '>' +
-           'rt' +
-           '<"bottom-bar d-flex justify-content-between mt-3"ip>',
+        'l' +
+        'f' +
+        '<"right-group d-flex align-items-center btn-group flex-wrap">' +
+        '>' +
+        'rt' +
+        '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
       autoWidth: true,
@@ -77,8 +77,8 @@ $(function () {
           orderable: false,
           className: 'image-cell',
           render: data => {
-            const imgSrc = data || '';
-            return `<img src="${imgSrc}" alt="Ảnh" class="combo-image" width="70" height="70">`;
+            const imgSrc = data || ''
+            return `<img src="${imgSrc}" alt="Ảnh" class="combo-image" width="70" height="70">`
           }
         },
         {
@@ -86,25 +86,25 @@ $(function () {
           className: 'text-start px-1',
           title: 'Nguyên liệu',
           render: items => {
-            if (!Array.isArray(items) || items.length === 0) return '';
-            const names = items.map(it => it.menuItem?.name).filter(Boolean);
-            const uniqueNames = new Set(names);
-            if (uniqueNames.size === 0) return '';
-            const arr = [...uniqueNames];
-            const firstThree = arr.slice(0, 3).join(', ');
-            const more = arr.length > 3 ? '...' : '';
-            return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`;
+            if (!Array.isArray(items) || items.length === 0) return ''
+            const names = items.map(it => it.menuItem?.name).filter(Boolean)
+            const uniqueNames = new Set(names)
+            if (uniqueNames.size === 0) return ''
+            const arr = [...uniqueNames]
+            const firstThree = arr.slice(0, 3).join(', ')
+            const more = arr.length > 3 ? '...' : ''
+            return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`
           }
         },
         {
           data: 'price',
           render: (data, type, row) => {
             if (type === 'display') {
-              const price = parseFloat(data) || 0;
-              const formatted = price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
-              return `<span>${formatted}</span>`;
+              const price = parseFloat(data) || 0
+              const formatted = price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+              return `<span>${formatted}</span>`
             }
-            return data;
+            return data
           }
         },
         {
@@ -119,17 +119,17 @@ $(function () {
           data: 'createdAt',
           render: (data, type, row) => {
             if (type === 'display') {
-              const dt = new Date(data);
-              const dateStr = dt.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-              const timeStr = dt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-              return `<span>${dateStr} ${timeStr}</span>`;
+              const dt = new Date(data)
+              const dateStr = dt.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+              const timeStr = dt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+              return `<span>${dateStr} ${timeStr}</span>`
             }
-            return data;
+            return data
           }
         }
       ],
-      rowCallback: function(row, data) {
-        $(row).attr('data-id', data._id);
+      rowCallback: function (row, data) {
+        $(row).attr('data-id', data._id)
       },
       initComplete: function () {
         $('.right-group').html(`
@@ -141,74 +141,74 @@ $(function () {
               <i class="bi bi-plus-circle"></i> Thêm
             </button>
           </div>
-        `);
+        `)
       }
-    });
+    })
 
     // Ẩn form
     if ($('#comboFormContainer').hasClass('d-none')) {
-      hideForm();
+      hideForm()
     } else {
-      showForm();
+      showForm()
     }
 
     // =======================================================
     // EVENT HANDLER chung
-    handlerDeleteEvent('#comboTable', '#deleteComboBtn', 'comboCheckbox', 'menu/combo');
-    initTableCheckboxEvents('#comboTable', 'comboCheckbox');
+    handlerDeleteEvent('#comboTable', '#deleteComboBtn', 'comboCheckbox', 'menu/combo')
+    initTableCheckboxEvents('#comboTable', 'comboCheckbox')
 
     // Add new combo
     $('#comboTable_wrapper').on('click', '#addComboBtn', function () {
-      const $form = $('#comboForm');
-      $('#comboFormContainer').removeClass('d-none');
-      $form[0].reset();
-      $('#itemTableBody').empty();
-      $('#formTitle').text('Thêm Combo mới');
-      $form.data('mode', 'create');
-      $form.removeData('comboId');
+      const $form = $('#comboForm')
+      $('#comboFormContainer').removeClass('d-none')
+      $form[0].reset()
+      $('#itemTableBody').empty()
+      $('#formTitle').text('Thêm Combo mới')
+      $form.data('mode', 'create')
+      $form.removeData('comboId')
 
       // Reset ảnh tạm
       if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-        try { URL.revokeObjectURL(croppedImageUrl); } catch(e) {}
+        try { URL.revokeObjectURL(croppedImageUrl) } catch (e) { }
       }
-      croppedImageUrl = null;
-      croppedImageFile = null;
-      currentImageFile = null;
-      updateImagePreview();
+      croppedImageUrl = null
+      croppedImageFile = null
+      currentImageFile = null
+      updateImagePreview()
 
-      showForm();
-    });
+      showForm()
+    })
 
     // Click row 
     $('#comboTable tbody').on('click', 'tr', function (e) {
-      if ($(e.target).is('input[type="checkbox"], tbody td:first-child')) return;
-      const data = table.row(this).data();
-      if (!data) return;
+      if ($(e.target).is('input[type="checkbox"], tbody td:first-child')) return
+      const data = table.row(this).data()
+      if (!data) return
 
-      const $form = $('#comboForm');
-      $('#comboFormContainer').removeClass('d-none');
-      $('#formTitle').text('Cập nhật Combo');
+      const $form = $('#comboForm')
+      $('#comboFormContainer').removeClass('d-none')
+      $('#formTitle').text('Cập nhật Combo')
 
       // Gán dữ liệu vào form
-      $form.find('[name="sku"]').val(data.sku || '');
-      $form.find('[name="name"]').val(data.name || '');
-      $form.find('[name="price"]').val(data.price || '');
-      $form.find('[name="note"]').val(data.note || '');
+      $form.find('[name="sku"]').val(data.sku || '')
+      $form.find('[name="name"]').val(data.name || '')
+      $form.find('[name="price"]').val(data.price || '')
+      $form.find('[name="note"]').val(data.note || '')
 
       // Set image: url server
-      croppedImageUrl = data.image || null;
-      croppedImageFile = null;
-      currentImageFile = null;
-      updateImagePreview();
+      croppedImageUrl = data.image || null
+      croppedImageFile = null
+      currentImageFile = null
+      updateImagePreview()
 
       // Items
-      const $itemBody = $('#itemTableBody');
-      $itemBody.empty();
+      const $itemBody = $('#itemTableBody')
+      $itemBody.empty()
       if (Array.isArray(data.items)) {
         data.items.forEach(it => {
           const options = menuItem.map(o => `
             <option value="${o._id}" ${o._id === it.menuItem?._id ? 'selected' : ''}>${o.name}</option>
-          `).join('');
+          `).join('')
 
           const $row = $(`
             <tr>
@@ -225,41 +225,41 @@ $(function () {
                 </button>
               </td>
             </tr>
-          `);
-          $itemBody.append($row);
-          initSelect2($row.find('select[name="menuItem"]'));
-        });
+          `)
+          $itemBody.append($row)
+          initSelect2($row.find('select[name="menuItem"]'))
+        })
       }
 
-      $form.data('mode', 'update');
-      $form.data('comboId', data._id);
-      showForm();
-    });
+      $form.data('mode', 'update')
+      $form.data('comboId', data._id)
+      showForm()
+    })
 
     // Khi chọn file ảnh — load vào modal crop
-    $('#comboForm').on('change', 'input[name="image"]', function(e) {
-      const file = e.target.files[0];
+    $('#comboForm').on('change', 'input[name="image"]', function (e) {
+      const file = e.target.files[0]
       if (file) {
         if (file.type.startsWith('image/')) {
-          currentImageFile = file;
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            $('#imagePreview').attr('src', e.target.result);
-            $('#imageCropModal').modal('show');
-          };
-          reader.readAsDataURL(file);
+          currentImageFile = file
+          const reader = new FileReader()
+          reader.onload = function (e) {
+            $('#imagePreview').attr('src', e.target.result)
+            $('#imageCropModal').modal('show')
+          }
+          reader.readAsDataURL(file)
         } else {
-          toastr.error('Vui lòng chọn file ảnh');
-          e.target.value = '';
+          toastr.error('Vui lòng chọn file ảnh')
+          e.target.value = ''
         }
       }
-    });
+    })
 
     // Khởi tạo cropper khi modal show
     $('#imageCropModal').on('shown.bs.modal', function () {
-      const image = document.getElementById('imagePreview');
+      const image = document.getElementById('imagePreview')
       if (cropper) {
-        cropper.destroy();
+        cropper.destroy()
       }
       cropper = new Cropper(image, {
         aspectRatio: 1,
@@ -273,110 +273,110 @@ $(function () {
         cropBoxMovable: true,
         cropBoxResizable: true,
         toggleDragModeOnDblclick: false
-      });
-    });
+      })
+    })
 
     // Destroy cropper khi đóng modal
     $('#imageCropModal').on('hidden.bs.modal', function () {
       if (cropper) {
-        cropper.destroy();
-        cropper = null;
+        cropper.destroy()
+        cropper = null
       }
-    });
+    })
 
     // Crop
-    $('#cropBtn').on('click', function() {
+    $('#cropBtn').on('click', function () {
       if (cropper && currentImageFile) {
         const canvas = cropper.getCroppedCanvas({
           width: 400,
           height: 400,
           imageSmoothingEnabled: true,
           imageSmoothingQuality: 'high'
-        });
+        })
 
-        canvas.toBlob(function(blob) {
+        canvas.toBlob(function (blob) {
           const croppedFile = new File([blob], currentImageFile.name, {
             type: currentImageFile.type,
             lastModified: Date.now()
-          });
+          })
 
           // Lưu file tạm để upload khi bấm Lưu form
-          croppedImageFile = croppedFile;
+          croppedImageFile = croppedFile
 
           // Dọn objectURL
           if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-            try { URL.revokeObjectURL(croppedImageUrl); } catch(e) {}
+            try { URL.revokeObjectURL(croppedImageUrl) } catch (e) { }
           }
 
           // Tạo preview bằng objectURL
-          croppedImageUrl = URL.createObjectURL(croppedFile);
-          updateImagePreview();
+          croppedImageUrl = URL.createObjectURL(croppedFile)
+          updateImagePreview()
 
           // Đóng modal
-          $('#imageCropModal').modal('hide');
-        }, currentImageFile.type, 0.9);
+          $('#imageCropModal').modal('hide')
+        }, currentImageFile.type, 0.9)
       }
-    });
+    })
 
     // Submit form
-    $('#comboForm').on('submit', async function(e) {
-      e.preventDefault();
-      const $form = $(this);
-      const mode = $form.data('mode');
-      const comboId = $form.data('comboId');
+    $('#comboForm').on('submit', async function (e) {
+      e.preventDefault()
+      const $form = $(this)
+      const mode = $form.data('mode')
+      const comboId = $form.data('comboId')
 
       // Lấy dữ liệu form
-      const sku = $form.find('[name="sku"]').val();
-      const name = $form.find('[name="name"]').val();
-      const price = parseFloat($form.find('[name="price"]').val());
-      const note = $form.find('[name="note"]').val();
-      let image = croppedImageUrl || '';
+      const sku = $form.find('[name="sku"]').val()
+      const name = $form.find('[name="name"]').val()
+      const price = parseFloat($form.find('[name="price"]').val())
+      const note = $form.find('[name="note"]').val()
+      let image = croppedImageUrl || ''
 
       // Lấy items
-      const items = [];
-      $('#itemTableBody tr').each(function() {
-        const menuItemId = $(this).find('[name="menuItem"]').val();
-        const quantity = parseFloat($(this).find('[name="quantity"]').val());
-        if (menuItemId && quantity > 0) items.push({ menuItem: menuItemId, quantity });
-      });
+      const items = []
+      $('#itemTableBody tr').each(function () {
+        const menuItemId = $(this).find('[name="menuItem"]').val()
+        const quantity = parseFloat($(this).find('[name="quantity"]').val())
+        if (menuItemId && quantity > 0) items.push({ menuItem: menuItemId, quantity })
+      })
 
       if (!name || !items.length || isNaN(price)) {
-        toastr.error('Vui lòng điền đầy đủ thông tin');
-        return;
+        toastr.error('Vui lòng điền đầy đủ thông tin')
+        return
       }
 
       // Disable nút submit trong khi xử lý
-      const $submitBtn = $form.find('button[type="submit"]');
-      $submitBtn.prop('disabled', true).addClass('disabled');
+      const $submitBtn = $form.find('button[type="submit"]')
+      $submitBtn.prop('disabled', true).addClass('disabled')
 
       try {
         // Nếu có file tạm => upload trước
         if (croppedImageFile) {
           try {
-            const uploadedPath = await uploadImageFile(croppedImageFile);
+            const uploadedPath = await uploadImageFile(croppedImageFile)
             if (uploadedPath) {
-              image = uploadedPath;
+              image = uploadedPath
             }
             // revoke objectURL nếu là blob
             if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-              try { URL.revokeObjectURL(croppedImageUrl); } catch(e) {}
+              try { URL.revokeObjectURL(croppedImageUrl) } catch (e) { }
             }
             // reset file tạm
-            croppedImageFile = null;
-            currentImageFile = null;
-            croppedImageUrl = image || null;
+            croppedImageFile = null
+            currentImageFile = null
+            croppedImageUrl = image || null
           } catch (uploadErr) {
-            toastr.error(uploadErr.message || 'Lỗi khi upload ảnh');
-            $submitBtn.prop('disabled', false).removeClass('disabled');
-            return;
+            toastr.error(uploadErr.message || 'Lỗi khi upload ảnh')
+            $submitBtn.prop('disabled', false).removeClass('disabled')
+            return
           }
         }
 
         // URL theo mode
-        let url = '/api/menu/combo/create';
-        if (mode === 'update') url = `/api/menu/combo/update/${comboId}`;
+        let url = '/api/menu/combo/create'
+        if (mode === 'update') url = `/api/menu/combo/update/${comboId}`
 
-        const payload = { sku, name, items, price, note, image };
+        const payload = { sku, name, items, price, note, image }
 
         // Gửi tạo/cập nhật combo
         const res = await $.ajax({
@@ -384,31 +384,31 @@ $(function () {
           method: 'POST',
           contentType: 'application/json',
           data: JSON.stringify(payload)
-        });
+        })
 
         if (res.success) {
-          toastr.success(res.message || 'Thành công');
-          if (table) table.ajax.reload(null, false);
-          $form[0].reset();
-          $('#itemTableBody').empty();
-          croppedImageUrl = null;
-          croppedImageFile = null;
-          currentImageFile = null;
-          updateImagePreview();
-          hideForm();
+          toastr.success(res.message || 'Thành công')
+          if (table) table.ajax.reload(null, false)
+          $form[0].reset()
+          $('#itemTableBody').empty()
+          croppedImageUrl = null
+          croppedImageFile = null
+          currentImageFile = null
+          updateImagePreview()
+          hideForm()
         } else {
-          toastr.error(res.message || 'Lỗi');
+          toastr.error(res.message || 'Lỗi')
         }
       } catch (err) {
-        toastr.error(err.responseJSON?.message || err.message || 'Lỗi server');
+        toastr.error(err.responseJSON?.message || err.message || 'Lỗi server')
       } finally {
-        $submitBtn.prop('disabled', false).removeClass('disabled');
+        $submitBtn.prop('disabled', false).removeClass('disabled')
       }
-    });
+    })
 
     // Thêm dòng items
-    $('#addItemRow').on('click', function() {
-      const options = menuItem.map(o => `<option value="${o._id}">${o.name}</option>`).join('');
+    $('#addItemRow').on('click', function () {
+      const options = menuItem.map(o => `<option value="${o._id}">${o.name}</option>`).join('')
       const rowHtml = `
         <tr>
           <td>
@@ -424,118 +424,118 @@ $(function () {
             </button>
           </td>
         </tr>
-      `;
-      const $row = $(rowHtml);
-      $('#itemTableBody').append($row);
-      initSelect2($row.find('select[name="menuItem"]'));
-    });
+      `
+      const $row = $(rowHtml)
+      $('#itemTableBody').append($row)
+      initSelect2($row.find('select[name="menuItem"]'))
+    })
 
     // Xóa item row
-    $('#itemTableBody').on('click', '.removeItemRow', function() {
-      $(this).closest('tr').remove();
-    });
+    $('#itemTableBody').on('click', '.removeItemRow', function () {
+      $(this).closest('tr').remove()
+    })
   } // end initDataTable
 
   // Hủy/ẩn form
   $('#comboForm').on('click', '#btnCancel', function (e) {
-    e.preventDefault();
+    e.preventDefault()
     if ($('#comboFormContainer').hasClass('d-none')) {
-      showForm();
+      showForm()
     } else {
-      hideForm();
+      hideForm()
     }
-  });
+  })
 
   // Update preview image trong form
   function updateImagePreview() {
-    const $imageContainer = $('#comboForm').find('.image-preview-container');
+    const $imageContainer = $('#comboForm').find('.image-preview-container')
     if ($imageContainer.length === 0) {
-      const $imageInput = $('#comboForm').find('input[name="image"]');
+      const $imageInput = $('#comboForm').find('input[name="image"]')
       $imageInput.after(`
-        <div class="image-preview-container mt-2" style="display: none;">
-          <img class="preview-image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+        <div class="image-preview-container mt-2" style="display: none">
+          <img class="preview-image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd">
           <div class="mt-1">
             <button type="button" class="btn btn-outline-danger btn-sm remove-image">
               <i class="bi bi-trash"></i> Xóa ảnh
             </button>
           </div>
         </div>
-      `);
+      `)
     }
 
-    const $container = $('#comboForm').find('.image-preview-container');
-    const $previewImg = $container.find('.preview-image');
+    const $container = $('#comboForm').find('.image-preview-container')
+    const $previewImg = $container.find('.preview-image')
 
     if (croppedImageUrl) {
-      $previewImg.attr('src', croppedImageUrl);
-      $container.show();
+      $previewImg.attr('src', croppedImageUrl)
+      $container.show()
     } else {
-      $container.hide();
-      $previewImg.attr('src', '');
+      $container.hide()
+      $previewImg.attr('src', '')
     }
   }
 
   // Remove image handler — giải phóng objectURL nếu là blob và xóa file tạm
-  $('#comboForm').on('click', '.remove-image', function() {
+  $('#comboForm').on('click', '.remove-image', function () {
     if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-      try { URL.revokeObjectURL(croppedImageUrl); } catch(e) {}
+      try { URL.revokeObjectURL(croppedImageUrl) } catch (e) { }
     }
-    croppedImageUrl = null;
-    croppedImageFile = null;
-    currentImageFile = null;
-    updateImagePreview();
-    $('#comboForm').find('input[name="image"]').val('');
-  });
+    croppedImageUrl = null
+    croppedImageFile = null
+    currentImageFile = null
+    updateImagePreview()
+    $('#comboForm').find('input[name="image"]').val('')
+  })
 
   function uploadImageFile(file) {
     return new Promise((resolve, reject) => {
-      if (!file) return resolve(null);
-      const formData = new FormData();
-      formData.append('file', file);
+      if (!file) return resolve(null)
+      const formData = new FormData()
+      formData.append('file', file)
       $.ajax({
         url: '/api/upload',
         method: 'POST',
         data: formData,
         processData: false,
         contentType: false,
-        success: function(response) {
+        success: function (response) {
           if (response.file) {
-            const path = '/' + response.file.path.replace(/\\/g, '/');
-            resolve(path);
+            const path = '/' + response.file.path.replace(/\\/g, '/')
+            resolve(path)
           } else {
-            reject(new Error('Không nhận về file từ server'));
+            reject(new Error('Không nhận về file từ server'))
           }
         },
-        error: function(xhr) {
-          reject(new Error(xhr.responseJSON?.message || 'Lỗi upload'));
+        error: function (xhr) {
+          reject(new Error(xhr.responseJSON?.message || 'Lỗi upload'))
         }
-      });
-    });
+      })
+    })
   }
 
   // Hiển thị / ẩn form — đồng thời resize DataTable column đúng
   function showForm() {
-    $('#tableContainer').removeClass('col-md-12').addClass('col-md-7');
-    $('#formContainer').removeClass('d-none').addClass('col-md-5');
-    $('#comboFormContainer').removeClass('d-none');
+    $('#tableContainer').removeClass('col-md-12').addClass('col-md-7')
+    $('#formContainer').removeClass('d-none').addClass('col-md-5')
+    $('#comboFormContainer').removeClass('d-none')
 
     setTimeout(() => {
       if (typeof table !== 'undefined' && table) {
-        try { table.columns.adjust().draw(false); } catch(e) {  }
+        try { table.columns.adjust().draw(false) } catch (e) { }
       }
-    }, 150);
+    }, 150)
   }
 
   function hideForm() {
-    $('#tableContainer').removeClass('col-md-7').addClass('col-md-12');
-    $('#comboFormContainer').addClass('d-none');
-    $('#formContainer').addClass('d-none').removeClass('col-md-5');
+    $('#tableContainer').removeClass('col-md-7').addClass('col-md-12')
+    $('#comboFormContainer').addClass('d-none')
+    $('#formContainer').addClass('d-none').removeClass('col-md-5')
 
     setTimeout(() => {
       if (typeof table !== 'undefined' && table) {
-        try { table.columns.adjust().draw(false); } catch(e) {  }
+        try { table.columns.adjust().draw(false) } catch (e) { }
       }
-    }, 150);
+    }, 150)
   }
 
-});
+})

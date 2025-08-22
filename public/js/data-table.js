@@ -6,7 +6,7 @@ function handlerAddEvent(tableSelector, btnSelector, module) {
 
   $wrapper.on('click', btnSelector, function () {
     const $btn = $(this).prop('disabled', true)
-    
+
     $.ajax({
       url: `/api/${module}/create`,
       method: 'POST',
@@ -30,7 +30,7 @@ function handlerAddEvent(tableSelector, btnSelector, module) {
   })
 }
 
-function handlerDeleteEvent (tableSelector, btnSelector, checkboxClass, module) {
+function handlerDeleteEvent(tableSelector, btnSelector, checkboxClass, module) {
   const $wrapper = $(`${tableSelector}_wrapper`)
   const table = $(tableSelector).DataTable()
 
@@ -73,7 +73,7 @@ function handlerDeleteEvent (tableSelector, btnSelector, checkboxClass, module) 
     })
   })
 }
-  
+
 function handlerUpdateEvent(tableSelector, module, transform) {
   const $table = $(tableSelector)
   $table.on('change', '.dataInput', function () {
@@ -113,7 +113,7 @@ function handlerUpdateEvent(tableSelector, module, transform) {
     })
   })
 }
-  
+
 function initTableCheckboxEvents(tableSelector, checkboxClass) {
   const $table = $(tableSelector)
   const $wrapper = $(`${tableSelector}_wrapper`)
@@ -121,7 +121,7 @@ function initTableCheckboxEvents(tableSelector, checkboxClass) {
 
   // Click 'tr' event
   $table.on('click', 'tbody tr', function (e) {
-    if ($(e.target).is(`input[type=checkbox], img, input[type=text], input[type=number], button, span, .dataInput, i, td:nth-child(n+2)`)) return
+    if ($(e.target).is(`input[type=checkbox], img, input[type=text], input[type=number], select, button, span, .dataInput, i, td:nth-child(n+2)`)) return
     const checkbox = $(this).find(`.${checkboxClass}`)
     checkbox.prop('checked', !checkbox.prop('checked')).trigger('change')
   })
@@ -156,14 +156,14 @@ const inputRenderer = (field) => {
     return data
   }
 }
-  
+
 // GET DATA AJAX
-function getData (module, suffix = '',callback) {
+function getData(module, suffix = '', callback) {
   if (typeof suffix === 'function') {
     callback = suffix
     suffix = ''
   }
-  
+
   $.ajax({
     url: `/api/${module}${suffix ? `/${suffix}` : ''}`,
     method: 'GET',
@@ -181,11 +181,11 @@ function getData (module, suffix = '',callback) {
 }
 
 // Multi Fetch Data
-function fetchData (endpoint) {
+function fetchData(endpoint) {
   return new Promise((resolve, reject) => {
     getData(endpoint, function (data) {
       if (data) resolve(data)
-        else reject(new Error('Không thể tải dữ liệu'))
+      else reject(new Error('Không thể tải dữ liệu'))
     })
   })
 }
