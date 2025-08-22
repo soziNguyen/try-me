@@ -5,18 +5,18 @@ import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
 export const getActiveCombos = async (req, res) => {
-    try {
-        const organizationId = getCurrentOrg(req)
-        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
-        
-        const combo = await Combo.find({
-            isActive: true,
-            organization: organizationId
-        })
-        responseHelper.success(res, combo)
-    } catch (error) {
-        responseHelper.error(res, error.message)
-    }
+  try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
+    const combo = await Combo.find({
+      isActive: true,
+      organization: organizationId
+    })
+    responseHelper.success(res, combo)
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
 }
 
 export const getCombos = async (req, res) => {
@@ -31,7 +31,7 @@ export const getCombos = async (req, res) => {
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
-    
+
     // base pipeline
     let pipeline = [
       { $match: { organization: organizationId } },
@@ -108,109 +108,109 @@ export const getCombos = async (req, res) => {
 }
 
 export const createCombo = async (req, res) => {
-    try {
-        const organizationId = getCurrentOrg(req)
-        if (!organizationId) 
-            return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+  try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId)
+      return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
-        const { sku, name, image, items, price, note } = req.body
-        if (!name || !price) 
-            return responseHelper.error(res, "Tên combo và giá bán là bắt buộc", 400)
+    const { sku, name, image, items, price, note } = req.body
+    if (!name || !price)
+      return responseHelper.error(res, "Tên combo và giá bán là bắt buộc", 400)
 
-        if (!Array.isArray(items) || items.length === 0) 
-            return responseHelper.error(res, "Combo phải có ít nhất 1 món ăn", 400)
+    if (!Array.isArray(items) || items.length === 0)
+      return responseHelper.error(res, "Combo phải có ít nhất 1 món ăn", 400)
 
-        for (const it of items) {
-            if (!it.menuItem || typeof it.quantity !== 'number' || it.quantity <= 0) {
-                return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin và số lượng > 0', 400)
-            }
-        }
-
-        const existing = await Combo.findOne({
-            organization: organizationId,
-            $or: [
-                { name },
-                { sku }
-            ]
-        })
-        if (existing) 
-            return responseHelper.error(res, 'SKU hoặc name đã tồn tại', 400)
-
-        const combo = new Combo({
-            sku, name, image, items, price, note,
-            organization: organizationId,
-            createdBy: req.user._id
-        })
-
-        await combo.save()
-        await combo.populate('items.menuItem', '_id name')
-
-        responseHelper.success(res, combo, "Tạo combo thành công")
-    } catch (error) {
-        responseHelper.error(res, error.message)
+    for (const it of items) {
+      if (!it.menuItem || typeof it.quantity !== 'number' || it.quantity <= 0) {
+        return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin và số lượng > 0', 400)
+      }
     }
+
+    const existing = await Combo.findOne({
+      organization: organizationId,
+      $or: [
+        { name },
+        { sku }
+      ]
+    })
+    if (existing)
+      return responseHelper.error(res, 'SKU hoặc name đã tồn tại', 400)
+
+    const combo = new Combo({
+      sku, name, image, items, price, note,
+      organization: organizationId,
+      createdBy: req.user._id
+    })
+
+    await combo.save()
+    await combo.populate('items.menuItem', '_id name')
+
+    responseHelper.success(res, combo, "Tạo combo thành công")
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
 }
 
 
 export const updateCombo = async (req, res) => {
-    try {
-        const { id } = req.params
-        const { sku, name, image, items, price, note } = req.body
-        const organizationId = getCurrentOrg(req)
-        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+  try {
+    const { id } = req.params
+    const { sku, name, image, items, price, note } = req.body
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
-        if (!id) return responseHelper.error(res, 'Thiếu ID công thức', 400)
+    if (!id) return responseHelper.error(res, 'Thiếu ID công thức', 400)
 
-        const existing = await Combo.findOne({
-            _id: { $ne: id },
-            organization: organizationId,
-            $or: [{ name }, { sku }]
-        })
+    const existing = await Combo.findOne({
+      _id: { $ne: id },
+      organization: organizationId,
+      $or: [{ name }, { sku }]
+    })
 
-        if (existing) return responseHelper.error(res, 'SKU hoặc name đã tồn tại', 400)
+    if (existing) return responseHelper.error(res, 'SKU hoặc name đã tồn tại', 400)
 
-        if (!Array.isArray(items) || items.length === 0) {
-            return responseHelper.error(res, "Combo phải có ít nhất 1 món ăn", 400)
-        }
-
-        for (const it of items) {
-            if (!it.menuItem || !it.quantity) {
-                return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin', 400)
-            }
-            if (it.quantity <= 0) {
-                return responseHelper.error(res, 'Số lượng phải lớn hơn 0', 400)
-            }
-        }
-
-        // Lấy combo cũ để so sánh ảnh
-        const combo = await Combo.findOne({ _id: id, organization: organizationId })
-        if (!combo) return responseHelper.error(res, "Không tìm thấy công thức", 404)
-
-        // Xóa file cũ nếu có và khác file mới
-        if (combo.image && combo.image !== image) {
-          try {
-            await deleteFile(combo.image)
-          } catch (err) {
-            // console.error('Không xóa được file cũ:', err)
-          }
-        }
-
-        const updated = await Combo.findOneAndUpdate(
-            { _id: id, organization: organizationId },
-            { sku, name, image, items, price, note },
-            { new: true }
-        ).populate('items.menuItem', '_id name')
-
-        responseHelper.success(res, updated, "Cập nhật thành công")
-    } catch (error) {
-        responseHelper.error(res, error.message)
+    if (!Array.isArray(items) || items.length === 0) {
+      return responseHelper.error(res, "Combo phải có ít nhất 1 món ăn", 400)
     }
+
+    for (const it of items) {
+      if (!it.menuItem || !it.quantity) {
+        return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin', 400)
+      }
+      if (it.quantity <= 0) {
+        return responseHelper.error(res, 'Số lượng phải lớn hơn 0', 400)
+      }
+    }
+
+    // Lấy combo cũ để so sánh ảnh
+    const combo = await Combo.findOne({ _id: id, organization: organizationId })
+    if (!combo) return responseHelper.error(res, "Không tìm thấy công thức", 404)
+
+    // Xóa file cũ nếu có và khác file mới
+    if (combo.image && combo.image !== image) {
+      try {
+        await deleteFile(combo.image)
+      } catch (err) {
+        // console.error('Không xóa được file cũ:', err)
+      }
+    }
+
+    const updated = await Combo.findOneAndUpdate(
+      { _id: id, organization: organizationId },
+      { sku, name, image, items, price, note },
+      { new: true }
+    ).populate('items.menuItem', '_id name')
+
+    responseHelper.success(res, updated, "Cập nhật thành công")
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
 }
 
 export const deleteCombos = async (req, res) => {
   try {
     const { ids } = req.body
-    
+
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 

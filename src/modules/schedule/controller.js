@@ -1,0 +1,147 @@
+import { Schedule } from './model.js'
+import { lookupUser, lookupRef } from './lookup.js'
+import responseHelper from '../../helpers/responseHelper.js'
+import { getCurrentOrg } from '../../helpers/orgHelper.js'
+
+export const getSchedules = async (req, res) => {
+    try {
+        const draw = +req.query.draw || 0
+        const start = +req.query.start || 0
+        const length = +req.query.length || 10
+        const searchValue = (req.query["search[value]"] || "").trim()
+        const colIdx = req.query["order[0][column]"]
+        const sortField = req.query[`columns[${colIdx}][data]`] || 'date'
+        const sortDir = req.query["order[0][dir]"] === 'asc' ? 1 : -1
+
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
+        // Base pipeline
+        const pipeline = [
+            { $match: { organization: organizationId } },
+            ...lookupUser('user'),
+            ...lookupRef('shift', 'Shifts')
+        ]
+
+        // Search filter
+        if (searchValue) {
+            pipeline.push({
+                $match: {
+                    $or: [
+                        { "user.username": { $regex: searchValue, $options: 'i' } },
+                        { "shift.name": { $regex: searchValue, $options: 'i' } },
+                        { note: { $regex: searchValue, $options: 'i' } },
+                        { status: { $regex: searchValue, $options: 'i' } }
+                    ]
+                }
+            })
+        }
+
+        // Total records
+        const totalRecords = await Schedule.countDocuments({ organization: organizationId })
+
+        // Total filtered
+        const countPipeline = [...pipeline, { $count: 'count' }]
+        const countResult = await Schedule.aggregate(countPipeline)
+        const recordsFiltered = countResult[0]?.count || 0
+
+        // Sort + Pagination
+        const sortStage = { $sort: { [sortField]: sortDir } }
+        pipeline.push(sortStage, { $skip: start }, { $limit: length })
+
+        const data = await Schedule.aggregate(pipeline)
+
+        return res.json({
+            draw,
+            recordsTotal: totalRecords,
+            recordsFiltered,
+            data
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            draw: +req.query.draw || 0,
+            recordsTotal: 0,
+            recordsFiltered: 0,
+            data: [],
+            error: error.message
+        })
+    }
+}
+
+export const createSchedule = async (req, res) => {
+    try {
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
+        const data = {
+            organization: organizationId,
+            createdBy: req.user._id
+        }
+
+        const schedule = new Schedule(data)
+        await schedule.save()
+
+        responseHelper.success(res, schedule, 'Tạo lịch mới thành công')
+    } catch (error) {
+        responseHelper.error(res, error.message)
+    }
+}
+
+export const updateSchedule = async (req, res) => {
+    try {
+        const { id } = req.params
+        const { user, shift, date, status, isRecurring, note, approved, recurringPattern } = req.body
+
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
+        const schedule = await Schedule.findOne({ _id: id, organization: organizationId })
+        if (!schedule) return responseHelper.error(res, 'Lịch không tồn tại', 404)
+
+        const dataUpdate = {}
+
+        if (user !== undefined) dataUpdate.user = user || null
+        if (shift !== undefined) dataUpdate.shift = shift || null
+        if (date !== undefined) dataUpdate.date = date ? new Date(date.toDateString()) : null
+        if (status !== undefined && ['scheduled', 'confirmed', 'cancelled'].includes(status)) dataUpdate.status = status
+        if (isRecurring !== undefined) dataUpdate.isRecurring = !!isRecurring
+        if (note !== undefined) dataUpdate.note = note
+        if (approved !== undefined) dataUpdate.approved = !!approved
+        if (recurringPattern !== undefined) dataUpdate.recurringPattern = recurringPattern
+
+        if (Object.keys(dataUpdate).length === 0) return responseHelper.error(res, 'Không có dữ liệu để cập nhật', 400)
+
+        const updated = await Schedule.findOneAndUpdate(
+            { _id: id, organization: organizationId },
+            dataUpdate,
+            { new: true }
+        )
+
+        responseHelper.success(res, updated, 'Cập nhật lịch thành công')
+    } catch (error) {
+        responseHelper.error(res, error.message)
+    }
+}
+
+
+export const deleteSchedule = async (req, res) => {
+    try {
+        const { ids } = req.body
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return responseHelper.error(res, 'Không có lịch nào được chọn để xóa', 400)
+        }
+
+        const result = await Schedule.deleteMany({
+            _id: { $in: ids },
+            organization: organizationId
+        })
+
+        responseHelper.success(res, result.deletedCount, 'Xóa thành công')
+    } catch (error) {
+        responseHelper.error(res, error.message)
+    }
+}

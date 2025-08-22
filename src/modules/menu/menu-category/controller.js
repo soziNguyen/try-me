@@ -5,26 +5,27 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
 export const getActiveMenuCategory = async (req, res) => {
     try {
-      const organizationId = getCurrentOrg(req)
-      if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
-  
-      const menuCate = await MenuCategory.aggregate([
-        { $match: { 
-          isActive: true,
-          organization: organizationId
-          } 
-        },
-        { $sort: { name: 1 } },
-        { $project: { _id: 1, name: 1, description: 1 } }
-      ])
-      
-      responseHelper.success(res, menuCate)
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
+        const menuCate = await MenuCategory.aggregate([
+            {
+                $match: {
+                    isActive: true,
+                    organization: organizationId
+                }
+            },
+            { $sort: { name: 1 } },
+            { $project: { _id: 1, name: 1, description: 1 } }
+        ])
+
+        responseHelper.success(res, menuCate)
     } catch (error) {
-      responseHelper.error(res, error.message)
+        responseHelper.error(res, error.message)
     }
 }
-  
-  
+
+
 export const getMenuCategory = async (req, res) => {
     try {
         const draw = +req.query.draw || 0
@@ -40,23 +41,23 @@ export const getMenuCategory = async (req, res) => {
 
         // Base pipeline with manager lookup
         const pipeline = [
-        { $match: { organization: organizationId } },
-        ...lookupUser('createdBy'),
-        ...lookupUser('updatedBy')
-    ]
+            { $match: { organization: organizationId } },
+            ...lookupUser('createdBy'),
+            ...lookupUser('updatedBy')
+        ]
 
         // Add search conditions if search value exists
         if (searchValue) {
-        const orConditions = [
-            { name: { $regex: searchValue, $options: 'i' } },
-            { description: { $regex: searchValue, $options: 'i' } },
-        ]
+            const orConditions = [
+                { name: { $regex: searchValue, $options: 'i' } },
+                { description: { $regex: searchValue, $options: 'i' } },
+            ]
 
-        pipeline.push({ $match: { $or: orConditions } })
+            pipeline.push({ $match: { $or: orConditions } })
         }
 
         // Get total count
-        const recordsTotal = await MenuCategory.countDocuments({ organization: organizationId }) 
+        const recordsTotal = await MenuCategory.countDocuments({ organization: organizationId })
 
         // Get filtered count
         const countPipeline = [...pipeline, { $count: 'count' }]
@@ -66,54 +67,54 @@ export const getMenuCategory = async (req, res) => {
         // Build sort object
         const sortObj = {}
         switch (sortField) {
-        case 'name':
-            sortObj.name = sortDir
-            break
-        case 'description':
-            sortObj.description = sortDir
-            break
-        case 'isActive':
-            sortObj.isActive = sortDir
-            break
-        default:
-            sortObj[sortField] = sortDir
+            case 'name':
+                sortObj.name = sortDir
+                break
+            case 'description':
+                sortObj.description = sortDir
+                break
+            case 'isActive':
+                sortObj.isActive = sortDir
+                break
+            default:
+                sortObj[sortField] = sortDir
         }
 
         // Add sorting, pagination, and projection
         pipeline.push(
-        { $sort: sortObj },
-        { $skip: start },
-        { $limit: length },
-        {
-            $project: {
-            _id: 1,
-            name: 1,
-            description: 1,
-            isActive: 1,
-            createdAt: 1,
-            createdBy: "$createdBy.username",
-            updatedBy: "$updatedBy.username"
+            { $sort: sortObj },
+            { $skip: start },
+            { $limit: length },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    description: 1,
+                    isActive: 1,
+                    createdAt: 1,
+                    createdBy: "$createdBy.username",
+                    updatedBy: "$updatedBy.username"
+                }
             }
-        }
         )
 
         // Execute the main query
         const data = await MenuCategory.aggregate(pipeline)
 
         return res.json({
-        draw,
-        recordsTotal,
-        recordsFiltered,
-        data
+            draw,
+            recordsTotal,
+            recordsFiltered,
+            data
         })
 
     } catch (error) {
         return res.status(500).json({
-        draw: +req.query.draw || 0,
-        recordsTotal: 0,
-        recordsFiltered: 0,
-        data: [],
-        error: error.message
+            draw: +req.query.draw || 0,
+            recordsTotal: 0,
+            recordsFiltered: 0,
+            data: [],
+            error: error.message
         })
     }
 }
@@ -122,7 +123,7 @@ export const createMenuCategory = async (req, res) => {
     try {
         const organizationId = getCurrentOrg(req)
         if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
-        
+
         if (!req.user || !req.user._id) {
             return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
         }
@@ -132,15 +133,15 @@ export const createMenuCategory = async (req, res) => {
             createdBy: req.user._id,
             organization: organizationId
         }
-        
+
         const menuCategory = new MenuCategory(data)
         await menuCategory.save()
-        
+
         const saved = await MenuCategory.findOne({
             _id: menuCategory._id,
             organization: organizationId
         })
-        .populate('createdBy', 'username -_id')
+            .populate('createdBy', 'username -_id')
         responseHelper.success(res, saved, 'Tạo danh mục thực đơn thành công')
     } catch (error) {
         responseHelper.error(res, error.message)
@@ -163,11 +164,11 @@ export const updateMenuCategory = async (req, res) => {
             return responseHelper.error(res, 'Danh mục không tồn tại', 404)
         }
 
-        const existing = await MenuCategory.findOne({ 
+        const existing = await MenuCategory.findOne({
             name,
             _id: { $ne: id },
             organization: organizationId
-         })
+        })
         if (existing) {
             return responseHelper.error(res, 'Danh mục thực đơn đã tồn tại', 400)
         }
@@ -180,8 +181,8 @@ export const updateMenuCategory = async (req, res) => {
         if (Object.keys(dataUpdate).length === 0) return
 
         const updated = await MenuCategory.findOneAndUpdate(
-            { _id: id, organization: organizationId}, 
-            dataUpdate, 
+            { _id: id, organization: organizationId },
+            dataUpdate,
             { new: true })
             .populate('updatedBy', 'username -_id')
         responseHelper.success(res, updated, 'Cập nhật thành công')
@@ -195,7 +196,7 @@ export const deleteMenuCategory = async (req, res) => {
         const { ids } = req.body
         const organizationId = getCurrentOrg(req)
         if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
-        
+
         if (!Array.isArray(ids) || ids.length === 0) {
             return responseHelper.error(res, 'Không có danh mục nào được chọn để xóa', 400)
         }
@@ -205,7 +206,7 @@ export const deleteMenuCategory = async (req, res) => {
             organization: organizationId
         })
 
-        responseHelper.success(res, result.deleteCount, 'Xóa thành công')
+        responseHelper.success(res, result.deletedCount, 'Xóa thành công')
     } catch (error) {
         responseHelper.error(res, error.message)
     }

@@ -18,31 +18,35 @@ import menuItemRoutes from '../modules/menu/menu-item/route.js'
 import recipeRoutes from '../modules/menu/recipe/route.js'
 import inventoryRoutes from './inventory.js'
 import menuRoutes from './menu.js'
-import comboRoute from '../modules/menu/combo/route.js'
+import staffRoutes from './staff.js'
+import comboRoutes from '../modules/menu/combo/route.js'
+import shiftRoutes from '../modules/shift/route.js'
 import uploadRouter from '../modules/upload/route.js'
 
 const router = express.Router()
 
-router.use('/', userRoutes)
-router.use('/', adminRoutes)
-router.use('/', ingredientRoutes)
-router.use('/', ingredientCategoryRoutes)
-router.use('/', ingredientStockRoute)
-router.use('/', organizationRoutes)
-router.use('/', stockEntryRoutes)
-router.use('/', stockIssueRoutes)
-router.use('/', stockTransferRoutes)
-router.use('/', stockHistoryRoutes)
-router.use('/', supplierRoutes)
-router.use('/', warehouseRoutes)
-router.use('/', inventoryRoutes)
-router.use('/', menuRoutes)
-router.use('/', organizationRoutes)
-router.use('/', menuCategoryRoutes)
-router.use('/', menuItemRoutes)
-router.use('/', recipeRoutes)
-router.use('/', comboRoute)
-router.use('/', uploadRouter)
-router.use('/', tableRoutes)
-router.use('/', orderRoutes)
+const routes = [
+    // Core
+    userRoutes, adminRoutes, organizationRoutes, uploadRouter,
+
+    // Inventory
+    ingredientRoutes, ingredientCategoryRoutes, ingredientStockRoute,
+    supplierRoutes, warehouseRoutes, inventoryRoutes,
+
+    // Stock transactions  
+    stockEntryRoutes, stockIssueRoutes, stockTransferRoutes, stockHistoryRoutes,
+
+    // Menu
+    menuRoutes, menuCategoryRoutes, menuItemRoutes, recipeRoutes, comboRoutes,
+    shiftRoutes,
+
+    // Table & order
+    tableRoutes, orderRoutes,
+
+    // Staff
+    staffRoutes
+]
+
+routes.forEach(route => router.use('/', route))
+
 export default router

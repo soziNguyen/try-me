@@ -7,13 +7,13 @@ $(function () {
   Promise.all([
     fetchData('inventory/categories'),
   ])
-  .then(([cats]) => {
-    categories = cats
-    initDataTable()
-  })
-  .catch(err => {
-    toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
-  })
+    .then(([cats]) => {
+      categories = cats
+      initDataTable()
+    })
+    .catch(err => {
+      toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
+    })
 
   // Render dataTable
   let showList = [10, 25, 50, 100]
@@ -23,16 +23,16 @@ $(function () {
   }
   showList.sort((a, b) => a - b)
 
-  
-  function initDataTable () {
+
+  function initDataTable() {
     table = $('#ingredientTable').DataTable({
       dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
-      'l' +
-      'f' +
-      '<"right-group d-flex align-items-center btn-group flex-wrap">' +
-      '>' +
-      'rt' +
-      '<"bottom-bar d-flex justify-content-between mt-3"ip>',
+        'l' +
+        'f' +
+        '<"right-group d-flex align-items-center btn-group flex-wrap">' +
+        '>' +
+        'rt' +
+        '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
       autoWidth: true,
@@ -167,7 +167,7 @@ $(function () {
           }
         }
       ],
-      rowCallback: function(row, data) {
+      rowCallback: function (row, data) {
         // Tag row with data-id for update
         $(row).attr('data-id', data._id)
       },
@@ -203,13 +203,13 @@ $(function () {
         // })
       }
     })
-  
+
     // =======================================================
     // EVENT HANDLER
     handlerAddEvent('#ingredientTable', '#addIngredientBtn', 'inventory/ingredient')
     handlerDeleteEvent('#ingredientTable', '#deleteIngredientBtn', 'ingredientCheckbox', 'inventory/ingredient')
     handlerUpdateEvent('#ingredientTable', 'inventory/ingredient')
-  
+
     initTableCheckboxEvents('#ingredientTable', 'ingredientCheckbox')
   }
 

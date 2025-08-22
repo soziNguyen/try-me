@@ -270,3 +270,58 @@ document.querySelectorAll("textarea").forEach(textarea => {
     textarea.style.height = textarea.scrollHeight + "px";
   });
 });
+
+function setCheckbox(tableSelector, checkboxClass) {
+  const table = document.querySelector(tableSelector)
+  if (!table) return
+
+  const selectAll = table.querySelector('thead th:first-child input[type=checkbox]')
+
+  // Click vào tr để toggle checkbox
+  table.querySelector('tbody').addEventListener('click', (e) => {
+    const target = e.target
+    if (
+      target.matches(
+        'input[type=checkbox], img, input[type=text], input[type=number], button, span, .dataInput, i, td:nth-child(n+2)'
+      )
+    ) return
+
+    const row = target.closest('tr')
+    if (!row) return
+    const checkbox = row.querySelector(`.${checkboxClass}`)
+    if (checkbox) {
+      checkbox.checked = !checkbox.checked
+      checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+    }
+  })
+
+  // Select All checkbox
+  if (selectAll) {
+    selectAll.addEventListener('change', () => {
+      const checkboxes = table.querySelectorAll(`.${checkboxClass}`)
+      checkboxes.forEach((cb) => (cb.checked = selectAll.checked))
+    })
+  }
+
+  // Click first 'th'
+  const firstTh = table.querySelector('thead th:first-child')
+  if (firstTh) {
+    firstTh.addEventListener('click', (e) => {
+      if (e.target.tagName === 'INPUT') return
+      if (selectAll) {
+        selectAll.checked = !selectAll.checked
+        selectAll.dispatchEvent(new Event('change', { bubbles: true }))
+      }
+    })
+  }
+
+  // Sync selectAll
+  table.addEventListener('change', (e) => {
+    if (!e.target.classList.contains(checkboxClass)) return
+    if (!selectAll) return
+
+    const all = table.querySelectorAll(`.${checkboxClass}`)
+    const checked = table.querySelectorAll(`.${checkboxClass}:checked`)
+    selectAll.checked = all.length > 0 && all.length === checked.length
+  })
+}

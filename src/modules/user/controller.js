@@ -5,12 +5,14 @@ import bcrypt from "bcryptjs"
 import passport from "passport"
 import responseHelper from '../../helpers/responseHelper.js'
 import { isValidPassword, generateSalt } from '../../helpers/common.js'
+import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
 // [CREATE] / User
 export const createUser = async (req, res) => {
     try {
         const { username, email, password } = req.body
-        const organizationId = req.user.organization
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
         const exist = await User.findOne({
             organization: organizationId,
@@ -40,7 +42,9 @@ export const createUser = async (req, res) => {
 export const getUsers = async (req, res) => {
     try {
         const { s } = req.query
-        const organizationId = req.user.organization
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
         const filter = { organization: organizationId }
         if (s) {
             filter["$or"] = [
@@ -61,7 +65,8 @@ export const getUsers = async (req, res) => {
 
 export const getUser = async (req, res) => {
   const { id } = req.params
-  const organizationId = req.user.organization
+  const organizationId = getCurrentOrg(req)
+  if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
   try {
       const user = await User.findOne({
@@ -84,7 +89,8 @@ export const getUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
     try {
-        const organizationId = req.user.organization
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
         const { username, email, password, confirmPassword, role } = req.body
         const { id } = req.params
 
@@ -138,7 +144,9 @@ export const updateUser = async (req, res) => {
 
 export const deleteUsers = async (req, res) => {
     try {
-        const organizationId = req.user.organization
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
         const { userIds } = req.body
         if (!userIds || userIds.length === 0) {
             return responseHelper.error(res, 'No users selected.', 400)
@@ -214,7 +222,7 @@ export const logOut = (req, res) => {
 export const forgotPassword = async (req, res) => {
     const { email } = req.body
     try {
-        const user = await User.findOne({ email, organization: req.user.organization })
+        const user = await User.findOne({ email })
         if (!user) {
             return responseHelper.error(res, `${email} Not Found.`, 404)
         }

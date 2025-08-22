@@ -364,33 +364,8 @@ if (logInForm) {
       toastr.error(error.message)
     }
   }
-  // select all check box
-  const selectAll = document.getElementById("selectAll")
-  const tbody     = document.getElementById('userTableBody')
-  selectAll?.addEventListener("change", () => {
-    const checkboxes = document.querySelectorAll(".userCheckbox")
-    checkboxes.forEach((checkbox) => (checkbox.checked = selectAll.checked))
-  })
 
-  // sync selectAll
-  tbody.addEventListener("change", (e) => {
-    if (!e.target.matches(".userCheckbox")) return
-    const all = Array.from(tbody.querySelectorAll(".userCheckbox"))
-    const every = all.every((cb) => cb.checked)
-    selectAll.checked = every
-  })
-
-  // click 'tr' checkbox
-  tbody.addEventListener("click", (e) => {
-    const target = e.target
-    if (target.matches("input.userCheckbox") || target.closest(".updateUserBtn") || target.closest("button") || 'td:nth-child(n+2)') return
-    const row = target.closest("tr")
-    if (!row) return
-    const cb = row.querySelector("input.userCheckbox")
-    if (!cb) return
-    cb.checked = !cb.checked
-    cb.dispatchEvent(new Event("change", { bubbles: true }))
-  })
+  setCheckbox('#userTable', 'userCheckbox')
 
   // delete users handling
   document.getElementById("deleteManyBtn")?.addEventListener("click", deleteUsers) 
