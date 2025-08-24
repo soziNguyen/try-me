@@ -1,37 +1,114 @@
 <div class="<%= headerClass %>">
-    <button id="toggleSidebar">
-        <i class="bi bi-list"></i>
-    </button>
-    <div class="dropdown info">
-        <a class="w-100 info__icon" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-person-circle fs-4"></i>
+  <button id="toggleSidebar">
+    <i class="bi bi-list"></i>
+  </button>
+  <div class="dropdown info">
+    <a
+      class="w-100 info__icon"
+      href="#"
+      role="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+    >
+      <i class="bi bi-person-circle fs-4"></i>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end mt-2">
+      <li class="px-3 mb-3">
+        <span><%= user.username %></span>
+        <span><%= user.email %></span>
+        <span><%= user.role %></span>
+      </li>
+      <li>
+        <button
+          class="dropdown-item"
+          type="button"
+          data-bs-toggle="modal"
+          data-bs-target="#themeModal"
+        >
+          <i class="bi bi-moon me-2"></i> Giao diện
+        </button>
+      </li>
+      <li id="change-password">
+        <a class="w-100 dropdown-item">
+          <i class="bi bi-shield-lock me-2"></i> Đổi mật khẩu
         </a>
-        <ul class="dropdown-menu dropdown-menu-end mt-2">
-        <li class="px-3 mb-3">
-            <span><%= user.username %></span>
-            <span><%= user.email %></span>
-            <span><%= user.role %></span>
-        </li>
-        <li id="change-password">
-            <a class="w-100 dropdown-item">
-            <i class="bi bi-shield-lock me-2"></i> Đổi mật khẩu
-            </a>
-        </li>
-        <li id="logOut">
-            <a class="dropdown-item w-100" id="logOutDropdown">
-            <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
-            </a>
-        </li>
-        <% if(user.role === 'Admin' && session.currentOrg) { %>
-            <li id="back-to-admin">
-                <form method="POST" action="/api/admin/exit-org">
-                  <button type="submit" class="dropdown-item w-100">
-                    <i class="bi bi-arrow-left-circle me-2"></i> Quay lại Admin
-                  </button>
-                </form>
-            </li>
-        <% } %>        
-        
-        </ul>
-    </div>   
+      </li>
+      <li id="logOut">
+        <a class="dropdown-item w-100" id="logOutDropdown">
+          <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+        </a>
+      </li>
+      <% if(user.role === 'Admin' && session.currentOrg) { %>
+      <li id="back-to-admin">
+        <form method="POST" action="/api/admin/exit-org">
+          <button type="submit" class="dropdown-item w-100">
+            <i class="bi bi-arrow-left-circle me-2"></i> Quay lại Admin
+          </button>
+        </form>
+      </li>
+      <% } %>
+    </ul>
+  </div>
+</div>
+<div
+  class="modal fade"
+  id="themeModal"
+  tabindex="-1"
+  aria-hidden="true"
+  data-bs-backdrop="true"
+>
+  <div
+    class="modal-dialog"
+    style="position: fixed; top: 60px; right: 20px; margin: 0; max-width: 280px"
+  >
+    <div class="modal-content bg-white text-dark border-0">
+      <!-- Modal Header -->
+      <div class="modal-header border-secondary pb-2">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-dark me-2"
+          id="backToDropdown"
+        >
+          <i class="bi bi-arrow-left"></i>
+        </button>
+        <h6 class="modal-title mb-0 fw-normal">Giao diện</h6>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body pt-2">
+        <p class="text-muted small mb-3">
+          Cài đặt chỉ áp dụng cho trình duyệt này
+        </p>
+
+        <!-- Dark Theme Option -->
+        <div
+          class="d-flex align-items-center justify-content-between p-2 mb-2 rounded theme-option bg-secondary bg-opacity-25"
+          data-theme="dark"
+          role="button"
+        >
+          <div class="d-flex align-items-center">
+            <i class="bi bi-moon me-3"></i>
+            <span>Chế độ tối</span>
+          </div>
+          <i class="bi bi-check-lg text-success theme-check" id="darkCheck"></i>
+        </div>
+
+        <!-- Light Theme Option -->
+        <div
+          class="d-flex align-items-center justify-content-between p-2 rounded theme-option"
+          data-theme="light"
+          role="button"
+        >
+          <div class="d-flex align-items-center">
+            <i class="bi bi-sun me-3"></i>
+            <span>Chế độ sáng</span>
+          </div>
+          <i
+            class="bi bi-check-lg text-success theme-check d-none"
+            id="lightCheck"
+          ></i>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

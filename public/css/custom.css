@@ -113,8 +113,6 @@ table tbody td .form-select-sm {
   padding: 0 !important;
 }
 .select2-container--default .select2-results__options {
-  background-color: black;
-  color: white;
   list-style: none;
   padding-left: 0px;
   margin: 0;
@@ -125,17 +123,17 @@ table tbody td .form-select-sm {
   padding-left: 4px;
 }
 .select2-container--default .select2-results__options .select2-results__option:hover {
-  background-color: #0099ff;
-  color: rgb(255, 255, 255);
+  background-color: var(--link);
+  color: #fff;
   cursor: pointer;
 }
 .select2-container--default .select2-results__options .select2-results__option--highlighted {
-  background-color: #0099ff;
-  color: rgb(255, 255, 255);
+  background-color: var(--link);
+  color: #fff;
 }
 .select2-container--default .select2-results__options .select2-results__option--selected {
-  background-color: #0099ff;
-  color: rgb(255, 255, 255);
+  background-color: var(--link);
+  color: #fff;
 }
 
 .select2-dropdown {

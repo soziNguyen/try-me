@@ -1,8 +1,44 @@
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --text: #222222;
+  --muted: #6c757d;
+  --header-bg: #ffffff;
+  --header-text: #222222;
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #000000;
+  --card-border: #e9ecef;
+  --link: #0d6efd;
+  --tooltip-bg: rgba(0,0,0,0.8);
+  --accent-bg: rgba(13,110,253,0.04);
+}
+
+/* Dark theme overrides */
+html[data-theme=dark] {
+  --bg: #0b0d10;
+  --surface: #0f1113;
+  --text: #e6eef6;
+  --muted: #9aa6b2;
+  --header-bg: #0b0d10;
+  --header-text: #e6eef6;
+  --sidebar-bg: #0f1215;
+  --sidebar-text: #dfe8f2;
+  --card-border: #22272b;
+  --link: #7ab4ff;
+  --tooltip-bg: rgba(255,255,255,0.12);
+  --accent-bg: rgba(122,180,255,0.06);
+}
+
+/* Basic reset / fonts */
 body {
   margin: 0;
   font-family: "Roboto", "Arial", sans-serif;
+  background: var(--bg);
+  color: var(--text);
 }
 
+/* panel layout mixin (uses variables for colors) */
+/* Tooltip */
 .sidebar-tooltip {
   position: fixed;
   background: rgba(0, 0, 0, 0.8);
@@ -28,13 +64,14 @@ body {
   border-right-color: rgba(0, 0, 0, 0.8);
 }
 
+/* Flyout */
 .sidebar-flyout {
   position: absolute;
-  background: #fff;
-  border: 1px solid #ccc;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
   border-radius: 4px;
-  -webkit-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  -webkit-box-shadow: 0 2px 6px var(--tooltip-bg);
+          box-shadow: 0 2px 6px var(--tooltip-bg);
   z-index: 2500;
 }
 .sidebar-flyout a {
@@ -47,10 +84,10 @@ body {
   padding: 8px 12px;
   white-space: nowrap;
   text-decoration: none;
-  color: #000;
+  color: var(--text);
 }
 .sidebar-flyout a:hover {
-  background: #f3f3f3;
+  background: var(--accent-bg);
 }
 
 .admin__layout {
@@ -69,7 +106,8 @@ body {
   left: 0;
   width: 100%;
   height: 60px;
-  background: #fff;
+  background: var(--header-bg);
+  color: var(--header-text);
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -86,12 +124,14 @@ body {
   background: none;
   border: none;
   font-size: 1.5rem;
+  color: inherit;
 }
 .admin__layout .admin__header .info .info__icon {
-  color: #000;
+  color: var(--header-text);
 }
 .admin__layout .admin__header .info ul li a {
   cursor: pointer;
+  color: inherit;
 }
 .admin__layout .admin__main {
   margin-top: 60px;
@@ -104,8 +144,8 @@ body {
 }
 .admin__layout .admin__main #admin__sidebar {
   width: 320px;
-  background: #fff;
-  color: #000;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
   height: calc(100vh - 60px) !important;
   padding: 0 1rem 1rem 1rem;
   -webkit-transition: width 0.3s;
@@ -133,7 +173,7 @@ body {
 }
 .admin__layout .admin__main #admin__sidebar ul li:not(:has(.accordion)) a {
   text-decoration: none;
-  color: #000;
+  color: var(--sidebar-text);
   padding: 10px;
   display: -webkit-box;
   display: -ms-flexbox;
@@ -144,7 +184,7 @@ body {
   width: 100%;
 }
 .admin__layout .admin__main #admin__sidebar ul li:not(:has(.accordion)).active, .admin__layout .admin__main #admin__sidebar ul li:not(:has(.accordion)):hover {
-  background: #f3f3f3;
+  background: var(--accent-bg);
   border-radius: 5px;
   font-weight: 550;
 }
@@ -172,7 +212,7 @@ body {
       -ms-flex-pack: justify;
           justify-content: space-between;
   font-size: 1.25rem;
-  color: #000;
+  color: var(--sidebar-text);
   -webkit-box-shadow: none;
           box-shadow: none;
 }
@@ -186,11 +226,11 @@ body {
   text-align: left;
 }
 .admin__layout .admin__main #admin__sidebar ul li > .accordion .accordion-header .accordion-button:hover {
-  background: #f3f3f3;
+  background: var(--accent-bg);
   font-weight: 550;
 }
 .admin__layout .admin__main #admin__sidebar ul li > .accordion .accordion-header .accordion-button.active {
-  background: #f3f3f3;
+  background: var(--accent-bg);
   border-radius: 5px;
   font-weight: 550;
 }
@@ -206,7 +246,7 @@ body {
           align-items: center;
   padding: 8px 10px 8px 30px;
   text-decoration: none;
-  color: #000;
+  color: var(--sidebar-text);
   width: 100%;
 }
 .admin__layout .admin__main #admin__sidebar ul li > .accordion .accordion-collapse .accordion-body a span {
@@ -216,12 +256,12 @@ body {
   font-size: 1rem;
 }
 .admin__layout .admin__main #admin__sidebar ul li > .accordion .accordion-collapse .accordion-body a.accordion-active {
-  background: #f3f3f3;
+  background: var(--accent-bg);
   font-weight: 550;
   border-radius: 5px;
 }
 .admin__layout .admin__main #admin__sidebar ul li > .accordion .accordion-collapse .accordion-body a:hover {
-  background: #f3f3f3;
+  background: var(--accent-bg);
 }
 .admin__layout .admin__main #admin__sidebar.collapsed {
   width: 60px;
@@ -270,6 +310,8 @@ body {
   padding: 0 1rem 1rem 1rem;
   overflow-y: auto;
   height: calc(100vh - 60px);
+  background: var(--bg);
+  color: var(--text);
 }
 
 .staff__layout {
@@ -288,7 +330,8 @@ body {
   left: 0;
   width: 100%;
   height: 60px;
-  background: #fff;
+  background: var(--header-bg);
+  color: var(--header-text);
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -305,12 +348,14 @@ body {
   background: none;
   border: none;
   font-size: 1.5rem;
+  color: inherit;
 }
 .staff__layout .staff__header .info .info__icon {
-  color: #000;
+  color: var(--header-text);
 }
 .staff__layout .staff__header .info ul li a {
   cursor: pointer;
+  color: inherit;
 }
 .staff__layout .staff__main {
   margin-top: 60px;
@@ -323,8 +368,8 @@ body {
 }
 .staff__layout .staff__main #staff__sidebar {
   width: 320px;
-  background: #fff;
-  color: #000;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
   height: calc(100vh - 60px) !important;
   padding: 0 1rem 1rem 1rem;
   -webkit-transition: width 0.3s;
@@ -352,7 +397,7 @@ body {
 }
 .staff__layout .staff__main #staff__sidebar ul li:not(:has(.accordion)) a {
   text-decoration: none;
-  color: #000;
+  color: var(--sidebar-text);
   padding: 10px;
   display: -webkit-box;
   display: -ms-flexbox;
@@ -363,7 +408,7 @@ body {
   width: 100%;
 }
 .staff__layout .staff__main #staff__sidebar ul li:not(:has(.accordion)).active, .staff__layout .staff__main #staff__sidebar ul li:not(:has(.accordion)):hover {
-  background: #f3f3f3;
+  background: var(--accent-bg);
   border-radius: 5px;
   font-weight: 550;
 }
@@ -391,7 +436,7 @@ body {
       -ms-flex-pack: justify;
           justify-content: space-between;
   font-size: 1.25rem;
-  color: #000;
+  color: var(--sidebar-text);
   -webkit-box-shadow: none;
           box-shadow: none;
 }
@@ -405,11 +450,11 @@ body {
   text-align: left;
 }
 .staff__layout .staff__main #staff__sidebar ul li > .accordion .accordion-header .accordion-button:hover {
-  background: #f3f3f3;
+  background: var(--accent-bg);
   font-weight: 550;
 }
 .staff__layout .staff__main #staff__sidebar ul li > .accordion .accordion-header .accordion-button.active {
-  background: #f3f3f3;
+  background: var(--accent-bg);
   border-radius: 5px;
   font-weight: 550;
 }
@@ -425,7 +470,7 @@ body {
           align-items: center;
   padding: 8px 10px 8px 30px;
   text-decoration: none;
-  color: #000;
+  color: var(--sidebar-text);
   width: 100%;
 }
 .staff__layout .staff__main #staff__sidebar ul li > .accordion .accordion-collapse .accordion-body a span {
@@ -435,12 +480,12 @@ body {
   font-size: 1rem;
 }
 .staff__layout .staff__main #staff__sidebar ul li > .accordion .accordion-collapse .accordion-body a.accordion-active {
-  background: #f3f3f3;
+  background: var(--accent-bg);
   font-weight: 550;
   border-radius: 5px;
 }
 .staff__layout .staff__main #staff__sidebar ul li > .accordion .accordion-collapse .accordion-body a:hover {
-  background: #f3f3f3;
+  background: var(--accent-bg);
 }
 .staff__layout .staff__main #staff__sidebar.collapsed {
   width: 60px;
@@ -489,6 +534,8 @@ body {
   padding: 0 1rem 1rem 1rem;
   overflow-y: auto;
   height: calc(100vh - 60px);
+  background: var(--bg);
+  color: var(--text);
 }
 
 /* Mobile (<992px) */
@@ -502,7 +549,7 @@ body {
     left: 0;
     height: calc(100vh - 60px);
     z-index: 999;
-    background-color: #fff;
+    background-color: var(--sidebar-bg);
     width: 320px;
     -webkit-transform: translateX(-100%);
             transform: translateX(-100%);
@@ -576,7 +623,7 @@ body {
   .staff__layout .admin__main #admin__sidebar ul li > .accordion .accordion-collapse.show .accordion-body a,
   .staff__layout .staff__main #staff__sidebar ul > li .accordion-collapse.show .accordion-body a,
   .staff__layout .staff__main #staff__sidebar ul li > .accordion .accordion-collapse.show .accordion-body a {
-    background: #f3f3f3;
+    background: var(--accent-bg);
   }
   .admin__layout .admin__main,
   .admin__layout .staff__main,
