@@ -66,7 +66,7 @@
               <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
                 <i class="bi bi-x-lg"></i> Đóng
               </button>
-              <button id="createUserBtn" class="btn btn-outline-primary">
+              <button type="submit" form="newUserForm" id="createUserBtn" class="btn btn-outline-primary">
                 <i class="bi bi-person-plus me-1"></i> Tạo mới
               </button>
             </div>
@@ -112,7 +112,7 @@
               <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
                 <i class="bi bi-x-lg"></i> Đóng
               </button>
-              <button id="updateUserBtnForm" class="btn btn-outline-primary">
+              <button type="submit" form="updateUserForm" id="updateUserBtnForm" class="btn btn-outline-primary">
                 <i class="bi bi-pencil-square me-1"></i> Thay đổi
               </button>
             </div>
@@ -127,5 +127,6 @@
   <%- include('../partials/commonjs.html')%>
   <script src="/js/sidebar-toggle.js"></script>
   <script src="/js/update-user.js"></script>
+  <script src="/js/data-table.js"></script>
   <script src="/js/users.js"></script>
   <%- include('../partials/footer.html') %>

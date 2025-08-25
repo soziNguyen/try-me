@@ -2,8 +2,6 @@ const logInForm = document.getElementById("login-form")
 const signUpForm = document.getElementById("signup-form")
 const forgotForm = document.getElementById("forgot-password")
 const resetForm = document.getElementById("reset-form")
-const API_PROVINCE = 'https://esgoo.net/api-tinhthanh-new/1/0.htm'
-const API_COMMUNE = 'https://esgoo.net/api-tinhthanh-new/2'
 
 if (logInForm) {
   // Điền sẵn giá trị từ localStorage khi trang login load
@@ -14,7 +12,9 @@ if (logInForm) {
 
     const savedLogin = localStorage.getItem("savedLogin") || ""
     const savedRemember = localStorage.getItem("savedRemember") === "true"
-    const savedPassword = savedRemember ? localStorage.getItem("savedPassword") || "" : ""
+    const savedPassword = savedRemember
+      ? localStorage.getItem("savedPassword") || ""
+      : ""
 
     loginField.value = savedLogin
     rememberCheckbox.checked = savedRemember
@@ -55,7 +55,11 @@ if (logInForm) {
     }
 
     try {
-      const result = await ajax("/api/users/login", { login, password, remember: remember ? 1 : 0 })
+      const result = await ajax("/api/users/login", {
+        login,
+        password,
+        remember: remember ? 1 : 0,
+      })
       if (result) {
         toastr.success("Đăng nhập thành công. Đang chuyển hướng...")
         setTimeout(() => {
@@ -73,26 +77,26 @@ if (logInForm) {
     // Lấy data từ form organization + admin
     const formData = new FormData(signUpForm)
     const data = {
-      orgName: formData.get('orgName'),
-      orgEmail: formData.get('orgEmail'),
-      orgPhone: formData.get('orgPhone'),
-      orgProvince: formData.get('orgProvince'),
-      orgCommune: formData.get('orgCommune'),
-      orgStreet: formData.get('orgStreet'),
-      adminUsername: formData.get('adminUsername'),
-      adminEmail: formData.get('adminEmail'),
-      adminPassword: formData.get('adminPassword')
+      orgName: formData.get("orgName"),
+      orgEmail: formData.get("orgEmail"),
+      orgPhone: formData.get("orgPhone"),
+      orgProvince: formData.get("orgProvince"),
+      orgCommune: formData.get("orgCommune"),
+      orgStreet: formData.get("orgStreet"),
+      adminUsername: formData.get("adminUsername"),
+      adminEmail: formData.get("adminEmail"),
+      adminPassword: formData.get("adminPassword"),
     }
 
-    const confirmPassword = formData.get('confirmPassword')
-    
+    const confirmPassword = formData.get("confirmPassword")
+
     // Validate
     if (data.adminPassword !== confirmPassword) {
-      toastr.warning('Mật khẩu không khớp')
+      toastr.warning("Mật khẩu không khớp")
       return
     }
 
-    if (!data || Object.values(data).some(value => !value)) {
+    if (!data || Object.values(data).some((value) => !value)) {
       toastr.warning("Vui lòng điền đầy đủ thông tin.")
       return
     }
@@ -100,7 +104,9 @@ if (logInForm) {
     try {
       const result = await ajax("/api/organization/create", data)
       if (result) {
-        toastr.success("Tổ chức và quản trị viên đã được tạo thành công. Đang chuyển hướng đến trang đăng nhập...")
+        toastr.success(
+          "Tổ chức và quản trị viên đã được tạo thành công. Đang chuyển hướng đến trang đăng nhập..."
+        )
         setTimeout(() => {
           window.location.href = "/login"
         }, 1000)
@@ -125,7 +131,9 @@ if (logInForm) {
     try {
       const result = await ajax("/api/users/forgot", { email })
       if (result) {
-        toastr.info("Đã gửi email hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến của bạn.")
+        toastr.info(
+          "Đã gửi email hướng dẫn đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến của bạn."
+        )
         setTimeout(() => {
           window.location.href = "/login"
         }, 1500)
@@ -159,7 +167,9 @@ if (logInForm) {
         return
       }
       if (!isValidPassword(newPassword)) {
-        toastr.warning( "Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm ký tự hoa, thường, số và ký tự đặc biệt." )
+        toastr.warning(
+          "Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm ký tự hoa, thường, số và ký tự đặc biệt."
+        )
         return
       }
       if (!isValidPassword(newPassword, confirmPassword)) {
@@ -167,7 +177,10 @@ if (logInForm) {
         return
       }
       try {
-        const result = await ajax(`/api/users/reset-password/${token}`, { newPassword, confirmPassword })
+        const result = await ajax(`/api/users/reset-password/${token}`, {
+          newPassword,
+          confirmPassword,
+        })
         if (result) {
           toastr.success("Thay đổi mật khẩu thành công.")
           setTimeout(() => {
@@ -187,22 +200,25 @@ if (logInForm) {
     await addUser()
   })
 
-  document.getElementById("userTableBody").addEventListener("click", async (event) => {
-    const btn = event.target.closest(".updateUserBtn")
-    if (btn) {
-      const userId = btn.getAttribute("data-id")
-      if (userId) {
-        await updateUser(userId)
+  document
+    .getElementById("userTableBody")
+    .addEventListener("click", async (event) => {
+      const btn = event.target.closest(".updateUserBtn")
+      if (btn) {
+        const userId = btn.getAttribute("data-id")
+        if (userId) {
+          await updateUser(userId)
+        }
       }
-    }
-  })
+    })
 
   async function addUser() {
     const newUserModalElement = document.getElementById("newUserModal")
-    const newUserModal = newUserModalElement ? new bootstrap.Modal(newUserModalElement) : null
+    const newUserModal = newUserModalElement
+      ? new bootstrap.Modal(newUserModalElement)
+      : null
     const newUser = document.querySelector("#newUser")
-    const createUserBtn = document.getElementById("createUserBtn")
-    // const userTable = document.querySelector("#userTable")
+    const form = document.getElementById("newUserForm")
 
     if (newUser && newUserModal) {
       newUser.addEventListener("click", function () {
@@ -210,12 +226,17 @@ if (logInForm) {
       })
     }
 
-    if (createUserBtn) {
-      createUserBtn.addEventListener("click", async function (event) {
+    if (form) {
+      form.addEventListener("submit", async function (event) {
         event.preventDefault()
 
         const { username, email, password, confirmPassword } = getFormData()
-        const checkInPut = validateUserInput( username, email, password, confirmPassword )
+        const checkInPut = validateUserInput(
+          username,
+          email,
+          password,
+          confirmPassword
+        )
 
         if (checkInPut) {
           toastr.warning(checkInPut)
@@ -223,11 +244,15 @@ if (logInForm) {
         }
 
         try {
-          const result = await ajax("/api/users/create", { username, email, password })
+          const result = await ajax("/api/users/create", {
+            username,
+            email,
+            password,
+          })
           if (result) {
             toastr.success("Thêm thành công")
             if (newUserModal) newUserModal.hide()
-            clearForm('new')
+            clearForm("new")
             await getUsers()
           }
         } catch (error) {
@@ -252,83 +277,95 @@ if (logInForm) {
   }
   window.getUsers = getUsers
 
-  document.getElementById("searchUserInput").addEventListener("input", function () {
-    const query = this.value.trim().toLowerCase()
-    const filtered = userData.filter(u => {
-      const username = removeAccents(u.username).toLowerCase()
-      const email = removeAccents(u.email).toLowerCase()
-      const createdAt = formatDate(u.createdAt)
-      const updatedAt = formatDate(u.updatedAt)
-      return username.includes(query) || email.includes(query) || createdAt.includes(query) || updatedAt.includes(query)
-    })
-    if (filtered.length === 0) {
-      userTableBody.innerHTML = `
+  document
+    .getElementById("searchUserInput")
+    .addEventListener("input", function () {
+      const query = this.value.trim().toLowerCase()
+      const filtered = userData.filter((u) => {
+        const username = removeAccents(u.username).toLowerCase()
+        const email = removeAccents(u.email).toLowerCase()
+        const createdAt = formatDate(u.createdAt)
+        const updatedAt = formatDate(u.updatedAt)
+        return (
+          username.includes(query) ||
+          email.includes(query) ||
+          createdAt.includes(query) ||
+          updatedAt.includes(query)
+        )
+      })
+      if (filtered.length === 0) {
+        userTableBody.innerHTML = `
         <tr>
           <td colspan="7" class="text-center">Không có bản ghi nào</td>
         </tr>
       `
-    } else {
-      renderTable(filtered)
-    }
-  })
-  
+      } else {
+        renderTable(filtered)
+      }
+    })
+
   // update event handler
   async function updateUser(userId) {
     try {
-      const updateUserModalElement = document.getElementById("updateUserModal")
-      if (!updateUserModalElement) {
-        toastr.error("Update user modal not found.")
+      const modalEl = document.getElementById("updateUserModal")
+      if (!modalEl) {
+        toastr.error("Không tìm thấy modal.")
         return
       }
 
+      // Lấy thông tin user
       const user = await ajax(`/api/users/${userId}`, {}, "GET")
-      const roles = ['Org', 'Member']
+
+      // Đổ roles
+      const roles = ["Org", "Member"]
       const roleSelect = document.getElementById("new-role")
       roleSelect.innerHTML = ""
-
       roles.forEach((r) => {
         const opt = document.createElement("option")
         opt.value = r
         opt.textContent = r
         roleSelect.appendChild(opt)
       })
-      
+
+      // Gán dữ liệu
       document.getElementById("new-username").value = user.username || ""
       document.getElementById("new-email").value = user.email || ""
       document.getElementById("new-role").value = user.role || "Member"
+      document.getElementById("new-password").value = ""
+      document.getElementById("new-confirm-password").value = ""
 
-      const updateUserModal = new bootstrap.Modal(updateUserModalElement) // initial & show bootstrap modal
-      updateUserModal.show()
+      // Hiển thị modal
+      const modal = new bootstrap.Modal(modalEl)
+      modal.show()
 
-      const updateBtn = document.getElementById("updateUserBtnForm") // form submit
-      const updateUserBtnForm = updateBtn.cloneNode(true)
-      updateBtn.replaceWith(updateUserBtnForm)
+      // Xử lý submit chỉ một lần
+      const form = document.getElementById("updateUserForm")
+      const submitHandler = async (e) => {
+        e.preventDefault()
 
-      updateUserBtnForm.addEventListener("click", async function () {
         const currentUserId = document.getElementById("currentUserId").value
         const username = document.getElementById("new-username").value.trim()
         const email = document.getElementById("new-email").value.trim()
         const password = document.getElementById("new-password").value.trim()
-        const confirmPassword = document.getElementById("new-confirm-password").value.trim()
+        const confirmPassword = document
+          .getElementById("new-confirm-password")
+          .value.trim()
         const role = document.getElementById("new-role").value
         const dataUpdate = { username, email, role }
-        const isValidUser = isValidUserAccountName(username, email)
 
+        const isValidUser = isValidUserAccountName(username, email)
         if (isValidUser) {
           toastr.warning(isValidUser)
           return
         }
-
         if (role !== user.role && userId === currentUserId) {
           toastr.warning("Bạn không thể tự thay đổi vai trò của mình")
           return
-        } 
+        }
         if ((password && !confirmPassword) || (!password && confirmPassword)) {
           toastr.warning("Vui lòng nhập đầy đủ mật khẩu và xác nhận mật khẩu.")
-          (password ? document.getElementById("new-confirm-password") : document.getElementById("new-password")).focus()
           return
         }
-
         if (password && confirmPassword) {
           if (!isValidPassword(password)) {
             toastr.warning(
@@ -352,27 +389,36 @@ if (logInForm) {
           )
           if (result) {
             toastr.success("Cập nhật thành công")
-            updateUserModal.hide()
-            clearForm('update')
+            modal.hide()
+            clearForm("update")
             await getUsers()
           }
-        } catch (error) {
-          toastr.error(error.message)
+        } catch (err) {
+          toastr.error(err.message)
         }
-      })
+      }
+
+      // Gỡ event cũ rồi gắn mới (hoặc dùng once)
+      form.replaceWith(form.cloneNode(true))
+      const newForm = document.getElementById("updateUserForm")
+      newForm.addEventListener("submit", submitHandler, { once: true })
     } catch (error) {
       toastr.error(error.message)
     }
   }
 
-  setCheckbox('#userTable', 'userCheckbox')
+  setCheckbox("#userTable", "userCheckbox")
 
   // delete users handling
-  document.getElementById("deleteManyBtn")?.addEventListener("click", deleteUsers) 
-  const currentUserId = document.getElementById('currentUserId')?.value
+  document
+    .getElementById("deleteManyBtn")
+    ?.addEventListener("click", deleteUsers)
+  const currentUserId = document.getElementById("currentUserId")?.value
 
   async function deleteUsers() {
-    const selectedUsers = [...document.querySelectorAll(".userCheckbox:checked"),].map((cb) => cb.dataset.id)
+    const selectedUsers = [
+      ...document.querySelectorAll(".userCheckbox:checked"),
+    ].map((cb) => cb.dataset.id)
 
     if (selectedUsers.length === 0) {
       toastr.warning("Vui lòng chọn ít nhất một người dùng để xóa")
@@ -384,20 +430,25 @@ if (logInForm) {
       return
     }
 
-    const confirmDelete = confirm(`Bạn có chắc chắn muốn xóa ${selectedUsers.length} thành viên?`)
-    if (!confirmDelete) return
-    try {
-      const result = await ajax("/api/users/delete", {
-        userIds: selectedUsers,
-      })
-      if (result) {
-        toastr.success("Xóa thành công")
-        await getUsers()
-        selectAll.checked = false
-      }
-    } catch (error) {
-      toastr.error(error.message)
-    }
+    // Hiển thị modal xác nhận
+    showConfirmModal({
+      title: "Xác nhận xóa",
+      message: `Bạn có chắc chắn muốn xóa ${selectedUsers.length} thành viên?`,
+      onConfirm: async () => {
+        try {
+          const result = await ajax("/api/users/delete", {
+            userIds: selectedUsers,
+          })
+          if (result) {
+            toastr.success("Xóa thành công")
+            await getUsers()
+            selectAll.checked = false
+          }
+        } catch (error) {
+          toastr.error(error.message)
+        }
+      },
+    })
   }
 }
 
@@ -413,82 +464,92 @@ function renderTable(users = []) {
     return
   }
   tableBody.innerHTML = users
-    .map((user) =>
+    .map(
+      (user) =>
         `<tr>
-            <td class="text-center"><input type="checkbox" class="userCheckbox" data-id="${user._id}"></td>
+            <td class="text-center"><input type="checkbox" class="userCheckbox" data-id="${
+              user._id
+            }"></td>
             <td>${user.username}</td>
             <td>${user.email}</td>
             <td>${user.role}</td>
             <td>${formatDate(user.createdAt)}</td>
             <td>${formatDate(user.updatedAt)}</td>
             <td>
-                <button class="updateUserBtn btn btn-outline-info" data-id="${user._id}">
+                <button class="updateUserBtn btn btn-outline-info" data-id="${
+                  user._id
+                }">
                     <i class="bi bi-pencil-square"></i>
                 </button>
             </td>
         </tr>`
-    ).join("")
+    )
+    .join("")
 }
 
-function listProvinces () {
-  $.getJSON('/data/full_address.json', function (res) {
+function listProvinces() {
+  $.getJSON("/data/full_address.json", function (res) {
     if (res.error == 0 && res.data) {
-
-      const $provinceSelect = $('#orgProvince')
-      $provinceSelect.empty().append('<option value="">— Tỉnh/ Thành phố —</option>')
+      const $provinceSelect = $("#orgProvince")
+      $provinceSelect
+        .empty()
+        .append('<option value="">— Tỉnh/ Thành phố —</option>')
 
       $.each(res.data, function (key, province) {
-        $provinceSelect.append(`<option value="${province.id}">${province.name}</option>`)
+        $provinceSelect.append(
+          `<option value="${province.id}">${province.name}</option>`
+        )
       })
 
-      initSelect2($provinceSelect, 'Tỉnh/ Thành phố')
+      initSelect2($provinceSelect, "Tỉnh/ Thành phố")
     }
-  })
-  .fail(function () {
+  }).fail(function () {
     toastr.error("Không thể tải danh sách tỉnh thành.")
   })
 }
 
 function listCommunes(provinceId) {
-  $.getJSON('/data/full_address.json', function(res) {
-    const $communeSelect = $('#orgCommune')
-    $communeSelect.empty().append('<option value="">— Chọn Xã/ Phường —</option>')
+  $.getJSON("/data/full_address.json", function (res) {
+    const $communeSelect = $("#orgCommune")
+    $communeSelect
+      .empty()
+      .append('<option value="">— Chọn Xã/ Phường —</option>')
 
     if (res.error === 0 && res.data) {
       // Tìm đúng tỉnh theo id
-      const province = res.data.find(p => p.id === provinceId)
+      const province = res.data.find((p) => p.id === provinceId)
       if (province && province.data2) {
-        province.data2.forEach(commune => {
+        province.data2.forEach((commune) => {
           $communeSelect.append(
             `<option value="${commune.id}">${commune.full_name}</option>`
           )
         })
       }
 
-      $communeSelect.prop('disabled', $communeSelect.children().length <= 1)
-      initSelect2($communeSelect, 'Xã/ Phường')
+      $communeSelect.prop("disabled", $communeSelect.children().length <= 1)
+      initSelect2($communeSelect, "Xã/ Phường")
     } else {
-      $communeSelect.prop('disabled', true)
+      $communeSelect.prop("disabled", true)
     }
-  }).fail(function() {
+  }).fail(function () {
     toastr.error("Không thể tải danh sách xã/phường.")
   })
 }
 
-$(document).ready(function() {
+$(document).ready(function () {
   if (signUpForm) {
     listProvinces()
-    $('#orgProvince').on('change', function() {
-        const provinceId = $(this).val()
-        if (provinceId) {
-            listCommunes(provinceId)
-        } else {
-            $('#orgCommune')
-                .empty()
-                .append('<option value="">— Chọn Xã/ Phường —</option>')
-                .prop('disabled', true)
-            initSelect2($('#orgCommune'), '— Chọn Xã/ Phường —')
-        }
+    $("#orgProvince").on("change", function () {
+      const provinceId = $(this).val()
+      if (provinceId) {
+        listCommunes(provinceId)
+      } else {
+        $("#orgCommune")
+          .empty()
+          .append('<option value="">— Chọn Xã/ Phường —</option>')
+          .prop("disabled", true)
+        initSelect2($("#orgCommune"), "— Chọn Xã/ Phường —")
+      }
     })
   }
 })
