@@ -39,6 +39,71 @@
                 Tổng cộng: <span id="totalAmount">0đ</span>
               </div>
             </div>
+
+            <!-- Chi tiết thanh toán (ẩn mặc định) -->
+              <div id="checkoutDetail" class="card p-3 shadow-sm mt-3" style="display: none;">
+                <h5 class="mb-3">💳 Chi tiết thanh toán</h5>
+
+                <div class="mb-2">
+                    <div class="mb-2">
+                      <label for="discountCodeInput">Mã giảm giá:</label>
+                      <input type="text" id="discountCodeInput" class="form-control" placeholder="Nhập mã giảm giá">
+                      <small id="discountMessage" class="text-success d-block mt-1"></small>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                  <label>Chiết khấu:</label>
+                  <input type="number" id="discountInput" class="form-control" value="0" min="0">
+                </div>
+
+                <div class="mb-2">
+                  <label>Phí dịch vụ:</label>
+                  <input type="number" id="serviceChargeInput" class="form-control" value="0" min="0">
+                </div>
+
+                <div class="mb-2">
+                  <label>VAT (%):</label>
+                  <input type="number" id="vatInput" class="form-control" value="0" min="0" max="100">
+                </div>
+
+                <div class="mb-2">
+                  <label>Số tiền khách trả:</label>
+                  <input type="text" id="customerPaidInput" class="form-control" value="0" min="0">
+                  <div class="mt-2 d-flex flex-wrap justify-content-center gap-2">
+                    <!-- Gợi ý mệnh giá -->
+                      <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="1000">1.000</button>
+                      <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="2000">2.000</button>
+                      <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="5000">5.000</button>
+                      <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="10000">10.000</button>
+                      <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="20000">20.000</button>
+                      <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="50000">50.000</button>
+                      <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="100000">100.000</button>
+                      <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="200000">200.000</button>
+                      <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="500000">500.000</button>
+                  </div>
+                </div>
+
+                <div class="mb-2">
+                  <label>Phương thức thanh toán:</label>
+                  <select id="paymentMethod" class="form-select">
+                    <option value="">-- Chọn --</option>
+                    <option value="cash">Tiền mặt</option>
+                    <option value="bank">Chuyển khoản</option>
+                    <option value="card">Thẻ</option>
+                  </select>
+                </div>
+
+                <div class="mb-2">
+                  <label>Tiền thừa:</label>
+                  <input type="text" id="changeAmount" class="form-control" readonly>
+                </div>
+
+                <div class="text-end">
+                  <button type="button" class="btn btn-danger me-2" id="cancelCheckoutDetail">ĐÓNG</button>
+                  <button type="button" class="btn btn-success" id="confirmCheckoutBtn">THANH TOÁN</button>
+                </div>
+              </div>
           </div>
 
         </div>

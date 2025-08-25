@@ -29,11 +29,16 @@ $orange-800: #9a3412;
 
     &.show {
       display: flex;        
-      flex-wrap: wrap;     
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;      
       opacity: 1;
       pointer-events: auto;
       z-index: 10;
       background-color: #fff;
     }
+  }
+    .btn-select-table {
+    margin-bottom: 15px;
   }
 }
