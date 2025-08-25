@@ -1,10 +1,14 @@
 import mailer from '../../helpers/mailer.js'
 import SMTP from "../../configs/smtp.js"
 import User from "./model.js"
+import Attendance from '../attendance/model.js'
+import { Schedule } from '../schedule/model.js'
+import { Shift } from '../shift/model.js'
 import bcrypt from "bcryptjs"
 import passport from "passport"
 import responseHelper from '../../helpers/responseHelper.js'
 import { isValidPassword, generateSalt } from '../../helpers/common.js'
+import { parseShiftStart } from '../../helpers/dateHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
 // [CREATE] / User
@@ -64,23 +68,23 @@ export const getUsers = async (req, res) => {
  */
 
 export const getUser = async (req, res) => {
-  const { id } = req.params
-  const organizationId = getCurrentOrg(req)
-  if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    const { id } = req.params
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
-  try {
-      const user = await User.findOne({
-        _id: id,
-        organization: organizationId
-    })
+    try {
+        const user = await User.findOne({
+            _id: id,
+            organization: organizationId
+        })
 
-      if (!user) {
-          responseHelper.error(res, 'User Not Found.', 404)
-      }
-      responseHelper.success(res, user)
-  } catch (error) {
-      responseHelper.error(res, error.message)
-  }
+        if (!user) {
+            responseHelper.error(res, 'Không tìm thấy người dùng', 404)
+        }
+        responseHelper.success(res, user)
+    } catch (error) {
+        responseHelper.error(res, error.message)
+    }
 }
 
 /*
@@ -99,7 +103,7 @@ export const updateUser = async (req, res) => {
             organization: organizationId
         })
         if (!userExist) {
-            return responseHelper.error(res, 'User Not Found', 404)
+            return responseHelper.error(res, 'Không tìm thấy người dùng', 404)
         }
 
         const existUser = await User.findOne({
@@ -109,28 +113,28 @@ export const updateUser = async (req, res) => {
         })
 
         if (existUser) {
-            return responseHelper.error(res, 'Username or Email already exists.', 400)
+            return responseHelper.error(res, 'Username hoặc Email đã tồn tại', 400)
         }
 
         let updatedFields = { username, email, role }
         if (password) {
             if (password !== confirmPassword) {
-                return responseHelper.error(res, 'Passwords do not match', 400)
+                return responseHelper.error(res, 'Mật khẩu không khớp', 400)
             }
             const passwordValidation = isValidPassword(password)
             if (passwordValidation) {
                 return responseHelper.error(res, passwordValidation, 400)
             }
-                const hashedPassword = await bcrypt.hash(password, 10)
-                updatedFields.password = hashedPassword
+            const hashedPassword = await bcrypt.hash(password, 10)
+            updatedFields.password = hashedPassword
         }
         const updateUser = await User.findOneAndUpdate(
-            {_id: id, organization: organizationId }, 
-            updatedFields, 
+            { _id: id, organization: organizationId },
+            updatedFields,
             { new: true })
 
         if (!updateUser) {
-            return responseHelper.error(res, 'Update failed.', 400)
+            return responseHelper.error(res, 'Cập nhật thất bại', 400)
         }
         responseHelper.success(res, updateUser)
     } catch (error) {
@@ -149,11 +153,11 @@ export const deleteUsers = async (req, res) => {
 
         const { userIds } = req.body
         if (!userIds || userIds.length === 0) {
-            return responseHelper.error(res, 'No users selected.', 400)
+            return responseHelper.error(res, 'Không có người dùng nào được chọn để xóa', 400)
         }
 
         if (userIds.includes(req.user._id.toString())) {
-            return responseHelper.error(res, 'You cannot delete your own account.', 400)
+            return responseHelper.error(res, 'Bạn không thể xóa tài khoản của chính mình', 400)
         }
 
         const result = await User.deleteMany({
@@ -161,10 +165,10 @@ export const deleteUsers = async (req, res) => {
             organization: organizationId
         })
 
-        if (result.deletedCount === 0) {            
-            return responseHelper.error(res, 'User Not Found To Delete.', 404)
+        if (result.deletedCount === 0) {
+            return responseHelper.error(res, 'Không có người dùng nào được chọn để xóa ', 404)
         }
-        responseHelper.success(res, '1')
+        responseHelper.success(res, 'Xóa thành công')
     } catch (error) {
         responseHelper.error(res, error.message)
     }
@@ -174,21 +178,95 @@ export const deleteUsers = async (req, res) => {
  * [LOGIN] / User
  */
 
+const GRACE_MINUTES = 5 // thay đổi theo policy
+
 export const logIn = async (req, res, next) => {
     passport.authenticate("local", async (err, user, info) => {
         if (err) return next(err)
         if (!user) {
-            return responseHelper.error(res, info.message, 400) 
+            return responseHelper.error(res, info?.message || 'Tài khoản hoặc mật khẩu không chính xác', 400)
         }
 
         req.logIn(user, async (err) => {
             if (err) return next(err)
-             if (req.body.remember) {
-            // Thiết lập cookie tồn tại 30 ngày (ms)    
-            req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000
-            } else {
-                // Không tick: cookie sẽ hết khi đóng trình duyệt
-                req.session.cookie.expires = false
+
+            // Remember me
+            req.session.cookie.maxAge = req.body?.remember
+                ? 30 * 24 * 60 * 60 * 1000
+                : false
+
+            try {
+                if ((user.role || '').toLowerCase() === 'member') {
+                    const now = new Date()
+                    const today = new Date(now)
+                    today.setHours(0, 0, 0, 0)
+                    const tomorrow = new Date(today)
+                    tomorrow.setDate(today.getDate() + 1)
+
+                    // Lấy lịch hôm nay và ca
+                    const schedule = await Schedule.findOne({
+                        organization: user.organization,
+                        user: user._id,
+                        date: { $gte: today, $lt: tomorrow },
+                        status: { $ne: 'cancelled' }
+                    }).populate('shift')
+
+                    let statusForDay = 'present'
+                    if (schedule?.shift?.startTime) {
+                        const shiftStart = parseShiftStart(today, schedule.shift.startTime) // hàm parse HH:mm => Date
+                        const diffMin = Math.round((now - shiftStart) / 60000)
+                        if (diffMin > GRACE_MINUTES) statusForDay = 'late'
+                    }
+
+                    const sessionObj = {
+                        shift: schedule?.shift?._id || null,
+                        checkIn: now,
+                        type: 'regular',
+                        note: 'Auto check-in on login'
+                    }
+
+                    // Upsert attendance
+                    let attendance = await Attendance.findOneAndUpdate(
+                        {
+                            organization: user.organization,
+                            user: user._id,
+                            date: today
+                        },
+                        {
+                            $setOnInsert: {
+                                organization: user.organization,
+                                user: user._id,
+                                date: today,
+                                status: statusForDay,
+                                sessions: [sessionObj]
+                            }
+                        },
+                        { upsert: true, new: true, setDefaultsOnInsert: true }
+                    )
+
+                    // Nếu attendance đã tồn tại nhưng không có session mở => thêm session mới
+                    const hasOpen = attendance.sessions.some(s => !s.checkOut)
+                    if (!hasOpen) {
+                        await Attendance.findByIdAndUpdate(attendance._id, {
+                            $push: { sessions: sessionObj },
+                            $set: {
+                                status: attendance.status === 'absent'
+                                    ? statusForDay
+                                    : (statusForDay === 'late' && attendance.status !== 'leave'
+                                        ? 'late'
+                                        : attendance.status)
+                            }
+                        })
+                    } else {
+                        // Update status nếu đang absent/late
+                        if (attendance.status !== statusForDay && attendance.status !== 'leave') {
+                            attendance.status = statusForDay
+                            await attendance.save()
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Auto check-in failed:', e)
             }
 
             const userData = {
@@ -205,7 +283,64 @@ export const logIn = async (req, res, next) => {
 }
 
 // [LOGOUT]
-export const logOut = (req, res) => {
+export const logOut = async (req, res) => {
+    try {
+        const user = req.user
+        if (!user) {
+            return req.logout(() => responseHelper.success(res, 'Logged out'))
+        }
+
+        if ((user.role || '').toLowerCase() === 'member') {
+            const now = new Date()
+
+            const todayStart = new Date(now)
+            todayStart.setHours(0, 0, 0, 0, 0)
+            const tomorrowStart = new Date(todayStart)
+            tomorrowStart.setDate(todayStart.getDate() + 1)
+
+            const [attendance, schedule] = await Promise.all([
+                Attendance.findOne({
+                    organization: user.organization,
+                    user: user._id,
+                    date: { $gte: todayStart, $lt: tomorrowStart }
+                }),
+                Schedule.findOne({
+                    organization: user.organization,
+                    user: user._id,
+                    date: { $gte: todayStart, $lt: tomorrowStart },
+                    status: { $ne: 'cancelled' }
+                }).populate('shift')
+            ])
+
+            if (attendance) {
+                const openSession = attendance.sessions.find(s => !s.checkOut)
+                if (openSession) {
+                    // tránh overlap: nếu có session kế tiếp và now > next.checkIn thì cắt ngắn
+                    const idx = attendance.sessions.findIndex(s => s === openSession)
+                    const next = attendance.sessions[idx + 1]
+                    if (next && next.checkIn && now > new Date(next.checkIn)) {
+                        openSession.checkOut = next.checkIn
+                    } else {
+                        openSession.checkOut = now
+                    }
+
+                    if (!openSession.shift && schedule?.shift) {
+                        openSession.shift = schedule.shift._id
+                    }
+
+                    try {
+                        await attendance.save() // trigger pre-save hook (tính duration/totals)
+                    } catch (saveErr) {
+                        // log lỗi nhưng không block logout
+                        console.error('Auto check-out save failed:', saveErr)
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.error('Auto check-out failed:', err)
+    }
+
     req.logout((err) => {
         if (err) return responseHelper.error(res, 'Logout failed', 500)
 
@@ -228,7 +363,7 @@ export const forgotPassword = async (req, res) => {
         }
 
         const resetToken = generateSalt(32)
-        const tokenExpires = Date.now() + 60 * 60 * 1000 
+        const tokenExpires = Date.now() + 60 * 60 * 1000
 
         user.resetToken = resetToken
         user.resetTokenExpires = tokenExpires
@@ -244,7 +379,7 @@ export const forgotPassword = async (req, res) => {
                 <p>Click the link below to reset your password. This link will expire in 1 hour:</p>
                 <p>Click <a href="${resetLink}"><i>here</i></a> to reset your password</p>
             `
-        })        
+        })
         responseHelper.success(res, '1', 'A password reset link has been sent to your email.')
     } catch (error) {
         responseHelper.error(res, error.message)

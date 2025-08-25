@@ -1,5 +1,5 @@
 import { Schedule } from './model.js'
-import { lookupUser, lookupRef } from './lookup.js'
+import { lookupUser, lookupRef } from '../../helpers/lookupHelper.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
@@ -10,7 +10,7 @@ export const getSchedules = async (req, res) => {
         const length = +req.query.length || 10
         const searchValue = (req.query["search[value]"] || "").trim()
         const colIdx = req.query["order[0][column]"]
-        const sortField = req.query[`columns[${colIdx}][data]`] || 'date'
+        const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
         const sortDir = req.query["order[0][dir]"] === 'asc' ? 1 : -1
 
         const organizationId = getCurrentOrg(req)
@@ -19,8 +19,9 @@ export const getSchedules = async (req, res) => {
         // Base pipeline
         const pipeline = [
             { $match: { organization: organizationId } },
-            ...lookupUser('user'),
-            ...lookupRef('shift', 'Shifts')
+            ...lookupRef('user', 'Users'),
+            ...lookupRef('shift', 'Shifts'),
+            ...lookupUser('createdBy')
         ]
 
         // Search filter
@@ -45,10 +46,51 @@ export const getSchedules = async (req, res) => {
         const countResult = await Schedule.aggregate(countPipeline)
         const recordsFiltered = countResult[0]?.count || 0
 
+        // Mapping sort fields để tránh lỗi khi sort
+        const sortFieldMapping = {
+            'user': 'user.username',
+            'shift': 'shift.name',
+            'createdBy': 'createdBy.username',
+            'date': 'date',
+            'status': 'status',
+            'note': 'note',
+            'approved': 'approved',
+            'createdAt': 'createdAt',
+            'updatedAt': 'updatedAt'
+        }
+
+        const actualSortField = sortFieldMapping[sortField] || sortField
+
         // Sort + Pagination
-        const sortStage = { $sort: { [sortField]: sortDir } }
+        const sortStage = { $sort: { [actualSortField]: sortDir } }
         pipeline.push(sortStage, { $skip: start }, { $limit: length })
 
+        pipeline.push({
+            $project: {
+                _id: 1,
+                organization: 1,
+                user: {
+                    _id: "$user._id",
+                    username: "$user.username"
+                },
+                shift: {
+                    _id: "$shift._id",
+                    name: "$shift.name"
+                },
+                date: 1,
+                status: 1,
+                note: 1,
+                createdBy: {
+                    _id: "$createdBy._id",
+                    username: "$createdBy.username"
+                },
+                approved: 1,
+                createdAt: 1,
+                updatedAt: 1
+            }
+        })
+
+        // Execute aggregation
         const data = await Schedule.aggregate(pipeline)
 
         return res.json({
@@ -91,7 +133,7 @@ export const createSchedule = async (req, res) => {
 export const updateSchedule = async (req, res) => {
     try {
         const { id } = req.params
-        const { user, shift, date, status, isRecurring, note, approved, recurringPattern } = req.body
+        const { user, shift, date, status, note, approved } = req.body
 
         const organizationId = getCurrentOrg(req)
         if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
@@ -103,12 +145,10 @@ export const updateSchedule = async (req, res) => {
 
         if (user !== undefined) dataUpdate.user = user || null
         if (shift !== undefined) dataUpdate.shift = shift || null
-        if (date !== undefined) dataUpdate.date = date ? new Date(date.toDateString()) : null
+        if (date !== undefined) dataUpdate.date = date ? new Date(date) : null
         if (status !== undefined && ['scheduled', 'confirmed', 'cancelled'].includes(status)) dataUpdate.status = status
-        if (isRecurring !== undefined) dataUpdate.isRecurring = !!isRecurring
         if (note !== undefined) dataUpdate.note = note
         if (approved !== undefined) dataUpdate.approved = !!approved
-        if (recurringPattern !== undefined) dataUpdate.recurringPattern = recurringPattern
 
         if (Object.keys(dataUpdate).length === 0) return responseHelper.error(res, 'Không có dữ liệu để cập nhật', 400)
 

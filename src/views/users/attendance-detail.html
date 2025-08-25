@@ -1,0 +1,53 @@
+<%- include('../partials/header.html') %>
+  <%- include('../partials/org_sidebar.html') %>
+    <div class="admin__content">
+      <h1 class="mb-4">Chi tiết chấm công</h1>
+
+      <!-- Thông tin chung -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Thông tin nhân viên</h5>
+          <p><strong>Nhân viên:</strong> <span id="employeeName"></span></p>
+          <p><strong>Ngày làm việc:</strong> <span id="workDate"></span></p>
+          <p><strong>Ghi chú:</strong> <span id="note"></span></p>
+        </div>
+      </div>
+
+      <!-- Danh sách các ca làm việc -->
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Chi tiết ca</h5>
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th class="text-center">Ca</th>
+                <th class="text-center">Bắt đầu</th>
+                <th class="text-center">Kết thúc</th>
+                <th class="text-center">Check-in</th>
+                <th class="text-center">Check-out</th>
+                <th class="text-center">Thời gian làm (giờ)</th>
+              </tr>
+            </thead>
+            <tbody id="sessionsTable">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <a href="/staff/attendance" class="btn btn-outline-danger border-0">
+          <i class="bi bi-arrow-left me-2"></i>Quay lại
+        </a>
+      </div>
+    </div>
+
+
+    </div>
+    </div>
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <%- include('../partials/commonjs.html') %>
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/update-user.js"></script>
+      <script src="/js/data-table.js"></script>
+      <script src="/js/staff/attendance-detail.js"></script>
+      <%- include('../partials/footer.html') %>

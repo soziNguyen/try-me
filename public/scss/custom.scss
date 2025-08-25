@@ -55,7 +55,6 @@ table {
   thead {
     th {
       &:first-child {
-        cursor: pointer;
         text-align: center;
         vertical-align: middle;
         input[type="checkbox"] {
@@ -75,7 +74,6 @@ table {
       padding: 0 !important;
 
       &:first-child {
-        cursor: pointer;
         input[type="checkbox"] {
           cursor: pointer;
         }
@@ -138,6 +136,7 @@ table {
   }
 
   .select2-results__options {
+    background-color: #fff;
     list-style: none;
     padding-left: 0px;
     margin: 0;
@@ -147,18 +146,18 @@ table {
     .select2-results__option {
       padding-left: 4px;
       &:hover {
-        background-color: var(--link);
+        background-color: var(--link) !important;
         color: #fff;
         cursor: pointer;
       }
 
       &--highlighted {
-        background-color: var(--link);
+        background-color: var(--link) !important;
         color: #fff;
       }
 
       &--selected {
-        background-color: var(--link);
+        background-color: var(--link) !important;
         color: #fff;
       }
     }

@@ -20,6 +20,8 @@ import inventoryRoutes from './inventory.js'
 import menuRoutes from './menu.js'
 import staffRoutes from './staff.js'
 import comboRoutes from '../modules/menu/combo/route.js'
+import scheduleRoutes from '../modules/schedule/route.js'
+import attendanceRoute from '../modules/attendance/route.js'
 import shiftRoutes from '../modules/shift/route.js'
 import uploadRouter from '../modules/upload/route.js'
 
@@ -44,7 +46,7 @@ const routes = [
     tableRoutes, orderRoutes,
 
     // Staff
-    staffRoutes
+    staffRoutes, scheduleRoutes, attendanceRoute
 ]
 
 routes.forEach(route => router.use('/', route))

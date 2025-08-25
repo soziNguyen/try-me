@@ -161,93 +161,19 @@ export const getAttendances = async (req, res) => {
     }
 }
 
-export const toggleAttendance = async (req, res) => {
+export const getAttendanceById = async (req, res) => {
     try {
-        const user = req.user
-        const organizationId = getCurrentOrg(req)
+        const { id } = req.params
 
-        if (!user || !organizationId) {
-            return responseHelper.error(res, 'Thiếu thông tin user hoặc tổ chức', 400)
-        }
+        const attendance = await Attendance.findById(id)
+            .populate('user', 'username email')
+            .populate('sessions.shift', 'name startTime endTime')
+            .lean()
 
-        const { type = 'regular', shift = null, note = '' } = req.body
-        const now = new Date()
-        const dateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        if (!attendance) return responseHelper.error(res, 'Không tìm thấy chấm công')
 
-        let attendance = await Attendance.findOne({
-            organization: organizationId,
-            user: user._id,
-            date: dateOnly
-        })
-
-        const createSession = () => {
-            const session = {
-                checkIn: now,
-                type,
-                note: note || ''
-            }
-            if (shift) {
-                session.shift = shift
-            }
-            return session
-        }
-
-        if (!attendance) {
-            // Tạo attendance mới với session đầu tiên
-            attendance = new Attendance({
-                organization: organizationId,
-                user: user._id,
-                date: dateOnly,
-                status: 'present',
-                sessions: [createSession()],
-                note: note || ''
-            })
-
-            await attendance.save()
-
-            return res.json({
-                success: true,
-                attendance,
-                action: 'check_in',
-                message: 'Check-in thành công'
-            })
-        }
-
-        // Attendance đã tồn tại - kiểm tra session cuối
-        const sessions = attendance.sessions || []
-        sessions.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn))
-        const lastSession = sessions[sessions.length - 1]
-        const hasOpenSession = lastSession && !lastSession.checkOut
-
-        if (hasOpenSession) {
-            // Check-out: đóng session cuối
-            lastSession.checkOut = now
-            attendance.markModified('sessions')
-            await attendance.save()
-
-            return res.json({
-                success: true,
-                attendance,
-                action: 'check_out',
-                message: 'Check-out thành công'
-            })
-
-        } else {
-            // Check-in: tạo session mới
-            attendance.sessions.push(createSession())
-            attendance.status = 'present'
-            attendance.markModified('sessions')
-            await attendance.save()
-
-            return res.json({
-                success: true,
-                attendance,
-                action: 'check_in',
-                message: 'Check-in thành công'
-            })
-        }
-
+        responseHelper.success(res, attendance)
     } catch (err) {
-        return responseHelper.error(res, 'Có lỗi xảy ra khi xử lý chấm công', 500)
+        responseHelper.error(err.message)
     }
 }

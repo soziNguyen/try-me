@@ -13,8 +13,8 @@ const sessionSchema = new mongoose.Schema({
 // Attendance mỗi nhân viên / ngày
 const attendanceSchema = new mongoose.Schema({
     organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    date: { type: Date, required: true, set: v => v ? new Date(v.toDateString()) : v }, // yyyy-mm-dd 
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    date: { type: Date, default: Date.now() }, // yyyy-mm-dd 
     status: { type: String, enum: ['present', 'absent', 'late', 'leave'], default: 'present' },
     sessions: { type: [sessionSchema], default: [] }, // nhiều lần check-in/out
     totalRegular: { type: Number, default: 0 },
@@ -22,7 +22,7 @@ const attendanceSchema = new mongoose.Schema({
     totalHoliday: { type: Number, default: 0 },
     totalDuration: { type: Number, default: 0 },
     note: { type: String, default: '' },
-    approved: { type: Boolean, default: false } // admin duyệt
+    approved: { type: Boolean, default: false } // admin duyệt     
 }, {
     collection: "Attendances",
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }

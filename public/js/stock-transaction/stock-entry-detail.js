@@ -46,7 +46,7 @@ $(function () {
       addNewItem()
     }
 
-    $('.select2-ingredient').each(function() {
+    $('.select2-ingredient').each(function () {
       initSelect2($(this), '— Chọn nguyên liệu —')
     })
 
@@ -84,7 +84,7 @@ $(function () {
           if (res.success && res.data.isLocked) {
             toastr.success("Phiếu nhập đã được khóa thành công")
             $("#btn-lock-entry").prop("disabled", true).html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
-    
+
             $("#stockEntryForm")
               .find("input, select, textarea, button")
               .not("#btn-lock-entry, #btn-print")
@@ -102,7 +102,7 @@ $(function () {
         }
       })
     })
-    
+
     // Auto calculate totals
     $(document).on(
       "input",
@@ -123,11 +123,11 @@ $(function () {
 
   function updateRowDropdowns(rowIndex) {
     const $select = $(`select[name="items[${rowIndex}][ingredient]"]`)
-    
+
     const ingredientOptions = ingredients
       .map((ing) => `<option value="${ing._id}">${ing.name}</option>`)
       .join("")
-    
+
     $select.empty().html(
       '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
       ingredientOptions
@@ -159,13 +159,13 @@ $(function () {
     </tr>
     `
     $("#itemsTableBody").append(newRow)
-    
+
     const currentRowIndex = itemCounter
     updateRowDropdowns(currentRowIndex)
-    
+
     const $newSelect = $(`select[name="items[${currentRowIndex}][ingredient]"]`)
     initSelect2($newSelect, '— Chọn nguyên liệu —')
-    
+
     itemCounter++
   }
 
@@ -188,10 +188,10 @@ $(function () {
       const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val()) || 0
       subtotal += quantity * unitPrice
     })
-  
+
     const tax = Math.round(subtotal * 0.08) // 8%
     const total = subtotal + tax
-  
+
     // Update giao diện
     $("#subtotalAmount").text(subtotal.toLocaleString("vi-VN") + " ₫")
     $("#taxAmount").text(tax.toLocaleString("vi-VN") + " ₫")
@@ -211,7 +211,7 @@ $(function () {
     if (stockEntry.items && stockEntry.items.length > 0) {
       // Clear existing rows
       $("#itemsTableBody").empty()
-      
+
       stockEntry.items.forEach((item, index) => {
         const row = `
         <tr>
@@ -229,9 +229,8 @@ $(function () {
               min="0" step="1" value="${item.unitPrice || ""}" placeholder="0">
           </td>
           <td>
-            <input type="text" class="form-control form-control-sm" readonly value="${
-              (item.total || 0).toLocaleString("vi-VN") + " ₫"
-            }" placeholder="0">
+            <input type="text" class="form-control form-control-sm" readonly value="${(item.total || 0).toLocaleString("vi-VN") + " ₫"
+          }" placeholder="0">
           </td>
           <td class="text-center">
             <button type="button" class="btn btn-danger btn-sm remove-item-btn">
@@ -241,75 +240,75 @@ $(function () {
         </tr>
         `
         $("#itemsTableBody").append(row)
-        
+
         updateRowDropdowns(index)
-        
+
         const $sel = $(`select[name="items[${index}][ingredient]"]`)
         $sel.val(item.ingredient?._id || "")
         initSelect2($sel, '— Chọn nguyên liệu —')
       })
-      
+
       itemCounter = stockEntry.items.length
       calculateTotals()
     }
-    
+
     if (stockEntry?.isLocked) {
       $("#btn-lock-entry").prop("disabled", true).html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
-    
+
       $("#stockEntryForm")
         .find("input, select, textarea, button")
         .not("#btn-lock-entry, #btn-print")
         .add("#btn-save-entry, #addItemBtn, #supplier, #warehouse")
         .prop("disabled", true)
-    }   
+    }
   }
 
   function saveStockEntry(e) {
     e.preventDefault()
-  
+
     const $rows = $("#itemsTableBody tr")
     const partialErrors = []
-  
+
     // Kiểm tra từng dòng
     $rows.each(function (index) {
       const rowIndex = index + 1
-  
+
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
       const quantity = $(this).find('input[name*="[quantity]"]').val()
       const unitPrice = $(this).find('input[name*="[unitPrice]"]').val()
-  
+
       const hasAnyValue = ingredientId || quantity || unitPrice
       const isComplete = ingredientId && quantity && unitPrice
-  
+
       if (hasAnyValue && !isComplete) {
         const missingFields = []
         if (!ingredientId) missingFields.push("nguyên liệu")
         if (!quantity) missingFields.push("số lượng")
         if (!unitPrice) missingFields.push("đơn giá")
-  
+
         partialErrors.push(`Dòng ${rowIndex} thiếu ${missingFields.join(", ")}`)
       }
     })
-  
+
     // Nếu có lỗi dữ liệu từng dòng thì báo lỗi và dừng lại
     if (partialErrors.length) {
       toastr.error(partialErrors.join("<br/>"), "Lỗi dữ liệu")
       return
     }
-  
+
     // Loại bỏ những dòng hoàn toàn trống (nếu có nhiều hơn 1 dòng)
     if ($rows.length > 1) {
       $rows.each(function () {
         const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
         const quantity = $(this).find('input[name*="[quantity]"]').val()
         const unitPrice = $(this).find('input[name*="[unitPrice]"]').val()
-  
+
         if (!ingredientId && !quantity && !unitPrice) {
           $(this).remove()
         }
       })
     }
-  
+
     // Thu thập dữ liệu từ form
     const formData = new FormData(e.target)
     const stockEntryData = {
@@ -320,21 +319,21 @@ $(function () {
       note: formData.get("note"),
       items: [],
     }
-  
+
     if (!stockEntryId) {
       stockEntryData.createdBy = $("#createdBy").data("id") || "<%= currentUserId %>"
     }
-  
+
     let subTotal = 0
     $("#itemsTableBody tr").each(function () {
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
       const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val())
       const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val())
-  
+
       if (ingredientId && quantity && unitPrice) {
         const itemTotal = quantity * unitPrice
         subTotal += itemTotal
-  
+
         stockEntryData.items.push({
           ingredient: ingredientId,
           quantity,
@@ -343,37 +342,37 @@ $(function () {
         })
       }
     })
-  
+
     if (!stockEntryData.supplier) {
       toastr.error("Vui lòng chọn nhà cung cấp", "Lỗi dữ liệu")
       return
     }
-  
+
     if (!stockEntryData.warehouse) {
       toastr.error("Vui lòng chọn kho", "Lỗi dữ liệu")
       return
     }
-  
+
     if (stockEntryData.items.length === 0) {
       toastr.error("Phải có ít nhất 1 dòng nguyên liệu hợp lệ", "Lỗi dữ liệu")
       return
     }
-  
+
     // ===== TÍNH TỔNG =====
     const taxRate = 0.08
     const taxAmount = subTotal * taxRate
     const grandTotal = subTotal + taxAmount
-  
+
     stockEntryData.subTotal = subTotal
     stockEntryData.taxRate = taxRate
     stockEntryData.taxAmount = taxAmount
     stockEntryData.grandTotal = grandTotal
-  
+
     // Gửi AJAX
     const url = stockEntryId
       ? `/api/inventory/stock-entry/update/${stockEntryId}`
       : "/api/inventory/stock-entry/create"
-  
+
     $.ajax({
       url,
       method: "POST",
@@ -392,6 +391,6 @@ $(function () {
         toastr.error(xhr.responseJSON?.message || "Có lỗi xảy ra khi lưu")
       },
     })
-  }  
+  }
   setupBackButton()
 })
