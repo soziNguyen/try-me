@@ -39,7 +39,6 @@
 }
 
 table thead th:first-child {
-  cursor: pointer;
   text-align: center;
   vertical-align: middle;
 }
@@ -54,9 +53,6 @@ table tbody td {
 table tbody td input[type=checkbox] {
   display: block;
   margin: auto;
-}
-table tbody td:first-child {
-  cursor: pointer;
 }
 table tbody td:first-child input[type=checkbox] {
   cursor: pointer;
