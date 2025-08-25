@@ -34,11 +34,11 @@
             <div class="card-body">
               <form id="comboForm">
                 <div class="mb-3">
-                  <label class="form-label">SKU</label>
+                  <label class="form-label">SKU <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" name="sku">
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">Tên</label>
+                  <label class="form-label">Tên <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" name="name">
                 </div>
                 <div class="mb-3">
@@ -47,7 +47,7 @@
                 </div>
                 <div class="mb-3">
                   <div class="d-flex justify-content-between mb-2">
-                    <label class="form-label m-0">Items</label>
+                    <label class="form-label m-0">Items <span class="text-danger">*</span></label>
                     <button type="button" class="btn btn-outline-primary btn-sm" id="addItemRow">
                       <i class="bi bi-plus-circle"></i> Thêm item
                     </button>
@@ -57,7 +57,7 @@
                       <tr>
                         <th>Món ăn</th>
                         <th>Số lượng</th>
-                        <th></th>
+                        <th class="text-center"><i class="bi bi-pencil"></i></th>
                       </tr>
                     </thead>
                     <tbody id="itemTableBody">
@@ -65,7 +65,7 @@
                   </table>
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">Giá</label>
+                  <label class="form-label">Giá <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" name="price">
                 </div>
                 <div class="mb-3">

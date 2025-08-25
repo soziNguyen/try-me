@@ -373,3 +373,17 @@ export const payrollPage = async (req, res) => {
         )
     )
 }
+
+export const attendanceDetail = (req, res) => {
+    const { id } = req.params
+
+    res.render('users/attendance-detail',
+        getPageData(req, 'Chi tiết chấm công', 'Attendance Detail',
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'CHI TIẾT CHẤM CÔNG ',
+                attendanceId: id
+            }
+        )
+    )
+}

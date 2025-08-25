@@ -9,8 +9,8 @@ export const getShiftOptions = async (req, res) => {
 
         const shifts = await Shift.find(
             { organization: organizationId },
-            { _id: 1, name: 1, type: 1, startTime: 1, endTime: 1, coefficient: 1 }
-        ).sort({ type: 1, startTime: 1 })
+            { _id: 1, name: 1 }
+        )
 
         responseHelper.success(res, shifts)
     } catch (error) {
