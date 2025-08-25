@@ -35,40 +35,43 @@ function handlerDeleteEvent(tableSelector, btnSelector, checkboxClass, module) {
   const table = $(tableSelector).DataTable()
 
   $wrapper.on('click', btnSelector, function () {
-    const $btn = $(this).prop('disabled', true)
+    const $btn = $(this) // chưa disable ngay
     const selected = $wrapper.find(`.${checkboxClass}:checked`).map((_, el) => $(el).data('id')).get()
 
     if (!selected.length) {
       toastr.remove()
       toastr.warning('Không có bản ghi nào được chọn để xóa')
-      return $btn.prop('disabled', false)
+      return
     }
 
-    if (!confirm(`Bạn có chắc chắn muốn xóa ${selected.length} bản ghi không ?`)) {
-      return $btn.prop('disabled', false)
-    }
-
-    $.ajax({
-      url: `/api/${module}/deletes`,
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify({ ids: selected }),
-      success(res) {
-        if (res.success) {
-          toastr.remove()
-          toastr.success(res.message)
-          table.ajax.reload(null, false)
-          $wrapper.find('#selectAll').prop('checked', false)
-        } else {
-          toastr.error(res.message)
-        }
-      },
-      error(xhr) {
-        toastr.remove()
-        toastr.error(xhr.responseJSON?.message || 'Đã có lỗi xảy ra')
-      },
-      complete() {
-        $btn.prop('disabled', false)
+    showConfirmModal({
+      title: 'Xóa các mục đã chọn',
+      message: `Bạn có chắc chắn muốn xóa <strong>${selected.length}</strong> bản ghi không?`,
+      onConfirm: function () {
+        $btn.prop('disabled', true) // disable khi user confirm
+        $.ajax({
+          url: `/api/${module}/deletes`,
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ ids: selected }),
+          success(res) {
+            if (res.success) {
+              toastr.remove()
+              toastr.success(res.message)
+              table.ajax.reload(null, false)
+              $wrapper.find('#selectAll').prop('checked', false)
+            } else {
+              toastr.error(res.message)
+            }
+          },
+          error(xhr) {
+            toastr.remove()
+            toastr.error(xhr.responseJSON?.message || 'Đã có lỗi xảy ra')
+          },
+          complete() {
+            $btn.prop('disabled', false)
+          }
+        })
       }
     })
   })
@@ -229,6 +232,28 @@ function setupBackButton(btnSelector = '#btn-back') {
     btn.href = '/inventory/stock-transfers'
   }
 }
+
+function showConfirmModal(options) {
+  const settings = $.extend({
+    title: 'Xác nhận',
+    message: '',
+    onConfirm: null
+  }, options)
+
+  $('#confirmModalTitle').text(settings.title)
+  $('#confirmModalBody').html(settings.message)
+
+  const $okBtn = $('#confirmModalOk')
+  $okBtn.off('click').on('click', function() {
+    if (typeof settings.onConfirm === 'function') settings.onConfirm()
+    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'))
+    modal.hide()
+  })
+
+  const modal = new bootstrap.Modal(document.getElementById('confirmModal'))
+  modal.show()
+}
+
 
 function setupSaveButtonWatcher(formSelector, saveBtnSelector) {
   const $form = $(formSelector)

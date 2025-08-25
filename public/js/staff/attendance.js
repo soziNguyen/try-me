@@ -30,11 +30,11 @@ $(function () {
             lengthMenu: [showList, showList],
             language: {
                 search: '',
-                searchPlaceholder: 'Tìm kiếm lịch làm việc',
-                lengthMenu: `_MENU_ lịch làm việc mỗi trang`,
-                info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ lịch làm việc',
+                searchPlaceholder: 'Tìm kiếm',
+                lengthMenu: `_MENU_ bản ghi mỗi trang`,
+                info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ bản ghi',
                 infoEmpty: 'Không có bản ghi nào',
-                infoFiltered: '(được lọc từ tổng _MAX_ lịch làm việc)',
+                infoFiltered: '(được lọc từ tổng _MAX_ bản ghi)',
                 zeroRecords: 'Không tìm thấy kết quả phù hợp',
                 emptyTable: 'Không có dữ liệu trong bảng'
             },
