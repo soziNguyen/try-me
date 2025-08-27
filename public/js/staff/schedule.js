@@ -124,7 +124,13 @@ $(function () {
                         if (type === 'display') {
                             const statuses = ['scheduled', 'confirmed', 'cancelled']
                             const opts = statuses.map(
-                                s => `<option value="${s}" ${data === s ? 'selected' : ''}>${s}</option>`
+                                s => `<option value="${s}" ${data === s ? 'selected' : ''}>
+                                    ${
+                                        s === 'confirmed' ? 'Đã xác nhận'
+                                        : s === 'scheduled' ? 'Chờ xác nhận'
+                                        : 'Đã hủy'
+                                    }
+                                </option>`
                             )
                             return `
                     <select class="form-select border-0 dataInput" data-field="status">
@@ -143,18 +149,6 @@ $(function () {
                            data-field="note" 
                            value="${data || ''}" 
                            placeholder="Nhập ghi chú">`
-                        }
-                        return data
-                    }
-                },
-                {
-                    data: 'approved',
-                    title: 'Xác nhận',
-                    className: 'text-center',
-                    render: (data, type, row) => {
-                        if (type === 'display') {
-                            return `<input type="checkbox" class="dataInput form-check-input" 
-                           data-field="approved" ${data ? 'checked' : ''}>`
                         }
                         return data
                     }

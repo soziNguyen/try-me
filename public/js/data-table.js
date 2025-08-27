@@ -237,10 +237,12 @@ function showConfirmModal(options) {
   const settings = $.extend({
     title: 'Xác nhận',
     message: '',
+    confirmed: '',
     onConfirm: null
   }, options)
 
   $('#confirmModalTitle').text(settings.title)
+  $('#confirmModalOk').text(settings.confirmed || 'Xóa')
   $('#confirmModalBody').html(settings.message)
 
   const $okBtn = $('#confirmModalOk')

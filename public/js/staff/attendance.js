@@ -41,14 +41,6 @@ $(function () {
             pageLength: numRows,
             columns: [
                 {
-                    data: null,
-                    orderable: false,
-                    title: '<input type="checkbox" id="selectAll">',
-                    className: 'text-center',
-                    render: (data, type, row) =>
-                        `<input type="checkbox" class="scheduleCheckbox" data-id="${row._id}">`
-                },
-                {
                     data: 'user.username',
                     className: 'text-center',
                     title: 'Nhân viên',

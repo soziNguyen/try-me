@@ -23,6 +23,7 @@ import comboRoutes from '../modules/menu/combo/route.js'
 import scheduleRoutes from '../modules/schedule/route.js'
 import attendanceRoute from '../modules/attendance/route.js'
 import shiftRoutes from '../modules/shift/route.js'
+import payrollRoutes from '../modules/payroll/route.js'
 import uploadRouter from '../modules/upload/route.js'
 
 const router = express.Router()
@@ -46,7 +47,7 @@ const routes = [
     tableRoutes, orderRoutes,
 
     // Staff
-    staffRoutes, scheduleRoutes, attendanceRoute
+    staffRoutes, scheduleRoutes, attendanceRoute, payrollRoutes
 ]
 
 routes.forEach(route => router.use('/', route))

@@ -1,0 +1,36 @@
+<%- include('../partials/header.html') %>
+<%- include('../partials/org_sidebar.html') %>
+<div class="admin__content">
+    <h2 class="mb-4 bold semi-bold"><%= pageTitle %></h2>
+    <div class="payroll-summary mb-3">
+        <span>Tổng giờ làm: <strong id="totalHours"></strong>h</span>
+        &nbsp;&nbsp;&nbsp;
+        <span>Tổng lương: <strong id="totalSalary"></strong></span>
+    </div>
+
+
+    <table id="payrollDetailTable" class="table table-bordered">
+        <thead>
+            <tr>
+            <th>STT</th>
+            <th>Ngày</th>
+            <th>Trạng thái</th>
+            <th>Số ca</th>
+            <th>Giờ công</th>
+            <th>Lương ngày</th>
+            <th>Ghi chú</th>
+            </tr>
+        </thead>
+        <tbody id="payrollDetailTableBody"></tbody>
+    </table>
+</div>
+
+</div>
+</div>
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<%- include('../partials/commonjs.html') %>
+<script src="/js/sidebar-toggle.js"></script>
+<script src="/js/update-user.js"></script>
+<script src="/js/data-table.js"></script>
+<script src="/js/staff/payroll-detail.js"></script>
+<%- include('../partials/footer.html') %>

@@ -114,7 +114,7 @@
             </li>
 
             <!-- Staff Management -->
-            <% const inStaff = ['User','Shift','Schedule','Attendance','Payroll'].includes(page); %>
+            <% const inStaff = ['User','Shift','Schedule','Attendance','Payroll','Attendance Detail','Payroll Detail'].includes(page); %>
             <li class="staff-accordion">
               <div class="accordion" id="accordionStaff">
                 <div class="accordion-item">
@@ -144,11 +144,11 @@
                         <i class="bi bi-calendar-check me-2 text-danger"></i>
                         <span>Lịch làm việc</span>
                       </a>
-                      <a class="<%= page === 'Attendance' ? 'accordion-active' : '' %>" href="/staff/attendance">
+                      <a class="<%= (page === 'Attendance' || page === 'Attendance Detail') ? 'accordion-active' : '' %>" href="/staff/attendance">
                         <i class="bi bi-card-checklist me-2 text-info"></i>
                         <span>Chấm công</span>
                       </a>
-                      <a class="<%= page === 'Payroll' ? 'accordion-active' : '' %>" href="/staff/payroll">
+                      <a class="<%= (page === 'Payroll' || page === 'Payroll Detail') ? 'accordion-active' : '' %>" href="/staff/payroll">
                         <i class="bi bi-cash-stack me-2 text-warning"></i>
                         <span>Bảng lương</span>
                       </a>

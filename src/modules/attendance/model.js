@@ -1,11 +1,11 @@
 import mongoose from 'mongoose'
+import { generatePayroll } from '../payroll/service.js'
 
 // Session của từng nhân viên trong một ngày
 const sessionSchema = new mongoose.Schema({
     shift: { type: mongoose.Schema.Types.ObjectId, ref: 'Shift', default: null },
     checkIn: { type: Date, required: true },
     checkOut: { type: Date },
-    type: { type: String, enum: ['regular', 'overtime', 'holiday'], default: 'regular' },
     note: { type: String, default: '' },
     duration: { type: Number, default: 0 } // phút
 }, { _id: false })
@@ -17,9 +17,6 @@ const attendanceSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now() }, // yyyy-mm-dd 
     status: { type: String, enum: ['present', 'absent', 'late', 'leave'], default: 'present' },
     sessions: { type: [sessionSchema], default: [] }, // nhiều lần check-in/out
-    totalRegular: { type: Number, default: 0 },
-    totalOvertime: { type: Number, default: 0 },
-    totalHoliday: { type: Number, default: 0 },
     totalDuration: { type: Number, default: 0 },
     note: { type: String, default: '' },
     approved: { type: Boolean, default: false } // admin duyệt     
@@ -31,38 +28,31 @@ const attendanceSchema = new mongoose.Schema({
 attendanceSchema.index({ organization: 1, user: 1, date: 1 }, { unique: true })
 attendanceSchema.index({ user: 1, date: 1 })
 
-// Pre-save hook tính tổng thời gian
-attendanceSchema.pre('save', function (next) {
-    let totalRegular = 0
-    let totalOvertime = 0
-    let totalHoliday = 0
-
-    // Sắp xếp session theo checkIn
-    this.sessions.sort((a, b) => a.checkIn - b.checkIn)
-
-    // Kiểm tra overlap
-    for (let i = 0; i < this.sessions.length - 1; i++) {
-        if (this.sessions[i].checkOut && this.sessions[i].checkOut > this.sessions[i + 1].checkIn) {
-            return next(new Error('Sessions cannot overlap'))
-        }
+attendanceSchema.pre('save', function(next) {
+  let total = 0
+  this.sessions.forEach(s => {
+    if (s.checkIn && s.checkOut) {
+      s.duration = Math.round((s.checkOut - s.checkIn) / 60000)
     }
+    total += s.duration || 0
+  })
+  this.totalDuration = total
+  next()
+})
 
-    this.sessions.forEach(s => {
-        if (s.checkIn && s.checkOut) {
-            const diff = Math.round((s.checkOut - s.checkIn) / 60000) // phút
-            s.duration = diff
-            if (s.type === 'regular') totalRegular += diff
-            if (s.type === 'overtime') totalOvertime += diff
-            if (s.type === 'holiday') totalHoliday += diff
-        }
-    })
+attendanceSchema.post('save', async function(doc) {
+  try {
+    const date = new Date(doc.date)
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const orgId = doc.organization
+    const userId = doc.user
 
-    this.totalRegular = totalRegular
-    this.totalOvertime = totalOvertime
-    this.totalHoliday = totalHoliday
-    this.totalDuration = totalRegular + totalOvertime + totalHoliday
-
-    next()
+    // Gọi generatePayroll chỉ cho user và tháng này
+    await generatePayroll(orgId, userId, year, month)
+  } catch (err) {
+    // console.error('Auto payroll error (post-save):', err)
+  }
 })
 
 const Attendance = mongoose.model('Attendance', attendanceSchema)

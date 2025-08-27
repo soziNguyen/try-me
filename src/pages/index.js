@@ -352,6 +352,17 @@ export const schedulePage = async (req, res) => {
     )
 }
 
+export const mySchedulePage = async (req, res) => {
+    res.render('staff/schedule',
+        getPageData(req, 'Lịch làm việc của tôi', 'My Schedule',
+            {
+                headerClass: 'staff__header',
+                pageTitle: 'LỊCH LÀM VIỆC CỦA TÔI'
+            }
+        )
+    )
+}
+
 export const attendancePage = async (req, res) => {
     res.render('users/attendance',
         getPageData(req, 'Quản lý chấm công', 'Attendance',
@@ -383,6 +394,19 @@ export const attendanceDetail = (req, res) => {
                 headerClass: 'admin__header',
                 pageTitle: 'CHI TIẾT CHẤM CÔNG ',
                 attendanceId: id
+            }
+        )
+    )
+}
+
+export const payrollDetailPage = (req, res) => {
+    const { id } = req.params
+    res.render('users/payroll-detail',
+        getPageData(req, 'Chi tiết lương', 'Payroll Detail',
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'CHI TIẾT LƯƠNG ',
+                payrollId: id
             }
         )
     )

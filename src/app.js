@@ -6,6 +6,7 @@ import ejs from 'ejs';
 import { fileURLToPath } from 'url';
 import router from './routes/common.js';
 import passport from './configs/passport.js';
+import './modules/payroll/auto.js'
 import session from 'express-session';
 import MongoStore from "connect-mongo";
 

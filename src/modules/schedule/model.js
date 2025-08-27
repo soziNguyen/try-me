@@ -8,7 +8,6 @@ const scheduleSchema = new mongoose.Schema({
     status: { type: String, enum: ['scheduled', 'confirmed', 'cancelled'], default: 'scheduled' },
     note: { type: String, default: '' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Admin tạo lịch
-    approved: { type: Boolean, default: false } // Nhân viên xác nhận lịch
 }, {
     collection: "Schedules",
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }

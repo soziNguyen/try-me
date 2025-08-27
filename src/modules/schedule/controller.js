@@ -54,7 +54,6 @@ export const getSchedules = async (req, res) => {
             'date': 'date',
             'status': 'status',
             'note': 'note',
-            'approved': 'approved',
             'createdAt': 'createdAt',
             'updatedAt': 'updatedAt'
         }
@@ -84,7 +83,6 @@ export const getSchedules = async (req, res) => {
                     _id: "$createdBy._id",
                     username: "$createdBy.username"
                 },
-                approved: 1,
                 createdAt: 1,
                 updatedAt: 1
             }
@@ -133,7 +131,7 @@ export const createSchedule = async (req, res) => {
 export const updateSchedule = async (req, res) => {
     try {
         const { id } = req.params
-        const { user, shift, date, status, note, approved } = req.body
+        const { user, shift, date, status, note } = req.body
 
         const organizationId = getCurrentOrg(req)
         if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
@@ -148,7 +146,6 @@ export const updateSchedule = async (req, res) => {
         if (date !== undefined) dataUpdate.date = date ? new Date(date) : null
         if (status !== undefined && ['scheduled', 'confirmed', 'cancelled'].includes(status)) dataUpdate.status = status
         if (note !== undefined) dataUpdate.note = note
-        if (approved !== undefined) dataUpdate.approved = !!approved
 
         if (Object.keys(dataUpdate).length === 0) return responseHelper.error(res, 'Không có dữ liệu để cập nhật', 400)
 
@@ -183,5 +180,95 @@ export const deleteSchedule = async (req, res) => {
         responseHelper.success(res, result.deletedCount, 'Xóa thành công')
     } catch (error) {
         responseHelper.error(res, error.message)
+    }
+}
+
+export const getMySchedules = async (req, res) => {
+    try {
+        const draw = +req.query.draw || 0
+        const start = +req.query.start || 0
+        const length = +req.query.length || 10
+        const searchValue = (req.query["search[value]"] || "").trim()
+        const colIdx = req.query["order[0][column]"]
+        const sortField = req.query[`columns[${colIdx}][data]`] || 'date'
+        const sortDir = req.query["order[0][dir]"] === 'asc' ? 1 : -1
+
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+        if (!req.user || !req.user._id) return responseHelper.error(res, "Thiếu thông tin người dùng", 401)
+
+        const pipeline = [
+            { $match: { organization: organizationId, user: req.user._id } },
+            ...lookupRef('shift', 'Shifts')
+        ]
+
+        if (searchValue) {
+            pipeline.push({
+                $match: {
+                    $or: [
+                        { "shift.name": { $regex: searchValue, $options: 'i' } },
+                        { status: { $regex: searchValue, $options: 'i' } },
+                        { note: { $regex: searchValue, $options: 'i' } }
+                    ]
+                }
+            })
+        }
+
+        const totalRecords = await Schedule.countDocuments({ organization: organizationId, user: req.user._id })
+
+        // Total filtered
+        const countPipeline = [...pipeline, { $count: 'count' }]
+        const countResult = await Schedule.aggregate(countPipeline)
+        const recordsFiltered = countResult[0]?.count || 0
+
+        // Mapping sort fields để tránh lỗi khi sort
+        const sortFieldMapping = {
+            'shift': 'shift.name',
+            'date': 'date',
+            'status': 'status',
+            'note': 'note',
+            'createdAt': 'createdAt',
+            'updatedAt': 'updatedAt'
+        }
+        const actualSortField = sortFieldMapping[sortField] || sortField
+
+        // Sort + Pagination
+        pipeline.push({ $sort: { [actualSortField]: sortDir } }, { $skip: start }, { $limit: length })
+
+        // Projection
+        pipeline.push({
+            $project: {
+                _id: 1,
+                date: 1,
+                status: 1,
+                note: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                shift: {
+                    _id: "$shift._id",
+                    name: "$shift.name",
+                    type: "$shift.type",
+                    startTime: "$shift.startTime",
+                    endTime: "$shift.endTime"
+                }
+            }
+        })
+
+        const data = await Schedule.aggregate(pipeline)
+
+        return res.json({
+            draw,
+            recordsTotal: totalRecords,
+            recordsFiltered,
+            data
+        })
+    } catch (error) {
+        return res.status(500).json({
+            draw: +req.query.draw || 0,
+            recordsTotal: 0,
+            recordsFiltered: 0,
+            data: [],
+            error: error.message
+        })
     }
 }
