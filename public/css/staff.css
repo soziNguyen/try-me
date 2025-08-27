@@ -39,8 +39,15 @@
   display: flex;
   -ms-flex-wrap: wrap;
       flex-wrap: wrap;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  gap: 10px;
   opacity: 1;
   pointer-events: auto;
   z-index: 10;
   background-color: #fff;
+}
+.table-order .btn-select-table {
+  margin-bottom: 15px;
 }

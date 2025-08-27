@@ -11,26 +11,62 @@ export const createOrder = async (req, res) => {
       return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400);
     }
 
-    const { tableId } = req.body;
+    const { tableId, isTakeaway } = req.body;
+
+    if (isTakeaway) {
+      const existingOrder = await Order.findOne({
+        isTakeaway: true,
+        status: 'open',
+        organization: organizationId,
+      });
+
+      if (existingOrder) {
+        return responseHelper.success(res, {
+          orderId: existingOrder._id,
+          tableId: null,
+          isNewOrder: false
+        });
+      }
+
+      const newOrder = await Order.create({
+        tableId: null,
+        isTakeaway: true,
+        status: 'open',
+        organization: organizationId,
+      });
+
+      return responseHelper.success(res, {
+        orderId: newOrder._id,
+        tableId: null,
+        isNewOrder: true
+      });
+    }
+
+
+    if (!tableId) {
+      return responseHelper.error(res, 'Thiếu thông tin bàn', 400);
+    }
+
     const table = await Table.findById(tableId);
-    
-    if (!table) return responseHelper.error(res, 'Bàn không tồn tại', 404); 
-    if (table.status === 'occupied') return responseHelper.error(res, 'Bàn đã có khách', 400); 
+
+    if (!table) return responseHelper.error(res, 'Bàn không tồn tại', 404);
+    if (table.status === 'occupied') return responseHelper.error(res, 'Bàn đã có khách', 400);
 
     const newOrder = await Order.create({
       tableId,
+      isTakeaway: false,
       status: 'open',
-      organization: organizationId, 
+      organization: organizationId,
     });
 
     table.status = 'occupied';
     table.checkInTime = new Date();
-    table.currentOrderId = newOrder._id;  
+    table.currentOrderId = newOrder._id;
     await table.save();
 
     responseHelper.success(res, { orderId: newOrder._id, tableId: table._id });
   } catch (error) {
-    responseHelper.error(res, error.message); 
+    responseHelper.error(res, error.message);
   }
 };
 
