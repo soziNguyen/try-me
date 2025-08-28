@@ -1,9 +1,9 @@
 import mongoose from 'mongoose'
 
 const couponSchema = new mongoose.Schema({
-    code: { type: String, unique: true, default: '' },
+    code: { type: String, default: '' },
     discountType: { type: String, enum: ['percent', 'amount'], default: null },
-    discountValue: { type: Number, default: 0 },
+    discountValue: { type: Number, default: null },
     description: { type: String, default: '' },
     startDate: { type: Date, default: Date.now() },
     endDate: { type: Date, default: Date.now() },

@@ -136,38 +136,91 @@ export const updateCoupon = async (req, res) => {
             _id: id,
             organization: organizationId
         })
-
+        
         if (!coupon) return responseHelper.error(res, 'Mã giảm giá không hợp lệ hoặc đã hết hạn.', 400)
-        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+
+        let normalizedDiscountValue = discountValue
+        if (discountValue === '') {
+            normalizedDiscountValue = null
+        }
+
+        if (normalizedDiscountValue !== undefined && normalizedDiscountValue !== null && isNaN(Number(normalizedDiscountValue))) {
+            return responseHelper.error(res, "Giá trị giảm giá phải là số", 400)
+        }
+
+        const finalDiscountType = discountType !== undefined ? discountType : coupon.discountType
+        const finalDiscountValue = normalizedDiscountValue !== undefined ? normalizedDiscountValue : coupon.discountValue
+
+        if (finalDiscountValue !== null && finalDiscountValue !== undefined && finalDiscountValue !== '') {
+            const value = Number(finalDiscountValue)
+            
+            if (!finalDiscountType) {
+                return responseHelper.error(res, "Vui lòng chọn loại giảm giá", 400)
+            }
+            
+            if (finalDiscountType === 'percent' && (value <= 0 || value > 100)) {
+                return responseHelper.error(res, 'Giá trị phần trăm phải nằm trong khoảng 1-100', 400)
+            }
+
+            if (finalDiscountType === 'amount' && (value <= 0)) {
+                return responseHelper.error(res, "Giá trị giảm cố định phải lớn hơn 0", 400)
+            }
+        }
+
+        const finalStartDate = startDate !== undefined ? new Date(startDate) : new Date(coupon.startDate)
+        const finalEndDate = endDate !== undefined ? new Date(endDate) : new Date(coupon.endDate)
+
+        if (startDate !== undefined && isNaN(finalStartDate.getTime())) {
+            return responseHelper.error(res, "Định dạng ngày bắt đầu không hợp lệ", 400)
+        }
+
+        if (endDate !== undefined && isNaN(finalEndDate.getTime())) {
+            return responseHelper.error(res, "Định dạng ngày kết thúc không hợp lệ", 400)
+        }
+
+        if (finalStartDate > finalEndDate) {
             return responseHelper.error(res, "Ngày bắt đầu không được sau ngày kết thúc", 400)
         }
 
-        if (discountType === 'percent' && (discountValue <= 0 || discountValue > 100)) {
-            return responseHelper.error(res, 'Giá trị phần trăm phải nằm trong khoảng 1-100', 400)
+        if (usageLimit !== undefined && isNaN(Number(usageLimit))) {
+            return responseHelper.error(res, 'Giới hạn sử dụng phải là một số', 400)
         }
 
-        if (discountType === 'amount' && (discountValue <= 0)) {
-            return responseHelper.error(res, "Giá trị giảm cố định phải lớn hơn 0", 400)
+        if (usageLimit !== undefined && usageLimit !== null && usageLimit < 0) {
+            return responseHelper.error(res, "Giới hạn sử dụng không thể âm", 400)
         }
 
-        if (usageLimit !== null && usedCount > usageLimit) {
+        if (usedCount !== undefined && isNaN(Number(usedCount))) {
+            return responseHelper.error(res, 'Số lượt đã sử dụng phải là một số', 400)
+        }
+
+        if (usedCount !== undefined && usedCount < 0) {
+            return responseHelper.error(res, "Số lượt đã sử dụng không thể âm", 400)
+        }
+
+        const finalUsageLimit = usageLimit !== undefined ? usageLimit : coupon.usageLimit
+        const finalUsedCount = usedCount !== undefined ? usedCount : coupon.usedCount
+
+        if (finalUsageLimit !== null && finalUsedCount > finalUsageLimit) {
             return responseHelper.error(res, "Số lượt đã sử dụng không thể lớn hơn giới hạn cho phép", 400)
         }
 
-        const existedCode = await Coupon.findOne({
-            code,
-            organization: organizationId,
-            _id: { $ne: id }
-        })
+        if (code !== undefined) {
+            const existedCode = await Coupon.findOne({
+                code,
+                organization: organizationId,
+                _id: { $ne: id }
+            })
 
-        if (existedCode) {
-            return responseHelper.error(res, "Mã giảm giá này đã tồn tại", 400)
+            if (existedCode) {
+                return responseHelper.error(res, "Mã giảm giá này đã tồn tại", 400)
+            }
         }
 
         let dataUpdate = {}
         if (code !== undefined) dataUpdate.code = code
         if (discountType !== undefined) dataUpdate.discountType = discountType
-        if (discountValue !== undefined) dataUpdate.discountValue = discountValue
+        if (normalizedDiscountValue !== undefined) dataUpdate.discountValue = normalizedDiscountValue
         if (description !== undefined) dataUpdate.description = description
         if (startDate !== undefined) dataUpdate.startDate = startDate
         if (endDate !== undefined) dataUpdate.endDate = endDate
