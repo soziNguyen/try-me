@@ -10,35 +10,35 @@
                 </a>
               </li>
           
-              <li>
+              <li class="<%= page === 'Table' ? 'active' : '' %>">
                 <a class="w-100" href="/tables">
                   <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>
                   <span>Quản lý Bàn</span>
                 </a>
               </li>
 
-              <li>
+              <li class="<%= page === 'Orders' ? 'active' : '' %>">
                 <a class="w-100" href="/orders">
                   <i class="bi bi-receipt me-2 text-success"></i>
                   <span>Đặt món (Gọi món)</span>
                 </a>
               </li>
               
-              <li>
+              <li class="<%= page === 'Bills' ? 'active' : '' %>">
                 <a class="w-100" href="/bills">
                   <i class="bi bi-cash-stack me-2 text-danger"></i>
                   <span>Hóa đơn</span>
                 </a>
               </li>
 
-              <li>
+              <li class="<%= page === 'My Schedule' ? 'active' : '' %>">
                 <a class="w-100" href="/my-schedule">
                   <i class="bi bi-calendar3 me-2 text-warning"></i>
                   <span>Xem Lịch làm việc</span>
                 </a>
               </li>
           
-              <li>
+              <li class="<%= page === 'Orders' ? 'active' : '' %>">
                 <a class="w-100" href="/staff/attendance">
                   <i class="bi bi-clock-history me-2 text-info"></i>
                   <span>Chấm công Vào/Ra</span>
