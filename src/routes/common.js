@@ -19,7 +19,9 @@ import recipeRoutes from '../modules/menu/recipe/route.js'
 import inventoryRoutes from './inventory.js'
 import menuRoutes from './menu.js'
 import staffRoutes from './staff.js'
+import reportRoutes from './report.js'
 import comboRoutes from '../modules/menu/combo/route.js'
+import couponRoutes from '../modules/coupon/route.js'
 import scheduleRoutes from '../modules/schedule/route.js'
 import attendanceRoute from '../modules/attendance/route.js'
 import shiftRoutes from '../modules/shift/route.js'
@@ -47,7 +49,13 @@ const routes = [
     tableRoutes, orderRoutes,
 
     // Staff
-    staffRoutes, scheduleRoutes, attendanceRoute, payrollRoutes
+    staffRoutes, scheduleRoutes, attendanceRoute, payrollRoutes,
+
+    // Report
+    reportRoutes,
+
+    // Coupon
+    couponRoutes
 ]
 
 routes.forEach(route => router.use('/', route))

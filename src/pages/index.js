@@ -411,3 +411,61 @@ export const payrollDetailPage = (req, res) => {
         )
     )
 }
+
+// =================================================
+// ================== REPORTS ======================
+
+export const saleReportPage = async (req, res) => {
+    res.render('reports/sale',
+        getPageData(req, 'Báo cáo bán hàng', 'SalesReport',
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'BÁO CÁO BÁN HÀNG'
+            }
+        )
+    )
+}
+
+export const inventoryReportPage = async (req, res) => {
+    res.render('reports/inventory',
+        getPageData(req, 'Báo cáo kho', 'InventoryReport',
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'BÁO CÁO KHO'
+            }
+        )
+    )
+}
+
+export const staffReportPage = async (req, res) => {
+    res.render('reports/staff',
+        getPageData(req, 'Quản lý nhân viên', 'StaffReport',
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'QUẢN LÝ NHÂN VIÊN'
+            }
+        )
+    )
+}
+
+export const taxReportPage = async (req, res) => {
+    res.render('reports/tax',
+        getPageData(req, 'Báo cáo thuế', 'TaxReport',
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'BÁO CÁO THUẾ'
+            }
+        )
+    )
+}
+
+export const couponPage = async (req, res) => {
+    res.render('coupon/coupon',
+        getPageData(req, 'Mã giảm giá', 'Coupon',
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'MÃ GIẢM GIÁ'
+            }
+        )
+    )
+}

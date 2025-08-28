@@ -81,12 +81,12 @@ $(function () {
           render: (data, type, row) => {
             if (type === "display") {
               return `
-                              <button class="btn btn-sm btn-outline-primary my-1 detail-btn"
-                                  data-id="${row._id}"
-                                  title="Xem chi tiết">
-                                <i class="bi bi-eye"></i> Chi tiết
-                              </button>
-                            `
+                <button class="btn btn-sm btn-outline-primary my-1 detail-btn"
+                    data-id="${row._id}"
+                    title="Xem chi tiết">
+                  <i class="bi bi-eye"></i> Chi tiết
+                </button>
+              `
             }
             return ""
           },
