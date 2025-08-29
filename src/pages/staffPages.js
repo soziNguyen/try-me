@@ -43,15 +43,5 @@ export const billsPage = (req, res) => {
             }
         )
     )    
-}
+} 
 
-export const schedulePage = (req, res) => {
-    res.render('staff/schedule', 
-        getPageData(req, 'Lịch Làm Việc', 'Schedule', 
-            {
-                headerClass: 'staff__header',
-                pageTitle: `LỊCH LÀM VIỆC của ${req.user.username}`
-            }
-        )
-    )    
-}

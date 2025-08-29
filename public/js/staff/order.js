@@ -122,43 +122,6 @@ document.getElementById('tableGrid').addEventListener('click', async (e) => {
 });
 
 
-// CHI TIẾT HÓA ĐƠN
-document.addEventListener('click', (e) => {
-  const checkoutBtn = e.target.closest('#checkoutBtn');
-  if (checkoutBtn) {
-    const checkoutDetail = document.getElementById('checkoutDetail');
-    if (!checkoutDetail) return;
-    const tbody = document.getElementById('orderItems');
-    if (!tbody || tbody.children.length === 0) {
-      toastr.warning('Chưa có món nào trong hóa đơn!');
-      return;
-    }
-
-    checkoutDetail.style.display = 'block';
-    checkoutDetail.scrollIntoView({ behavior: 'smooth' });
-
-    const totalAmountEl = document.getElementById('totalAmount');
-    const customerPaidInput = document.getElementById('customerPaidInput');
-    if (totalAmountEl && customerPaidInput) {
-      const total = totalAmountEl.textContent.replace(/[^\d]/g, '');
-      const totalNumber = Number(total) || 0;
-      customerPaidInput.value = totalNumber.toLocaleString();
-    }
-  }
-
-  if (e.target.classList.contains('cash-suggestion')) {
-    const value = parseInt(e.target.dataset.value, 10);
-    const input = document.getElementById('customerPaidInput');
-    if (input) {
-      input.value = parseInt(input.value || 0) + value;
-      input.dispatchEvent(new Event('input'));
-    }
-  }
-
-  if (e.target.id === 'cancelCheckoutDetail') {
-    document.getElementById('checkoutDetail').style.display = 'none';
-  }
-});
 
 // ======== Các hàm lấy dữ liệu và render UI ========
 
@@ -320,80 +283,5 @@ function updateOrderUI(order) {
     `;
     orderSummary.insertAdjacentHTML('beforeend', btnHTML);
   }
-}
-
-
-// ======== Các hàm xử lý thêm/xóa/sửa món ========
-
-// Thêm món vào hóa đơn
-async function addToOrder(foodId, foodName, price) {
-  if (!orderId) {
-    toastr.error("Không tìm thấy hóa đơn.");
-    return;
-  }
-  try {
-    const res = await fetch(`/api/orders/${orderId}/items`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ foodId, quantity: 1 })
-    });
-    const result = await res.json();
-    if (!res.ok) {
-      toastr.error(result.message || "Lỗi khi thêm món");
-      return;
-    }
-    toastr.success(`Đã thêm ${foodName} vào hóa đơn`);
-    updateOrderUI(result.data);
-  } catch (err) {
-    console.error("Lỗi khi thêm món:", err);
-    toastr.error("Lỗi kết nối server");
-  }
-}
-
-// Cập nhật số lượng món ăn trong hóa đơn
-async function updateItemQuantity(foodId, newQuantity) {
-  if (!orderId) {
-    toastr.error("Không tìm thấy hóa đơn.");
-    return;
-  }
-  try {
-    const res = await fetch(`/api/orders/${orderId}/items/${foodId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ foodId, quantity: Number(newQuantity) })
-    });
-    const result = await res.json();
-    if (!res.ok) {
-      toastr.error(result.message || "Lỗi khi cập nhật số lượng");
-      return;
-    }
-    toastr.success("Cập nhật số lượng thành công");
-    updateOrderUI(result.data);
-  } catch (err) {
-    console.error("Lỗi khi cập nhật số lượng:", err);
-    toastr.error("Lỗi kết nối server");
-  }
-}
-
-// Xóa món khỏi hóa đơn
-async function removeItemFromOrder(foodId) {
-  if (!orderId) {
-    toastr.error("Không tìm thấy hóa đơn.");
-    return;
-  }
-  try {
-    const res = await fetch(`/api/orders/${orderId}/items/${foodId}`, {
-      method: "DELETE"
-    });
-    const result = await res.json();
-    if (!res.ok) {
-      toastr.error(result.message || "Lỗi khi xóa món");
-      return;
-    }
-    toastr.success("Đã xóa món khỏi hóa đơn");
-    updateOrderUI(result.data);
-  } catch (err) {
-    console.error("Lỗi khi xóa món:", err);
-    toastr.error("Lỗi kết nối server");
-  }
+  syncCheckoutDetailTotal();
 }
