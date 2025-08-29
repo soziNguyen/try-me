@@ -469,3 +469,14 @@ export const couponPage = async (req, res) => {
         )
     )
 }
+
+export const taxPage = async (req, res) => {
+    res.render('tax/index',
+        getPageData(req, 'Thuế', 'Tax',
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'THUẾ'
+            }
+        )
+    )
+}

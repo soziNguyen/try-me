@@ -10,5 +10,6 @@ router.get('/reports/inventory', isAuthenticated, isPermit('Admin', 'Org'), page
 router.get('/reports/performance', isAuthenticated, isPermit('Admin', 'Org'), page.staffReportPage)
 router.get('/reports/tax', isAuthenticated, isPermit('Admin', 'Org'), page.taxReportPage)
 router.get('/coupon', isAuthenticated, isPermit('Admin', 'Org'), page.couponPage)
+router.get('/tax', isAuthenticated, isPermit('Admin', 'Org'), page.taxPage)
 
 export default router

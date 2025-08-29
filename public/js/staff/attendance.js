@@ -41,13 +41,6 @@ $(function () {
             pageLength: numRows,
             columns: [
                 {
-                    data: 'code',
-                    className: 'text-center',
-                    render: data => `
-                        <input type="text" class="dataInput form-control w-100 border-0" value=${data}>
-                    `
-                },
-                {
                     data: 'user.username',
                     className: 'text-center',
                     title: 'Nhân viên',
