@@ -39,6 +39,12 @@ $(function () {
                 zeroRecords: 'Không tìm thấy kết quả phù hợp',
                 emptyTable: 'Không có dữ liệu trong bảng'
             },
+            columnDefs: [
+                { width: "220px", targets: 1 }, 
+                { width: "180px", targets: 2 },
+                { width: "100px", targets: 7 },
+                { width: "60px", targets: 8 }
+            ],
             columns: [
                 {
                     data: null,
@@ -72,34 +78,42 @@ $(function () {
                             })
                             return `
                                 <select class="dataInput form-select border-0" data-field="discountType">
-                                <option value="">--Chọn loại giảm--</option>
-                                ${opts}
+                                    <option value="">— Chọn —</option>
+                                    ${opts}
                                 </select>
                                 `
                         }
+                        return data ?? ''
                     }
                 },
                 {
                     data: 'discountValue',
-                    render: (data) => {
-                        return `<input type="number" 
+                    render: (data, type, row) => {
+                        if (type === 'display') {
+                            return `
+                                <input type="number" 
                                     class="dataInput form-control w-100 border-0" 
-                                    placeholder="0" 
-                                    min="0"
+                                    placeholder="0"
                                     data-field="discountValue" 
-                                    value="${data ?? ''}
+                                    value="${data ?? ''}"
                                 >`
+                        }
+                        return data ?? ''
                     }
                 },
                 {
                     data: 'description',
-                    render: (data) => {
-                        return `<input type="text" 
+                    render: (data, type, row) => {
+                        if (type === 'display') {
+                            return `
+                                <input type="text" 
                                     class="dataInput form-control w-100 border-0" 
                                     placeholder="Mô tả" 
                                     data-field="description"
-                                    value="${data ?? ''}
+                                    value="${data ?? ''}"
                                 >`
+                        }
+                        return data ?? ''
                     }
                 },
                 {
@@ -128,11 +142,11 @@ $(function () {
                     data: 'usageLimit',
                     className: 'text-center',
                     render: (data) => {
-                        return `<input type="text" 
+                        return `<input type="number"
                                     class="dataInput form-control w-100 border-0" 
-                                    placeholder="Mô tả" 
+                                    placeholder="Số lượng" 
                                     data-field="usageLimit"
-                                    value="${data ?? ''}
+                                    value="${data ?? ''}"
                                 >`
                     }
                 },
