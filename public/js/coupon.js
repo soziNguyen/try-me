@@ -40,7 +40,7 @@ $(function () {
                 emptyTable: 'Không có dữ liệu trong bảng'
             },
             columnDefs: [
-                { width: "220px", targets: 1 }, 
+                { width: "220px", targets: 1 },
                 { width: "180px", targets: 2 },
                 { width: "100px", targets: 7 },
                 { width: "60px", targets: 8 }
