@@ -7,14 +7,14 @@ export const getActiveCoupons = async (req, res) => {
         const organizationId = getCurrentOrg(req)
         if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
-        const Coupons = await Coupon.find(
+        const coupons = await Coupon.find(
             {
                 isActive: true,
                 organization: organizationId
             })
             .select('_id code')
             .sort({ name: 1 })
-        responseHelper.success(res, Coupons)
+        responseHelper.success(res, coupons)
     } catch (error) {
         responseHelper.error(res, error.message)
     }
@@ -136,7 +136,7 @@ export const updateCoupon = async (req, res) => {
             _id: id,
             organization: organizationId
         })
-        
+
         if (!coupon) return responseHelper.error(res, 'Mã giảm giá không hợp lệ hoặc đã hết hạn.', 400)
 
         let normalizedDiscountValue = discountValue
@@ -153,11 +153,11 @@ export const updateCoupon = async (req, res) => {
 
         if (finalDiscountValue !== null && finalDiscountValue !== undefined && finalDiscountValue !== '') {
             const value = Number(finalDiscountValue)
-            
+
             if (!finalDiscountType) {
                 return responseHelper.error(res, "Vui lòng chọn loại giảm giá", 400)
             }
-            
+
             if (finalDiscountType === 'percent' && (value <= 0 || value > 100)) {
                 return responseHelper.error(res, 'Giá trị phần trăm phải nằm trong khoảng 1-100', 400)
             }

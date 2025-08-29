@@ -2,6 +2,20 @@ import Tax from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
+export const getActiveTaxes = async (req, res) => {
+    try {
+        const organizationId = getCurrentOrg(req)
+        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
+        const taxes = await Tax.find(
+            { isActive: true, organization: organizationId }
+        ).select('_id name')
+        responseHelper.success(res, taxes)
+    } catch (error) {
+        responseHelper.error(res, error.message)
+    }
+}
+
 export const getTaxes = async (req, res) => {
     try {
         const draw = +req.query.draw || 0
