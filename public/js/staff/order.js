@@ -234,14 +234,12 @@ function updateOrderUI(order) {
   }
 
   tbody.innerHTML = "";
-  let total = 0;
 
   for (const item of order.items) {
     const name = item.foodId.name || "Không rõ";
     const price = item.price || 0;
     const quantity = item.quantity || 0;
     const amount = price * quantity;
-    total += amount;
 
     const row = `
       <tr>
@@ -256,7 +254,7 @@ function updateOrderUI(order) {
             data-id="${item.foodId._id}"
           />
         </td>
-        <td>${price.toLocaleString()}đ</td>
+        <td>${price.toLocaleString()}</td>
         <td>${amount.toLocaleString()}đ</td>
         <td>
           <button class="btn btn-sm btn-outline-danger remove-item" data-id=${item.foodId._id}>
@@ -269,6 +267,7 @@ function updateOrderUI(order) {
     tbody.insertAdjacentHTML("beforeend", row);
   }
 
+  const total = calculateTotalAmount(order.items);
   totalAmountEl.textContent = `${total.toLocaleString()}đ`;
 
   // Thêm nút Thanh toán nếu chưa có
@@ -284,4 +283,80 @@ function updateOrderUI(order) {
     orderSummary.insertAdjacentHTML('beforeend', btnHTML);
   }
   syncCheckoutDetailTotal();
+}
+
+
+// ======== Các hàm xử lý thêm/xóa/sửa món ========
+
+// Thêm món vào hóa đơn
+async function addToOrder(foodId, foodName, price) {
+  if (!orderId) {
+    toastr.error("Không tìm thấy hóa đơn.");
+    return;
+  }
+  try {
+    const res = await fetch(`/api/orders/${orderId}/items`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ foodId, quantity: 1 })
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      toastr.error(result.message || "Lỗi khi thêm món");
+      return;
+    }
+    toastr.success(`Đã thêm ${foodName} vào hóa đơn`);
+    updateOrderUI(result.data);
+  } catch (err) {
+    console.error("Lỗi khi thêm món:", err);
+    toastr.error("Lỗi kết nối server");
+  }
+}
+
+// Cập nhật số lượng món ăn trong hóa đơn
+async function updateItemQuantity(foodId, newQuantity) {
+  if (!orderId) {
+    toastr.error("Không tìm thấy hóa đơn.");
+    return;
+  }
+  try {
+    const res = await fetch(`/api/orders/${orderId}/items/${foodId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ foodId, quantity: Number(newQuantity) })
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      toastr.error(result.message || "Lỗi khi cập nhật số lượng");
+      return;
+    }
+    toastr.success("Cập nhật số lượng thành công");
+    updateOrderUI(result.data);
+  } catch (err) {
+    console.error("Lỗi khi cập nhật số lượng:", err);
+    toastr.error("Lỗi kết nối server");
+  }
+}
+
+// Xóa món khỏi hóa đơn
+async function removeItemFromOrder(foodId) {
+  if (!orderId) {
+    toastr.error("Không tìm thấy hóa đơn.");
+    return;
+  }
+  try {
+    const res = await fetch(`/api/orders/${orderId}/items/${foodId}`, {
+      method: "DELETE"
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      toastr.error(result.message || "Lỗi khi xóa món");
+      return;
+    }
+    toastr.success("Đã xóa món khỏi hóa đơn");
+    updateOrderUI(result.data);
+  } catch (err) {
+    console.error("Lỗi khi xóa món:", err);
+    toastr.error("Lỗi kết nối server");
+  }
 }

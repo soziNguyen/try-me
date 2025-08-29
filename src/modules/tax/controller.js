@@ -9,7 +9,7 @@ export const getActiveTaxes = async (req, res) => {
 
         const taxes = await Tax.find(
             { isActive: true, organization: organizationId }
-        ).select('_id name')
+        ).select('_id name rate')
         responseHelper.success(res, taxes)
     } catch (error) {
         responseHelper.error(res, error.message)

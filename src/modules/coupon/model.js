@@ -6,7 +6,11 @@ const couponSchema = new mongoose.Schema({
     discountValue: { type: Number, default: null },
     description: { type: String, default: '' },
     startDate: { type: Date, default: Date.now() },
-    endDate: { type: Date, default: Date.now() },
+    endDate: { type: Date,  default: () => {
+        const now = new Date()
+        now.setHours(23, 59, 59, 999)
+        return now
+    } },
     usageLimit: { type: Number, default: null }, // null = không giới hạn
     usedCount: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },

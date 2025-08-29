@@ -168,7 +168,19 @@ export const updateCoupon = async (req, res) => {
         }
 
         const finalStartDate = startDate !== undefined ? new Date(startDate) : new Date(coupon.startDate)
-        const finalEndDate = endDate !== undefined ? new Date(endDate) : new Date(coupon.endDate)
+        const finalEndDate = (() => {
+            if (endDate !== undefined) {
+                const ed = new Date(endDate)
+                if (isNaN(ed.getTime())) {
+                    throw new Error("Định dạng ngày kết thúc không hợp lệ")
+                }
+                ed.setHours(23, 59, 59, 999)
+                return ed
+            }
+            const ed = new Date(coupon.endDate)
+            ed.setHours(23, 59, 59, 999)
+            return ed
+        })()
 
         if (startDate !== undefined && isNaN(finalStartDate.getTime())) {
             return responseHelper.error(res, "Định dạng ngày bắt đầu không hợp lệ", 400)
@@ -222,8 +234,13 @@ export const updateCoupon = async (req, res) => {
         if (discountType !== undefined) dataUpdate.discountType = discountType
         if (normalizedDiscountValue !== undefined) dataUpdate.discountValue = normalizedDiscountValue
         if (description !== undefined) dataUpdate.description = description
-        if (startDate !== undefined) dataUpdate.startDate = startDate
-        if (endDate !== undefined) dataUpdate.endDate = endDate
+        if (startDate !== undefined) {
+        const sd = new Date(startDate)
+        const now = new Date()
+        sd.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds())
+        dataUpdate.startDate = sd
+        }
+        if (endDate !== undefined) dataUpdate.endDate = finalEndDate
         if (usageLimit !== undefined) dataUpdate.usageLimit = usageLimit
         if (usedCount !== undefined) dataUpdate.usedCount = usedCount
         if (isActive !== undefined) dataUpdate.isActive = isActive
@@ -260,4 +277,50 @@ export const deleteCoupons = async (req, res) => {
     } catch (err) {
         return responseHelper.error(res, err.message)
     }
+}
+
+export const applyCoupon = async (req, res) => {
+  try {
+    const { code, totalAmount } = req.body
+    if (!code) return responseHelper.error(res, "Vui lòng nhập mã giảm giá", 400)
+    if (totalAmount == null) return responseHelper.error(res, "Thiếu tổng tiền để áp dụng", 400)
+
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
+    const now = new Date()
+    const coupon = await Coupon.findOne({
+        isActive: true,
+        code,
+        startDate: { $lte: now },
+        endDate: { $gte: now },
+        $expr: { $lt: ["$usedCount", "$usageLimit"] },
+        organization: organizationId,
+    })
+
+    console.log(coupon)
+    
+    if (!coupon) return responseHelper.error(res, "Mã giảm giá không hợp lệ hoặc đã hết hạn", 400)
+
+    let discount = 0
+    if (coupon.discountType === "percent") {
+      discount = (totalAmount * coupon.discountValue) / 100
+    } else if (coupon.discountType === "amount") {
+      discount = coupon.discountValue
+    }
+
+    // Giảm không vượt quá tổng tiền
+    if (discount > totalAmount) discount = totalAmount
+    
+    // Trả về thông tin giảm giá
+    responseHelper.success(res, {
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      discountAmount: discount
+    })
+
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
 }
