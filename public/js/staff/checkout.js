@@ -1,6 +1,9 @@
-// Xử lý sự kiện click mở/ẩn chi tiết thanh toán, xử lý gợi ý tiền mặt
+// ========== XỬ LÝ SỰ KIỆN CLICK ==========
+
 document.addEventListener('click', (e) => {
   const checkoutBtn = e.target.closest('#checkoutBtn');
+
+  // Mở/ẩn chi tiết thanh toán và xử lý gợi ý tiền mặt
   if (checkoutBtn) {
     const checkoutDetail = document.getElementById('checkoutDetail');
     if (!checkoutDetail) return;
@@ -20,17 +23,17 @@ document.addEventListener('click', (e) => {
     if (totalAmountEl && totalPayableEl && customerPaidInput) {
       const totalText = totalAmountEl.textContent.replace(/[^\d]/g, '');
       const totalNumber = Number(totalText) || 0;
+
       totalPayableEl.value = totalNumber.toLocaleString();
       customerPaidInput.value = '';
 
-      // Khi mới mở, giá trị = 0, hiện nút gợi ý mệnh giá, ẩn gợi ý động
       showPriceSuggestions(true);
       clearDynamicSuggestions();
       updateChangeAmount();
     }
   }
 
-  // Xử lý khi click nút gợi ý tiền mặt 
+  // Click nút gợi ý tiền mặt
   if (e.target.classList.contains('cash-suggestion')) {
     const value = parseInt(e.target.dataset.value, 10);
     const input = document.getElementById('customerPaidInput');
@@ -40,13 +43,15 @@ document.addEventListener('click', (e) => {
     }
   }
 
-  // click nút hủy
+  // Click nút hủy
   if (e.target.id === 'cancelCheckoutDetail') {
     document.getElementById('checkoutDetail').style.display = 'none';
   }
 });
 
-// sự kiện input trên ô nhập tiền
+
+// ========== XỬ LÝ SỰ KIỆN INPUT TIỀN KHÁCH ĐÃ TRẢ ==========
+
 const customerPaidInput = document.getElementById('customerPaidInput');
 if (customerPaidInput) {
   customerPaidInput.addEventListener('input', () => {
@@ -67,7 +72,10 @@ if (customerPaidInput) {
   });
 }
 
-// Hàm hiển thị hoặc ẩn nút gợi ý mệnh giá và gợi ý động
+
+// ========== HÀM HỖ TRỢ ==========
+
+// Hiển thị hoặc ẩn nút gợi ý mệnh giá và gợi ý động
 function showPriceSuggestions(show) {
   const priceSuggestionDiv = document.querySelector('.price-suggestion');
   const dynamicSuggestionDiv = document.getElementById('dynamicSuggestions');
@@ -82,7 +90,7 @@ function showPriceSuggestions(show) {
   }
 }
 
-// Hàm xóa và ẩn gợi ý mệnh giá động
+// Xóa và ẩn gợi ý mệnh giá động
 function clearDynamicSuggestions() {
   const container = document.getElementById('dynamicSuggestions');
   if (container) {
@@ -91,22 +99,22 @@ function clearDynamicSuggestions() {
   }
 }
 
-// Hàm tính và cập nhật tiền thừa
+// Cập nhật tiền thừa
 function updateChangeAmount() {
-  const totalPayableEl = document.getElementById('totalPayable');
+  const totalEl = document.getElementById('total'); 
   const customerPaidInput = document.getElementById('customerPaidInput');
   const changeAmountInput = document.getElementById('changeAmount');
 
-  if (!totalPayableEl || !customerPaidInput || !changeAmountInput) return;
+  if (!totalEl || !customerPaidInput || !changeAmountInput) return;
 
-  const totalPayable = Number(totalPayableEl.value.replace(/[^\d]/g, '')) || 0;
+  const total = Number(totalEl.value.replace(/[^\d]/g, '')) || 0;
   const customerPaid = Number(customerPaidInput.value.replace(/[^\d]/g, '')) || 0;
-  const change = customerPaid - totalPayable;
+  const change = customerPaid - total;
 
   changeAmountInput.value = change > 0 ? change.toLocaleString() : '0';
 }
 
-// Hàm cập nhật các nút gợi ý tiền mặt động dựa trên giá trị nhập
+// Cập nhật các nút gợi ý tiền mặt động dựa trên giá trị nhập
 function updateDynamicSuggestions(inputValue) {
   const container = document.getElementById('dynamicSuggestions');
   container.innerHTML = '';
@@ -117,17 +125,43 @@ function updateDynamicSuggestions(inputValue) {
     return;
   }
 
-  const maxValue = 1000000; // Giới hạn tối đa 1 triệu đồng
-  const suggestions = [];
-  const multiples = [1, 10, 100, 1000, 10000];
+  const maxValue = 100000000; 
+  const suggestionsSet = new Set();
+  const rawValueStr = rawValue.toString();
 
-  for (let mul of multiples) {
-    const val = rawValue * mul;
-    if (val < 1000 || val > maxValue || suggestions.includes(val)) continue;
-    suggestions.push(val);
+  if (rawValue === 1) {
+    const powersOfTen = [3, 4, 5, 6, 7];
+    for (let power of powersOfTen) {
+      const val = rawValue * Math.pow(10, power);
+      if (val >= 1000 && val <= maxValue) {
+        suggestionsSet.add(val);
+      }
+    }
+  } else {
+    const standardAmounts = [
+      1000, 2000, 5000, 10000, 15000, 20000, 25000, 30000, 40000, 50000,
+      100000, 150000, 200000, 250000, 300000, 400000, 500000,
+      1000000, 1500000, 2000000, 2500000, 3000000, 4000000, 5000000,
+      10000000, 15000000, 20000000, 25000000, 30000000, 40000000, 50000000
+    ];
+
+    for (let amt of standardAmounts) {
+      if (amt.toString().startsWith(rawValueStr) && amt >= 1000 && amt <= maxValue) {
+        suggestionsSet.add(amt);
+      }
+    }
+
+    let multiplier = 10;
+    for (let i = 0; i < 5; i++) {
+      const val = rawValue * multiplier;
+      if (val >= 1000 && val <= maxValue) {
+        suggestionsSet.add(val);
+      }
+      multiplier *= 10;
+    }
   }
 
-  suggestions.sort((a, b) => a - b);
+  const suggestions = Array.from(suggestionsSet).sort((a, b) => a - b);
 
   for (let val of suggestions) {
     const btn = document.createElement('button');
@@ -145,11 +179,24 @@ function updateDynamicSuggestions(inputValue) {
   }
 }
 
+
+// Tính tổng tiền đơn hàng
+function calculateTotalAmount(items) {
+  let total = 0;
+  for (const item of items) {
+    const price = item.price || 0;
+    const quantity = item.quantity || 0;
+    total += price * quantity;
+  }
+  return total;
+}
+
+// Đồng bộ tổng tiền trên chi tiết thanh toán
 function syncCheckoutDetailTotal() {
   const totalAmountEl = document.getElementById('totalAmount');
   const totalPayableEl = document.getElementById('totalPayable');
   const customerPaidInput = document.getElementById('customerPaidInput');
-  
+
   if (!totalAmountEl || !totalPayableEl) return;
 
   const totalText = totalAmountEl.textContent.replace(/[^\d]/g, '');
@@ -162,83 +209,122 @@ function syncCheckoutDetailTotal() {
   }
 
   updateChangeAmount();
+  updateTotalAfterVAT();
 }
 
 
+// ========== XỬ LÝ VAT ==========
+
+let taxes = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await getTaxes();
+  renderTaxOptions();
+
+  const vatInput = document.getElementById('vatInput');
+  if (vatInput) {
+    vatInput.addEventListener('change', () => {
+      updateTotalAfterVAT();
+    });
+  }
+});
+
+async function getTaxes() {
+  try {
+    const data = await ajax('/api/taxes/active', {}, 'GET');
+    if (data) {
+      taxes = data;
+    }
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+function renderTaxOptions() {
+  const vatInput = document.getElementById('vatInput');
+  if (!vatInput) return;
+
+  taxes.forEach(tax => {
+    const option = document.createElement('option');
+    option.value = tax._id;
+    option.textContent = `${tax.rate} %`;
+    vatInput.appendChild(option);
+  });
+}
+
+function updateTotalAfterVAT() {
+  const totalPayableEl = document.getElementById('totalPayable');
+  const vatInput = document.getElementById('vatInput');
+  const totalEl = document.getElementById('total');
+
+  if (!totalPayableEl || !vatInput || !totalEl) return;
+
+  let totalPayable = Number(totalPayableEl.value.replace(/[^\d]/g, '')) || 0;
+  const selectedOption = vatInput.options[vatInput.selectedIndex];
+  let vatRate = 0;
+
+  if (selectedOption) {
+    const match = selectedOption.textContent.match(/(\d+)\s*%/);
+    if (match) vatRate = Number(match[1]);
+  }
+
+  const totalWithVAT = totalPayable + (totalPayable * vatRate / 100);
+  totalEl.value = totalWithVAT.toLocaleString();
+}
 
 
+// ========== ÁP DỤNG MÃ GIẢM GIÁ ==========
 
-// ======== Các hàm xử lý thêm/xóa/sửa món ========
+document.getElementById('applyDiscountBtn').addEventListener('click', async () => {
+  const codeInput = document.getElementById('discountCodeInput');
+  const discountMessage = document.getElementById('discountMessage');
+  const totalAmountEl = document.getElementById('totalAmount');
+  const totalPayable = document.getElementById('totalPayable');
 
-// Thêm món vào hóa đơn
-async function addToOrder(foodId, foodName, price) {
-  if (!orderId) {
-    toastr.error("Không tìm thấy hóa đơn.");
+  const code = codeInput.value.trim();
+  if (!code) {
+    discountMessage.textContent = 'Vui lòng nhập mã giảm giá';
+    discountMessage.className = 'text-danger d-block mt-1';
     return;
   }
-  try {
-    const res = await fetch(`/api/orders/${orderId}/items`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ foodId, quantity: 1 })
-    });
-    const result = await res.json();
-    if (!res.ok) {
-      toastr.error(result.message || "Lỗi khi thêm món");
-      return;
-    }
-    toastr.success(`Đã thêm ${foodName} vào hóa đơn`);
-    updateOrderUI(result.data);
-  } catch (err) {
-    console.error("Lỗi khi thêm món:", err);
-    toastr.error("Lỗi kết nối server");
-  }
-}
 
-// Cập nhật số lượng món ăn trong hóa đơn
-async function updateItemQuantity(foodId, newQuantity) {
-  if (!orderId) {
-    toastr.error("Không tìm thấy hóa đơn.");
+  let currentTotalText = totalAmountEl.textContent.replace(/[đ,\.\s]/g, '');
+  let totalAmount = Number(currentTotalText);
+
+  if (isNaN(totalAmount) || totalAmount <= 0) {
+    discountMessage.textContent = 'Tổng tiền không hợp lệ';
+    discountMessage.className = 'text-danger d-block mt-1';
     return;
   }
-  try {
-    const res = await fetch(`/api/orders/${orderId}/items/${foodId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ foodId, quantity: Number(newQuantity) })
-    });
-    const result = await res.json();
-    if (!res.ok) {
-      toastr.error(result.message || "Lỗi khi cập nhật số lượng");
-      return;
-    }
-    toastr.success("Cập nhật số lượng thành công");
-    updateOrderUI(result.data);
-  } catch (err) {
-    console.error("Lỗi khi cập nhật số lượng:", err);
-    toastr.error("Lỗi kết nối server");
-  }
-}
 
-// Xóa món khỏi hóa đơn
-async function removeItemFromOrder(foodId) {
-  if (!orderId) {
-    toastr.error("Không tìm thấy hóa đơn.");
-    return;
-  }
   try {
-    const res = await fetch(`/api/orders/${orderId}/items/${foodId}`, {
-      method: "DELETE"
+    const response = await fetch('/api/coupon/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, totalAmount })
     });
-    const result = await res.json();
-    if (!res.ok) {
-      toastr.error(result.message || "Lỗi khi xóa món");
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      discountMessage.textContent = data.message || 'Mã giảm giá không hợp lệ';
+      discountMessage.className = 'text-danger d-block mt-1';
       return;
     }
-    toastr.success("Đã xóa món khỏi hóa đơn");
-    updateOrderUI(result.data);
-  } catch (err) {
-    console.error("Lỗi khi xóa món:", err);
-    toastr.error("Lỗi kết nối server");
+
+    // Thành công
+    const discountAmount = data.data.discountAmount || 0;
+    const newTotal = totalAmount - discountAmount;
+
+    discountMessage.textContent = `Áp dụng thành công! Giảm ${discountAmount.toLocaleString()}đ`;
+    discountMessage.className = 'text-success d-block mt-1';
+
+    totalPayable.value = newTotal.toLocaleString();
+    updateTotalAfterVAT();
+
+  } catch (error) {
+    discountMessage.textContent = 'Lỗi khi áp dụng mã giảm giá';
+    discountMessage.className = 'text-danger d-block mt-1';
+    console.error(error);
   }
-}
+});

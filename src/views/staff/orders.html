@@ -26,7 +26,7 @@
                   <tr>
                     <th>Món</th>
                     <th>Số Lượng</th>
-                    <th>Đơn giá</th>
+                    <th>Đơn giá (đ)</th>
                     <th>Thành tiền</th>
                   </tr>
                 </thead>
@@ -45,11 +45,12 @@
                 <h5 class="mb-3"> Chi tiết thanh toán</h5>
 
                 <div class="mb-2">
-                    <div class="mb-2">
-                      <label for="discountCodeInput">Mã giảm giá:</label>
-                      <input type="text" id="discountCodeInput" class="form-control" placeholder="Nhập mã giảm giá">
-                      <small id="discountMessage" class="text-success d-block mt-1"></small>
-                    </div>
+                  <label for="discountCodeInput">Mã giảm giá:</label>
+                  <div class="input-group">
+                    <input type="text" id="discountCodeInput" class="form-control" placeholder="Nhập mã giảm giá">
+                    <button id="applyDiscountBtn" class="btn btn-primary">Áp dụng</button>
+                  </div>
+                  <small id="discountMessage" class="text-success d-block mt-1"></small>
                 </div>
 
                 <div class="mb-2">
@@ -61,16 +62,23 @@
                   <label>Phí dịch vụ:</label>
                   <input type="number" id="serviceChargeInput" class="form-control" value="0" min="0">
                 </div>
-
+                
                 <div class="mb-2">
-                  <label>VAT (%):</label>
-                  <input type="number" id="vatInput" class="form-control" value="0" min="0" max="100">
+                  <label><strong>Tổng tiền trước thuế:</strong></label>
+                  <input type="text" id="totalPayable" class="form-control text-danger fw-bold" value="0" readonly>
                 </div>
 
                 <div class="mb-2">
-                  <label><strong>Tổng cộng tiền khách phải trả:</strong></label>
-                  <input type="text" id="totalPayable" class="form-control" value="0" readonly style="color: red; font-weight: bold;">
+                  <label>VAT (%) </label>
+                  <select id="vatInput" class="form-select">
+                  </select>
                 </div>
+
+                <div class="mb-2">
+                  <label><strong>Tổng tiền phải trả:</strong></label>
+                  <input type="text" id="total" class="form-control text-danger fw-bold" value="0" readonly>
+                </div>
+
 
                 <div class="mb-2">
                   <label>Số tiền khách đã trả:</label>
