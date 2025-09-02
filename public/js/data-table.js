@@ -124,7 +124,10 @@ function initTableCheckboxEvents(tableSelector, checkboxClass) {
 
   // Click 'tr' event
   $table.on('click', 'tbody tr', function (e) {
-    if ($(e.target).is(`input[type=checkbox], img, input[type=text], input[type=number], select, button, span, .dataInput, i, td:nth-child(n+2)`)) return
+    if ($(e.target).is(`
+      input[type=checkbox], img, input[type=text], input[type=number], select, button, span, .dataInput, i, td:nth-child(n+2)
+      `) || $(e.target).closest('.image-cell').length)
+    return
     const checkbox = $(this).find(`.${checkboxClass}`)
     checkbox.prop('checked', !checkbox.prop('checked')).trigger('change')
   })

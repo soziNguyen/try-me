@@ -319,7 +319,6 @@ $(function () {
             cropper = new Cropper(
               document.getElementById('imagePreview'),
               {
-                aspectRatio: 1,
                 viewMode: 1,
                 autoCropArea: 1,
               }
