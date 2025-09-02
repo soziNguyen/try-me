@@ -42,6 +42,9 @@ table thead th:first-child {
   text-align: center;
   vertical-align: middle;
 }
+table thead th:first-child:hover {
+  cursor: pointer;
+}
 table thead th:first-child input[type=checkbox] {
   cursor: pointer;
 }
@@ -53,6 +56,9 @@ table tbody td {
 table tbody td input[type=checkbox] {
   display: block;
   margin: auto;
+}
+table tbody td:first-child:hover {
+  cursor: pointer;
 }
 table tbody td:first-child input[type=checkbox] {
   cursor: pointer;
@@ -149,7 +155,7 @@ table tbody td .form-select-sm {
 }
 
 #imageCropModal .modal-body {
-  min-height: 300px;
+  max-height: 400px;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -186,7 +192,7 @@ input[type=number]::-webkit-inner-spin-button {
 
 @media (max-width: 767px) {
   #imageCropModal .modal-body {
-    max-height: 100px;
+    max-height: 150px;
   }
 }
 @media print {

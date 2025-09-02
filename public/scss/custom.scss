@@ -57,6 +57,9 @@ table {
       &:first-child {
         text-align: center;
         vertical-align: middle;
+        &:hover {
+          cursor: pointer;
+        }
         input[type="checkbox"] {
           cursor: pointer;
         }
@@ -74,6 +77,9 @@ table {
       padding: 0 !important;
 
       &:first-child {
+        &:hover {
+          cursor: pointer;
+        }
         input[type="checkbox"] {
           cursor: pointer;
         }
@@ -183,7 +189,7 @@ table {
 
 #imageCropModal {
   .modal-body {
-    min-height: 300px;
+    max-height: 400px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -216,10 +222,12 @@ input[type=number]::-webkit-inner-spin-button {
   margin: 0;
 }
 
+
+
 @media (max-width: 767px) {
   #imageCropModal {
     .modal-body {
-      max-height: 100px;
+      max-height: 150px;
     }
   }
 }
