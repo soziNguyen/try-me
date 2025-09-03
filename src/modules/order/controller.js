@@ -170,3 +170,56 @@ export const removeItemFromOrder = async (req, res) => {
     responseHelper.error(res, 'Lỗi server nội bộ', 500);
   }
 };
+
+export const checkoutOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { total, paymentMethod, customerPaid, discount = 0, serviceCharge = 0, vatRate = 0, totalPayable } = req.body;
+
+    if (!orderId) return responseHelper.error(res, 'Thiếu orderId', 400);
+
+    const order = await Order.findById(orderId);
+    if (!order) return responseHelper.error(res, 'Order không tồn tại', 404);
+
+    if (order.status !== 'open') {
+      return responseHelper.error(res, 'Order đã được thanh toán hoặc đã đóng', 400);
+    }
+
+    if (!paymentMethod) {
+      return responseHelper.error(res, 'Phương thức thanh toán không hợp lệ', 400);
+    }
+
+    if (customerPaid < total) {
+      return responseHelper.error(res, 'Số tiền khách trả chưa đủ', 400);
+    }
+
+    // ✅ Gán chính xác các trường
+    order.discount = discount;
+    order.serviceCharge = serviceCharge;
+    order.vatRate = vatRate;
+    order.totalPayable = totalPayable;  
+    order.totalAmount = total;        
+    order.paymentMethod = paymentMethod;
+    order.customerPaid = customerPaid;
+    order.changeAmount = customerPaid - total;
+    order.status = 'completed';
+    order.updatedAt = new Date();
+
+    await order.save();
+
+    // ✅ Xử lý bàn
+    if (order.tableId) {
+      const table = await Table.findById(order.tableId);
+      if (table) {
+        table.status = 'available';
+        table.currentOrderId = null;
+        await table.save();
+      }
+    }
+
+    responseHelper.success(res, { message: 'Thanh toán thành công' });
+  } catch (error) {
+    console.error('Lỗi thanh toán:', error);
+    responseHelper.error(res, 'Lỗi server nội bộ', 500);
+  }
+};

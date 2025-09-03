@@ -13,6 +13,15 @@ const OrderSchema = new Schema({
       price: { type: Number, required: true }  
     }
   ],
+  totalAmount: { type: Number, default: 0 },       // Tổng tiền gốc
+  discount: { type: Number, default: 0 },          // Chiết khấu (nếu có)
+  serviceCharge: { type: Number, default: 0 },     // Phí dịch vụ (nếu có)
+  totalPayable: { type: Number, default: 0 },       // Tổng tiền gốc
+  vatRate: { type: Number, default: 0 },           // VAT %
+  total: { type: Number, default: 0 },      // Tổng tiền sau VAT, phải trả
+  paymentMethod: { type: String, enum: ['cash', 'card', 'bank'], required: false },
+  customerPaid: { type: Number, default: 0 },      // Tiền khách trả
+  changeAmount: { type: Number, default: 0 },      // Tiền thừa
   createdAt: { type: Date, default: Date.now },
   organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
 }, 

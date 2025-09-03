@@ -360,3 +360,14 @@ async function removeItemFromOrder(foodId) {
     toastr.error("Lỗi kết nối server");
   }
 }
+
+// ===== GÁN orderId VÀO window.currentOrderId =====
+document.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get('orderId');
+
+  if (orderId) {
+    window.currentOrderId = orderId;
+    console.log('Order hiện tại:', window.currentOrderId);
+  }
+});
