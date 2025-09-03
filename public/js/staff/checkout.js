@@ -328,3 +328,81 @@ document.getElementById('applyDiscountBtn').addEventListener('click', async () =
     console.error(error);
   }
 });
+
+document.getElementById('confirmCheckoutBtn').addEventListener('click', async () => {
+  const orderId = window.currentOrderId;
+  if (!orderId) {
+    toastr.error('Không xác định được đơn hàng hiện tại!');
+    return;
+  }
+
+  const discountInput = document.getElementById('discountInput');
+  const serviceChargeInput = document.getElementById('serviceChargeInput');
+  const vatInput = document.getElementById('vatInput');
+  const totalPayableInput = document.getElementById('totalPayable');
+  const totalInput = document.getElementById('total');
+  const paymentMethodEl = document.getElementById('paymentMethod');
+  const customerPaidInput = document.getElementById('customerPaidInput');
+
+  if (!discountInput || !serviceChargeInput || !vatInput || !totalPayableInput || !totalInput || !paymentMethodEl || !customerPaidInput) {
+    toastr.error('Thiếu dữ liệu thanh toán!');
+    return;
+  }
+
+  function parseCurrency(value) {
+    if (!value) return 0;
+    return Number(value.toString().replace(/[^\d]/g, '')) || 0;
+  }
+
+  const discount = parseCurrency(discountInput.value);
+  const serviceCharge = parseCurrency(serviceChargeInput.value);
+  const vatRate = Number(vatInput.value) || 0;
+
+  const totalPayable = parseCurrency(totalPayableInput.value); 
+  const total = parseCurrency(totalInput.value); 
+  const paymentMethod = paymentMethodEl.value;
+  const customerPaid = parseCurrency(customerPaidInput.value);
+
+  if (!paymentMethod) {
+    toastr.warning('Vui lòng chọn phương thức thanh toán!');
+    return;
+  }
+
+  if (customerPaid < total) {
+    toastr.warning('Số tiền khách trả chưa đủ!');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/orders/${orderId}/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        discount,
+        serviceCharge,
+        vatRate,
+        totalPayable,
+        total,
+        paymentMethod,
+        customerPaid,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      toastr.error(data.message || 'Thanh toán thất bại!');
+      return;
+    }
+
+    toastr.success('Thanh toán thành công!');
+    document.getElementById('checkoutDetail').style.display = 'none';
+
+    setTimeout(() => {
+      window.location.href = `/orders`;
+    }, 2000);
+
+  } catch (error) {
+    toastr.error('Lỗi hệ thống, vui lòng thử lại sau!');
+    console.error(error);
+  }
+});

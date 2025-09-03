@@ -114,6 +114,17 @@
                   <input type="text" id="changeAmount" class="form-control" readonly>
                 </div>
 
+                <div class="mb-3">
+                  <label><strong>In hóa đơn:</strong></label>
+                  <div>
+                    <input type="radio" id="printYes" name="printInvoice" value="yes" checked>
+                    <label for="printYes">Có</label>
+
+                    <input type="radio" id="printNo" name="printInvoice" value="no" class="ms-3">
+                    <label for="printNo">Không</label>
+                  </div>
+                </div>
+
                 <div class="text-end">
                   <button type="button" class="btn btn-danger me-2" id="cancelCheckoutDetail">ĐÓNG</button>
                   <button type="button" class="btn btn-success" id="confirmCheckoutBtn">THANH TOÁN</button>

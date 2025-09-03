@@ -14,4 +14,5 @@ router.get('/api/orders/:orderId', isAuthenticated, orderController.getOrderById
 router.post('/api/orders/:orderId/items', isAuthenticated, orderController.addItemToOrder)
 router.post('/api/orders/:orderId/items/:foodId', isAuthenticated, orderController.updateItemQuantity);
 router.delete('/api/orders/:orderId/items/:foodId', isAuthenticated, orderController.removeItemFromOrder);
+router.post('/api/orders/:orderId/checkout', isAuthenticated, orderController.checkoutOrder);
 export default router;
