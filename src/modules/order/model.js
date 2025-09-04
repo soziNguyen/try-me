@@ -16,9 +16,9 @@ const OrderSchema = new Schema({
   totalAmount: { type: Number, default: 0 },       // Tổng tiền gốc
   discount: { type: Number, default: 0 },          // Chiết khấu (nếu có)
   serviceCharge: { type: Number, default: 0 },     // Phí dịch vụ (nếu có)
-  totalPayable: { type: Number, default: 0 },       // Tổng tiền gốc
+  totalPayable: { type: Number, default: 0 },       // Tổng tiền trước thuế
   vatRate: { type: Number, default: 0 },           // VAT %
-  total: { type: Number, default: 0 },      // Tổng tiền sau VAT, phải trả
+  total: { type: Number, default: 0 },      // Tổng cuối, phải trả
   paymentMethod: { type: String, enum: ['cash', 'card', 'bank'], required: false },
   customerPaid: { type: Number, default: 0 },      // Tiền khách trả
   changeAmount: { type: Number, default: 0 },      // Tiền thừa

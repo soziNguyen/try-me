@@ -42,3 +42,43 @@ $orange-800: #9a3412;
     margin-bottom: 15px;
   }
 }
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  border-top: 1px solid #000;
+  thead {
+    border-bottom: 1px solid #000; 
+  }
+
+  th,
+  td {
+    padding: 6px 8px;
+    text-align: center;
+    border: none; 
+  }
+
+  th.name,
+  td.name {
+    text-align: left;
+    width: 40%;
+  }
+
+  th.price,
+  td.price,
+  th.qty,
+  td.qty,
+  th.total,
+  td.total {
+    width: 20%;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #000; 
+  }
+
+  tbody tr:last-child {
+    border-bottom: 1px solid #000; 
+  }
+}
