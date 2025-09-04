@@ -34,8 +34,7 @@ $(function () {
         '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
-      autoWidth: true,
-      scrollX: true,
+      autoWidth: false,
       order: [],
       ajax: {
         url: '/api/inventory/ingredient',
@@ -146,7 +145,7 @@ $(function () {
           data: 'stock',
           render: (data, type, row) => {
             if (type === 'display') {
-              return `<input type="number" class="form-control-plaintext text-center" value="${data ?? 0}" readonly>`
+              return `<span class='number'>${data ?? ''}</span>`
             }
             return data
           }

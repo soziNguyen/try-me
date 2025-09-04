@@ -236,6 +236,26 @@ function setupBackButton(btnSelector = '#btn-back') {
   }
 }
 
+/**
+ * Hiển thị modal xác nhận (Confirm Modal).
+ * 
+ * @param {Object} options - Các tùy chọn cấu hình cho modal.
+ * @param {string} [options.title='Xác nhận'] - Tiêu đề của modal.
+ * @param {string} [options.message=''] - Nội dung hiển thị trong modal.
+ * @param {string} [options.confirmed='Xóa'] - Nội dung nút xác nhận (OK button).
+ * @param {Function|null} [options.onConfirm=null] - Callback sẽ được gọi khi người dùng bấm nút xác nhận.
+ * 
+ * @example
+ * showConfirmModal({
+ *   title: 'Xóa bản ghi',
+ *   message: 'Bạn có chắc chắn muốn xóa bản ghi này?',
+ *   confirmed: 'Đồng ý',
+ *   onConfirm: function () {
+ *     // Logic xóa ở đây
+ *   }
+ * })
+ */
+
 function showConfirmModal(options) {
   const settings = $.extend({
     title: 'Xác nhận',

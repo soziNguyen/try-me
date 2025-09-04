@@ -61,32 +61,38 @@ $(function () {
     $("#stockIssueForm").on("submit", saveStockIssue)
     
     $("#btn-lock-issue").on("click", function () {
-      if (!confirm("Bạn có chắc chắn muốn khóa phiếu này? Sau khi khóa sẽ không thể chỉnh sửa hoặc xóa.")) return
-      $.ajax({
-        url: `/api/inventory/stock-issue/lock/${stockIssueId}`,
-        method: "POST",
-        beforeSend: function () {
-          $("#btn-lock-issue").prop("disabled", true).text("Đang khóa...")
-        },
-        success(res) {
-          if (res.success && res.data.isLocked) {
-            toastr.success("Phiếu xuất đã được khóa thành công")
-            $("#btn-lock-issue").prop("disabled", true).html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
-    
-            $("#stockIssueForm")
-              .find("input, select, textarea, button")
-              .not("#btn-lock-issue, #btn-print")
-              .add("#btn-save-issue, #addItemBtn")
-              .prop("disabled", true)
-          } else {
-            toastr.error(res.message || "Có lỗi xảy ra")
-            $("#btn-lock-issue").prop("disabled", false).text("Khóa phiếu")
-          }
-        },
-        error(xhr) {
-          const msg = xhr.responseJSON?.message || "Lỗi hệ thống"
-          toastr.error(msg)
-          $("#btn-lock-issue").prop("disabled", false).text("Khóa phiếu")
+      showConfirmModal({
+        title: "Khóa phiếu",
+        message: "Bạn có chắc chắn muốn khóa phiếu này? Sau khi khóa sẽ không thể chỉnh sửa hoặc xóa.",
+        confirmed: 'Khóa',
+        onConfirm: function () {
+          $.ajax({
+            url: `/api/inventory/stock-issue/lock/${stockIssueId}`,
+            method: "POST",
+            beforeSend: function () {
+              $("#btn-lock-issue").prop("disabled", true).text("Đang khóa...")
+            },
+            success(res) {
+              if (res.success && res.data.isLocked) {
+                toastr.success("Phiếu xuất đã được khóa thành công")
+                $("#btn-lock-issue").prop("disabled", true).html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
+        
+                $("#stockIssueForm")
+                  .find("input, select, textarea, button")
+                  .not("#btn-lock-issue, #btn-print")
+                  .add("#btn-save-issue, #addItemBtn")
+                  .prop("disabled", true)
+              } else {
+                toastr.error(res.message || "Có lỗi xảy ra")
+                $("#btn-lock-issue").prop("disabled", false).text("Khóa phiếu")
+              }
+            },
+            error(xhr) {
+              const msg = xhr.responseJSON?.message || "Lỗi hệ thống"
+              toastr.error(msg)
+              $("#btn-lock-issue").prop("disabled", false).text("Khóa phiếu")
+            }
+          })
         }
       })
     })
