@@ -15,4 +15,5 @@ router.post('/api/orders/:orderId/items', isAuthenticated, orderController.addIt
 router.post('/api/orders/:orderId/items/:foodId', isAuthenticated, orderController.updateItemQuantity);
 router.delete('/api/orders/:orderId/items/:foodId', isAuthenticated, orderController.removeItemFromOrder);
 router.post('/api/orders/:orderId/checkout', isAuthenticated, orderController.checkoutOrder);
+router.get('/orders/:orderId/print', isAuthenticated, orderController.printInvoice);
 export default router;

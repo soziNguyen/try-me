@@ -174,7 +174,13 @@ export const removeItemFromOrder = async (req, res) => {
 export const checkoutOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { total, paymentMethod, customerPaid, discount = 0, serviceCharge = 0, vatRate = 0, totalPayable } = req.body;
+    const {
+      discount = 0,
+      serviceCharge = 0,
+      vatRate = 0,
+      paymentMethod,
+      customerPaid,
+    } = req.body;
 
     if (!orderId) return responseHelper.error(res, 'Thiếu orderId', 400);
 
@@ -188,17 +194,29 @@ export const checkoutOrder = async (req, res) => {
     if (!paymentMethod) {
       return responseHelper.error(res, 'Phương thức thanh toán không hợp lệ', 400);
     }
+    const parsedDiscount = Number(discount) || 0;
+    const parsedServiceCharge = Number(serviceCharge) || 0;
+    const parsedVatRate = Number(vatRate) || 0;
+
+    const totalAmount = order.items.reduce((sum, item) => {
+      return sum + item.price * item.quantity;
+    }, 0);
+
+    const totalPayable = totalAmount - parsedDiscount + parsedServiceCharge;
+    const total = Math.round(totalPayable + (totalPayable * (parsedVatRate / 100)));
 
     if (customerPaid < total) {
       return responseHelper.error(res, 'Số tiền khách trả chưa đủ', 400);
     }
 
-    // ✅ Gán chính xác các trường
-    order.discount = discount;
-    order.serviceCharge = serviceCharge;
-    order.vatRate = vatRate;
-    order.totalPayable = totalPayable;  
-    order.totalAmount = total;        
+    order.discount = parsedDiscount;
+    order.serviceCharge = parsedServiceCharge;
+    order.vatRate = parsedVatRate;
+
+    order.totalAmount = totalAmount;
+    order.totalPayable = totalPayable;
+    order.total = total;
+
     order.paymentMethod = paymentMethod;
     order.customerPaid = customerPaid;
     order.changeAmount = customerPaid - total;
@@ -206,8 +224,6 @@ export const checkoutOrder = async (req, res) => {
     order.updatedAt = new Date();
 
     await order.save();
-
-    // ✅ Xử lý bàn
     if (order.tableId) {
       const table = await Table.findById(order.tableId);
       if (table) {
@@ -217,9 +233,43 @@ export const checkoutOrder = async (req, res) => {
       }
     }
 
-    responseHelper.success(res, { message: 'Thanh toán thành công' });
+    return responseHelper.success(res, {
+      message: 'Thanh toán thành công',
+      data: {
+        totalAmount,
+        discount: parsedDiscount,
+        serviceCharge: parsedServiceCharge,
+        vatRate: parsedVatRate,
+        totalPayable,
+        total,
+        changeAmount: order.changeAmount,
+      }
+    });
   } catch (error) {
     console.error('Lỗi thanh toán:', error);
-    responseHelper.error(res, 'Lỗi server nội bộ', 500);
+    return responseHelper.error(res, 'Lỗi server nội bộ', 500);
   }
 };
+
+export const printInvoice = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId)
+      .populate('items.foodId', 'name price')
+      .populate('tableId', 'name');
+
+    if (!order) return res.status(404).send('Không tìm thấy đơn hàng');
+
+    res.render('staff/invoice', { 
+      title: 'Hóa đơn thanh toán', 
+      order,
+      orderId: order._id, 
+      currentUserId: req.user ? req.user._id : null 
+    });
+  } catch (error) {
+    console.error('Lỗi khi in hóa đơn:', error);
+    res.status(500).send('Lỗi máy chủ');
+  }
+};
+

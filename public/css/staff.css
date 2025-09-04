@@ -51,3 +51,38 @@
 .table-order .btn-select-table {
   margin-bottom: 15px;
 }
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  border-top: 1px solid #000;
+}
+.invoice-table thead {
+  border-bottom: 1px solid #000;
+}
+.invoice-table th,
+.invoice-table td {
+  padding: 6px 8px;
+  text-align: center;
+  border: none;
+}
+.invoice-table th.name,
+.invoice-table td.name {
+  text-align: left;
+  width: 40%;
+}
+.invoice-table th.price,
+.invoice-table td.price,
+.invoice-table th.qty,
+.invoice-table td.qty,
+.invoice-table th.total,
+.invoice-table td.total {
+  width: 20%;
+}
+.invoice-table tbody tr {
+  border-bottom: 1px solid #000;
+}
+.invoice-table tbody tr:last-child {
+  border-bottom: 1px solid #000;
+}
