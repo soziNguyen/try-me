@@ -23,7 +23,6 @@ $(function () {
   }
   showList.sort((a, b) => a - b)
 
-
   function initDataTable() {
     table = $('#ingredientTable').DataTable({
       dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
@@ -35,8 +34,7 @@ $(function () {
         '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
-      autoWidth: true,
-      scrollX: true,
+      autoWidth: false,
       order: [],
       ajax: {
         url: '/api/inventory/ingredient',
@@ -73,7 +71,38 @@ $(function () {
           className: 'image-cell',
           render: (data) => {
             const imgSrc = data || ''
-            return `<img src="${imgSrc}" alt="Ảnh" class="ingredient-image">`
+            const hasImage = imgSrc && imgSrc.trim() !== ''
+            const containerStyle = hasImage
+              ? 'display: inline-block;'
+              : 'display: inline-block; width: 70px; height: 70px; border: 2px dashed #dee2e6; border-radius: 8px;'
+            const imgStyle = hasImage
+              ? 'cursor: pointer; width: 70px; height: 70px; object-fit: cover; border-radius: 8px;'
+              : 'cursor: pointer; width: 100%; height: 100%; object-fit: cover; border-radius: 6px; opacity: 0.3;'
+            const overlayStyle = hasImage
+              ? 'background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s;'
+              : 'background: rgba(248,249,250,0.9); border: 1px dashed #6c757d; border-radius: 6px; opacity: 0; transition: opacity 0.3s;'
+
+            const previewBtn = hasImage
+              ? `<button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
+                   <i class="bi bi-eye"></i>
+                 </button>`
+              : ''
+
+            const uploadBtnClass = hasImage ? 'btn-outline-light' : 'btn-outline-secondary'
+            const uploadBtnTitle = hasImage ? 'Chọn ảnh mới' : 'Thêm ảnh'
+
+            return `
+              <div class="ingredient-image-container position-relative" style="${containerStyle}">
+                <img src="${imgSrc || '/assets/images/default.png'}" alt="Ảnh" class="ingredient-image" style="${imgStyle}">
+                <div class="image-overlay position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
+                     style="${overlayStyle}">
+                  ${previewBtn}
+                  <button type="button" class="btn ${uploadBtnClass} btn-sm upload-btn" title="${uploadBtnTitle}" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
+                    <i class="bi bi-${hasImage ? 'arrow-repeat' : 'upload'}"></i>
+                  </button>
+                </div>
+              </div>
+            `
           }
         },
         {
@@ -116,7 +145,7 @@ $(function () {
           data: 'stock',
           render: (data, type, row) => {
             if (type === 'display') {
-              return `<input type="number" class="form-control-plaintext text-center" value="${data ?? 0}" readonly>`
+              return `<span class='number'>${data ?? ''}</span>`
             }
             return data
           }
@@ -185,9 +214,17 @@ $(function () {
             })
           }
         })
+
+        $('#ingredientTable .ingredient-image-container').hover(
+          function () {
+            $(this).find('.image-overlay').css('opacity', '1')
+          },
+          function () {
+            $(this).find('.image-overlay').css('opacity', '0')
+          }
+        )
       },
       initComplete: function () {
-        // const api = this.api()
         $('.right-group').html(`
           <div class="btn-group flex-wrap">
             <button class="btn btn-outline-danger me-2" id="deleteIngredientBtn">
@@ -198,9 +235,6 @@ $(function () {
             </button>
           </div>
         `)
-        // $(window).on('resize', function () {
-        //   api.columns.adjust()
-        // })
       }
     })
 
@@ -216,9 +250,75 @@ $(function () {
   let cropper
   let currentImgCell
 
-  // Khi click vào ảnh trong table
-  $('#ingredientTable').on('click', '.ingredient-image', function () {
-    currentImgCell = $(this).closest('td')
+  // Function to update image container styling after image upload
+  function updateImageContainerAfterUpload(imgCell, imgUrl) {
+    const container = imgCell.find('.ingredient-image-container')
+    const img = container.find('img')
+    const overlay = container.find('.image-overlay')
+
+    // Update container style to remove dashed border
+    container.attr('style', 'display: inline-block;')
+
+    // Update image style
+    img.attr('style', 'cursor: pointer; width: 70px; height: 70px; object-fit: cover; border-radius: 8px;')
+
+    // Update overlay style for images with content
+    overlay.attr('style', 'background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s;')
+
+    // Update buttons in overlay
+    const previewBtn = `<button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
+                         <i class="bi bi-eye"></i>
+                       </button>`
+    const uploadBtn = `<button type="button" class="btn btn-outline-light btn-sm upload-btn" title="Chọn ảnh mới" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
+                         <i class="bi bi-arrow-repeat"></i>
+                       </button>`
+
+    overlay.html(previewBtn + uploadBtn)
+  }
+
+  // Event handler preview btn
+  $('#ingredientTable').on('click', '.preview-btn', function (e) {
+    e.stopPropagation()
+    const imgSrc = $(this).closest('.ingredient-image-container').find('img').attr('src')
+
+    if (!imgSrc || imgSrc.includes('default.png') || imgSrc.trim() === '') {
+      toastr.info('Chưa có ảnh để xem')
+      return
+    }
+
+    // Tạo modal preview
+    const previewModal = `
+      <div class="modal fade" id="imagePreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Xem ảnh</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+              <img src="${imgSrc}" class="img-fluid" style="max-height: 70vh;">
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+
+    // Remove existing preview modal and add new one
+    $('#imagePreviewModal').remove()
+    $('body').append(previewModal)
+
+    const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'))
+    modal.show()
+
+    $('#imagePreviewModal').on('hidden.bs.modal', function () {
+      $(this).remove()
+    })
+  })
+
+  // Event handler cho upload button
+  $('#ingredientTable').on('click', '.upload-btn', function (e) {
+    e.stopPropagation()
+    currentImgCell = $(this).closest('.image-cell')
 
     // Tạo input file ẩn và trigger chọn file
     $('<input type="file" accept="image/*">')
@@ -244,7 +344,6 @@ $(function () {
             cropper = new Cropper(
               document.getElementById('imagePreview'),
               {
-                aspectRatio: 1,
                 viewMode: 1,
                 autoCropArea: 1,
               }
@@ -276,6 +375,9 @@ $(function () {
           const timestamp = new Date().getTime()
           // Update src ảnh trong table, thêm timestamp để bust cache
           currentImgCell.find('img').attr('src', `${imgUrl}?t=${timestamp}`)
+
+          // Update the container styling to reflect that it now has an image
+          updateImageContainerAfterUpload(currentImgCell, imgUrl)
 
           // Cập nhật trường image của bản ghi
           const row = currentImgCell.closest('tr')

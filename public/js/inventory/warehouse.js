@@ -66,7 +66,7 @@ $(function () {
         },
         {
           data: 'manager',
-          className: 'px-1',
+          className: '',
           name: 'manager.username',
           render: function (data, type, row) {
             if (type === 'display') {
@@ -99,9 +99,10 @@ $(function () {
       rowCallback: function(row, data) {
         $(row).attr('data-id', data._id)
       },
-      drawCallback: function (settings) {
-        const selector = $('#warehouseTable select[data-field]')
-        initSelect2(selector, '— Chọn quản lý —')
+      drawCallback: function () {
+        $('#warehouseTable select.dataInput').each(function() {
+          initSelect2($(this), '— Chọn quản lý —')
+        })
       },  
       initComplete: function () {
         $('.right-group').html(`
@@ -120,12 +121,7 @@ $(function () {
     // EVENT HANDLERS
     handlerAddEvent('#warehouseTable', '#addWarehouseBtn', 'inventory/warehouse')
     handlerDeleteEvent('#warehouseTable', '#deleteWarehouseBtn', 'warehouseCheckbox', 'inventory/warehouse')
-    handlerUpdateEvent('#warehouseTable', 'inventory/warehouse', (id, field, value) => {
-      if (field === 'manager') {
-        return { manager: value }
-      }
-      return { [field] : value }
-    })
+    handlerUpdateEvent('#warehouseTable', 'inventory/warehouse')
     initTableCheckboxEvents('#warehouseTable', 'warehouseCheckbox')
   }
 })

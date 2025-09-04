@@ -50,32 +50,38 @@ $(function () {
       $("#addItemBtn").on("click", addNewItem)
       $("#stockTransferForm").on("submit", saveStockTransfer)
       $("#btn-lock-transfer").on("click", function () {
-        if (!confirm("Bạn có chắc chắn muốn khóa phiếu này? Sau khi khóa sẽ không thể chỉnh sửa hoặc xóa.")) return
-        $.ajax({
-          url: `/api/inventory/stock-transfer/lock/${stockTransferId}`,
-          method: "POST",
-          beforeSend: function () {
-            $("#btn-lock-transfer").prop("disabled", true).text("Đang khóa...")
-          },
-          success(res) {
-            if (res.success && res.data.isLocked) {
-              toastr.success("Phiếu chuyển kho đã được khóa thành công")
-              $("#btn-lock-transfer").prop("disabled", true).html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
-      
-              $("#stockTransferForm")
-                .find("input, select, textarea, button")
-                .not("#btn-lock-transfer, #btn-print")
-                .add("#btn-save-transfer, #addItemBtn")
-                .prop("disabled", true)
-            } else {
-              toastr.error(res.message || "Có lỗi xảy ra")
-              $("#btn-lock-transfer").prop("disabled", false).text("Khóa phiếu")
-            }
-          },
-          error(xhr) {
-            const msg = xhr.responseJSON?.message || "Lỗi hệ thống"
-            toastr.error(msg)
-            $("#btn-lock-transfer").prop("disabled", false).text("Khóa phiếu")
+        showConfirmModal({
+          title: "Khóa phiếu",
+          message: "Bạn có chắc chắn muốn khóa phiếu này? Sau khi khóa sẽ không thể chỉnh sửa hoặc xóa.",
+          confirmed: "Khóa",
+          onConfirm: function () {
+            $.ajax({
+              url: `/api/inventory/stock-transfer/lock/${stockTransferId}`,
+              method: "POST",
+              beforeSend: function () {
+                $("#btn-lock-transfer").prop("disabled", true).text("Đang khóa...")
+              },
+              success(res) {
+                if (res.success && res.data.isLocked) {
+                  toastr.success("Phiếu chuyển kho đã được khóa thành công")
+                  $("#btn-lock-transfer").prop("disabled", true).html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
+          
+                  $("#stockTransferForm")
+                    .find("input, select, textarea, button")
+                    .not("#btn-lock-transfer, #btn-print")
+                    .add("#btn-save-transfer, #addItemBtn")
+                    .prop("disabled", true)
+                } else {
+                  toastr.error(res.message || "Có lỗi xảy ra")
+                  $("#btn-lock-transfer").prop("disabled", false).text("Khóa phiếu")
+                }
+              },
+              error(xhr) {
+                const msg = xhr.responseJSON?.message || "Lỗi hệ thống"
+                toastr.error(msg)
+                $("#btn-lock-transfer").prop("disabled", false).text("Khóa phiếu")
+              }
+            })
           }
         })
       })

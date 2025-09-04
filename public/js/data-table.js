@@ -124,7 +124,10 @@ function initTableCheckboxEvents(tableSelector, checkboxClass) {
 
   // Click 'tr' event
   $table.on('click', 'tbody tr', function (e) {
-    if ($(e.target).is(`input[type=checkbox], img, input[type=text], input[type=number], select, button, span, .dataInput, i, td:nth-child(n+2)`)) return
+    if ($(e.target).is(`
+      input[type=checkbox], img, input[type=text], input[type=number], select, button, span, .dataInput, i, td:nth-child(n+2)
+      `) || $(e.target).closest('.image-cell').length)
+    return
     const checkbox = $(this).find(`.${checkboxClass}`)
     checkbox.prop('checked', !checkbox.prop('checked')).trigger('change')
   })
@@ -232,6 +235,26 @@ function setupBackButton(btnSelector = '#btn-back') {
     btn.href = '/inventory/stock-transfers'
   }
 }
+
+/**
+ * Hiển thị modal xác nhận (Confirm Modal).
+ * 
+ * @param {Object} options - Các tùy chọn cấu hình cho modal.
+ * @param {string} [options.title='Xác nhận'] - Tiêu đề của modal.
+ * @param {string} [options.message=''] - Nội dung hiển thị trong modal.
+ * @param {string} [options.confirmed='Xóa'] - Nội dung nút xác nhận (OK button).
+ * @param {Function|null} [options.onConfirm=null] - Callback sẽ được gọi khi người dùng bấm nút xác nhận.
+ * 
+ * @example
+ * showConfirmModal({
+ *   title: 'Xóa bản ghi',
+ *   message: 'Bạn có chắc chắn muốn xóa bản ghi này?',
+ *   confirmed: 'Đồng ý',
+ *   onConfirm: function () {
+ *     // Logic xóa ở đây
+ *   }
+ * })
+ */
 
 function showConfirmModal(options) {
   const settings = $.extend({
