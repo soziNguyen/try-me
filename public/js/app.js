@@ -20,6 +20,7 @@ async function ajax(url, data = {}, method = 'POST') {
   const response = await fetch(url, options)
   const result = await response.json()
   if (!response.ok) {
+      toastr.remove()
       toastr.error(result.message)
       return false
   } 
