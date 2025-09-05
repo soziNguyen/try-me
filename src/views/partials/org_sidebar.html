@@ -1,34 +1,33 @@
 <div class="admin__layout">
   <%- include('../partials/navbar.html') %>
-  <div class="admin__main">
+    <div class="admin__main">
       <div id="admin__sidebar">
         <ul>
-            <!-- Dashboard -->
-            <li class="<%= page === 'Dashboard' ? 'active' : '' %>">
-              <a class="w-100" href="/">
-                <i class="bi bi-speedometer2 text-dark me-2"></i>
-                <span>Dashboard</span>
-              </a>
-            </li>
+          <!-- Dashboard -->
+          <li class="<%= page === 'Dashboard' ? 'active' : '' %>">
+            <a class="w-100" href="/">
+              <i class="bi bi-speedometer2 text-dark me-2"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
 
-            <!-- Inventory Management -->
-            <% const inInventory = ['Ingredient','Category','Warehouse', 'IngredientStock','Supplier','Import','Export', 'History', 'Transfer', 'Movement'].includes(page); %>
+          <!-- Inventory Management -->
+          <% const inInventory=['Ingredient','Category','Warehouse', 'IngredientStock'
+            ,'Supplier','Import','Export', 'History' , 'Transfer' , 'Movement' ].includes(page); %>
             <li class="inventory-accordion">
               <div class="accordion" id="accordionInventory">
                 <div class="accordion-item">
                   <h2 class="accordion-header">
                     <button
                       class="accordion-button <%= inInventory ? 'active' : '' %> <%= inInventory ? '' : 'collapsed' %>"
-                      type="button"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#collapseInventory"
-                      aria-expanded="<%= inInventory ? 'true' : 'false' %>"
-                      aria-controls="collapseInventory">
+                      type="button" data-bs-toggle="collapse" data-bs-target="#collapseInventory"
+                      aria-expanded="<%= inInventory ? 'true' : 'false' %>" aria-controls="collapseInventory">
                       <i class="bi bi-box-seam text-info me-2"></i>
                       <span>Quản lý Kho</span>
                     </button>
                   </h2>
-                  <div id="collapseInventory" class="accordion-collapse collapse <%= inInventory ? 'show' : '' %>" data-bs-parent="#accordionInventory">
+                  <div id="collapseInventory" class="accordion-collapse collapse <%= inInventory ? 'show' : '' %>"
+                    data-bs-parent="#accordionInventory">
                     <div class="accordion-body">
                       <a class="<%= page === 'Ingredient' ? 'accordion-active' : '' %>" href="/inventory/ingredients">
                         <i class="bi bi-basket3 text-danger me-2"></i>
@@ -38,7 +37,8 @@
                         <i class="bi bi-leaf text-success me-2"></i>
                         <span>Quản lý Loại Nguyên Liệu</span>
                       </a>
-                      <a class="<%= page === 'IngredientStock' ? 'accordion-active' : '' %>" href="/inventory/inventory-stock">
+                      <a class="<%= page === 'IngredientStock' ? 'accordion-active' : '' %>"
+                        href="/inventory/inventory-stock">
                         <i class="bi bi-database-check text-dark me-2"></i>
                         <span>Quản lý Tồn Kho</span>
                       </a>
@@ -73,153 +73,157 @@
             </li>
 
             <!-- Menu Management -->
-            <% const inMenu = ['Menu','MenuCategory','Recipe','Combo'].includes(page); %>
-            <li class="menu-accordion">
-              <div class="accordion" id="accordionMenu">
-                <div class="accordion-item">
-                  <h2 class="accordion-header">
-                    <button
-                      class="accordion-button <%= inMenu ? 'active' : '' %> <%= inMenu ? '' : 'collapsed' %>"
-                      type="button"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#collapseMenu"
-                      aria-expanded="<%= inMenu ? 'true' : 'false' %>"
-                      aria-controls="collapseMenu">
-                      <i class="bi bi-journal-bookmark text-danger me-2"></i>
-                      <span>Quản lý Thực đơn</span>
-                    </button>
-                  </h2>
-                  <div id="collapseMenu" class="accordion-collapse collapse <%= inMenu ? 'show' : '' %>" data-bs-parent="#accordionMenu">
-                    <div class="accordion-body">
-                      <a class="<%= page === 'Menu' ? 'accordion-active' : '' %>" href="/menu/lists">
-                        <i class="bi bi-list-ul me-2 text-success"></i>
-                        <span>Danh sách món</span>
-                      </a>
-                      <a class="<%= page === 'MenuCategory' ? 'accordion-active' : '' %>" href="/menu/categories">
-                        <i class="bi bi-tags me-2 text-info"></i>
-                        <span>Danh mục món</span>
-                      </a>
-                      <a class="<%= page === 'Recipe' ? 'accordion-active' : '' %>" href="/menu/recipes">
-                        <i class="bi bi-clipboard-check me-2 text-danger"></i>
-                        <span>Quản lý công thức</span>
-                      </a>
-                      <a class="<%= page === 'Combo' ? 'accordion-active' : '' %>" href="/menu/combos">
-                        <i class="bi bi-grid me-2 text-warning"></i>
-                        <span>Combo / Set menu</span>
-                      </a>
+            <% const inMenu=['Menu','MenuCategory','Recipe','Combo'].includes(page); %>
+              <li class="menu-accordion">
+                <div class="accordion" id="accordionMenu">
+                  <div class="accordion-item">
+                    <h2 class="accordion-header">
+                      <button class="accordion-button <%= inMenu ? 'active' : '' %> <%= inMenu ? '' : 'collapsed' %>"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#collapseMenu"
+                        aria-expanded="<%= inMenu ? 'true' : 'false' %>" aria-controls="collapseMenu">
+                        <i class="bi bi-journal-bookmark text-danger me-2"></i>
+                        <span>Quản lý Thực đơn</span>
+                      </button>
+                    </h2>
+                    <div id="collapseMenu" class="accordion-collapse collapse <%= inMenu ? 'show' : '' %>"
+                      data-bs-parent="#accordionMenu">
+                      <div class="accordion-body">
+                        <a class="<%= page === 'Menu' ? 'accordion-active' : '' %>" href="/menu/lists">
+                          <i class="bi bi-list-ul me-2 text-success"></i>
+                          <span>Danh sách món</span>
+                        </a>
+                        <a class="<%= page === 'MenuCategory' ? 'accordion-active' : '' %>" href="/menu/categories">
+                          <i class="bi bi-tags me-2 text-info"></i>
+                          <span>Danh mục món</span>
+                        </a>
+                        <a class="<%= page === 'Recipe' ? 'accordion-active' : '' %>" href="/menu/recipes">
+                          <i class="bi bi-clipboard-check me-2 text-danger"></i>
+                          <span>Quản lý công thức</span>
+                        </a>
+                        <a class="<%= page === 'Combo' ? 'accordion-active' : '' %>" href="/menu/combos">
+                          <i class="bi bi-grid me-2 text-warning"></i>
+                          <span>Combo / Set menu</span>
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </li>
+              </li>
 
-            <!-- Staff Management -->
-            <% const inStaff = ['User','Shift','Schedule','Attendance','Payroll','Attendance Detail','Payroll Detail'].includes(page); %>
-            <li class="staff-accordion">
-              <div class="accordion" id="accordionStaff">
-                <div class="accordion-item">
-                  <h2 class="accordion-header">
-                    <button
-                      class="accordion-button <%= inStaff ? 'active' : '' %> <%= inStaff ? '' : 'collapsed' %>"
-                      type="button"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#collapseStaff"
-                      aria-expanded="<%= inStaff ? 'true' : 'false' %>"
-                      aria-controls="collapseStaff">
-                      <i class="bi bi-people text-warning me-2"></i>
-                      <span>Quản lý Nhân viên</span>
-                    </button>
-                  </h2>
-                  <div id="collapseStaff" class="accordion-collapse collapse <%= inStaff ? 'show' : '' %>" data-bs-parent="#accordionStaff">
-                    <div class="accordion-body">
-                      <a class="<%= page === 'User' ? 'accordion-active' : '' %>" href="/users">
-                        <i class="bi bi-person-lines-fill me-2 text-primary"></i>
-                        <span>Danh sách Nhân viên</span>
-                      </a>
-                      <a class="<%= page === 'Shift' ? 'accordion-active' : '' %>" href="/staff/shifts">
-                        <i class="bi bi-clock-history me-2 text-success"></i>
-                        <span>Ca làm</span>
-                      </a>
-                      <a class="<%= page === 'Schedule' ? 'accordion-active' : '' %>" href="/staff/schedule">
-                        <i class="bi bi-calendar-check me-2 text-danger"></i>
-                        <span>Lịch làm việc</span>
-                      </a>
-                      <a class="<%= (page === 'Attendance' || page === 'Attendance Detail') ? 'accordion-active' : '' %>" href="/staff/attendance">
-                        <i class="bi bi-card-checklist me-2 text-info"></i>
-                        <span>Chấm công</span>
-                      </a>
-                      <a class="<%= (page === 'Payroll' || page === 'Payroll Detail') ? 'accordion-active' : '' %>" href="/staff/payroll">
-                        <i class="bi bi-cash-stack me-2 text-warning"></i>
-                        <span>Bảng lương</span>
-                      </a>
+              <!-- Staff Management -->
+              <% const inStaff=['User','Shift','Schedule','Attendance','Payroll','Attendance Detail', 'Payroll Detail'
+                ].includes(page); %>
+                <li class="staff-accordion">
+                  <div class="accordion" id="accordionStaff">
+                    <div class="accordion-item">
+                      <h2 class="accordion-header">
+                        <button
+                          class="accordion-button <%= inStaff ? 'active' : '' %> <%= inStaff ? '' : 'collapsed' %>"
+                          type="button" data-bs-toggle="collapse" data-bs-target="#collapseStaff"
+                          aria-expanded="<%= inStaff ? 'true' : 'false' %>" aria-controls="collapseStaff">
+                          <i class="bi bi-people text-warning me-2"></i>
+                          <span>Quản lý Nhân viên</span>
+                        </button>
+                      </h2>
+                      <div id="collapseStaff" class="accordion-collapse collapse <%= inStaff ? 'show' : '' %>"
+                        data-bs-parent="#accordionStaff">
+                        <div class="accordion-body">
+                          <a class="<%= page === 'User' ? 'accordion-active' : '' %>" href="/users">
+                            <i class="bi bi-person-lines-fill me-2 text-primary"></i>
+                            <span>Danh sách Nhân viên</span>
+                          </a>
+                          <a class="<%= page === 'Shift' ? 'accordion-active' : '' %>" href="/staff/shifts">
+                            <i class="bi bi-clock-history me-2 text-success"></i>
+                            <span>Ca làm</span>
+                          </a>
+                          <a class="<%= page === 'Schedule' ? 'accordion-active' : '' %>" href="/staff/schedule">
+                            <i class="bi bi-calendar-check me-2 text-danger"></i>
+                            <span>Lịch làm việc</span>
+                          </a>
+                          <a class="<%= (page === 'Attendance' || page === 'Attendance Detail') ? 'accordion-active' : '' %>"
+                            href="/staff/attendance">
+                            <i class="bi bi-card-checklist me-2 text-info"></i>
+                            <span>Chấm công</span>
+                          </a>
+                          <a class="<%= (page === 'Payroll' || page === 'Payroll Detail') ? 'accordion-active' : '' %>"
+                            href="/staff/payroll">
+                            <i class="bi bi-cash-stack me-2 text-warning"></i>
+                            <span>Bảng lương</span>
+                          </a>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </li>
+                </li>
 
-            <!-- Reports Section -->
-            <% const inReports = ['SalesReport','InventoryReport','StaffReport','TaxReport'].includes(page); %>
-            <li class="reports-accordion">
-              <div class="accordion" id="accordionReports">
-                <div class="accordion-item">
-                  <h2 class="accordion-header">
-                    <button
-                      class="accordion-button <%= inReports ? 'active' : '' %> <%= inReports ? '' : 'collapsed' %>"
-                      type="button"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#collapseReports"
-                      aria-expanded="<%= inReports ? 'true' : 'false' %>"
-                      aria-controls="collapseReports">
-                      <i class="bi bi-bar-chart text-info me-2"></i>
-                      <span>Báo cáo</span>
-                    </button>
-                  </h2>
-                  <div id="collapseReports" class="accordion-collapse collapse <%= inReports ? 'show' : '' %>" data-bs-parent="#accordionReports">
-                    <div class="accordion-body">
-                      <a class="<%= page === 'SalesReport' ? 'accordion-active' : '' %>" href="/reports/sales">
-                        <i class="bi bi-bar-chart-line text-success me-2"></i>
-                        <span>Báo cáo Bán hàng</span>
-                      </a>
-                      <a class="<%= page === 'InventoryReport' ? 'accordion-active' : '' %>" href="/reports/inventory">
-                        <i class="bi bi-box-seam text-info me-2"></i>
-                        <span>Báo cáo Kho</span>
-                      </a>
-                      <a class="<%= page === 'StaffReport' ? 'accordion-active' : '' %>" href="/reports/performance">
-                        <i class="bi bi-award text-primary me-2"></i>
-                        <span>Báo cáo Nhân viên</span>
-                      </a>
-                      <a class="<%= page === 'TaxReport' ? 'accordion-active' : '' %>" href="/reports/tax">
-                        <i class="bi bi-file-earmark-text text-warning me-2"></i>
-                        <span>Báo cáo Thuế</span>
-                      </a>
+                <!-- Reports Section -->
+                <% const inReports=['SalesReport','InventoryReport','StaffReport','TaxReport'].includes(page); %>
+                  <li class="reports-accordion">
+                    <div class="accordion" id="accordionReports">
+                      <div class="accordion-item">
+                        <h2 class="accordion-header">
+                          <button
+                            class="accordion-button <%= inReports ? 'active' : '' %> <%= inReports ? '' : 'collapsed' %>"
+                            type="button" data-bs-toggle="collapse" data-bs-target="#collapseReports"
+                            aria-expanded="<%= inReports ? 'true' : 'false' %>" aria-controls="collapseReports">
+                            <i class="bi bi-bar-chart text-info-emphasis me-2"></i>
+                            <span>Báo cáo</span>
+                          </button>
+                        </h2>
+                        <div id="collapseReports" class="accordion-collapse collapse <%= inReports ? 'show' : '' %>"
+                          data-bs-parent="#accordionReports">
+                          <div class="accordion-body">
+                            <a class="<%= page === 'SalesReport' ? 'accordion-active' : '' %>" href="/reports/sales">
+                              <i class="bi bi-bar-chart-line text-success me-2"></i>
+                              <span>Báo cáo Bán hàng</span>
+                            </a>
+                            <a class="<%= page === 'InventoryReport' ? 'accordion-active' : '' %>"
+                              href="/reports/inventory">
+                              <i class="bi bi-box-seam text-info me-2"></i>
+                              <span>Báo cáo Kho</span>
+                            </a>
+                            <a class="<%= page === 'StaffReport' ? 'accordion-active' : '' %>"
+                              href="/reports/performance">
+                              <i class="bi bi-award text-primary me-2"></i>
+                              <span>Báo cáo Nhân viên</span>
+                            </a>
+                            <a class="<%= page === 'TaxReport' ? 'accordion-active' : '' %>" href="/reports/tax">
+                              <i class="bi bi-file-earmark-text text-warning me-2"></i>
+                              <span>Báo cáo Thuế</span>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </li>
+                  </li>
 
-            <!-- Other Features -->
-            <li class="<%= page === 'Tax' ? 'active' : '' %>">
-              <a class="w-100" href="/tax">
-                <i class="bi bi-file-earmark-text text-danger me-2"></i>
-                <span>Thuế</span>
-              </a>
-            </li>
+                  <!-- Other Features -->
+                  <li class="<%= page === 'Tax' ? 'active' : '' %>">
+                    <a class="w-100" href="/tax">
+                      <i class="bi bi-file-earmark-text text-danger-emphasis me-2"></i>
+                      <span>Thuế</span>
+                    </a>
+                  </li>
 
-            <li class="<%= page === 'Revenue' ? 'active' : '' %>">
-              <a class="w-100" href="/revenue">
-                <i class="bi bi-cash-stack text-success me-2"></i>
-                <span>Theo dõi Doanh thu</span>
-              </a>
-            </li>
+                  <li class="<%= page === 'Revenue' ? 'active' : '' %>">
+                    <a class="w-100" href="/revenue">
+                      <i class="bi bi-cash-stack text-success me-2"></i>
+                      <span>Theo dõi Doanh thu</span>
+                    </a>
+                  </li>
 
-            <li class="<%= page === 'Coupon' ? 'active' : '' %>">
-              <a class="w-100" href="/coupon">
-                <i class="bi bi-tags text-danger me-2"></i>
-                <span>Mã giảm giá</span>
-              </a>
-            </li>
+                  <li class="<%= page === 'Coupon' ? 'active' : '' %>">
+                    <a class="w-100" href="/coupon">
+                      <i class="bi bi-tags text-warning-emphasis me-2"></i>
+                      <span>Mã giảm giá</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="<%= page === 'ActivityLog' ? 'active' : '' %>" href="/activity-logs">
+                      <i class="bi bi-activity text-secondary me-2"></i>
+                      <span>Nhật ký hoạt động</span>
+                    </a>
+                  </li>
         </ul>
       </div>
-    <%- include('../users/update-user.html') %>
+      <%- include('../users/update-user.html') %>

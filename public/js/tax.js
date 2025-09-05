@@ -29,6 +29,8 @@ $(function () {
                 url: '/api/taxes',
                 method: 'GET'
             },
+            lengthMenu: [showList, showList],
+            pageLength: numRows,
             language: {
                 search: '',
                 searchPlaceholder: 'Tìm kiếm thuế',

@@ -480,3 +480,14 @@ export const taxPage = async (req, res) => {
         )
     )
 }
+
+export const activityLog = async (req, res) => {
+    res.render('users/activity_logs',
+        getPageData(req, 'Nhật ký hoạt động', 'ActivityLog',
+            {
+                headerClass: 'admin__header',
+                pageTitle: 'NHẬT KÝ HOẠT ĐỘNG'
+            }
+        )
+    )
+}

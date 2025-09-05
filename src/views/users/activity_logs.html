@@ -5,25 +5,19 @@
                 <%= pageTitle %>
             </h2>
 
-            <table class="table table-bordered" id="couponTable">
+            <table id="activityLogsTable" class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>
-                            <input type="checkbox" id="selectAll">
-                        </th>
-                        <th>Mã</th>
-                        <th>Loại giảm</th>
-                        <th>Giá trị</th>
-                        <th>Mô tả</th>
-                        <th>Ngày bắt đầu</th>
-                        <th>Ngày kết thúc</th>
-                        <th>Giới hạn</th>
-                        <th>Lượt đã sử dụng</th>
+                        <th>Thời gian</th>
+                        <th>Người dùng</th>
+                        <th>Hoạt động</th>
                         <th>Trạng thái</th>
                     </tr>
                 </thead>
-                <tbody id="couponTableBody"></tbody>
+                <tbody id="activityLogsTableBody">
+                </tbody>
             </table>
+
         </div>
 
         </div>
@@ -33,5 +27,5 @@
             <script src="/js/sidebar-toggle.js"></script>
             <script src="/js/update-user.js"></script>
             <script src="/js/data-table.js"></script>
-            <script src="/js/coupon.js"></script>
+            <script src="/js/activity-logs.js"></script>
             <%- include('../partials/footer.html') %>

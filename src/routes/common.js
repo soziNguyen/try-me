@@ -27,6 +27,7 @@ import attendanceRoute from '../modules/attendance/route.js'
 import shiftRoutes from '../modules/shift/route.js'
 import payrollRoutes from '../modules/payroll/route.js'
 import taxRoutes from '../modules/tax/route.js'
+import activityRoutes from '../modules/activity-logs/route.js'
 import uploadRouter from '../modules/upload/route.js'
 
 const router = express.Router()
@@ -59,7 +60,10 @@ const routes = [
     couponRoutes,
 
     // Tax
-    taxRoutes
+    taxRoutes,
+
+    // Activity
+    activityRoutes
 ]
 
 routes.forEach(route => router.use('/', route))

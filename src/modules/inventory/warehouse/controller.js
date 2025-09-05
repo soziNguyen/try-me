@@ -10,10 +10,11 @@ export const getActiveWarehouses = async (req, res) => {
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
     const warehouses = await Warehouse.aggregate([
-      { $match: { 
-        isActive: true,
-        organization: organizationId
-        } 
+      {
+        $match: {
+          isActive: true,
+          organization: organizationId
+        }
       },
       { $sort: { name: 1 } },
       { $project: { _id: 1, name: 1, location: 1 } }
@@ -43,19 +44,24 @@ export const getWareHouses = async (req, res) => {
       ...lookupRef('manager', 'Users')
     ]
 
-    // Add search conditions if search value exists
+    // Multi-token search
     if (searchValue) {
-      const orConditions = [
-        { name: { $regex: searchValue, $options: 'i' } },
-        { location: { $regex: searchValue, $options: 'i' } },
-        { "manager.username": { $regex: searchValue, $options: 'i' } }
-      ]
-
-      pipeline.push({ $match: { $or: orConditions } })
+      const tokens = searchValue.split(/\s+/).filter(Boolean)
+      const andConditions = tokens.map(token => {
+        const regex = { $regex: token, $options: 'i' }
+        return {
+          $or: [
+            { name: regex },
+            { location: regex },
+            { "manager.username": regex }
+          ]
+        }
+      })
+      pipeline.push({ $match: { $and: andConditions } })
     }
 
     // Get total count
-    const recordsTotal = await Warehouse.countDocuments({ organization: organizationId }) 
+    const recordsTotal = await Warehouse.countDocuments({ organization: organizationId })
 
     // Get filtered count
     const countPipeline = [...pipeline, { $count: 'count' }]
@@ -91,8 +97,8 @@ export const getWareHouses = async (req, res) => {
           createdAt: 1,
           isActive: 1,
           manager: {
-              _id: "$manager._id",
-              username: "$manager.username"
+            _id: "$manager._id",
+            username: "$manager.username"
           }
         }
       }
@@ -151,42 +157,42 @@ export const updateWareHouse = async (req, res) => {
       organization: organizationId
     })
     if (!warehouse) {
-        return responseHelper.error(res, "Nhà kho không tồn tại", 404)
+      return responseHelper.error(res, "Nhà kho không tồn tại", 404)
     }
 
     const nameTrimmed = name?.trim()
     const locationTrimmed = location?.trim()
 
     if (nameTrimmed || locationTrimmed) {
-        const nameToCheck = nameTrimmed ?? warehouse.name
-        const locationToCheck = locationTrimmed ?? warehouse.location
+      const nameToCheck = nameTrimmed ?? warehouse.name
+      const locationToCheck = locationTrimmed ?? warehouse.location
 
-        const isExisting = await Warehouse.findOne({
-            _id: { $ne: id },
-            name: { $regex: new RegExp(`^${nameToCheck}$`, 'i') },
-            location: { $regex: new RegExp(`^${locationToCheck}$`, 'i') },
-            organization: organizationId
-        })
+      const isExisting = await Warehouse.findOne({
+        _id: { $ne: id },
+        name: { $regex: new RegExp(`^${nameToCheck}$`, 'i') },
+        location: { $regex: new RegExp(`^${locationToCheck}$`, 'i') },
+        organization: organizationId
+      })
 
-        if (isExisting) {
-            return responseHelper.error(res, `Nhà kho ${nameToCheck} đã tồn tại ở địa điểm ${locationToCheck}`)
-        }
+      if (isExisting) {
+        return responseHelper.error(res, `Nhà kho ${nameToCheck} đã tồn tại ở địa điểm ${locationToCheck}`)
+      }
     }
 
     const dataUpdate = {}
     if (name !== undefined) dataUpdate.name = nameTrimmed
     if (location !== undefined) dataUpdate.location = locationTrimmed
     if (manager !== undefined) {
-        dataUpdate.manager = manager === "" ? null : manager
-      }
+      dataUpdate.manager = manager === "" ? null : manager
+    }
     if (isActive !== undefined) dataUpdate.isActive = isActive
     dataUpdate.updatedBy = req.user._id
 
     if (Object.keys(dataUpdate).length === 0) return
 
     const updated = await Warehouse.findOneAndUpdate(
-      { _id: id, organization: organizationId }, 
-      dataUpdate, 
+      { _id: id, organization: organizationId },
+      dataUpdate,
       { new: true })
       .populate('manager', 'username')
       .populate('updatedBy', 'username')
@@ -203,13 +209,13 @@ export const deleteWarehouses = async (req, res) => {
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
-        return responseHelper.error(res, "Không có nhà kho nào được chọn để xóa", 400)
+      return responseHelper.error(res, "Không có nhà kho nào được chọn để xóa", 400)
     }
 
     const result = await Warehouse.updateMany(
-        { _id: { $in: ids } },
-        { $set: { isActive: 'false' } }
-  )
+      { _id: { $in: ids } },
+      { $set: { isActive: 'false' } }
+    )
 
     responseHelper.success(res, result.modifiedCount, 'Xóa thành công')
   } catch (error) {
@@ -222,14 +228,14 @@ export const restoreWarehouses = async (req, res) => {
     const { ids } = req.body
 
     if (!Array.isArray(ids) || ids.length === 0) {
-        return responseHelper.error(res, 'Không có nhà kho nào được chọn để khôi phục', 400)
+      return responseHelper.error(res, 'Không có nhà kho nào được chọn để khôi phục', 400)
     }
-    
+
     await Warehouse.updateMany(
-        { _id: { $in: ids } },
-        { $set: { status: 'active' } }
+      { _id: { $in: ids } },
+      { $set: { status: 'active' } }
     )
-    responseHelper.success(res, 'Khôi phục thành công')    
+    responseHelper.success(res, 'Khôi phục thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -240,13 +246,13 @@ export const forceDeleteWareHouses = async (req, res) => {
     const { ids } = req.body
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
-      
+
     if (!Array.isArray(ids) || ids.length === 0) {
       return responseHelper.error(res, 'Không có nhà kho nào được chọn để xóa', 400)
     }
 
     const result = await Warehouse.deleteMany(
-      { 
+      {
         _id: { $in: ids },
         organization: organizationId
       })
