@@ -265,7 +265,8 @@ export const printInvoice = async (req, res) => {
       title: 'Hóa đơn thanh toán', 
       order,
       orderId: order._id, 
-      currentUserId: req.user ? req.user._id : null 
+      currentUserId: req.user ? req.user._id : null ,
+      user: req.user || { username: 'Admin' }
     });
   } catch (error) {
     console.error('Lỗi khi in hóa đơn:', error);

@@ -14,16 +14,22 @@
 
     <div class="info">
       <p><strong>Khách hàng:</strong> <span id="customerName">Khách lẻ</span></p>
-      <p><strong>Thu ngân:</strong> <span id="cashier">Admin</span></p>
+
+      <div class="d-flex justify-content-between">
+        <p class="mb-0"><strong>Thu ngân:</strong> <span id="cashier"><%= user.username %></span></p>
+        <p class="mb-0"><strong>Loại hóa đơn:</strong> <span id="orderType">--</span></p>
+      </div>
     </div>
 
-    <table class="invoice-table">
+
+    <table class="invoice-table fw-bold">
       <thead>
         <tr>
+          <th class="stt">STT</th>
           <th class="name">Tên hàng</th>
           <th class="price">Đ.giá</th>
           <th class="qty">SL</th>
-          <th class="total">TT</th>
+          <th class="total text-end">TT</th>
         </tr>
       </thead>
       <tbody id="orderItems">
@@ -32,11 +38,12 @@
     </table>
 
     <!-- Tổng kết -->
-    <div class="summary">
+    <div class="summary fw-bold">
       <p><span>Tổng thành tiền</span><span id="totalAmount"></span></p>
-      <p><span>DISCOUNT</span><span id="discount"></span></p>
+      <p><span>Giảm được</span><span id="discount"></span></p>
       <p><span>Phụ thu dịch vụ</span><span id="serviceCharge"></span></p>
-      <p><strong>Tổng cộng</strong><strong id="total"></strong></p>
+      <p><span>VAT</span><span id="vatAmount"></span></p>
+      <p><span>Tổng cộng</span><span id="total"></span></p>
       <p><span>Tiền khách trả</span><span id="customerPaid"></span></p>
       <p><span>Tiền thừa</span><span id="changeAmount"></span></p>
     </div>
