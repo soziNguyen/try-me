@@ -20,20 +20,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Khách hàng và thu ngân
     document.getElementById('customerName').textContent = order.customerName || 'Khách lẻ';
-    document.getElementById('cashier').textContent = order.cashier || 'Admin';
+    const orderTypeEl = document.getElementById('orderType');
+      if (order.isTakeaway) {
+        orderTypeEl.textContent = 'Mang về';
+      } else if (order.tableId && order.tableId.name) {
+        orderTypeEl.textContent = `Bàn ${order.tableId.name} - ${order.tableId.area}`;
+      } else {
+        orderTypeEl.textContent = 'Không xác định';
+      }
 
     // Danh sách món ăn
     const itemsContainer = document.getElementById('orderItems');
     itemsContainer.innerHTML = ''; 
 
-    order.items.forEach(item => {
+    order.items.forEach((item,index) => {
       const tr = document.createElement('tr');
 
       tr.innerHTML = `
+        <td class="stt">${index + 1}</td>
         <td class="name">${item.foodId.name}</td>
         <td class="price">${formatCurrency(item.price)}</td>
         <td class="qty">${item.quantity}</td>
-        <td class="total">${formatCurrency(item.price * item.quantity)}</td>
+        <td class="total text-end">${formatCurrency(item.price * item.quantity)}</td>
       `;
       itemsContainer.appendChild(tr);
     });
@@ -41,6 +49,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('totalAmount').textContent = formatCurrency(order.totalAmount);
     document.getElementById('discount').textContent = formatCurrency(order.discount);
     document.getElementById('serviceCharge').textContent = formatCurrency(order.serviceCharge);
+    const vatRate = order.vatRate || (document.getElementById('vatInput')?.value || 0);
+    document.getElementById('vatAmount').textContent = vatRate + ' %';
     document.getElementById('total').textContent = formatCurrency(order.total);
     document.getElementById('customerPaid').textContent = formatCurrency(order.customerPaid);
     document.getElementById('changeAmount').textContent = formatCurrency(order.changeAmount);

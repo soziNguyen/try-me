@@ -64,13 +64,19 @@
 .invoice-table th,
 .invoice-table td {
   padding: 6px 8px;
-  text-align: center;
   border: none;
+}
+.invoice-table th.stt,
+.invoice-table td.stt {
+  width: 5%;
+  text-align: center;
+  padding-left: 0;
 }
 .invoice-table th.name,
 .invoice-table td.name {
+  width: 35%;
   text-align: left;
-  width: 40%;
+  padding-left: 0;
 }
 .invoice-table th.price,
 .invoice-table td.price,
@@ -78,11 +84,26 @@
 .invoice-table td.qty,
 .invoice-table th.total,
 .invoice-table td.total {
-  width: 20%;
+  width: 5%;
+  text-align: center;
 }
 .invoice-table tbody tr {
   border-bottom: 1px solid #000;
 }
 .invoice-table tbody tr:last-child {
   border-bottom: 1px solid #000;
+}
+
+.summary p {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+.summary p span:last-child,
+.summary p strong:last-child {
+  margin-left: auto;
+  text-align: right;
 }
