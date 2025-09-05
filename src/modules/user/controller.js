@@ -10,6 +10,7 @@ import responseHelper from '../../helpers/responseHelper.js'
 import { isValidPassword, generateSalt } from '../../helpers/common.js'
 import { parseShiftStart } from '../../helpers/dateHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
+import { logActivity } from '../activity-logs/service.js'
 
 // [CREATE] / User
 export const createUser = async (req, res) => {
@@ -183,7 +184,21 @@ const GRACE_MINUTES = 5 // thay đổi theo policy
 export const logIn = async (req, res, next) => {
     passport.authenticate("local", async (err, user, info) => {
         if (err) return next(err)
+
         if (!user) {
+            // Log failed login attempt
+            if (req.body?.username) {
+                await logActivity(
+                    null,
+                    null,
+                    req.body.username,      // <-- truyền username trực tiếp
+                    'LOGIN',
+                    'AUTH',
+                    'Đăng nhập thất bại',
+                    req.body.username,
+                    'FAILED'
+                )
+            }
             return responseHelper.error(res, info?.message || 'Tài khoản hoặc mật khẩu không chính xác', 400)
         }
 
@@ -203,7 +218,6 @@ export const logIn = async (req, res, next) => {
                     const tomorrow = new Date(today)
                     tomorrow.setDate(today.getDate() + 1)
 
-                    // Lấy lịch hôm nay và ca
                     const schedule = await Schedule.findOne({
                         organization: user.organization,
                         user: user._id,
@@ -213,7 +227,7 @@ export const logIn = async (req, res, next) => {
 
                     let statusForDay = 'present'
                     if (schedule?.shift?.startTime) {
-                        const shiftStart = parseShiftStart(today, schedule.shift.startTime) // hàm parse HH:mm => Date
+                        const shiftStart = parseShiftStart(today, schedule.shift.startTime)
                         const diffMin = Math.round((now - shiftStart) / 60000)
                         if (diffMin > GRACE_MINUTES) statusForDay = 'late'
                     }
@@ -244,7 +258,6 @@ export const logIn = async (req, res, next) => {
                         { upsert: true, new: true, setDefaultsOnInsert: true }
                     )
 
-                    // Nếu attendance đã tồn tại nhưng không có session mở => thêm session mới
                     const hasOpen = attendance.sessions.some(s => !s.checkOut)
                     if (!hasOpen) {
                         await Attendance.findByIdAndUpdate(attendance._id, {
@@ -268,6 +281,17 @@ export const logIn = async (req, res, next) => {
             } catch (e) {
                 console.error('Auto check-in failed:', e)
             }
+
+            // Log successful login
+            await logActivity(
+                user.organization,
+                user._id,
+                user.username || user.email,
+                'LOGIN',
+                'AUTH',
+                'Đăng nhập',
+                user.username || user.email
+            )
 
             const userData = {
                 id: user._id,
@@ -337,8 +361,30 @@ export const logOut = async (req, res) => {
                 }
             }
         }
+        await logActivity(
+            user.organization,
+            user._id, user.username || user.email,
+            'LOGOUT',
+            'AUTH',
+            'Đăng xuất',
+            user.username || user.email
+        )
     } catch (err) {
         console.error('Auto check-out failed:', err)
+
+        // Log logout failure nếu có user info
+        if (req.user) {
+            await logActivity(
+                req.user.organization,
+                req.user._id,
+                req.user.username || req.user.email,
+                'LOGOUT',
+                'AUTH',
+                `Logout process failed`,
+                req.user.username || req.user.email,
+                'FAILED'
+            )
+        }
     }
 
     req.logout((err) => {

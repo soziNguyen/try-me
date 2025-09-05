@@ -29,7 +29,7 @@
           padding: .5rem .75rem !important;
         }
 
-        span {
+        span, input {
           &.text {
             text-align: left;
           }
@@ -55,13 +55,16 @@ table {
   thead {
     th {
       &:first-child {
-        text-align: center;
         vertical-align: middle;
-        &:hover {
-          cursor: pointer;
-        }
+        
         input[type="checkbox"] {
+          text-align: center;
+          vertical-align: middle;
           cursor: pointer;
+          
+          &:hover {
+            cursor: pointer;
+          }
         }
       }
     }
@@ -77,11 +80,10 @@ table {
       padding: 0 !important;
 
       &:first-child {
-        &:hover {
-          cursor: pointer;
-        }
         input[type="checkbox"] {
-          cursor: pointer;
+          &:hover {
+            cursor: pointer;
+          }
         }
       }
 
@@ -182,9 +184,7 @@ table {
 
 .ms-5 {
   .select2-container--default {
-    border: 1px solid rgb(220, 53, 69);
-    border-radius: 6px;
-    padding: 2px 10px !important;
+    border-bottom: 1px solid #ff0000;
   }
 }
 

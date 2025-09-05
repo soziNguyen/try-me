@@ -12,5 +12,6 @@ router.get('/staff/attendance', isAuthenticated, isPermit('Admin', 'Org'), page.
 router.get('/staff/payroll', isAuthenticated, isPermit('Admin', 'Org'), page.payrollPage)
 router.get('/staff/attendance/:id', isAuthenticated, isPermit('Admin', 'Org'), page.attendanceDetail)
 router.get('/staff/payroll/:id', isAuthenticated, isPermit('Admin', 'Org'), page.payrollDetailPage)
+router.get('/activity-logs', isAuthenticated, isPermit('Admin', 'Org'), page.activityLog)
 
 export default router

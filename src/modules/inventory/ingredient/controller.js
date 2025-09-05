@@ -4,20 +4,25 @@ import { parseNumberField, parseStringField } from '../../../helpers/common.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import { normalizeValue } from '../../../helpers/common.js'
+import { logActivity } from '../../activity-logs/service.js'
 
 export const getAllIngredients = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
     const pipeline = [
-     { $match: { 
-        isActive: true,
-        organization: organizationId
-      }},
-     { $sort: { name: 1 }},
-     { $project: {
-        _id: 1, name: 1, unit: 1
-        } 
+      {
+        $match: {
+          isActive: true,
+          organization: organizationId
+        }
+      },
+      { $sort: { name: 1 } },
+      {
+        $project: {
+          _id: 1, name: 1, unit: 1
+        }
       }
     ]
     const ings = await Ingredient.aggregate(pipeline)
@@ -71,7 +76,7 @@ export const ingredientDataAPI = async (req, res) => {
     }
 
     // Get total count
-    const recordsTotal = await Ingredient.countDocuments({ organization: organizationId }) 
+    const recordsTotal = await Ingredient.countDocuments({ organization: organizationId })
 
     // Get filtered count
     const countPipeline = [...pipeline, { $count: 'count' }]
@@ -175,7 +180,7 @@ export const createIngredient = async (req, res) => {
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
-    
+
     if (!req.user || !req.user._id) {
       return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
     }
@@ -188,8 +193,31 @@ export const createIngredient = async (req, res) => {
     const saved = await Ingredient.findById(newIngredient._id)
       .populate('category', 'name')
       .populate('createdBy', 'username -_id')
+
+    await logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'Tạo nguyên liệu',
+      'INGREDIENT',
+      `Tạo nguyên liệu ${saved.name}`,
+      saved.name,
+      'SUCCESS'
+    )
     responseHelper.success(res, saved, 'Tạo nguyên liệu thành công')
   } catch (err) {
+    if (req?.user?._id) {
+      await logActivity(
+        getCurrentOrg(req),
+        req.user._id,
+        req.user.username || 'Unknown',
+        'CREATE',
+        'INGREDIENT',
+        `Lỗi khi tạo nguyên liệu: ${err.message}`,
+        req.body?.name || '',
+        'FAILED'
+      )
+    }
     return responseHelper.error(res, err.message)
   }
 }
@@ -205,73 +233,100 @@ export const updateIngredient = async (req, res) => {
     const ingredient = await Ingredient.findOne({
       _id: id,
       organization: organizationId
-    })
-    if (!ingredient) {
-      return responseHelper.error(res, "Nguyên liệu không tồn tại", 404)
-    }
+    }).populate('category', 'name')
+    if (!ingredient) return responseHelper.error(res, "Nguyên liệu không tồn tại", 404)
 
     const orConditions = []
     if (sku !== undefined) orConditions.push({ sku })
     if (name !== undefined) orConditions.push({ name })
-    
+
     if (orConditions.length) {
       const existing = await Ingredient.findOne({
         _id: { $ne: id },
         organization: organizationId,
         $or: orConditions
-       })
-      if (existing) {
-        return responseHelper.error(res, "SKU hoặc tên nguyên liệu đã tồn tại", 400)
+      })
+      if (existing) return responseHelper.error(res, "SKU hoặc tên nguyên liệu đã tồn tại", 400)
+    }
+
+    const updateData = { updatedBy: req.user._id }
+
+    if (sku !== undefined) updateData.sku = sku
+    if (name !== undefined) updateData.name = name
+    if (image !== undefined) updateData.image = image
+    if (unit !== undefined) updateData.unit = unit === "" ? null : unit
+    if (category !== undefined) updateData.category = category === "" ? null : category
+    if (expirationDays !== undefined) updateData.expirationDays = expirationDays
+    if (isActive !== undefined) updateData.isActive = Boolean(isActive)
+    if (note !== undefined) updateData.note = note
+
+    // Lọc field thực sự thay đổi
+    const actualChanges = {}
+    for (const key in updateData) {
+      if (normalizeValue(updateData[key]) !== normalizeValue(ingredient[key])) {
+        actualChanges[key] = updateData[key]
       }
     }
 
-    const updateData = {
-      updatedBy: req.user._id
-    }
-
-    const parsedSku = parseStringField(sku)
-    if (parsedSku) updateData.sku = parsedSku
-
-    const parsedName = parseStringField(name)
-    if (parsedName) updateData.name = parsedName
-
-    const oldImage = ingredient.image
-    const parsedImage = parseStringField(image)
-    if (parsedImage) updateData.image = parsedImage
-
-    if (unit !== undefined) {
-      updateData.unit = unit === "" ? null : unit
-    }
-
-    if (category !== undefined) {
-      updateData.category = category === "" ? null : category
-    }
-
-    const parsedExpirationDays = parseNumberField(expirationDays)
-    if (parsedExpirationDays !== undefined) updateData.expirationDays = parsedExpirationDays
-
-    if (isActive !== undefined) updateData.isActive = Boolean(isActive)
-    
-
-    const parsedNote = parseStringField(note)
-    if (parsedNote) updateData.note = parsedNote
-
     const updated = await Ingredient.findOneAndUpdate(
-      { _id: id, organization: organizationId }, 
-      updateData,
-       { new: true })
+      { _id: id, organization: organizationId },
+      actualChanges,
+      { new: true }
+    )
       .populate('category', 'name')
       .populate('createdBy', 'username -_id')
       .populate('updatedBy', 'username -_id')
       .lean()
 
-    if (oldImage && oldImage !== updateData.image) {
+    if (ingredient.image && actualChanges.image && ingredient.image !== actualChanges.image) {
       try {
-        await deleteFile(oldImage)
+        await deleteFile(ingredient.image)
       } catch (err) {
         console.error('Không xóa được file cũ:', err)
       }
     }
+
+    // Gộp log các field thay đổi
+    const fieldLabels = {
+      name: 'Tên nguyên liệu',
+      sku: 'Mã SKU',
+      unit: 'Đơn vị',
+      category: 'Danh mục',
+      expirationDays: 'HSD (ngày)',
+      isActive: 'Kích hoạt',
+      note: 'Ghi chú',
+      image: 'Ảnh'
+    }
+
+    let description = ''
+    if (Object.keys(actualChanges).length) {
+      description = `Cập nhật nguyên liệu "${ingredient.name}": ` +
+        Object.keys(actualChanges)
+          .map(key => {
+            let oldVal = ingredient[key]
+            if (key === 'category' && oldVal) oldVal = oldVal.name
+            let newVal = actualChanges[key]
+            if (key === 'category' && newVal) {
+              newVal = updated.category?.name || ''
+            }
+            return `${fieldLabels[key] || key}: "${normalizeValue(oldVal)}" → "${normalizeValue(newVal)}"`
+          })
+          .join(', ')
+    } else {
+      description = `Cập nhật nguyên liệu "${ingredient.name}" nhưng không có thay đổi nào`
+    }
+
+    await logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'UPDATE',
+      'INGREDIENT',
+      description,
+      ingredient.name,
+      'SUCCESS'
+    )
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (err) {
     return responseHelper.error(res, err.message)
@@ -281,7 +336,7 @@ export const updateIngredient = async (req, res) => {
 export const deleteIngredients = async (req, res) => {
   try {
     const { ids } = req.body
-    
+
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
@@ -289,13 +344,51 @@ export const deleteIngredients = async (req, res) => {
       return responseHelper.error(res, "Không có nguyên liệu nào được chọn để xóa", 400)
     }
 
+    const ingredientsToDelete = await Ingredient.find({
+      _id: { $in: ids },
+      organization: organizationId
+    }).lean()
+
     const result = await Ingredient.deleteMany({
       _id: { $in: ids },
       organization: organizationId
     })
 
+    for (const ing of ingredientsToDelete) {
+      if (ing.image) {
+        try {
+          await deleteFile(ing.image)
+        } catch (err) {
+          console.error(`Không xóa được ảnh của ${ing.name}:`, err)
+        }
+      }
+    }
+
+    await logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'INGREDIENT',
+      `Đã xóa ${result.deletedCount} nguyên liệu`,
+      ingredientsToDelete.map(i => i.name).join(', '),
+      'SUCCESS'
+    )
+
     responseHelper.success(res, result.deletedCount, 'Xóa nguyên liệu thành công')
   } catch (err) {
+    if (req?.user?._id) {
+      await logActivity(
+        getCurrentOrg(req),
+        req.user._id,
+        req.user.username || 'Unknown',
+        'DELETE',
+        'INGREDIENT',
+        `Lỗi khi xóa nguyên liệu: ${err.message}`,
+        req.body?.ids?.join(', ') || '',
+        'FAILED'
+      )
+    }
     return responseHelper.error(res, err.message)
   }
 }

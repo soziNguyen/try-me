@@ -1,13 +1,15 @@
 import express from "express"
 import isAdmin from "../../helpers/isAdmin.js"
 import isAuthenticated from "../../helpers/isAuthenticated.js"
-import { userManagementPage, auditPage } from "../../pages/index.js" 
-import { getAllUsers, getUserById, createUser, updateUser, deleteUsers, setOrg, exitOrg } from "./controller.js"
+import { userManagementPage, auditPage } from "../../pages/index.js"
+import { getAllUsers, getUserById, createUser, updateUser, deleteUsers, setOrg, exitOrg, getAllAuditLogs } from "./controller.js"
 
 const router = express.Router()
 
 router.get('/admin', isAuthenticated, isAdmin, userManagementPage)
 router.get('/audit-logs', isAuthenticated, isAdmin, auditPage)
+
+router.get('/api/admin/audit-logs', isAuthenticated, isAdmin, getAllAuditLogs)
 
 router.get('/api/admin/users', isAuthenticated, isAdmin, getAllUsers)
 router.get('/api/admin/users/:id', isAuthenticated, isAdmin, getUserById)

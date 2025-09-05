@@ -17,7 +17,7 @@ $(function () {
 
   // Render dataTable
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#ingredientTableBody').offset().top - 100) / 70)
+  const numRows = Math.floor(($(window).height() - $('#ingredientTableBody').offset().top - 120) / 70)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -171,7 +171,7 @@ $(function () {
           data: 'expirationDays',
           render: (data, type, row) => {
             if (type === 'display') {
-              return `<input type="number" class="dataInput border-0 w-100 form-control" data-field="expirationDays" value="${data ?? ''}">`
+              return `<input type="number" class="dataInput border-0 w-100 form-control number" data-field="expirationDays" value="${data ?? ''}">`
             }
             return data
           }
