@@ -289,14 +289,18 @@ export const applyCoupon = async (req, res) => {
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
     const now = new Date()
-    const coupon = await Coupon.findOne({
+    const coupon = await Coupon.findOneAndUpdate(
+    {
         isActive: true,
         code,
         startDate: { $lte: now },
         endDate: { $gte: now },
-        $expr: { $lt: ["$usedCount", "$usageLimit"] },
         organization: organizationId,
-    })
+        $expr: { $lt: ["$usedCount", "$usageLimit"] }
+    },
+    { $inc: { usedCount: 1 } },
+    { new: true }
+    )
 
     console.log(coupon)
     

@@ -369,7 +369,7 @@ document.getElementById('confirmCheckoutBtn').addEventListener('click', async ()
     document.getElementById('checkoutDetail').style.display = 'none';
 
     if (printInvoice === 'yes') {
-      window.open(`/orders/${orderId}/print`, '_blank');
+      window.open(`/orders/print/${orderId}`, '_blank');
       setTimeout(() => {
         window.location.href = `/orders`;
       }, 2000);

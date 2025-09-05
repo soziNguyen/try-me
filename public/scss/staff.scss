@@ -48,6 +48,7 @@ $orange-800: #9a3412;
   border-collapse: collapse;
   font-size: 14px;
   border-top: 1px solid #000;
+
   thead {
     border-bottom: 1px solid #000; 
   }
@@ -55,14 +56,21 @@ $orange-800: #9a3412;
   th,
   td {
     padding: 6px 8px;
-    text-align: center;
     border: none; 
+  }
+
+  th.stt,
+  td.stt {
+    width: 5%;
+    text-align: center;
+    padding-left: 0;
   }
 
   th.name,
   td.name {
+    width: 35%;
     text-align: left;
-    width: 40%;
+    padding-left: 0;
   }
 
   th.price,
@@ -71,7 +79,8 @@ $orange-800: #9a3412;
   td.qty,
   th.total,
   td.total {
-    width: 20%;
+    width: 5%;
+    text-align: center;
   }
 
   tbody tr {
@@ -80,5 +89,18 @@ $orange-800: #9a3412;
 
   tbody tr:last-child {
     border-bottom: 1px solid #000; 
+  }
+}
+
+.summary {
+  p {
+    display: flex;
+    align-items: center;
+
+    span:last-child,
+    strong:last-child {
+      margin-left: auto;
+      text-align: right;
+    }
   }
 }
