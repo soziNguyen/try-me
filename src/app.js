@@ -8,12 +8,13 @@ import { fileURLToPath } from 'url';
 import helmet from 'helmet';
 import compression from 'compression';
 import lusca from 'lusca';
+import xss from 'xss';
 import morgan from 'morgan';
 import router from './routes/common.js';
 import passport from './configs/passport.js';
 import session from 'express-session';
 import MongoStore from "connect-mongo";
-import './modules/payroll/auto.js'
+import './modules/payroll/auto.js';
 
 const app = express();
 
@@ -47,6 +48,22 @@ app.use(cors());  // Allow API requests from different origins (CORS)
 app.use(express.json());  // Parse incoming JSON requests (req.body)
 app.use(cookieParser()); // Read & parse cookie from req.cookies
 
+// ==== Middleware chống XSS ====
+app.use((req, res, next) => {
+  const sanitize = (obj) => {
+    if (!obj || typeof obj !== 'object') return;
+    for (const key in obj) {
+      if (typeof obj[key] === 'string') obj[key] = xss(obj[key]);
+      else if (typeof obj[key] === 'object') sanitize(obj[key]);
+    }
+  };
+  sanitize(req.body);
+  sanitize(req.query);
+  sanitize(req.params);
+  next();
+});
+// ===================================
+
 //session
 const sessionStore = MongoStore.create({
   mongoUrl: process.env.MONGODB_URI,
@@ -54,31 +71,19 @@ const sessionStore = MongoStore.create({
     // autoReconnect: true
   }
 });
-// Listen for the 'connected' event on the MongoStore instance
-sessionStore.on('connected', () => {
-  console.log('MongoStore is connected');
-  // Perform actions you want to take when MongoStore is ready
-});
-// Listen for the 'error' event on the MongoStore instance
-sessionStore.on('error', (error) => {
-  console.error('MongoStore connection error:', error);
-  // Handle the error as needed
-});
+sessionStore.on('connected', () => console.log('MongoStore is connected'));
+sessionStore.on('error', (error) => console.error('MongoStore connection error:', error));
 
-// session config
 app.use(
-    session({
-      secret: process.env.SESSION_SECRET,
-      rolling: true,
-      resave: true,
-      saveUninitialized: false, // true: csrf
-      store: sessionStore,
-      cookie: {
-        secure: false // false: local (http)
-        // maxAge: 24*60*60000
-      }
-    })
-  );
+  session({
+    secret: process.env.SESSION_SECRET,
+    rolling: true,
+    resave: true,
+    saveUninitialized: false,
+    store: sessionStore,
+    cookie: { secure: false } // local: false
+  })
+);
 
 // ==================================
 // passport
@@ -86,9 +91,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use(lusca({ 
-  // csrf: true,        // CSRF protection
-  xframe: 'SAMEORIGIN', 
-  xssProtection: true 
+  // csrf: true,  // CSRF protection
+  xframe: 'SAMEORIGIN',
+  xssProtection: true
 }));
 
 // Custom Middleware
@@ -103,8 +108,9 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 // Register routes
 app.use('/', router);
 
+// 404 page
 app.use((req, res) => {
-    res.status(404).render('errors/error-404', { title: 'Page Not Found' });
+  res.status(404).render('errors/error-404', { title: 'Page Not Found' });
 });
 
 export default app;
