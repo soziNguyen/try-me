@@ -12,8 +12,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error('foods không phải là mảng:', foods);
       return;
     }
-    renderMenu(foods);
 
+    // Gán và hiển thị menu
+    allFoods = foods;
+    renderMenu(allFoods);
+
+    // Hiển thị danh mục
+    const categories = extractCategories(allFoods);
+    renderCategories(categories);
+
+    // Nếu đã có orderId → load đơn hàng
     if (orderId) {
       const orderRes = await fetch(`/api/orders/${orderId}`);
       const orderData = await orderRes.json();
@@ -182,6 +190,42 @@ function renderTableList(tables = []) {
   tableGrid.innerHTML = html;
 }
 
+// categories
+let allFoods = [];
+function extractCategories(foods) {
+  const categories = [];
+  const names = new Set();
+
+  for (const food of foods) {
+    const catName = food.category?.name;
+    if (catName && !names.has(catName)) {
+      categories.push(catName);
+      names.add(catName);
+    }
+  }
+
+  return categories;
+}
+
+function renderCategories(categories) {
+  const categoryList = document.getElementById("categoryList");
+  if (!categoryList) return;
+
+  categoryList.innerHTML = `
+    <button class="btn btn-outline-primary" onclick="renderMenu(allFoods)">Tất cả</button>
+    ${categories.map(cate => `
+      <button class="btn btn-outline-secondary" onclick="filterMenuByCategory('${cate}')">
+        ${cate}
+      </button>
+    `).join('')}
+  `;
+}
+
+function filterMenuByCategory(categoryName) {
+  const filtered = allFoods.filter(food => food.category?.name === categoryName);
+  renderMenu(filtered);
+}
+
 // Render thực đơn món ăn
 function renderMenu(foods) {
   const menuDiv = document.getElementById('foodMenu');
@@ -204,13 +248,13 @@ function renderMenu(foods) {
 
     return `
       <div class="col">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm h-100 rounded-3">
           <img src="${imgSrc}" alt="${name}" class="card-img-top" style="object-fit: cover; height: 180px;">
-          <div class="card-body">
-            <h5 class="card-title">${name}</h5>
-            <p class="card-text">Giá: ${priceFormatted} đ</p>
-            <button class="btn btn-sm btn-outline-primary" onclick="addToOrder('${food._id}', '${name}', ${price})">
-              <i class="bi bi-bag-check"></i> Thêm
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title fw-semibold">${name}</h5>
+            <p class="card-text text-danger fw-bold fs-5 flex-grow-1">Giá: ${priceFormatted} đ</p>
+            <button class="btn btn-primary btn-sm rounded-pill px-3 mt-auto" onclick="addToOrder('${food._id}', '${name}', ${price})">
+              <i class="bi bi-bag-plus"></i> Thêm
             </button>
           </div>
         </div>
@@ -358,6 +402,21 @@ async function removeItemFromOrder(foodId) {
   } catch (err) {
     console.error("Lỗi khi xóa món:", err);
     toastr.error("Lỗi kết nối server");
+  }
+}
+
+getCombos()
+let combos = []
+// Lấy danh sách combo
+async function getCombos () {
+  try {
+    const result = await ajax('/api/menu/combos/active', {}, 'GET')
+    if (!result) {
+      console.error('Lấy danh sách combo thất bại')
+    }
+    combos = result
+  } catch (error) {
+    console.error('Lỗi server', error)
   }
 }
 

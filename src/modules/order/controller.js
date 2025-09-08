@@ -261,7 +261,7 @@ export const printInvoice = async (req, res) => {
 
     if (!order) return res.status(404).send('Không tìm thấy đơn hàng');
 
-    res.render('staff/invoice', { 
+    res.render('staff/printbill', { 
       title: 'Hóa đơn thanh toán', 
       order,
       orderId: order._id, 

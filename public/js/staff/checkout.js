@@ -289,6 +289,7 @@ document.getElementById('applyDiscountBtn').addEventListener('click', async () =
     discountMessage.textContent = `Áp dụng thành công! Giảm ${discountAmount.toLocaleString()}đ`;
     discountMessage.className = 'text-success d-block mt-1';
 
+    window.appliedCouponId = data.data.couponId;
     calculateTotals();
 
   } catch (error) {
@@ -346,7 +347,25 @@ document.getElementById('confirmCheckoutBtn').addEventListener('click', async ()
   // Lấy giá trị radio In hóa đơn
   const printInvoice = document.querySelector('input[name="printInvoice"]:checked').value;
 
+  // Lấy couponId đã áp dụng (bạn cần lưu couponId khi apply coupon thành công)
+  const appliedCouponId = window.appliedCouponId; // hoặc cách nào đó bạn lưu couponId
+
   try {
+    // Nếu có mã giảm giá thì gọi API confirm để tăng lượt sử dụng
+    if (appliedCouponId) {
+      const confirmResponse = await fetch('/api/coupon/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ couponId: appliedCouponId }),
+      });
+      const confirmData = await confirmResponse.json();
+      if (!confirmResponse.ok) {
+        toastr.error(confirmData.message || 'Xác nhận mã giảm giá thất bại!');
+        return;  // Dừng thanh toán nếu confirm coupon lỗi
+      }
+    }
+
+    // Gọi API thanh toán
     const response = await fetch(`/api/orders/${orderId}/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

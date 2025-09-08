@@ -12,7 +12,7 @@ export const getActiveCombos = async (req, res) => {
     const combo = await Combo.find({
       isActive: true,
       organization: organizationId
-    })
+    }).populate('items.menuItem', '_id name')
     responseHelper.success(res, combo)
   } catch (error) {
     responseHelper.error(res, error.message)
