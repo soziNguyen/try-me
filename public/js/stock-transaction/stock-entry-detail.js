@@ -2,8 +2,10 @@ $(function () {
   let suppliers = []
   let ingredients = []
   let warehouses = []
+  let units = []
   let stockEntryId = null
-  let itemCounter = 1
+  let itemCounter = 0
+  let stockEntry = null
   const disableStockEntrySave = setupSaveButtonWatcher("#stockEntryForm", "#btn-save-entry")
 
   // Lấy stockEntryId từ URL
@@ -22,13 +24,15 @@ $(function () {
       ? fetchData(`inventory/stock-entry/${stockEntryId}`)
       : Promise.resolve(null),
   ])
-    .then(([sups, ings, whs, stockEntry]) => {
-      suppliers = sups
-      ingredients = ings
-      warehouses = whs
+    .then(([sups, ings, whs, stockEntryRes]) => {
+      suppliers = sups || []
+      ingredients = ings || []
+      warehouses = whs || []
 
       initForm()
-      if (stockEntry) {
+      if (stockEntryRes) {
+        stockEntry = stockEntryRes.stockEntry
+        units = stockEntryRes.units || []
         populateForm(stockEntry)
       } else {
         const currentUserName = "<%= currentUserName %>"
@@ -48,6 +52,10 @@ $(function () {
 
     $('.select2-ingredient').each(function () {
       initSelect2($(this), '— Chọn nguyên liệu —')
+    })
+
+    $('.select2-units').each(function () {
+      initSelect2($(this), '— Chọn đơn vị —')
     })
 
     // Populate suppliers dropdown
@@ -138,21 +146,42 @@ $(function () {
       '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
       ingredientOptions
     )
+
+    const $unitSelect = $(`select[name="items[${rowIndex}][unit]"]`)
+    if ($unitSelect.length) {
+      const unitOptions = (units || [])
+        .map((u) => {
+          if (!u) return ''
+          if (typeof u === 'string') return `<option value="${u}">${u}</option>`
+          return `<option value="${u._id}">${u.name}</option>`
+        })
+        .join('')
+
+      $unitSelect.empty().html(
+        '<option value="" class="text-center">— Chọn đơn vị —</option>' + unitOptions
+      )
+    }
   }
 
   function addNewItem() {
+    const currentIndex = itemCounter
     const newRow = `
     <tr>
       <td>
-        <select class="select2-ingredient" name="items[${itemCounter}][ingredient]">
+        <select class="select2-ingredient" name="items[${currentIndex}][ingredient]">
           <option value="" class="text-center">— Chọn nguyên liệu —</option>
         </select>
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][quantity]" min="0" step="0.1" placeholder="0">
+        <input type="number" class="form-control form-control-sm" name="items[${currentIndex}][quantity]" min="0" step="0.1" placeholder="0">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][unitPrice]" min="0" step="0.1" placeholder="0">
+        <select class="select2-units" name="items[${currentIndex}][unit]">
+          <option value="" class="text-center">— Chọn đơn vị —</option>
+        </select>
+      </td>
+      <td>
+        <input type="number" class="form-control form-control-sm" name="items[${currentIndex}][unitPrice]" min="0" step="0.1" placeholder="0">
       </td>
       <td>
         <input type="text" class="form-control form-control-sm" readonly placeholder="0">
@@ -166,11 +195,14 @@ $(function () {
     `
     $("#itemsTableBody").append(newRow)
 
-    const currentRowIndex = itemCounter
-    updateRowDropdowns(currentRowIndex)
+    // populate dropdown options
+    updateRowDropdowns(currentIndex)
 
-    const $newSelect = $(`select[name="items[${currentRowIndex}][ingredient]"]`)
+    const $newSelect = $(`select[name="items[${currentIndex}][ingredient]"]`)
     initSelect2($newSelect, '— Chọn nguyên liệu —')
+
+    const $unitSelect = $(`select[name="items[${currentIndex}][unit]"]`)
+    initSelect2($unitSelect, '— Chọn đơn vị —')
 
     itemCounter++
   }
@@ -183,7 +215,7 @@ $(function () {
       parseFloat(row.find('input[name*="[unitPrice]"]').val()) || 0
     const total = quantity * unitPrice
 
-    row.find("input[readonly]").val(total.toLocaleString("vi-VN") + " ₫")
+    row.find("input[readonly]").val(total ? total.toLocaleString("vi-VN") + " ₫" : "0")
     calculateTotals()
   }
 
@@ -231,12 +263,16 @@ $(function () {
               min="0" step="0.1" value="${item.quantity || ""}" placeholder="0">
           </td>
           <td>
+            <select class="select2-units" name="items[${index}][unit]">
+              <option value="" class="text-center">— Chọn đơn vị —</option>
+            </select>
+          </td>
+          <td>
             <input type="number" class="form-control form-control-sm" name="items[${index}][unitPrice]" 
               min="0" step="0.1" value="${item.unitPrice || ""}" placeholder="0">
           </td>
           <td>
-            <input type="text" class="form-control form-control-sm" readonly value="${(item.total || 0).toLocaleString("vi-VN") + " ₫"
-          }" placeholder="0">
+            <input type="text" class="form-control form-control-sm" readonly value="${(item.total || 0).toLocaleString("vi-VN") + " ₫"}" placeholder="0">
           </td>
           <td class="text-center">
             <button type="button" class="btn btn-danger btn-sm remove-item-btn">
@@ -250,8 +286,14 @@ $(function () {
         updateRowDropdowns(index)
 
         const $sel = $(`select[name="items[${index}][ingredient]"]`)
-        $sel.val(item.ingredient?._id || "")
+        const ingredientVal = item.ingredient?._id || item.ingredient || ""
+        $sel.val(ingredientVal).trigger('change')
         initSelect2($sel, '— Chọn nguyên liệu —')
+
+        const $unit = $(`select[name="items[${index}][unit]"]`)
+        const unitVal = item.unit?._id || item.unit || ""
+        $unit.val(unitVal).trigger('change')
+        initSelect2($unit, '— Chọn đơn vị —')
       })
 
       itemCounter = stockEntry.items.length
@@ -281,15 +323,17 @@ $(function () {
 
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
       const quantity = $(this).find('input[name*="[quantity]"]').val()
+      const unit = $(this).find('select[name*="[unit]"]').val()
       const unitPrice = $(this).find('input[name*="[unitPrice]"]').val()
 
-      const hasAnyValue = ingredientId || quantity || unitPrice
-      const isComplete = ingredientId && quantity && unitPrice
+      const hasAnyValue = ingredientId || quantity || unitPrice || unit
+      const isComplete = ingredientId && quantity && unitPrice && unit
 
       if (hasAnyValue && !isComplete) {
         const missingFields = []
         if (!ingredientId) missingFields.push("nguyên liệu")
         if (!quantity) missingFields.push("số lượng")
+        if (!unit) missingFields.push("đơn vị")
         if (!unitPrice) missingFields.push("đơn giá")
 
         partialErrors.push(`Dòng ${rowIndex} thiếu ${missingFields.join(", ")}`)
@@ -307,9 +351,10 @@ $(function () {
       $rows.each(function () {
         const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
         const quantity = $(this).find('input[name*="[quantity]"]').val()
+        const unit = $(this).find('select[name*="[unit]"]').val()
         const unitPrice = $(this).find('input[name*="[unitPrice]"]').val()
 
-        if (!ingredientId && !quantity && !unitPrice) {
+        if (!ingredientId && !quantity && !unitPrice && !unit) {
           $(this).remove()
         }
       })
@@ -334,6 +379,7 @@ $(function () {
     $("#itemsTableBody tr").each(function () {
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
       const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val())
+      const unit = $(this).find('select[name*="[unit]"]').val()
       const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val())
 
       if (ingredientId && quantity && unitPrice) {
@@ -343,6 +389,7 @@ $(function () {
         stockEntryData.items.push({
           ingredient: ingredientId,
           quantity,
+          unit,
           unitPrice,
           total: itemTotal,
         })

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { units } from '../../../helpers/unitHelper.js'
 
 const stockEntrySchema = new mongoose.Schema({
   code: { type: String, default: '' },         // mã phiếu
@@ -8,6 +9,7 @@ const stockEntrySchema = new mongoose.Schema({
   items: [{
     ingredient: { type: mongoose.Schema.Types.ObjectId, ref: 'Ingredient', default: null },
     quantity: { type: Number, default: 0 },
+    unit: { type: String, enum: units, default: '' },
     unitPrice: { type: Number, default: 0 },
     total: { type: Number, default: 0 }
   }],
@@ -29,4 +31,4 @@ const stockEntrySchema = new mongoose.Schema({
   }
 )
 const StockEntry = mongoose.model('StockEntry', stockEntrySchema)
-export default StockEntry
+export { StockEntry, units }

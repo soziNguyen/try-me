@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import StockEntry from "./model.js"
+import { StockEntry, units } from "./model.js"
 import IngredientStock from "../../inventory/ingredient-stock/model.js"
 import { Ingredient } from "../../inventory/ingredient/model.js"
 import responseHelper from "../../../helpers/responseHelper.js"
@@ -99,8 +99,19 @@ export const getStockEntries = async (req, res) => {
           code: { $first: "$code" },
           note: { $first: "$note" },
           date: { $first: "$date" },
-          supplier: { $first: "$supplier" },
-          warehouse: { $first: "$warehouse" },
+          supplier: {
+            $first: {
+              _id: "$supplier._id",
+              code: "$supplier.code",
+              name: "$supplier.name"
+            }
+          },
+          warehouse: { 
+            $first: {
+              _id: "$warehouse._id",
+              name: "$warehouse.name",
+              location: "$warehouse.location",
+            } },
           createdAt: { $first: "$createdAt" },
           createdBy: { $first: "$createdBy.username" },
           items: { $push: "$items" },
@@ -193,7 +204,7 @@ export const getStockEntryById = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
     }
 
-    responseHelper.success(res, stockEntry, 'Lấy thông tin phiếu nhập thành công')
+    responseHelper.success(res, { stockEntry, units }, 'Lấy thông tin phiếu nhập thành công')
   } catch (err) {
     responseHelper.error(res, err.message)
   }
@@ -264,6 +275,7 @@ export const updateStockEntryFromForm = async (req, res) => {
       // Chuẩn hóa dữ liệu items và tính tổng tiền
       const items = rawItems.map(item => {
         const quantity = parseFloat(item.quantity) || 0
+        const unit = item.unit || null
         const unitPrice = parseFloat(item.unitPrice) || 0
         const itemTotal = quantity * unitPrice
         subTotal += itemTotal
@@ -271,6 +283,7 @@ export const updateStockEntryFromForm = async (req, res) => {
         return {
           ingredient: item.ingredient,
           quantity,
+          unit,
           unitPrice,
           total: itemTotal
         }
