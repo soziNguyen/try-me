@@ -88,7 +88,7 @@ $(function () {
               if (res.success && res.data.isLocked) {
                 toastr.success("Phiếu nhập đã được khóa thành công")
                 $("#btn-lock-entry").prop("disabled", true).html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
-    
+
                 $("#stockEntryForm")
                   .find("input, select, textarea, button")
                   .not("#btn-lock-entry, #btn-print")
@@ -149,10 +149,10 @@ $(function () {
         </select>
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][quantity]" min="0" step="0.01" placeholder="0">
+        <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][quantity]" min="0" step="0.1" placeholder="0">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][unitPrice]" min="0" step="0.01" placeholder="0">
+        <input type="number" class="form-control form-control-sm" name="items[${itemCounter}][unitPrice]" min="0" step="0.1" placeholder="0">
       </td>
       <td>
         <input type="text" class="form-control form-control-sm" readonly placeholder="0">
@@ -228,11 +228,11 @@ $(function () {
           </td>
           <td>
             <input type="number" class="form-control form-control-sm" name="items[${index}][quantity]" 
-              min="0" step="1" value="${item.quantity || ""}" placeholder="0">
+              min="0" step="0.1" value="${item.quantity || ""}" placeholder="0">
           </td>
           <td>
             <input type="number" class="form-control form-control-sm" name="items[${index}][unitPrice]" 
-              min="0" step="1" value="${item.unitPrice || ""}" placeholder="0">
+              min="0" step="0.1" value="${item.unitPrice || ""}" placeholder="0">
           </td>
           <td>
             <input type="text" class="form-control form-control-sm" readonly value="${(item.total || 0).toLocaleString("vi-VN") + " ₫"
