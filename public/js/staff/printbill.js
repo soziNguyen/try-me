@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const order = await response.json();
 
     const now = new Date();
-    document.getElementById('currentTime').textContent = `${now.toLocaleTimeString()} ${now.toLocaleDateString()}`;
 
     // Header
     document.getElementById('orderId').textContent = order._id;

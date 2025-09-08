@@ -5,7 +5,7 @@ import { isPermit } from '../../../helpers/isPermit.js'
 
 const router = express.Router()
 
-router.get('/api/menu/combos/active',     isAuthenticated, isPermit('Admin', 'Org'), getActiveCombos)
+router.get('/api/menu/combos/active',                                                getActiveCombos)
 router.get('/api/menu/combos',            isAuthenticated, isPermit('Admin', 'Org'), getCombos)
 router.post('/api/menu/combo/create',     isAuthenticated, isPermit('Admin', 'Org'), createCombo)
 router.post('/api/menu/combo/update/:id', isAuthenticated, isPermit('Admin', 'Org'), updateCombo)

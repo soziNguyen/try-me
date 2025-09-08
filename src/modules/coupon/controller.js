@@ -289,18 +289,19 @@ export const applyCoupon = async (req, res) => {
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
     const now = new Date()
-    const coupon = await Coupon.findOneAndUpdate(
-    {
-        isActive: true,
-        code,
-        startDate: { $lte: now },
-        endDate: { $gte: now },
-        organization: organizationId,
-        $expr: { $lt: ["$usedCount", "$usageLimit"] }
-    },
-    { $inc: { usedCount: 1 } },
-    { new: true }
-    )
+    const coupon = await Coupon.findOne({
+    isActive: true,
+    code,
+    startDate: { $lte: now },
+    endDate: { $gte: now },
+    organization: organizationId,
+    $expr: {
+        $or: [
+        { $eq: ["$usageLimit", null] },
+        { $lt: ["$usedCount", "$usageLimit"] }
+        ]
+    }
+    })
 
     console.log(coupon)
     
@@ -318,12 +319,51 @@ export const applyCoupon = async (req, res) => {
     
     // Trả về thông tin giảm giá
     responseHelper.success(res, {
+      couponId: coupon._id,
       code: coupon.code,
       discountType: coupon.discountType,
       discountValue: coupon.discountValue,
       discountAmount: discount
     })
 
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
+export const confirmCouponUsage = async (req, res) => {
+  try {
+    const { couponId } = req.body
+    if (!couponId) return responseHelper.error(res, "Thiếu mã giảm giá", 400)
+
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+
+    const now = new Date()
+
+    const coupon = await Coupon.findOneAndUpdate(
+      {
+        _id: couponId,
+        isActive: true,
+        startDate: { $lte: now },
+        endDate: { $gte: now },
+        organization: organizationId,
+        $expr: {
+          $or: [
+            { $eq: ["$usageLimit", null] },
+            { $lt: ["$usedCount", "$usageLimit"] }
+          ]
+        }
+      },
+      { $inc: { usedCount: 1 } },
+      { new: true }
+    )
+
+    if (!coupon) {
+      return responseHelper.error(res, "Mã giảm giá không còn hợp lệ hoặc đã vượt quá lượt sử dụng", 400)
+    }
+
+    responseHelper.success(res, coupon, "Xác nhận sử dụng mã giảm giá thành công")
   } catch (error) {
     responseHelper.error(res, error.message)
   }

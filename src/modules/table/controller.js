@@ -1,6 +1,5 @@
 import Table from './model.js';
 import responseHelper from "../../helpers/responseHelper.js"
-import paginationHelper from '../../helpers/paginationHelper.js';
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
 export const tablePage = async (req, res) => {
@@ -50,36 +49,30 @@ export const createTable = async (req, res) => {
 // [GET] /api/tables
 export const getTables = async (req, res) => {
   try {
-    const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
-    const { page, limit, status, area  } = req.query; 
-    const { currentPage, perPage, skip } = paginationHelper(page || 1, limit || 100);
+    const organizationId = getCurrentOrg(req);
+    if (!organizationId) {
+      return responseHelper.error(res, "Thiếu thông tin tổ chức", 400);
+    }
 
+    // Lấy các query filter
+    const { status, area } = req.query;
+
+    // Tạo bộ lọc
     const filter = {
-    organization: organizationId
+      organization: organizationId
     };
     if (status) {
-      filter.status = status; 
+      filter.status = status;
     }
     if (area) {
-    filter.area = new RegExp(`^${area}$`, 'i');
+      filter.area = new RegExp(`^${area}$`, 'i'); // không phân biệt hoa thường
     }
 
-    const [tables, totalItems] = await Promise.all([
-      Table.find(filter).skip(skip).limit(perPage).lean(),
-      Table.countDocuments(filter)
-    ]);
-
-    const totalPages = Math.ceil(totalItems / perPage);
+    // Lấy toàn bộ danh sách bàn theo filter (không phân trang)
+    const tables = await Table.find(filter).lean();
 
     responseHelper.success(res, {
-      tables,
-      pagination: {
-        currentPage,
-        perPage,
-        totalItems,
-        totalPages
-      }
+      tables
     });
   } catch (error) {
     responseHelper.error(res, error.message);

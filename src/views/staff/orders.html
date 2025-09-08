@@ -4,16 +4,22 @@
     <div class="staff__content">
       <div>
         <div class="row">
-          <div class="table-order px-0">
-            <button class="btn btn-outline-primary w-100 btn-select-table" id="btnSelectTable">
-              <i class="bi bi-list-ul"></i> XEM DANH SÁCH BÀN ĐANG HOẠT ĐỘNG
-            </button>
-            <div id="tableGrid"></div>
+          <div class="col-12 px-3">
+            <div class="table-order">
+              <button class="btn btn-outline-primary w-100 btn-select-table" id="btnSelectTable">
+                <i class="bi bi-list-ul"></i> XEM DANH SÁCH BÀN ĐANG HOẠT ĐỘNG
+              </button>
+              <div id="tableGrid"></div>
+            </div>
           </div>
+        </div>
+        
+        <div class="row">
           <div class="col-lg-8 mt-3">
             <div id="orderWarning"></div>
             <h3>🍽️ Danh sách thực đơn</h3>
-            <div id="foodMenu" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+            <div id="categoryList" class="mb-4 d-flex gap-2 flex-wrap"></div>
+            <div id="foodMenu" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
               <!-- Món ăn sẽ được render ở đây -->
             </div>
           </div>
