@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       tr.innerHTML = `
         <td class="stt">${index + 1}</td>
-        <td class="name">${item.foodId.name}</td>
+        <td class="name">${item.foodId?.name || item.comboId?.name || "Không rõ"}</td>
         <td class="price">${formatCurrency(item.price)}</td>
         <td class="qty">${item.quantity}</td>
         <td class="total text-end">${formatCurrency(item.price * item.quantity)}</td>
