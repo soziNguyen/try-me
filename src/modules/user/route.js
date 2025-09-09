@@ -4,6 +4,7 @@ import { userPage, logInPage, signUpPage, forgotPasswordPage, resetPasswordPage,
 
 import isAuthenticated from "../../helpers/isAuthenticated.js"
 import { isPermit } from '../../helpers/isPermit.js'
+import { loginLimiter } from '../../helpers/rateLimit.js'
 
 const router = express.Router()
 
@@ -20,7 +21,7 @@ router.post('/api/users/delete',    isAuthenticated, isPermit('Admin', 'Org'), u
 
 router.get('/signup', signUpPage)       // render view
 router.get('/login', logInPage)         // render view
-router.post('/api/users/login', userController.logIn)  // post
+router.post('/api/users/login', loginLimiter, userController.logIn)  // post
 router.post('/api/users/logout', userController.logOut)
 
 router.get('/login/identify', forgotPasswordPage)               // render view

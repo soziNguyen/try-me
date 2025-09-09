@@ -37,8 +37,6 @@ $(function () {
         '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
-      autoWidth: true,
-      scrollX: true,
       order: [],
       ajax: {
         url: '/api/menu/combos',
@@ -127,6 +125,9 @@ $(function () {
             return data
           }
         }
+      ],
+      columnDefs: [
+        { width: "70px", target: 3 }
       ],
       rowCallback: function (row, data) {
         $(row).attr('data-id', data._id)
@@ -434,7 +435,7 @@ $(function () {
     $('#itemTableBody').on('click', '.removeItemRow', function () {
       $(this).closest('tr').remove()
     })
-  } // end initDataTable
+  }
 
   // Hủy/ẩn form
   $('#comboForm').on('click', '#btnCancel', function (e) {

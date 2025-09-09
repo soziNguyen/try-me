@@ -57,6 +57,9 @@ $(function () {
         emptyTable: 'Không có dữ liệu trong bảng'
       },
       pageLength: numRows,
+      columnDefs: [
+        { width: "70px", target: 1 }
+      ],
       columns: [
         {
           data: null,
@@ -73,11 +76,11 @@ $(function () {
             const imgSrc = data || ''
             const hasImage = imgSrc && imgSrc.trim() !== ''
             const containerStyle = hasImage
-              ? 'display: inline-block;'
-              : 'display: inline-block; width: 70px; height: 70px; border: 2px dashed #dee2e6; border-radius: 8px;'
+              ? 'display: block; margin: 0 auto;'
+              : 'display: block; margin: 0 auto; width: 70px; height: 70px;'
             const imgStyle = hasImage
-              ? 'cursor: pointer; width: 70px; height: 70px; object-fit: cover; border-radius: 8px;'
-              : 'cursor: pointer; width: 100%; height: 100%; object-fit: cover; border-radius: 6px; opacity: 0.3;'
+              ? 'display: block; margin: 0 auto; cursor: pointer; width: 70px; height: 70px; object-fit: cover; border-radius: 8px;'
+              : 'cursor: pointer; width: 70px; height: 70px; object-fit: cover; border-radius: 6px; opacity: 0.3;'
             const overlayStyle = hasImage
               ? 'background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s;'
               : 'background: rgba(248,249,250,0.9); border: 1px dashed #6c757d; border-radius: 6px; opacity: 0; transition: opacity 0.3s;'
@@ -346,6 +349,9 @@ $(function () {
               {
                 viewMode: 1,
                 autoCropArea: 1,
+                responsive: true,
+                background: true,
+                center: true
               }
             )
           }, { once: true })
@@ -358,8 +364,14 @@ $(function () {
   // Khi nhấn nút Crop & Save
   $('#cropBtn').on('click', function () {
     if (!cropper) return
-
-    cropper.getCroppedCanvas().toBlob(blob => {
+    const cropData = cropper.getData(true)
+    cropper.getCroppedCanvas({
+      width: Math.floor(cropData.width),
+      height: Math.floor(cropData.height),
+      fillColor: '#fff',
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: 'high'
+    }).toBlob(blob => {
       const formData = new FormData()
       formData.append('file', blob, 'cropped.jpg')
 
@@ -376,7 +388,6 @@ $(function () {
           // Update src ảnh trong table, thêm timestamp để bust cache
           currentImgCell.find('img').attr('src', `${imgUrl}?t=${timestamp}`)
 
-          // Update the container styling to reflect that it now has an image
           updateImageContainerAfterUpload(currentImgCell, imgUrl)
 
           // Cập nhật trường image của bản ghi

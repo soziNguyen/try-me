@@ -299,21 +299,17 @@ export const updateIngredient = async (req, res) => {
     }
 
     let description = ''
-    if (Object.keys(actualChanges).length) {
+    if (ingredient && Object.keys(actualChanges).length) {
       description = `Cập nhật nguyên liệu "${ingredient.name}": ` +
         Object.keys(actualChanges)
           .map(key => {
-            let oldVal = ingredient[key]
-            if (key === 'category' && oldVal) oldVal = oldVal.name
+            let oldVal = ingredient?.[key] ?? ''
+            if (key === 'category' && oldVal) oldVal = oldVal.name || ''
             let newVal = actualChanges[key]
-            if (key === 'category' && newVal) {
-              newVal = updated.category?.name || ''
-            }
+            if (key === 'category' && newVal) newVal = updated.category?.name || ''
             return `${fieldLabels[key] || key}: "${normalizeValue(oldVal)}" → "${normalizeValue(newVal)}"`
           })
           .join(', ')
-    } else {
-      description = `Cập nhật nguyên liệu "${ingredient.name}" nhưng không có thay đổi nào`
     }
 
     await logActivity(

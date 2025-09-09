@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import StockEntry from "./model.js"
+import { StockEntry, units } from "./model.js"
 import IngredientStock from "../../inventory/ingredient-stock/model.js"
 import { Ingredient } from "../../inventory/ingredient/model.js"
 import responseHelper from "../../../helpers/responseHelper.js"
@@ -99,8 +99,20 @@ export const getStockEntries = async (req, res) => {
           code: { $first: "$code" },
           note: { $first: "$note" },
           date: { $first: "$date" },
-          supplier: { $first: "$supplier" },
-          warehouse: { $first: "$warehouse" },
+          supplier: {
+            $first: {
+              _id: "$supplier._id",
+              code: "$supplier.code",
+              name: "$supplier.name"
+            }
+          },
+          warehouse: {
+            $first: {
+              _id: "$warehouse._id",
+              name: "$warehouse.name",
+              location: "$warehouse.location",
+            }
+          },
           createdAt: { $first: "$createdAt" },
           createdBy: { $first: "$createdBy.username" },
           items: { $push: "$items" },
@@ -172,11 +184,11 @@ export const getStockEntryById = async (req, res) => {
     const { id } = req.params
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
-    
+
     if (!mongoose.isValidObjectId(id)) {
       return responseHelper.error(res, 'ID không hợp lệ', 400)
     }
-    
+
     const stockEntry = await StockEntry.findOne({
       _id: id,
       organization: organizationId
@@ -188,12 +200,12 @@ export const getStockEntryById = async (req, res) => {
       .populate('lockedBy', 'name username')
       .populate('items.ingredient', 'name unit')
       .lean()
-    
+
     if (!stockEntry) {
       return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
     }
-    
-    responseHelper.success(res, stockEntry, 'Lấy thông tin phiếu nhập thành công')
+
+    responseHelper.success(res, { stockEntry, units }, 'Lấy thông tin phiếu nhập thành công')
   } catch (err) {
     responseHelper.error(res, err.message)
   }
@@ -213,8 +225,8 @@ export const createStockEntry = async (req, res) => {
         date: date,
         createdBy: req.user._id,
         organization: organizationId
-       })
-       await doc.save({ session })
+      })
+      await doc.save({ session })
       return doc
     })
     responseHelper.success(res, { id: entry._id, code: entry.code }, "Khởi tạo phiếu nhập thành công")
@@ -243,7 +255,7 @@ export const updateStockEntryFromForm = async (req, res) => {
 
       if (!oldEntry) throw new Error('Phiếu nhập không tồn tại')
       if (oldEntry.isLocked) throw new Error('Phiếu nhập đã bị khóa, không thể chỉnh sửa')
-      
+
       // Trừ tồn kho cũ khỏi IngredientStock (sử dụng warehouse từ phiếu nhập)
       if (oldEntry.warehouse) {
         for (const item of oldEntry.items) {
@@ -259,18 +271,20 @@ export const updateStockEntryFromForm = async (req, res) => {
 
       // Lấy dữ liệu mới từ form
       const { supplier, warehouse, note, items: rawItems = [] } = req.body
-      let subTotal  = 0
+      let subTotal = 0
 
       // Chuẩn hóa dữ liệu items và tính tổng tiền
       const items = rawItems.map(item => {
         const quantity = parseFloat(item.quantity) || 0
+        const unit = item.unit || null
         const unitPrice = parseFloat(item.unitPrice) || 0
         const itemTotal = quantity * unitPrice
-        subTotal  += itemTotal
+        subTotal += itemTotal
 
         return {
           ingredient: item.ingredient,
           quantity,
+          unit,
           unitPrice,
           total: itemTotal
         }
@@ -294,10 +308,10 @@ export const updateStockEntryFromForm = async (req, res) => {
 
       // Cập nhật phiếu nhập
       const newEntry = await StockEntry.findOneAndUpdate({
-          _id: id,
-          organization: organizationId
-        }, 
-        updateData, 
+        _id: id,
+        organization: organizationId
+      },
+        updateData,
         { new: true, session }
       )
 
@@ -327,9 +341,9 @@ export const updateStockEntryFromForm = async (req, res) => {
           { $match: { ingredient: new mongoose.Types.ObjectId(ingId), organization: organizationId } },
           { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
         ]).session(session)
-        
+
         const totalStock = totalStockAgg[0]?.totalQuantity || 0
-        
+
         await Ingredient.updateOne(
           { _id: ingId, organization: organizationId },
           { $set: { stock: totalStock } },
@@ -363,13 +377,13 @@ export const deleteStockEntries = async (req, res) => {
         throw new Error("Không có phiếu nào được chọn")
       }
 
-    const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+      const organizationId = getCurrentOrg(req)
+      if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
 
       // Lấy các phiếu nhập
       const entries = await StockEntry.find(
-        { 
-          _id: { $in: ids }, 
+        {
+          _id: { $in: ids },
           organization: organizationId
         })
         .session(session)
@@ -401,7 +415,7 @@ export const deleteStockEntries = async (req, res) => {
 
       // Xóa phiếu
       await StockEntry.deleteMany(
-        { 
+        {
           _id: { $in: ids },
           organization: organizationId
         })
@@ -458,8 +472,8 @@ export const lockStockEntry = async (req, res) => {
     await withTransaction(async (session) => {
       // update lock state
       const updatedEntry = await StockEntry.findOneAndUpdate(
-        { 
-          _id: id, 
+        {
+          _id: id,
           organization: organizationId,
           isLocked: false // chỉ cập nhật nếu chưa khóa
         },
