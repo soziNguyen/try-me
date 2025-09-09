@@ -1,7 +1,23 @@
 export const units = [
-  "kg",
-  "ml", "l", "m³",
-  "cái", "quả", "miếng", "gói", "hộp", "chai", "bình", "thùng",
-  "m", "cm", "mm", "m²",
-  "bao", "két", "tấm", "cuộn", "vỉ"
+  'kg',
+  'ml',
+  'l',
+  'm³',
+  'cái',
+  'quả',
+  'miếng',
+  'gói',
+  'hộp',
+  'chai',
+  'bình',
+  'thùng',
+  'm',
+  'cm',
+  'mm',
+  'm²',
+  'bao',
+  'két',
+  'tấm',
+  'cuộn',
+  'vỉ'
 ]

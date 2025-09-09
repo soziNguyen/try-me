@@ -1,5 +1,5 @@
 import express from 'express'
-import isAuthenticated from "../../helpers/isAuthenticated.js"
+import isAuthenticated from '../../helpers/isAuthenticated.js'
 // import { isPermit } from '../helpers/isPermit.js'
 import { getAttendances, getAttendanceById } from './controller.js'
 

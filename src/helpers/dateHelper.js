@@ -12,7 +12,7 @@ export function toVietnamTime(date, format = 'YYYY-MM-DD HH:mm:ss') {
 
 export function parseShiftStart(today, startTimeStr) {
   // startTimeStr expected "HH:mm" or "HH:mm:ss"
-  const parts = (startTimeStr || '').split(':').map(n => Number(n))
+  const parts = (startTimeStr || '').split(':').map((n) => Number(n))
   const sh = parts[0] || 0
   const sm = parts[1] || 0
   const dt = new Date(today)

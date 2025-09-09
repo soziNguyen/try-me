@@ -8,13 +8,14 @@ export const getStockHistories = async (req, res) => {
     const draw = +req.query.draw || 0
     const start = +req.query.start || 0
     const length = +req.query.length || 10
-    const searchValue = (req.query["search[value]"] || "").trim()
-    const colIdx = req.query["order[0][column]"]
-    const sortField = req.query[`columns[${colIdx}][data]`] || "transactionDate"
-    const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
+    const searchValue = (req.query['search[value]'] || '').trim()
+    const colIdx = req.query['order[0][column]']
+    const sortField = req.query[`columns[${colIdx}][data]`] || 'transactionDate'
+    const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const pipeline = [
       { $match: { organization: organizationId } },
@@ -71,15 +72,20 @@ export const getStockHistories = async (req, res) => {
       pipeline.push({
         $match: {
           $or: [
-            { documentCode: { $regex: searchValue, $options: "i" } },
-            { "items.ingredient.name": { $regex: searchValue, $options: "i" } },
-            { "createdBy.username": { $regex: searchValue, $options: "i" } },
+            { documentCode: { $regex: searchValue, $options: 'i' } },
+            { 'items.ingredient.name': { $regex: searchValue, $options: 'i' } },
+            { 'createdBy.username': { $regex: searchValue, $options: 'i' } },
             {
               $expr: {
                 $regexMatch: {
-                  input: { $dateToString: { format: "%d/%m/%Y", date: "$transactionDate" } },
+                  input: {
+                    $dateToString: {
+                      format: '%d/%m/%Y',
+                      date: '$transactionDate'
+                    }
+                  },
                   regex: searchValue,
-                  options: "i"
+                  options: 'i'
                 }
               }
             },
@@ -87,9 +93,9 @@ export const getStockHistories = async (req, res) => {
             {
               $expr: {
                 $regexMatch: {
-                  input: { $toString: "$totalQuantity" },
+                  input: { $toString: '$totalQuantity' },
                   regex: searchValue,
-                  options: "i"
+                  options: 'i'
                 }
               }
             }
@@ -99,7 +105,7 @@ export const getStockHistories = async (req, res) => {
     }
 
     // Count after filter
-    const countPipeline = [...pipeline, { $count: "count" }]
+    const countPipeline = [...pipeline, { $count: 'count' }]
     const countResult = await StockHistory.aggregate(countPipeline)
     const recordsFiltered = countResult[0]?.count || 0
 
@@ -147,7 +153,9 @@ export const getStockHistories = async (req, res) => {
     })
 
     const data = await StockHistory.aggregate(pipeline)
-    const recordsTotal = await StockHistory.countDocuments({ organization: organizationId })
+    const recordsTotal = await StockHistory.countDocuments({
+      organization: organizationId
+    })
 
     res.json({
       draw,

@@ -1,31 +1,30 @@
 $(function () {
-
   let table
   let categories = []
 
-  Promise.all([
-    fetchData('menu/category/active'),
-  ])
+  Promise.all([fetchData('menu/category/active')])
     .then(([cats]) => {
       categories = cats
       initDataTable()
     })
-    .catch(err => {
+    .catch((err) => {
       toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
     })
 
   // Render dataTable
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#menuTableBody').offset().top - 100) / 70)
+  const numRows = Math.floor(
+    ($(window).height() - $('#menuTableBody').offset().top - 100) / 70
+  )
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
   showList.sort((a, b) => a - b)
 
-
   function initDataTable() {
     table = $('#menuTable').DataTable({
-      dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+      dom:
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -53,9 +52,7 @@ $(function () {
         emptyTable: 'Không có dữ liệu trong bảng'
       },
       pageLength: numRows,
-      columnDefs: [
-        { width: "70px", target: 1 }
-      ],
+      columnDefs: [{ width: '70px', target: 1 }],
       columns: [
         {
           data: null,
@@ -87,7 +84,7 @@ $(function () {
           render: (data, type, row) => {
             if (type === 'display') {
               const selectedCategoryId = data?._id || ''
-              const options = categories.map(cat => {
+              const options = categories.map((cat) => {
                 return `<option value="${cat._id}"${selectedCategoryId === cat._id ? ' selected' : ''}>${cat.name}</option>`
               })
               return `
@@ -190,18 +187,19 @@ $(function () {
           modal.show()
 
           // Khi modal đã hiển thị hết animation, khởi tạo Cropper
-          modalEl.addEventListener('shown.bs.modal', () => {
-            if (cropper) {
-              cropper.destroy()
-            }
-            cropper = new Cropper(
-              document.getElementById('imagePreview'),
-              {
-                viewMode: 1,
-                autoCropArea: 1,
+          modalEl.addEventListener(
+            'shown.bs.modal',
+            () => {
+              if (cropper) {
+                cropper.destroy()
               }
-            )
-          }, { once: true })
+              cropper = new Cropper(document.getElementById('imagePreview'), {
+                viewMode: 1,
+                autoCropArea: 1
+              })
+            },
+            { once: true }
+          )
         }
         reader.readAsDataURL(file)
       })
@@ -212,52 +210,54 @@ $(function () {
   $('#cropBtn').on('click', function () {
     if (!cropper) return
     const cropData = cropper.getData(true)
-    cropper.getCroppedCanvas({
-      width: Math.floor(cropData.width),
-      height: Math.floor(cropData.height),
-      fillColor: '#fff',
-      imageSmoothingEnabled: true,
-      imageSmoothingQuality: 'high'
-    }).toBlob(blob => {
-      const formData = new FormData()
-      formData.append('file', blob, 'cropped.jpg')
-
-      // Upload file đã crop lên server
-      $.ajax({
-        url: '/api/upload',
-        method: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: res => {
-          const imgUrl = '/' + res.file.path.replace(/\\/g, '/')
-          const timestamp = new Date().getTime()
-          // Update src ảnh trong table, thêm timestamp để bust cache
-          currentImgCell.find('img').attr('src', `${imgUrl}?t=${timestamp}`)
-
-          // Cập nhật trường image của bản ghi
-          const row = currentImgCell.closest('tr')
-          const id = row.data('id')
-          if (id) {
-            $.ajax({
-              url: `/api/menu/update/${id}`,
-              method: 'POST',
-              contentType: 'application/json',
-              data: JSON.stringify({ image: imgUrl }),
-              success: () => toastr.success('Cập nhật ảnh thành công'),
-              error: () => toastr.error('Lỗi khi cập nhật ảnh'),
-            })
-          }
-
-          // Đóng modal và destroy cropper
-          bootstrap.Modal.getInstance(
-            document.getElementById('imageCropModal')
-          ).hide()
-          cropper.destroy()
-          cropper = null
-        },
-        error: () => toastr.error('Lỗi upload ảnh'),
+    cropper
+      .getCroppedCanvas({
+        width: Math.floor(cropData.width),
+        height: Math.floor(cropData.height),
+        fillColor: '#fff',
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
       })
-    }, 'image/jpeg')
+      .toBlob((blob) => {
+        const formData = new FormData()
+        formData.append('file', blob, 'cropped.jpg')
+
+        // Upload file đã crop lên server
+        $.ajax({
+          url: '/api/upload',
+          method: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: (res) => {
+            const imgUrl = '/' + res.file.path.replace(/\\/g, '/')
+            const timestamp = new Date().getTime()
+            // Update src ảnh trong table, thêm timestamp để bust cache
+            currentImgCell.find('img').attr('src', `${imgUrl}?t=${timestamp}`)
+
+            // Cập nhật trường image của bản ghi
+            const row = currentImgCell.closest('tr')
+            const id = row.data('id')
+            if (id) {
+              $.ajax({
+                url: `/api/menu/update/${id}`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ image: imgUrl }),
+                success: () => toastr.success('Cập nhật ảnh thành công'),
+                error: () => toastr.error('Lỗi khi cập nhật ảnh')
+              })
+            }
+
+            // Đóng modal và destroy cropper
+            bootstrap.Modal.getInstance(
+              document.getElementById('imageCropModal')
+            ).hide()
+            cropper.destroy()
+            cropper = null
+          },
+          error: () => toastr.error('Lỗi upload ảnh')
+        })
+      }, 'image/jpeg')
   })
 })

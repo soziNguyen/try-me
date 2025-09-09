@@ -1,8 +1,13 @@
-import mongoose from "mongoose"
+import mongoose from 'mongoose'
 
 const Schema = mongoose.Schema
-const ActivityLogSchema = new Schema({
-    organization: { type: Schema.Types.ObjectId, ref: 'Organization', default: null },
+const ActivityLogSchema = new Schema(
+  {
+    organization: {
+      type: Schema.Types.ObjectId,
+      ref: 'Organization',
+      default: null
+    },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     userName: { type: String, default: 'Unknown' },
     action: { type: String, required: true },
@@ -10,10 +15,12 @@ const ActivityLogSchema = new Schema({
     description: { type: String, required: true },
     targetName: { type: String, default: '' },
     status: { type: String, default: 'SUCCESS' }
-}, {
-    collection: "ActivityLogs",
+  },
+  {
+    collection: 'ActivityLogs',
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
-})
+  }
+)
 
 ActivityLogSchema.index({ organization: 1, createdAt: -1 })
 ActivityLogSchema.index({ organization: 1, userId: 1, createdAt: -1 })

@@ -1,7 +1,7 @@
-import multer from "multer"
-import fs from "fs"
-import path from "path"
-import sharp from "sharp"
+import multer from 'multer'
+import fs from 'fs'
+import path from 'path'
+import sharp from 'sharp'
 
 // Cấu hình nén ảnh
 const IMAGE_CONFIG = {
@@ -23,11 +23,14 @@ const IMAGE_CONFIG = {
 // Hàm nén ảnh từ buffer
 const compressImageFromBuffer = async (buffer, outputPath, mimetype) => {
   try {
-    let pipeline = sharp(buffer)
-      .resize(IMAGE_CONFIG.maxWidth, IMAGE_CONFIG.maxHeight, {
+    let pipeline = sharp(buffer).resize(
+      IMAGE_CONFIG.maxWidth,
+      IMAGE_CONFIG.maxHeight,
+      {
         fit: 'inside',
         withoutEnlargement: true
-      })
+      }
+    )
 
     // Áp dụng cấu hình nén theo loại file
     if (mimetype.includes('jpeg') || mimetype.includes('jpg')) {
@@ -39,7 +42,6 @@ const compressImageFromBuffer = async (buffer, outputPath, mimetype) => {
     }
 
     await pipeline.toFile(outputPath)
-
   } catch (error) {
     console.error('Lỗi khi nén ảnh:', error)
     throw error
@@ -52,8 +54,8 @@ const getStorage = () => {
     destination: (req, file, cb) => {
       const now = new Date()
       const year = now.getFullYear()
-      const month = String(now.getMonth() + 1).padStart(2, "0")
-      const uploadPath = path.join("uploads", `${year}`, `${month}`)
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const uploadPath = path.join('uploads', `${year}`, `${month}`)
 
       // Tạo thư mục nếu chưa tồn tại
       fs.mkdirSync(uploadPath, { recursive: true })
@@ -82,7 +84,11 @@ export const processImages = async (req, res, next) => {
   }
 
   try {
-    const files = req.files ? (Array.isArray(req.files) ? req.files : Object.values(req.files).flat()) : [req.file]
+    const files = req.files
+      ? Array.isArray(req.files)
+        ? req.files
+        : Object.values(req.files).flat()
+      : [req.file]
 
     for (const file of files) {
       const isImage = file.mimetype.startsWith('image/')
@@ -91,8 +97,8 @@ export const processImages = async (req, res, next) => {
         // Xử lý ảnh từ memory buffer
         const now = new Date()
         const year = now.getFullYear()
-        const month = String(now.getMonth() + 1).padStart(2, "0")
-        const uploadPath = path.join("uploads", `${year}`, `${month}`)
+        const month = String(now.getMonth() + 1).padStart(2, '0')
+        const uploadPath = path.join('uploads', `${year}`, `${month}`)
 
         // Tạo thư mục nếu chưa tồn tại
         fs.mkdirSync(uploadPath, { recursive: true })

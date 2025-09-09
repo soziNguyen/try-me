@@ -1,4 +1,4 @@
-import SMTP from "../configs/smtp.js"
+import SMTP from '../configs/smtp.js'
 import nodemailer from 'nodemailer'
 
 const mailer = nodemailer.createTransport({
@@ -10,8 +10,6 @@ const mailer = nodemailer.createTransport({
     pass: SMTP.password
   }
 })
-mailer.verify()
-.then(console.log('Mail OK'))
-.catch(console.error)
+mailer.verify().then(console.log('Mail OK')).catch(console.error)
 
 export default mailer

@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
   const toggleBtns = document.querySelectorAll('#toggleSidebar')
   const sidebars = document.querySelectorAll('#admin__sidebar, #staff__sidebar')
   const layoutSelector = '.admin__layout, .staff__layout'
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener('resize', handleResponsiveSidebar)
 
   // Click ngoài để ẩn sidebar trên mobile
-  document.addEventListener("click", (event) => {
+  document.addEventListener('click', (event) => {
     if (!isMobile()) return
 
     sidebars.forEach((sidebar) => {
@@ -54,14 +54,14 @@ document.addEventListener("DOMContentLoaded", () => {
   })
 
   // Log out button
-  const logOutBtn = document.getElementById("logOut")
+  const logOutBtn = document.getElementById('logOut')
   if (logOutBtn) {
-    logOutBtn.addEventListener("click", async () => {
+    logOutBtn.addEventListener('click', async () => {
       try {
-        const result = await ajax("/api/users/logout", {}, "POST")
+        const result = await ajax('/api/users/logout', {}, 'POST')
         if (result) {
-          toastr.success("Đăng xuất thành công")
-          setTimeout(() => (window.location.href = "/login"), 1000)
+          toastr.success('Đăng xuất thành công')
+          setTimeout(() => (window.location.href = '/login'), 1000)
         }
       } catch (error) {
         toastr.error(error.message)
@@ -99,20 +99,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 150)
   }
 
-  const ttSelector = '[id$="__sidebar"].collapsed ul > li a, [id$="__sidebar"].collapsed .accordion-button'
+  const ttSelector =
+    '[id$="__sidebar"].collapsed ul > li a, [id$="__sidebar"].collapsed .accordion-button'
 
-  document.addEventListener('mouseover', e => {
+  document.addEventListener('mouseover', (e) => {
     const el = e.target.closest(ttSelector)
     if (el) showTooltip(el)
   })
-  document.addEventListener('mouseout', e => {
+  document.addEventListener('mouseout', (e) => {
     if (e.target.closest(ttSelector)) hideTooltip()
   })
-  document.addEventListener('focusin', e => {
+  document.addEventListener('focusin', (e) => {
     const el = e.target.closest(ttSelector)
     if (el) showTooltip(el)
   })
-  document.addEventListener('focusout', e => {
+  document.addEventListener('focusout', (e) => {
     if (e.target.closest(ttSelector)) hideTooltip()
   })
   // — tooltip code end —
@@ -127,9 +128,11 @@ document.addEventListener("DOMContentLoaded", () => {
       flyout.style.display = 'none'
       document.body.appendChild(flyout)
 
-      document.addEventListener('click', e => {
-        if (!flyout.contains(e.target) &&
-            !e.target.closest('[id$="__sidebar"].collapsed .accordion-button')) {
+      document.addEventListener('click', (e) => {
+        if (
+          !flyout.contains(e.target) &&
+          !e.target.closest('[id$="__sidebar"].collapsed .accordion-button')
+        ) {
           flyout.style.display = 'none'
         }
       })
@@ -137,11 +140,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return flyout
   }
 
-  document.addEventListener('click', e => {
-    const btn = e.target.closest('[id$="__sidebar"].collapsed .accordion-button')
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest(
+      '[id$="__sidebar"].collapsed .accordion-button'
+    )
     if (!btn) return
 
-    e.preventDefault()  // chặn bootstrap collapse mặc định
+    e.preventDefault() // chặn bootstrap collapse mặc định
 
     const collapseId = btn.getAttribute('aria-controls')
     const body = document.querySelector(`#${collapseId} .accordion-body`)
@@ -149,9 +154,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const f = ensureFlyout()
     f.innerHTML = ''
-    body.querySelectorAll('a').forEach(a => {
+    body.querySelectorAll('a').forEach((a) => {
       const clone = a.cloneNode(true)
-      clone.addEventListener('click', event => {
+      clone.addEventListener('click', (event) => {
         event.preventDefault()
         window.location.href = clone.href
       })
@@ -164,5 +169,4 @@ document.addEventListener("DOMContentLoaded", () => {
     f.style.display = 'block'
   })
   // — flyout code end —
-
 })

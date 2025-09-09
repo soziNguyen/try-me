@@ -5,31 +5,35 @@ $(function () {
   let table
 
   Promise.all([
-    fetchData('inventory/ingredient/all'),// danh sách nguyên liệu
-    fetchData('inventory/warehouse/all')  // danh sách kho
+    fetchData('inventory/ingredient/all'), // danh sách nguyên liệu
+    fetchData('inventory/warehouse/all') // danh sách kho
   ])
-  .then(([ings, whs]) => {
-    ingredients = ings
-    warehouses = whs
-    initDataTable()
-  })
-  .catch(err => {
-    toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
-  })
+    .then(([ings, whs]) => {
+      ingredients = ings
+      warehouses = whs
+      initDataTable()
+    })
+    .catch((err) => {
+      toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
+    })
 
-  function initDataTable () {
+  function initDataTable() {
     let showList = [10, 25, 50, 100]
-    const numRows = Math.floor(($(window).height() - $('#stockEntryTableBody').offset().top - 100) / 45)
+    const numRows = Math.floor(
+      ($(window).height() - $('#stockEntryTableBody').offset().top - 100) / 45
+    )
     if (!showList.includes(numRows)) showList.push(numRows)
     showList.sort((a, b) => a - b)
 
     table = $('#stockEntryTable').DataTable({
-      dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
-             'l' + 'f' +
-           '<"right-group d-flex align-items-center btn-group flex-wrap">' +
-           '>' +
-           'rt' +
-           '<"bottom-bar d-flex justify-content-between mt-3"ip>',
+      dom:
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        'l' +
+        'f' +
+        '<"right-group d-flex align-items-center btn-group flex-wrap">' +
+        '>' +
+        'rt' +
+        '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
       autoWidth: false,
@@ -71,7 +75,11 @@ $(function () {
           className: 'text-center',
           render: (data) => {
             const dt = new Date(data)
-            return dt.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            return dt.toLocaleDateString('vi-VN', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            })
           }
         },
         {
@@ -84,11 +92,11 @@ $(function () {
           data: 'items',
           className: 'text-start px-1',
           title: 'Nguyên liệu',
-          render: items => {
+          render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const names = items.map(it => it.ingredient?.name).filter(Boolean)
+            const names = items.map((it) => it.ingredient?.name).filter(Boolean)
             const uniqueNames = new Set(names)
-            
+
             if (uniqueNames.size === 0) return ''
             const nameLengths = [...uniqueNames]
             const firstThree = nameLengths.slice(0, 3).join(', ')
@@ -102,7 +110,10 @@ $(function () {
           title: 'Số lượng',
           render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const totalQty = items.reduce((acc, cur) => acc + (cur.quantity || 0), 0)
+            const totalQty = items.reduce(
+              (acc, cur) => acc + (cur.quantity || 0),
+              0
+            )
             return totalQty
           }
         },
@@ -110,13 +121,15 @@ $(function () {
           data: 'items',
           title: 'Giá TB (₫)',
           className: 'text-center',
-          render: items => {
+          render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const prices = items.map(it => it.unitPrice || 0)
+            const prices = items.map((it) => it.unitPrice || 0)
             const sum = prices.reduce((s, p) => s + p, 0)
             const avg = sum / prices.length
             // Format theo vi-VN
-            return avg.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫'
+            return (
+              avg.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫'
+            )
           }
         },
         {
@@ -125,7 +138,9 @@ $(function () {
           title: 'Kho nhập',
           render: (data, type, row) => {
             if (type === 'display') {
-              return data ? `${row.warehouse.name} - ${row.warehouse.location}` : ''
+              return data
+                ? `${row.warehouse.name} - ${row.warehouse.location}`
+                : ''
             }
             return row.warehouse?.name || ''
           }
@@ -135,7 +150,7 @@ $(function () {
           title: 'Người tạo',
           className: 'text-center',
           render: (data) => data || ''
-        },      
+        },
         {
           data: 'note',
           title: 'Ghi chú',
@@ -174,11 +189,11 @@ $(function () {
             </button>
           </div>
         `)
-        
+
         // Event handler cho nút "Thêm"
         $('#addStockEntryBtn').on('click', () => {
           createNewRecord('inventory/stock-entry', {}, (data) => {
-              window.location.href = `/inventory/stock-entry/${data.id}?mode=new`
+            window.location.href = `/inventory/stock-entry/${data.id}?mode=new`
           })
         })
 
@@ -187,9 +202,14 @@ $(function () {
           const id = $(this).data('id')
           window.location.href = `/inventory/stock-entry/${id}`
         })
-        
+
         // CHỈ GIỮ LẠI DELETE VÀ CHECKBOX EVENTS
-        handlerDeleteEvent('#stockEntryTable', '#deleteStockEntryBtn', 'stockEntryCheckbox', 'inventory/stock-entry')
+        handlerDeleteEvent(
+          '#stockEntryTable',
+          '#deleteStockEntryBtn',
+          'stockEntryCheckbox',
+          'inventory/stock-entry'
+        )
         initTableCheckboxEvents('#stockEntryTable', 'stockEntryCheckbox')
       }
     })
