@@ -1,8 +1,17 @@
-import express from "express"
-import isAdmin from "../../helpers/isAdmin.js"
-import isAuthenticated from "../../helpers/isAuthenticated.js"
-import { userManagementPage, auditPage } from "../../pages/index.js"
-import { getAllUsers, getUserById, createUser, updateUser, deleteUsers, setOrg, exitOrg, getAllAuditLogs } from "./controller.js"
+import express from 'express'
+import isAdmin from '../../helpers/isAdmin.js'
+import isAuthenticated from '../../helpers/isAuthenticated.js'
+import { userManagementPage, auditPage } from '../../pages/index.js'
+import {
+  getAllUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUsers,
+  setOrg,
+  exitOrg,
+  getAllAuditLogs
+} from './controller.js'
 
 const router = express.Router()
 
@@ -18,6 +27,5 @@ router.put('/api/admin/update/:id', isAuthenticated, isAdmin, updateUser)
 router.post('/api/admin/deletes', isAuthenticated, isAdmin, deleteUsers)
 router.post('/api/admin/set-org', isAuthenticated, isAdmin, setOrg)
 router.post('/api/admin/exit-org', isAuthenticated, isAdmin, exitOrg)
-
 
 export default router

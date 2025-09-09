@@ -1,7 +1,16 @@
 import express from 'express'
-import isAuthenticated from "../../helpers/isAuthenticated.js"
+import isAuthenticated from '../../helpers/isAuthenticated.js'
 // import { isPermit } from '../helpers/isPermit.js'
-import { getActiveCoupons, getCoupons, getCouponById, createCoupon, updateCoupon, deleteCoupons,applyCoupon,confirmCouponUsage } from './controller.js'
+import {
+  getActiveCoupons,
+  getCoupons,
+  getCouponById,
+  createCoupon,
+  updateCoupon,
+  deleteCoupons,
+  applyCoupon,
+  confirmCouponUsage
+} from './controller.js'
 
 const router = express.Router()
 

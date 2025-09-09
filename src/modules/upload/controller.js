@@ -1,4 +1,4 @@
-import upload, { processImages, deleteFile } from "./helper.js"
+import upload, { processImages, deleteFile } from './helper.js'
 
 const uploadFile = (req, res) => {
   try {
@@ -26,7 +26,9 @@ const uploadFile = (req, res) => {
 
     res.json({
       success: true,
-      message: fileInfo.isImage ? 'Upload và nén ảnh thành công' : 'Upload file thành công',
+      message: fileInfo.isImage
+        ? 'Upload và nén ảnh thành công'
+        : 'Upload file thành công',
       file: fileInfo
     })
   } catch (error) {
@@ -48,7 +50,7 @@ const uploadMultipleFiles = (req, res) => {
       })
     }
 
-    const filesInfo = req.files.map(file => ({
+    const filesInfo = req.files.map((file) => ({
       filename: file.filename,
       originalname: file.originalname,
       path: file.path,
@@ -58,7 +60,7 @@ const uploadMultipleFiles = (req, res) => {
       url: `/${file.path.replace(/\\/g, '/')}`
     }))
 
-    const imageCount = filesInfo.filter(f => f.isImage).length
+    const imageCount = filesInfo.filter((f) => f.isImage).length
     const otherCount = filesInfo.length - imageCount
 
     res.json({

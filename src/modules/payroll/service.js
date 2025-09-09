@@ -1,7 +1,13 @@
 import Attendance from '../attendance/model.js'
 import Payroll from './model.js'
 
-export async function generatePayroll(orgId, userId, year, month, hourlyRate = 50000) {
+export async function generatePayroll(
+  orgId,
+  userId,
+  year,
+  month,
+  hourlyRate = 50000
+) {
   const start = new Date(year, month - 1, 1)
   const end = new Date(year, month, 0, 23, 59, 59)
 
@@ -13,7 +19,7 @@ export async function generatePayroll(orgId, userId, year, month, hourlyRate = 5
 
   // Group theo user
   const grouped = {}
-  attendances.forEach(a => {
+  attendances.forEach((a) => {
     const uid = a.user._id.toString()
     if (!grouped[uid]) grouped[uid] = []
     grouped[uid].push(a)
@@ -23,7 +29,7 @@ export async function generatePayroll(orgId, userId, year, month, hourlyRate = 5
   for (const uid in grouped) {
     const userAttendances = grouped[uid]
     let totalMinutes = 0
-    const details = userAttendances.map(a => {
+    const details = userAttendances.map((a) => {
       totalMinutes += a.totalDuration
       return {
         attendance: a._id,

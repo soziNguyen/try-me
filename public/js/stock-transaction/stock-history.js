@@ -3,14 +3,17 @@ $(function () {
 
   function initDataTable() {
     let showList = [10, 25, 50, 100]
-    const numRows = Math.floor(($(window).height() - $('#stockHistoryTableBody').offset().top - 100) / 45)
+    const numRows = Math.floor(
+      ($(window).height() - $('#stockHistoryTableBody').offset().top - 100) / 45
+    )
     if (!showList.includes(numRows)) showList.push(numRows)
     showList.sort((a, b) => a - b)
 
     table = $('#stockHistoryTable').DataTable({
-      dom: '<"top-bar d-flex justify-content-between mb-3"l f>' +
-           'rt' +
-           '<"bottom-bar d-flex justify-content-between mt-3"ip>',
+      dom:
+        '<"top-bar d-flex justify-content-between mb-3"l f>' +
+        'rt' +
+        '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
       autoWidth: false,
@@ -37,7 +40,6 @@ $(function () {
           className: 'text-center',
           data: 'documentCode',
           render: (data) => data ?? ''
-          
         },
         {
           title: 'Loại phiếu',
@@ -58,7 +60,11 @@ $(function () {
           data: 'transactionDate',
           render: (data) => {
             const d = new Date(data)
-            return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            return d.toLocaleDateString('vi-VN', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            })
           }
         },
         {
@@ -69,8 +75,8 @@ $(function () {
             if (!items || !Array.isArray(items) || items.length === 0) {
               return '-'
             }
-          
-            const ingredientNames = items.map(item => {
+
+            const ingredientNames = items.map((item) => {
               let name = 'N/A'
               if (typeof item.ingredient === 'object' && item.ingredient.name) {
                 name = item.ingredient.name
@@ -79,19 +85,18 @@ $(function () {
               }
               return `${name} (${item.quantity || 0})`
             })
-          
+
             const tooltip = ingredientNames.join('\n')
-          
+
             if (ingredientNames.length > 2) {
               const first2 = ingredientNames.slice(0, 2).join('<br>')
               const remaining = ingredientNames.length - 2
               const display = `${first2}<br><small class="text-muted">và ${remaining} khác</small>`
               return `<span title="${tooltip}">${display}</span>`
             }
-          
+
             return `<span title="${tooltip}">${ingredientNames.join('<br>')}</span>`
           }
-          
         },
         {
           title: 'Tổng Số Lượng',
@@ -103,7 +108,7 @@ $(function () {
           title: 'Người tạo',
           className: 'text-center',
           data: 'createdBy',
-          render: data => data?.username ?? ''
+          render: (data) => data?.username ?? ''
         },
         {
           data: null,
@@ -142,7 +147,7 @@ $(function () {
               break
             case 'TRANSFER':
               url = `/inventory/stock-transfer/${id}?from=history`
-            break
+              break
             default:
               url = `/inventory/stock-entry/${id}?from=history`
           }

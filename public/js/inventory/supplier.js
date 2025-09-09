@@ -1,20 +1,31 @@
 $(function () {
-  const editableFields = ['code','name','phone','email','country','address','taxId'];
+  const editableFields = [
+    'code',
+    'name',
+    'phone',
+    'email',
+    'country',
+    'address',
+    'taxId'
+  ]
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#supplierTableBody').offset().top - 100) / 45)
+  const numRows = Math.floor(
+    ($(window).height() - $('#supplierTableBody').offset().top - 100) / 45
+  )
   if (!showList.includes(numRows)) {
-      showList.push(numRows)
+    showList.push(numRows)
   }
   showList.sort((a, b) => a - b)
-  
+
   const table = $('#supplierTable').DataTable({
-    dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
-    'l' +
-    'f' +
-    '<"right-group d-flex align-items-center btn-group flex-wrap">' +
-    '>' +
-    'rt' +
-    '<"bottom-bar d-flex justify-content-between mt-3"ip>',
+    dom:
+      '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+      'l' +
+      'f' +
+      '<"right-group d-flex align-items-center btn-group flex-wrap">' +
+      '>' +
+      'rt' +
+      '<"bottom-bar d-flex justify-content-between mt-3"ip>',
     serverSide: true,
     processing: true,
     autoWidth: false,
@@ -41,9 +52,10 @@ $(function () {
         data: null,
         orderable: false,
         className: 'text-center',
-        render: (data, type, row) => `<input type="checkbox" class="supplierCheckbox" data-id="${row._id}">`
+        render: (data, type, row) =>
+          `<input type="checkbox" class="supplierCheckbox" data-id="${row._id}">`
       },
-      ...editableFields.map(field => ({
+      ...editableFields.map((field) => ({
         data: field,
         render: inputRenderer(field)
       })),
@@ -67,7 +79,7 @@ $(function () {
         }
       }
     ],
-    rowCallback: function(row, data) {
+    rowCallback: function (row, data) {
       // Tag row with data-id for update
       $(row).attr('data-id', data._id)
     },
@@ -89,10 +101,15 @@ $(function () {
     }
   })
 
-  //====================================================================================  
+  //====================================================================================
   // EVENT HANDLER
   handlerAddEvent('#supplierTable', '#addSupplierBtn', 'inventory/supplier')
-  handlerDeleteEvent('#supplierTable', '#deleteSupplierBtn', 'supplierCheckbox', 'inventory/supplier')
+  handlerDeleteEvent(
+    '#supplierTable',
+    '#deleteSupplierBtn',
+    'supplierCheckbox',
+    'inventory/supplier'
+  )
   handlerUpdateEvent('#supplierTable', 'inventory/supplier')
   initTableCheckboxEvents('#supplierTable', 'supplierCheckbox')
 })

@@ -8,8 +8,8 @@ toastr.options = {
 async function ajax(url, data = {}, method = 'POST') {
   const options = {
     method: method,
-    headers: { "Content-Type": "application/json" },
-    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include'
   }
   if (method == 'POST' || method == 'PUT') {
     options.body = JSON.stringify(data)
@@ -27,7 +27,7 @@ async function ajax(url, data = {}, method = 'POST') {
   return result.data
 }
 
-// format date 
+// format date
 function formatDate(dateString) {
   const date = dateString ? new Date(dateString) : new Date()
 
@@ -59,7 +59,11 @@ function formatToInternational(phone) {
 
 // remove accents
 function removeAccents(str) {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D")
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
 }
 
 // debounce
@@ -85,7 +89,8 @@ function renderPagination(pagination, searchParam = '') {
 
   const li = (page, label, active = false, disabled = false) => {
     const classes = ['page-item', active && 'active', disabled && 'disabled']
-      .filter(Boolean).join(' ')
+      .filter(Boolean)
+      .join(' ')
     const href = disabled
       ? 'javascript:void(0)'
       : `?page=${page}&limit=${perPage}${searchParam}`
@@ -96,7 +101,9 @@ function renderPagination(pagination, searchParam = '') {
   items.push(li(1, '1', currentPage === 1))
 
   if (currentPage > 4) {
-    items.push(`<li class="page-item disabled"><span class="page-link">...</span></li>`)
+    items.push(
+      `<li class="page-item disabled"><span class="page-link">...</span></li>`
+    )
   }
 
   const start = Math.max(2, currentPage - 2)
@@ -106,7 +113,9 @@ function renderPagination(pagination, searchParam = '') {
   }
 
   if (currentPage < totalPages - 3) {
-    items.push(`<li class="page-item disabled"><span class="page-link">...</span></li>`)
+    items.push(
+      `<li class="page-item disabled"><span class="page-link">...</span></li>`
+    )
   }
 
   if (totalPages > 1) {
@@ -136,13 +145,13 @@ function paginationHandle(callback) {
 
 function clearForm(type) {
   if (type === 'new') {
-    (['username', 'email', 'password', 'confirm-password']).forEach(id => {
+    ;['username', 'email', 'password', 'confirm-password'].forEach((id) => {
       const el = document.getElementById(id)
       if (el) el.value = ''
     })
   }
   if (type === 'update') {
-    (['new-password', 'new-confirm-password']).forEach(id => {
+    ;['new-password', 'new-confirm-password'].forEach((id) => {
       const el = document.getElementById(id)
       if (el) el.value = ''
     })
@@ -173,42 +182,42 @@ function isValidPassword(input, confirm = null) {
 // validate loginField (username, email)
 function isValidUserAccountName(username, email) {
   if (!username || !email) {
-    return "Username and Email are required."
+    return 'Username and Email are required.'
   }
   if (!/^[a-zA-Z0-9_]{3,15}$/.test(username)) {
-    return "Username must be 3-15 characters long and contain only letters, numbers, and underscores."
+    return 'Username must be 3-15 characters long and contain only letters, numbers, and underscores.'
   }
   if (!/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-    return "Invalid email format."
+    return 'Invalid email format.'
   }
   return null
 }
 // function check input
 function validateUserInput(username, email, password, confirmPassword) {
   if (!username || !email || !password || !confirmPassword) {
-    return "All fields are required."
+    return 'All fields are required.'
   }
   if (!/^[a-zA-Z0-9_]{3,15}$/.test(username)) {
-    return "Username must be 3-15 characters long and contain only letters, numbers, and underscores."
+    return 'Username must be 3-15 characters long and contain only letters, numbers, and underscores.'
   }
   if (!/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-    return "Invalid email format."
+    return 'Invalid email format.'
   }
   if (!isValidPassword(password)) {
-    return "Password must be at least 8 characters long and include an uppercase letter, a number, and a special character."
+    return 'Password must be at least 8 characters long and include an uppercase letter, a number, and a special character.'
   }
   if (!isValidPassword(password, confirmPassword)) {
-    return "Passwords do not match."
+    return 'Passwords do not match.'
   }
   return null
 }
 
 function getFormData() {
   return {
-    username: document.getElementById("username").value.trim(),
-    email: document.getElementById("email").value.trim(),
-    password: document.getElementById("password").value.trim(),
-    confirmPassword: document.getElementById("confirm-password").value.trim()
+    username: document.getElementById('username').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    password: document.getElementById('password').value.trim(),
+    confirmPassword: document.getElementById('confirm-password').value.trim()
   }
 }
 
@@ -237,7 +246,10 @@ function initSelect2($select, placeholder = '— Chọn mục —') {
 
   const $form = $select.closest('form')
   if ($form.length) {
-    $select.next('.select2-container').find('.select2-selection').addClass('form-control');
+    $select
+      .next('.select2-container')
+      .find('.select2-selection')
+      .addClass('form-control')
   }
 }
 
@@ -247,9 +259,9 @@ $('#btn-print').on('click', function () {
 
 function loadOrganizations($select, selectedId = '') {
   return fetchData('organizations')
-    .then(organizations => {
+    .then((organizations) => {
       $select.empty().append(new Option('— Chọn tổ chức —', ''))
-      organizations.forEach(org => {
+      organizations.forEach((org) => {
         $select.append(new Option(org.name, org._id))
       })
       if (selectedId) {
@@ -262,21 +274,23 @@ function loadOrganizations($select, selectedId = '') {
     })
 }
 
-document.querySelectorAll("textarea").forEach(textarea => {
-  textarea.style.height = "auto"; // reset trước
-  textarea.style.height = textarea.scrollHeight + "px";
+document.querySelectorAll('textarea').forEach((textarea) => {
+  textarea.style.height = 'auto' // reset trước
+  textarea.style.height = textarea.scrollHeight + 'px'
 
-  textarea.addEventListener("input", () => {
-    textarea.style.height = "auto"; // reset trước khi tính lại
-    textarea.style.height = textarea.scrollHeight + "px";
-  });
-});
+  textarea.addEventListener('input', () => {
+    textarea.style.height = 'auto' // reset trước khi tính lại
+    textarea.style.height = textarea.scrollHeight + 'px'
+  })
+})
 
 function setCheckbox(tableSelector, checkboxClass) {
   const table = document.querySelector(tableSelector)
   if (!table) return
 
-  const selectAll = table.querySelector('thead th:first-child input[type=checkbox]')
+  const selectAll = table.querySelector(
+    'thead th:first-child input[type=checkbox]'
+  )
 
   // Click vào tr để toggle checkbox
   table.querySelector('tbody').addEventListener('click', (e) => {
@@ -285,7 +299,8 @@ function setCheckbox(tableSelector, checkboxClass) {
       target.matches(
         'input[type=checkbox], img, input[type=text], input[type=number], button, span, .dataInput, i, td:nth-child(n+2)'
       )
-    ) return
+    )
+      return
 
     const row = target.closest('tr')
     if (!row) return
