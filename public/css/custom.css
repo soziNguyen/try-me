@@ -114,28 +114,29 @@ table tbody td .form-select-sm {
   padding: 0 !important;
 }
 .select2-container--default .select2-results__options {
-  background-color: #fff;
+  background-color: var(--white);
   list-style: none;
   padding-left: 0px;
   margin: 0;
   max-height: 200px;
   overflow-y: auto;
+  border: 1px solid var(--success);
 }
 .select2-container--default .select2-results__options .select2-results__option {
   padding-left: 4px;
 }
 .select2-container--default .select2-results__options .select2-results__option:hover {
   background-color: var(--link) !important;
-  color: #fff;
+  color: var(--white);
   cursor: pointer;
 }
 .select2-container--default .select2-results__options .select2-results__option--highlighted {
   background-color: var(--link) !important;
-  color: #fff;
+  color: var(--white);
 }
 .select2-container--default .select2-results__options .select2-results__option--selected {
   background-color: var(--link) !important;
-  color: #fff;
+  color: var(--white);
 }
 
 .select2-dropdown {
@@ -148,7 +149,7 @@ table tbody td .form-select-sm {
 }
 
 .ms-5 .select2-container--default {
-  border-bottom: 1px solid #ff0000;
+  border-bottom: 1px solid var(--danger);
 }
 
 #imageCropModal .modal-dialog {

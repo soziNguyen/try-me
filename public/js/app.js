@@ -20,10 +20,10 @@ async function ajax(url, data = {}, method = 'POST') {
   const response = await fetch(url, options)
   const result = await response.json()
   if (!response.ok) {
-      toastr.remove()
-      toastr.error(result.message)
-      return false
-  } 
+    toastr.remove()
+    toastr.error(result.message)
+    return false
+  }
   return result.data
 }
 
@@ -34,7 +34,7 @@ function formatDate(dateString) {
   if (isNaN(date.getTime())) return ''
 
   const dd = String(date.getDate()).padStart(2, '0')
-  const mm = String(date.getMonth() + 1).padStart(2, '0') 
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
   const yyyy = date.getFullYear()
 
   return `${dd}/${mm}/${yyyy}`
@@ -85,7 +85,7 @@ function renderPagination(pagination, searchParam = '') {
 
   const li = (page, label, active = false, disabled = false) => {
     const classes = ['page-item', active && 'active', disabled && 'disabled']
-                    .filter(Boolean).join(' ')
+      .filter(Boolean).join(' ')
     const href = disabled
       ? 'javascript:void(0)'
       : `?page=${page}&limit=${perPage}${searchParam}`
@@ -126,9 +126,9 @@ function paginationHandle(callback) {
 
     // Lấy page từ href, ví dụ href="?page=3&limit=10"
     const params = new URLSearchParams(a.getAttribute('href'))
-    const page   = parseInt(params.get('page'), 10) || 1
-    const limit  = parseInt(params.get('limit'), 10) || 10
-    const s      = params.get('s') ? `&s=${encodeURIComponent(params.get('s'))}` : ''
+    const page = parseInt(params.get('page'), 10) || 1
+    const limit = parseInt(params.get('limit'), 10) || 10
+    const s = params.get('s') ? `&s=${encodeURIComponent(params.get('s'))}` : ''
 
     callback(page, limit, s)
   })
@@ -157,58 +157,58 @@ function isValidObjectId(id) {
 // validate password
 function isValidPassword(input, confirm = null) {
   if (
-      input.length < 8 ||
-      !/[A-Z]/.test(input) ||
-      !/\d/.test(input) ||
-      !/[!@#$%^&*(),.?":{}|<>]/.test(input)
+    input.length < 8 ||
+    !/[A-Z]/.test(input) ||
+    !/\d/.test(input) ||
+    !/[!@#$%^&*(),.?":{}|<>]/.test(input)
   ) {
-      return false
+    return false
   }
   if (confirm && confirm !== input) {
-      return false
+    return false
   }
   return true
 }
 
 // validate loginField (username, email)
-function isValidUserAccountName(username, email){
+function isValidUserAccountName(username, email) {
   if (!username || !email) {
-      return "Username and Email are required."
+    return "Username and Email are required."
   }
   if (!/^[a-zA-Z0-9_]{3,15}$/.test(username)) {
-      return "Username must be 3-15 characters long and contain only letters, numbers, and underscores."
+    return "Username must be 3-15 characters long and contain only letters, numbers, and underscores."
   }
   if (!/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-      return "Invalid email format."
+    return "Invalid email format."
   }
   return null
 }
 // function check input
 function validateUserInput(username, email, password, confirmPassword) {
   if (!username || !email || !password || !confirmPassword) {
-      return "All fields are required."
+    return "All fields are required."
   }
   if (!/^[a-zA-Z0-9_]{3,15}$/.test(username)) {
-      return "Username must be 3-15 characters long and contain only letters, numbers, and underscores."
+    return "Username must be 3-15 characters long and contain only letters, numbers, and underscores."
   }
   if (!/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-      return "Invalid email format."
+    return "Invalid email format."
   }
   if (!isValidPassword(password)) {
-      return "Password must be at least 8 characters long and include an uppercase letter, a number, and a special character."
+    return "Password must be at least 8 characters long and include an uppercase letter, a number, and a special character."
   }
   if (!isValidPassword(password, confirmPassword)) {
-      return "Passwords do not match."
+    return "Passwords do not match."
   }
   return null
 }
 
 function getFormData() {
   return {
-      username: document.getElementById("username").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      password: document.getElementById("password").value.trim(),
-      confirmPassword: document.getElementById("confirm-password").value.trim()
+    username: document.getElementById("username").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    password: document.getElementById("password").value.trim(),
+    confirmPassword: document.getElementById("confirm-password").value.trim()
   }
 }
 
@@ -234,14 +234,14 @@ function initSelect2($select, placeholder = '— Chọn mục —') {
     dropdownCssClass: 'no-bullet',
     dropdownParent: parentElement
   })
-  
+
   const $form = $select.closest('form')
   if ($form.length) {
     $select.next('.select2-container').find('.select2-selection').addClass('form-control');
   }
 }
 
-$('#btn-print').on('click', function() {
+$('#btn-print').on('click', function () {
   window.print()
 })
 

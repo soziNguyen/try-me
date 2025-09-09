@@ -90,7 +90,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(lusca({ 
+app.use(lusca({
   // csrf: true,  // CSRF protection
   xframe: 'SAMEORIGIN',
   xssProtection: true
@@ -98,12 +98,12 @@ app.use(lusca({
 
 // Custom Middleware
 app.use((req, res, next) => {
-  res.locals.currentPath = req.path; 
+  res.locals.currentPath = req.path;
   next();
 });
 
 // Uploads Static
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Register routes
 app.use('/', router);

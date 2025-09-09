@@ -28,11 +28,11 @@ $(function () {
       suppliers = sups || []
       ingredients = ings || []
       warehouses = whs || []
+      units = stockEntryRes?.units || []
 
       initForm()
       if (stockEntryRes) {
         stockEntry = stockEntryRes.stockEntry
-        units = stockEntryRes.units || []
         populateForm(stockEntry)
       } else {
         const currentUserName = "<%= currentUserName %>"
@@ -55,7 +55,7 @@ $(function () {
     })
 
     $('.select2-units').each(function () {
-      initSelect2($(this), '— Chọn đơn vị —')
+      initSelect2($(this), '— Chọn —')
     })
 
     // Populate suppliers dropdown
@@ -149,16 +149,12 @@ $(function () {
 
     const $unitSelect = $(`select[name="items[${rowIndex}][unit]"]`)
     if ($unitSelect.length) {
-      const unitOptions = (units || [])
-        .map((u) => {
-          if (!u) return ''
-          if (typeof u === 'string') return `<option value="${u}">${u}</option>`
-          return `<option value="${u._id}">${u.name}</option>`
-        })
+      const unitOptions = units
+        .map((u) => `<option value="${u}">${u}</option>`)
         .join('')
 
       $unitSelect.empty().html(
-        '<option value="" class="text-center">— Chọn đơn vị —</option>' + unitOptions
+        '<option value="" class="text-center">— Chọn —</option>' + unitOptions
       )
     }
   }
@@ -177,7 +173,7 @@ $(function () {
       </td>
       <td>
         <select class="select2-units" name="items[${currentIndex}][unit]">
-          <option value="" class="text-center">— Chọn đơn vị —</option>
+          <option value="" class="text-center">— Chọn —</option>
         </select>
       </td>
       <td>
@@ -202,7 +198,7 @@ $(function () {
     initSelect2($newSelect, '— Chọn nguyên liệu —')
 
     const $unitSelect = $(`select[name="items[${currentIndex}][unit]"]`)
-    initSelect2($unitSelect, '— Chọn đơn vị —')
+    initSelect2($unitSelect, '— Chọn —')
 
     itemCounter++
   }
@@ -264,7 +260,7 @@ $(function () {
           </td>
           <td>
             <select class="select2-units" name="items[${index}][unit]">
-              <option value="" class="text-center">— Chọn đơn vị —</option>
+              <option value="" class="text-center">— Chọn —</option>
             </select>
           </td>
           <td>
@@ -293,7 +289,7 @@ $(function () {
         const $unit = $(`select[name="items[${index}][unit]"]`)
         const unitVal = item.unit?._id || item.unit || ""
         $unit.val(unitVal).trigger('change')
-        initSelect2($unit, '— Chọn đơn vị —')
+        initSelect2($unit, '— Chọn —')
       })
 
       itemCounter = stockEntry.items.length

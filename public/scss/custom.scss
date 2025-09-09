@@ -145,29 +145,30 @@ table {
   }
 
   .select2-results__options {
-    background-color: #fff;
+    background-color: var(--white);
     list-style: none;
     padding-left: 0px;
     margin: 0;
     max-height: 200px;
     overflow-y: auto;
+    border: 1px solid var(--success);
 
     .select2-results__option {
       padding-left: 4px;
       &:hover {
         background-color: var(--link) !important;
-        color: #fff;
+        color: var(--white);
         cursor: pointer;
       }
 
       &--highlighted {
         background-color: var(--link) !important;
-        color: #fff;
+        color: var(--white);
       }
 
       &--selected {
         background-color: var(--link) !important;
-        color: #fff;
+        color: var(--white);
       }
     }
   }
@@ -184,7 +185,7 @@ table {
 
 .ms-5 {
   .select2-container--default {
-    border-bottom: 1px solid #ff0000;
+    border-bottom: 1px solid var(--danger);
   }
 }
 

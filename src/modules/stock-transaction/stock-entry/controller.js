@@ -106,12 +106,13 @@ export const getStockEntries = async (req, res) => {
               name: "$supplier.name"
             }
           },
-          warehouse: { 
+          warehouse: {
             $first: {
               _id: "$warehouse._id",
               name: "$warehouse.name",
               location: "$warehouse.location",
-            } },
+            }
+          },
           createdAt: { $first: "$createdAt" },
           createdBy: { $first: "$createdBy.username" },
           items: { $push: "$items" },

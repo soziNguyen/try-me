@@ -11,7 +11,20 @@
   --link: #0d6efd;
   --tooltip-bg: rgba(0,0,0,0.8);
   --accent-bg: rgba(13,110,253,0.04);
+  
+  /* Theme colors */
+  --primary: #0d6efd;
+  --secondary: #6c757d;
+  --success: #198754;
+  --danger: #dc3545;
+  --warning: #ffc107;
+  --info: #0dcaf0;
+  --light: #f8f9fa;
+  --dark: #212529;
+  --white: #fff;
+  --black: rgba(0, 0, 0, 0.8);
 }
+
 
 /* Dark theme overrides */
 html[data-theme="dark"] {
@@ -240,8 +253,8 @@ body {
 /* Tooltip */
 .sidebar-tooltip {
   position: fixed;
-  background: rgba(0, 0, 0, 0.8);
-  color: #fff;
+  background: var(--black);
+  color: var(--white);
   padding: 6px 10px;
   border-radius: 4px;
   font-size: 0.85rem;
@@ -258,7 +271,7 @@ body {
     left: -6px;
     transform: translateY(-50%);
     border: 6px solid transparent;
-    border-right-color: rgba(0, 0, 0, 0.8);
+    border-right-color: var(--black);
   }
 }
 
