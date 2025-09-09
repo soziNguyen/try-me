@@ -1,6 +1,7 @@
 import Order from './model.js';
 import Table from '../table/model.js';
 import { MenuItem } from '../menu/menu-item/model.js';
+import { Combo } from '../menu/combo/model.js';
 import responseHelper from '../../helpers/responseHelper.js';
 import { getCurrentOrg } from '../../helpers/orgHelper.js';
 
@@ -75,7 +76,9 @@ export const getOrderById = async (req, res) => {
     const { orderId } = req.params;
     const order = await Order.findById(orderId)
       .populate('tableId', 'name area')
-      .populate('items.foodId', 'name price');
+      .populate('items.foodId', 'name price')
+      .populate('items.comboId', 'name price')
+      .lean(); 
 
     if (!order) return res.status(404).json({ message: 'Order không tồn tại' });
 
@@ -88,36 +91,60 @@ export const getOrderById = async (req, res) => {
 export const addItemToOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { foodId, quantity } = req.body;
+    const { foodId, comboId, quantity } = req.body;
 
-    if (!foodId || !quantity || quantity <= 0) {
-      return responseHelper.error(res, 'Thông tin món ăn không hợp lệ', 400);
+    if ((!foodId && !comboId) || !quantity || quantity <= 0) {
+      return responseHelper.error(res, 'Thông tin món/combo không hợp lệ', 400);
     }
 
     const order = await Order.findById(orderId);
     if (!order) return responseHelper.error(res, 'Order không tồn tại', 404);
     if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400);
 
-    const menuItem = await MenuItem.findById(foodId);
-    if (!menuItem) return responseHelper.error(res, 'Món ăn không tồn tại', 404);
+    // 👉 Nếu là combo
+    if (comboId) {
+      const combo = await Combo.findById(comboId);
+      if (!combo) return responseHelper.error(res, 'Combo không tồn tại', 404);
 
-    const existingItem = order.items.find(item => item.foodId.toString() === foodId);
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
-      order.items.push({
-        foodId,
-        quantity,
-        price: menuItem.price,
-      });
+      const existingCombo = order.items.find(item => item.comboId?.toString() === comboId);
+      if (existingCombo) {
+        existingCombo.quantity += quantity;
+      } else {
+        order.items.push({
+          comboId,
+          quantity,
+          price: combo.price,
+        });
+      }
+    }
+
+    // 👉 Nếu là món ăn
+    if (foodId) {
+      const menuItem = await MenuItem.findById(foodId);
+      if (!menuItem) return responseHelper.error(res, 'Món ăn không tồn tại', 404);
+
+      const existingItem = order.items.find(item => item.foodId?.toString() === foodId);
+      if (existingItem) {
+        existingItem.quantity += quantity;
+      } else {
+        order.items.push({
+          foodId,
+          quantity,
+          price: menuItem.price,
+        });
+      }
     }
 
     await order.save();
-    await order.populate('items.foodId', 'name price');
 
-    responseHelper.success(res, order);
+  const populatedOrder = await Order.findById(orderId)
+  .populate('items.foodId', 'name price')
+  .populate('items.comboId', 'name price')
+  .lean(); 
+
+  responseHelper.success(res, populatedOrder)
   } catch (error) {
-    console.error('Lỗi khi thêm món:', error); 
+    console.error('Lỗi khi thêm món/combo:', error); 
     responseHelper.error(res, 'Lỗi server nội bộ', 500);
   }
 };
@@ -125,24 +152,36 @@ export const addItemToOrder = async (req, res) => {
 export const updateItemQuantity = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { foodId, quantity } = req.body;
+    const { itemId, quantity, type } = req.body;
 
-    if (!foodId || !quantity || quantity <= 0) {
+    if (!itemId || !quantity || quantity <= 0) {
       return responseHelper.error(res, 'Thông tin không hợp lệ', 400);
+    }
+
+    if (!['food', 'combo'].includes(type)) {
+      return responseHelper.error(res, 'Loại item không hợp lệ', 400);
     }
 
     const order = await Order.findById(orderId);
     if (!order) return responseHelper.error(res, 'Order không tồn tại', 404);
     if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400);
 
-    const item = order.items.find(item => item.foodId.toString() === foodId);
-    if (!item) return responseHelper.error(res, 'Món ăn không có trong order', 404);
+    const item = order.items.find(item => {
+      if (type === 'food') return item.foodId?.toString() === itemId;
+      if (type === 'combo') return item.comboId?.toString() === itemId;
+    });
+
+    if (!item) return responseHelper.error(res, `${type === 'food' ? 'Món ăn' : 'Combo'} không có trong order`, 404);
 
     item.quantity = quantity;
     await order.save();
-    await order.populate('items.foodId', 'name price');
 
-    responseHelper.success(res, order);
+    const populatedOrder = await Order.findById(orderId)
+      .populate('items.foodId', 'name price')
+      .populate('items.comboId', 'name price')
+      .lean();
+
+    responseHelper.success(res, populatedOrder);
   } catch (error) {
     console.error('Lỗi khi cập nhật số lượng:', error);
     responseHelper.error(res, 'Lỗi server nội bộ', 500);
@@ -151,22 +190,38 @@ export const updateItemQuantity = async (req, res) => {
 
 export const removeItemFromOrder = async (req, res) => {
   try {
-    const { orderId, foodId } = req.params;
+    const { orderId, itemId } = req.params;
+    const { type } = req.query;
+
+    if (!['food', 'combo'].includes(type)) {
+      return responseHelper.error(res, 'Loại item không hợp lệ', 400);
+    }
 
     const order = await Order.findById(orderId);
     if (!order) return responseHelper.error(res, 'Order không tồn tại', 404);
     if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400);
 
-    const itemIndex = order.items.findIndex(i => i.foodId.toString() === foodId);
-    if (itemIndex === -1) return responseHelper.error(res, 'Món ăn không tồn tại trong order', 404);
+    // Tìm item cần xoá
+    const itemIndex = order.items.findIndex(item => {
+      if (type === 'food') return item.foodId?.toString() === itemId;
+      if (type === 'combo') return item.comboId?.toString() === itemId;
+    });
 
-    order.items.splice(itemIndex, 1); 
+    if (itemIndex === -1) {
+      return responseHelper.error(res, 'Món/combo không tồn tại trong order', 404);
+    }
+
+    order.items.splice(itemIndex, 1);
     await order.save();
-    await order.populate('items.foodId', 'name price');
 
-    responseHelper.success(res, order);
+    const populatedOrder = await Order.findById(orderId)
+      .populate('items.foodId', 'name price')
+      .populate('items.comboId', 'name price')
+      .lean();
+
+    responseHelper.success(res, populatedOrder);
   } catch (error) {
-    console.error('Lỗi khi xóa món:', error);
+    console.error('Lỗi khi xóa item:', error);
     responseHelper.error(res, 'Lỗi server nội bộ', 500);
   }
 };

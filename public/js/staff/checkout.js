@@ -33,6 +33,14 @@ document.addEventListener('click', (e) => {
   if (e.target.id === 'cancelCheckoutDetail') {
     document.getElementById('checkoutDetail').style.display = 'none';
   }
+
+  const paymentBtn = e.target.closest('#paymentMethod button');
+  if (paymentBtn) {
+    document.querySelectorAll('#paymentMethod button').forEach(b => b.classList.remove('active'));
+    paymentBtn.classList.add('active');
+    document.getElementById('paymentMethodValue').value = paymentBtn.getAttribute('data-value');
+    return;
+  }
 });
 
 
@@ -320,10 +328,10 @@ document.getElementById('confirmCheckoutBtn').addEventListener('click', async ()
   const discountInput = document.getElementById('discountInput');
   const serviceChargeInput = document.getElementById('serviceChargeInput');
   const vatInput = document.getElementById('vatInput');
-  const paymentMethodEl = document.getElementById('paymentMethod');
+  const paymentMethodValueEl = document.getElementById('paymentMethodValue');
   const customerPaidInput = document.getElementById('customerPaidInput');
 
-  if (!discountInput || !serviceChargeInput || !vatInput || !paymentMethodEl || !customerPaidInput) {
+  if (!discountInput || !serviceChargeInput || !vatInput || !paymentMethodValueEl || !customerPaidInput) {
     toastr.error('Thiếu dữ liệu thanh toán!');
     return;
   }
@@ -331,7 +339,7 @@ document.getElementById('confirmCheckoutBtn').addEventListener('click', async ()
   const discount = parseCurrency(discountInput.value);
   const serviceCharge = parseCurrency(serviceChargeInput.value);
   const vatRate = Number(vatInput.value) || 0;
-  const paymentMethod = paymentMethodEl.value;
+  const paymentMethod = paymentMethodValueEl.value;
   const customerPaid = parseCurrency(customerPaidInput.value);
 
   if (!paymentMethod) {
@@ -346,9 +354,7 @@ document.getElementById('confirmCheckoutBtn').addEventListener('click', async ()
 
   // Lấy giá trị radio In hóa đơn
   const printInvoice = document.querySelector('input[name="printInvoice"]:checked').value;
-
-  // Lấy couponId đã áp dụng (bạn cần lưu couponId khi apply coupon thành công)
-  const appliedCouponId = window.appliedCouponId; // hoặc cách nào đó bạn lưu couponId
+  const appliedCouponId = window.appliedCouponId; 
 
   try {
     // Nếu có mã giảm giá thì gọi API confirm để tăng lượt sử dụng

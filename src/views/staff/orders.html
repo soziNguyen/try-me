@@ -15,7 +15,7 @@
         </div>
         
         <div class="row">
-          <div class="col-lg-8 mt-3">
+          <div class="col-lg-8 mt-3" id="foodMenuCol">
             <div id="orderWarning"></div>
             <h3>🍽️ Danh sách thực đơn</h3>
             <div id="categoryList" class="mb-4 d-flex gap-2 flex-wrap"></div>
@@ -24,7 +24,7 @@
             </div>
           </div>
 
-          <div class="col-lg-4 mt-4">
+          <div class="col-lg-4 mt-4 d-none" id="orderSection">
             <h3 id="orderTitle">🧾 Hóa đơn</h3>
             <div id="orderSummary" class="card p-3 shadow-sm table-responsive">
               <table class="table table-bordered table-sm">
@@ -107,12 +107,18 @@
 
                 <div class="mb-2">
                   <label>Phương thức thanh toán:</label>
-                  <select id="paymentMethod" class="form-select">
-                    <option value="">-- Chọn --</option>
-                    <option value="cash">Tiền mặt</option>
-                    <option value="bank">Chuyển khoản</option>
-                    <option value="card">Thẻ</option>
-                  </select>
+                  <div id="paymentMethod" class="d-flex gap-2 mt-2">
+                    <button type="button" class="btn btn-outline-primary" data-value="cash" title="Tiền mặt">
+                      <i class="bi bi-cash-stack"></i> Tiền mặt
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" data-value="bank" title="Chuyển khoản">
+                      <i class="bi bi-bank"></i> Chuyển khoản
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" data-value="card" title="Thẻ">
+                      <i class="bi bi-credit-card"></i> Thẻ
+                    </button>
+                  </div>
+                  <input type="hidden" id="paymentMethodValue" name="paymentMethod" value="">
                 </div>
 
                 <div class="mb-2">
