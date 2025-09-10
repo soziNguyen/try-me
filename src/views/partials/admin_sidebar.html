@@ -1,36 +1,36 @@
 <div class="admin__layout">
-    <%- include('../partials/admin_navbar.html') %>
+  <%- include('../partials/admin_navbar.html') %>
     <div class="admin__main">
-        <div id="admin__sidebar">
-          <ul>
-              <li class="<%= page === 'Dashboard' ? 'active' : '' %>">
-                <a class="w-100" href="/">
-                  <i class="bi bi-house-door text-dark me-2"></i>
-                  <span>Trang chủ</span>
-                </a>
-              </li>
-    
-              <li class="<%= page === 'User Management' ? 'active' : '' %>">
-                <a class="w-100" href="/admin">
-                  <i class="bi bi-person-badge text-warning-emphasis me-2"></i>
-                  <span>Quản lý Người dùng</span>
-                </a>
-              </li>
-          
-              <li class="<%= page === 'Org Management' ? 'active' : '' %>">
-                <a class="w-100" href="/organizations">
-                  <i class="bi bi-building text-danger me-2"></i>
-                  <span>Quản lý Tổ chức</span>
-                </a>
-              </li>
-          
-              <li class="<%= page === 'Audit' ? 'active' : '' %>">
-                <a class="w-100" href="/audit-logs">
-                  <i class="bi bi-journal-text text-info me-2"></i>
-                  <span>Nhật ký hoạt động</span>
-                </a>
-              </li>
-  
-          </ul>
-        </div>
+      <div id="admin__sidebar">
+        <ul>
+          <li class="<%= page === 'Dashboard' ? 'active' : '' %>">
+            <a class="w-100" href="/">
+              <i class="bi bi-house-door text-dark me-2"></i>
+              <span>Trang chủ</span>
+            </a>
+          </li>
+
+          <li class="<%= page === 'User Management' ? 'active' : '' %>">
+            <a class="w-100" href="/admin">
+              <i class="bi bi-person-badge text-warning-emphasis me-2"></i>
+              <span>Quản lý Người dùng</span>
+            </a>
+          </li>
+
+          <li class="<%= page === 'Org Management' ? 'active' : '' %>">
+            <a class="w-100" href="/organizations">
+              <i class="bi bi-building text-danger me-2"></i>
+              <span>Quản lý Tổ chức</span>
+            </a>
+          </li>
+
+          <li class="<%= page === 'Audit' ? 'active' : '' %>">
+            <a class="w-100" href="/audit-logs">
+              <i class="bi bi-journal-text text-info me-2"></i>
+              <span>Nhật ký hoạt động</span>
+            </a>
+          </li>
+
+        </ul>
+      </div>
       <%- include('../users/update-user.html') %>

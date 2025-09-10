@@ -1,5 +1,5 @@
 <%- include('../partials/header.html') %>
-<%- include('../partials/staff_sidebar.html') %>
+  <%- include('../partials/staff_sidebar.html') %>
 
     <div class="staff__content">
       <div>
@@ -13,7 +13,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="row">
           <div class="col-lg-8 mt-3" id="foodMenuCol">
             <div id="orderWarning"></div>
@@ -37,7 +37,7 @@
                   </tr>
                 </thead>
                 <tbody id="orderItems">
-                  
+
                 </tbody>
               </table>
               <hr>
@@ -47,113 +47,122 @@
             </div>
 
             <!-- Chi tiết thanh toán (ẩn mặc định) -->
-              <div id="checkoutDetail" class="card p-3 shadow-sm mt-3" style="display: none;">
-                <h5 class="mb-3"> Chi tiết thanh toán</h5>
+            <div id="checkoutDetail" class="card p-3 shadow-sm mt-3" style="display: none;">
+              <h5 class="mb-3"> Chi tiết thanh toán</h5>
 
-                <div class="mb-2">
-                  <label for="discountCodeInput">Mã giảm giá:</label>
-                  <div class="input-group">
-                    <input type="text" id="discountCodeInput" class="form-control" placeholder="Nhập mã giảm giá">
-                    <button id="applyDiscountBtn" class="btn btn-primary">Áp dụng</button>
-                  </div>
-                  <small id="discountMessage" class="text-success d-block mt-1"></small>
+              <div class="mb-2">
+                <label for="discountCodeInput">Mã giảm giá:</label>
+                <div class="input-group">
+                  <input type="text" id="discountCodeInput" class="form-control" placeholder="Nhập mã giảm giá">
+                  <button id="applyDiscountBtn" class="btn btn-primary">Áp dụng</button>
                 </div>
+                <small id="discountMessage" class="text-success d-block mt-1"></small>
+              </div>
 
-                <div class="mb-2">
-                  <label>Giảm Được:</label>
-                  <input type="number" id="discountInput" class="form-control" value="0" min="0">
+              <div class="mb-2">
+                <label>Giảm Được:</label>
+                <input type="number" id="discountInput" class="form-control" value="0" min="0">
+              </div>
+
+              <div class="mb-2">
+                <label>Phí dịch vụ:</label>
+                <input type="number" id="serviceChargeInput" class="form-control" value="0" min="0">
+              </div>
+
+              <div class="mb-2">
+                <label><strong>Tổng tiền trước thuế:</strong></label>
+                <input type="text" id="totalPayable" class="form-control text-danger fw-bold" value="0" readonly>
+              </div>
+
+              <div class="mb-2">
+                <label>VAT (%) </label>
+                <select id="vatInput" class="form-select">
+                </select>
+              </div>
+
+              <div class="mb-2">
+                <label><strong>Tổng tiền phải trả:</strong></label>
+                <input type="text" id="total" class="form-control text-danger fw-bold" value="0" readonly>
+              </div>
+
+
+              <div class="mb-2">
+                <label>Số tiền khách đã trả:</label>
+                <input type="text" id="customerPaidInput" class="form-control" placeholder="0" min="0">
+                <div class="price-suggestion mt-2 d-flex flex-wrap justify-content-center gap-2">
+                  <!-- button gợi ý mệnh giá -->
+                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                    data-value="1000">1.000</button>
+                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                    data-value="2000">2.000</button>
+                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                    data-value="5000">5.000</button>
+                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                    data-value="10000">10.000</button>
+                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                    data-value="20000">20.000</button>
+                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                    data-value="50000">50.000</button>
+                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                    data-value="100000">100.000</button>
+                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                    data-value="200000">200.000</button>
+                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                    data-value="500000">500.000</button>
                 </div>
+                <!-- Gợi ý mệnh giá khi nhập  -->
+                <div id="dynamicSuggestions" class="mt-2 d-flex flex-wrap justify-content-center gap-2"></div>
+              </div>
 
-                <div class="mb-2">
-                  <label>Phí dịch vụ:</label>
-                  <input type="number" id="serviceChargeInput" class="form-control" value="0" min="0">
+              <div class="mb-2">
+                <label>Phương thức thanh toán:</label>
+                <div id="paymentMethod" class="d-flex gap-2 mt-2">
+                  <button type="button" class="btn btn-outline-primary" data-value="cash" title="Tiền mặt">
+                    <i class="bi bi-cash-stack"></i> Tiền mặt
+                  </button>
+                  <button type="button" class="btn btn-outline-primary" data-value="bank" title="Chuyển khoản">
+                    <i class="bi bi-bank"></i> Chuyển khoản
+                  </button>
+                  <button type="button" class="btn btn-outline-primary" data-value="card" title="Thẻ">
+                    <i class="bi bi-credit-card"></i> Thẻ
+                  </button>
                 </div>
-                
-                <div class="mb-2">
-                  <label><strong>Tổng tiền trước thuế:</strong></label>
-                  <input type="text" id="totalPayable" class="form-control text-danger fw-bold" value="0" readonly>
-                </div>
+                <input type="hidden" id="paymentMethodValue" name="paymentMethod" value="">
+              </div>
 
-                <div class="mb-2">
-                  <label>VAT (%) </label>
-                  <select id="vatInput" class="form-select">
-                  </select>
-                </div>
+              <div class="mb-2">
+                <label>Tiền thừa:</label>
+                <input type="text" id="changeAmount" class="form-control" readonly>
+              </div>
 
-                <div class="mb-2">
-                  <label><strong>Tổng tiền phải trả:</strong></label>
-                  <input type="text" id="total" class="form-control text-danger fw-bold" value="0" readonly>
-                </div>
+              <div class="mb-3">
+                <label><strong>In hóa đơn:</strong></label>
+                <div>
+                  <input type="radio" id="printYes" name="printInvoice" value="yes" checked>
+                  <label for="printYes">Có</label>
 
-
-                <div class="mb-2">
-                  <label>Số tiền khách đã trả:</label>
-                  <input type="text" id="customerPaidInput" class="form-control" placeholder="0" min="0">
-                  <div class="price-suggestion mt-2 d-flex flex-wrap justify-content-center gap-2">
-                    <!-- button gợi ý mệnh giá -->
-                    <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="1000">1.000</button>
-                    <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="2000">2.000</button>
-                    <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="5000">5.000</button>
-                    <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="10000">10.000</button>
-                    <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="20000">20.000</button>
-                    <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="50000">50.000</button>
-                    <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="100000">100.000</button>
-                    <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="200000">200.000</button>
-                    <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="500000">500.000</button>
-                  </div>
-                    <!-- Gợi ý mệnh giá khi nhập  -->
-                  <div id="dynamicSuggestions" class="mt-2 d-flex flex-wrap justify-content-center gap-2" ></div>              
-                </div>
-
-                <div class="mb-2">
-                  <label>Phương thức thanh toán:</label>
-                  <div id="paymentMethod" class="d-flex gap-2 mt-2">
-                    <button type="button" class="btn btn-outline-primary" data-value="cash" title="Tiền mặt">
-                      <i class="bi bi-cash-stack"></i> Tiền mặt
-                    </button>
-                    <button type="button" class="btn btn-outline-primary" data-value="bank" title="Chuyển khoản">
-                      <i class="bi bi-bank"></i> Chuyển khoản
-                    </button>
-                    <button type="button" class="btn btn-outline-primary" data-value="card" title="Thẻ">
-                      <i class="bi bi-credit-card"></i> Thẻ
-                    </button>
-                  </div>
-                  <input type="hidden" id="paymentMethodValue" name="paymentMethod" value="">
-                </div>
-
-                <div class="mb-2">
-                  <label>Tiền thừa:</label>
-                  <input type="text" id="changeAmount" class="form-control" readonly>
-                </div>
-
-                <div class="mb-3">
-                  <label><strong>In hóa đơn:</strong></label>
-                  <div>
-                    <input type="radio" id="printYes" name="printInvoice" value="yes" checked>
-                    <label for="printYes">Có</label>
-
-                    <input type="radio" id="printNo" name="printInvoice" value="no" class="ms-3">
-                    <label for="printNo">Không</label>
-                  </div>
-                </div>
-
-                <div class="text-end">
-                  <button type="button" class="btn btn-danger me-2" id="cancelCheckoutDetail">ĐÓNG</button>
-                  <button type="button" class="btn btn-success" id="confirmCheckoutBtn">THANH TOÁN</button>
+                  <input type="radio" id="printNo" name="printInvoice" value="no" class="ms-3">
+                  <label for="printNo">Không</label>
                 </div>
               </div>
+
+              <div class="text-end">
+                <button type="button" class="btn btn-danger me-2" id="cancelCheckoutDetail">ĐÓNG</button>
+                <button type="button" class="btn btn-success" id="confirmCheckoutBtn">THANH TOÁN</button>
+              </div>
+            </div>
           </div>
 
         </div>
       </div>
     </div>
-<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
 
 
 
-<%- include('../partials/commonjs.html') %>
-<script src="/js/sidebar-toggle.js"></script>
-<script src="/js/update-user.js"></script>
-<script src="/js/staff/order.js"></script>
-<script src="/js/staff/checkout.js"></script>
-<%- include('../partials/footer.html') %>
+    <%- include('../partials/commonjs.html') %>
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/update-user.js"></script>
+      <script src="/js/staff/order.js"></script>
+      <script src="/js/staff/checkout.js"></script>
+      <%- include('../partials/footer.html') %>

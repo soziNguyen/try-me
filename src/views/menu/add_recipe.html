@@ -1,9 +1,11 @@
 <%- include('../partials/header.html') %>
-<%- include('../partials/org_sidebar.html') %>
-<div class="admin__content">
-    <h2 class="mb-4 bold semi-bold"><%= pageTitle %></h2>
+  <%- include('../partials/org_sidebar.html') %>
+    <div class="admin__content">
+      <h2 class="mb-4 bold semi-bold">
+        <%= pageTitle %>
+      </h2>
 
-    <div class="col-lg-6 col-md-8 border-">
+      <div class="col-lg-6 col-md-8 border-">
         <h3 class="pb-2 pb-md-4">Tạo công thức</h3>
         <form id="recipe-form">
           <!-- Chọn món -->
@@ -13,14 +15,14 @@
               <option value="">— Chọn món —</option>
             </select>
           </div>
-      
+
           <!-- Ingredients -->
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1 mb-md-2">
-                <label class="form-label">Nguyên liệu</label>
-                <button type="button" class="btn btn-outline-success btn-sm" id="add-ingredient">
-                    + Thêm nguyên liệu
-                </button>
+              <label class="form-label">Nguyên liệu</label>
+              <button type="button" class="btn btn-outline-success btn-sm" id="add-ingredient">
+                + Thêm nguyên liệu
+              </button>
             </div>
             <table class="table table-bordered align-middle" id="ingredients-table">
               <thead>
@@ -32,37 +34,37 @@
                 </tr>
               </thead>
               <tbody id="itemsTableBody">
-                
+
               </tbody>
             </table>
           </div>
-      
+
           <!-- Note -->
           <div class="mb-3">
             <label for="note" class="form-label">Ghi chú</label>
             <textarea id="note" name="note" class="form-control"></textarea>
           </div>
-      
+
           <!-- Active -->
           <!-- <div class="form-check form-switch mb-3">
             <input class="form-check-input" type="checkbox" id="isActive" checked>
             <label class="form-check-label" for="isActive">Kích hoạt</label>
           </div> -->
-      
+
           <!-- Action -->
           <button type="submit" id="recipeForm" class="btn btn-outline-primary">Lưu</button>
           <a href="/menu/recipes" class="btn btn-outline-danger">Hủy</a>
         </form>
       </div>
-      
-</div>
 
-</div>
-</div>
-<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
-<%- include('../partials/commonjs.html') %>
-<script src="/js/sidebar-toggle.js"></script>
-<script src="/js/update-user.js"></script>
-<script src="/js/data-table.js"></script>
-<script src="/js/menu/recipe-detail.js"></script>
-<%- include('../partials/footer.html') %>
+    </div>
+
+    </div>
+    </div>
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <%- include('../partials/commonjs.html') %>
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/update-user.js"></script>
+      <script src="/js/data-table.js"></script>
+      <script src="/js/menu/recipe-detail.js"></script>
+      <%- include('../partials/footer.html') %>
