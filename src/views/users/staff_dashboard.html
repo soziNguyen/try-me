@@ -1,13 +1,14 @@
 <%- include('../partials/header.html') %>
-<%- include('../partials/staff_sidebar.html') %>
-      <div class="staff__content">
-          <h1>Welcome, <%= user.username %></h1>
-      </div>
+  <%- include('../partials/staff_sidebar.html') %>
+    <div class="staff__content">
+      <h1>Welcome, <%= user.username %>
+      </h1>
+    </div>
 
-</div>
-</div>
-<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
-<%- include('../partials/commonjs.html') %>
-<script src="/js/sidebar-toggle.js"></script>
-<script src="/js/update-user.js"></script>
-<%- include('../partials/footer.html') %>
+    </div>
+    </div>
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <%- include('../partials/commonjs.html') %>
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/update-user.js"></script>
+      <%- include('../partials/footer.html') %>

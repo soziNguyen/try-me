@@ -1,31 +1,31 @@
 <%- include('../partials/header.html') %>
-    <%- include('../partials/org_sidebar.html') %>
-        <div class="admin__content">
-            <h2 class="mb-4 bold semi-bold">
-                <%= pageTitle %>
-            </h2>
-            <table id="taxTable" class="table table-bordered w-100">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="selectAll"></th>
-                        <th>Tên thuế</th>
-                        <th>Tỷ lệ (%)</th>
-                        <th>Mô tả</th>
-                        <th>Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody id="taxTableBody"></tbody>
-            </table>
+  <%- include('../partials/org_sidebar.html') %>
+    <div class="admin__content">
+      <h2 class="mb-4 bold semi-bold">
+        <%= pageTitle %>
+      </h2>
+      <table id="taxTable" class="table table-bordered w-100">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll"></th>
+            <th>Tên thuế</th>
+            <th>Tỷ lệ (%)</th>
+            <th>Mô tả</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody id="taxTableBody"></tbody>
+      </table>
 
 
-        </div>
+    </div>
 
-        </div>
-        </div>
-        <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
-        <%- include('../partials/commonjs.html') %>
-            <script src="/js/sidebar-toggle.js"></script>
-            <script src="/js/update-user.js"></script>
-            <script src="/js/data-table.js"></script>
-            <script src="/js/tax.js"></script>
-            <%- include('../partials/footer.html') %>
+    </div>
+    </div>
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <%- include('../partials/commonjs.html') %>
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/update-user.js"></script>
+      <script src="/js/data-table.js"></script>
+      <script src="/js/tax.js"></script>
+      <%- include('../partials/footer.html') %>

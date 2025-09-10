@@ -1,15 +1,17 @@
 <%- include('../partials/header.html') %>
-<%- include('../partials/org_sidebar.html') %>
-<div class="admin__content">
-    <h2 class="mb-4 bold semi-bold"><%= pageTitle %></h2>
-    <div class="row">
+  <%- include('../partials/org_sidebar.html') %>
+    <div class="admin__content">
+      <h2 class="mb-4 bold semi-bold">
+        <%= pageTitle %>
+      </h2>
+      <div class="row">
         <!-- Cột DataTable -->
         <div class="col-md-7" id="tableContainer">
           <table id="comboTable" class="table table-bordered">
             <thead>
               <tr>
                 <th>
-                    <input type="checkbox" id="selectAll">
+                  <input type="checkbox" id="selectAll">
                 </th>
                 <th>SKU</th>
                 <th>Tên</th>
@@ -24,7 +26,7 @@
             <tbody id="comboTableBody"></tbody>
           </table>
         </div>
-      
+
         <!-- Cột Form -->
         <div class="col-md-5" id="formContainer">
           <div id="comboFormContainer" class="card d-none">
@@ -73,24 +75,25 @@
                   <textarea type="text" class="form-control" name="note"></textarea>
                 </div>
                 <div class="text-end">
-                  <button type="button" class="btn btn-outline-secondary me-2" id="btnCancel"><i class="las la-times me-1"></i>Hủy</button>
+                  <button type="button" class="btn btn-outline-secondary me-2" id="btnCancel"><i
+                      class="las la-times me-1"></i>Hủy</button>
                   <button type="submit" class="btn btn-outline-success"><i class="las la-save me-1"></i>Lưu</button>
                 </div>
               </form>
             </div>
           </div>
         </div>
-    </div>      
-    
-</div>
+      </div>
 
-</div>
-</div>
-<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
-<%- include('../partials/commonjs.html') %>
-<%- include('../partials/cropper_modal.html') %>
-<script src="/js/sidebar-toggle.js"></script>
-<script src="/js/update-user.js"></script>
-<script src="/js/data-table.js"></script>
-<script src="/js/menu/combo.js"></script>
-<%- include('../partials/footer.html') %>
+    </div>
+
+    </div>
+    </div>
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <%- include('../partials/commonjs.html') %>
+      <%- include('../partials/cropper_modal.html') %>
+        <script src="/js/sidebar-toggle.js"></script>
+        <script src="/js/update-user.js"></script>
+        <script src="/js/data-table.js"></script>
+        <script src="/js/menu/combo.js"></script>
+        <%- include('../partials/footer.html') %>
