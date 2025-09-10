@@ -33,6 +33,14 @@ document.addEventListener('click', (e) => {
   if (e.target.id === 'cancelCheckoutDetail') {
     document.getElementById('checkoutDetail').style.display = 'none';
   }
+
+  const paymentBtn = e.target.closest('#paymentMethod button');
+  if (paymentBtn) {
+    document.querySelectorAll('#paymentMethod button').forEach(b => b.classList.remove('active'));
+    paymentBtn.classList.add('active');
+    document.getElementById('paymentMethodValue').value = paymentBtn.getAttribute('data-value');
+    return;
+  }
 });
 
 
@@ -289,6 +297,7 @@ document.getElementById('applyDiscountBtn').addEventListener('click', async () =
     discountMessage.textContent = `Áp dụng thành công! Giảm ${discountAmount.toLocaleString()}đ`;
     discountMessage.className = 'text-success d-block mt-1';
 
+    window.appliedCouponId = data.data.couponId;
     calculateTotals();
 
   } catch (error) {
@@ -319,10 +328,10 @@ document.getElementById('confirmCheckoutBtn').addEventListener('click', async ()
   const discountInput = document.getElementById('discountInput');
   const serviceChargeInput = document.getElementById('serviceChargeInput');
   const vatInput = document.getElementById('vatInput');
-  const paymentMethodEl = document.getElementById('paymentMethod');
+  const paymentMethodValueEl = document.getElementById('paymentMethodValue');
   const customerPaidInput = document.getElementById('customerPaidInput');
 
-  if (!discountInput || !serviceChargeInput || !vatInput || !paymentMethodEl || !customerPaidInput) {
+  if (!discountInput || !serviceChargeInput || !vatInput || !paymentMethodValueEl || !customerPaidInput) {
     toastr.error('Thiếu dữ liệu thanh toán!');
     return;
   }
@@ -330,7 +339,7 @@ document.getElementById('confirmCheckoutBtn').addEventListener('click', async ()
   const discount = parseCurrency(discountInput.value);
   const serviceCharge = parseCurrency(serviceChargeInput.value);
   const vatRate = Number(vatInput.value) || 0;
-  const paymentMethod = paymentMethodEl.value;
+  const paymentMethod = paymentMethodValueEl.value;
   const customerPaid = parseCurrency(customerPaidInput.value);
 
   if (!paymentMethod) {
@@ -345,8 +354,24 @@ document.getElementById('confirmCheckoutBtn').addEventListener('click', async ()
 
   // Lấy giá trị radio In hóa đơn
   const printInvoice = document.querySelector('input[name="printInvoice"]:checked').value;
+  const appliedCouponId = window.appliedCouponId; 
 
   try {
+    // Nếu có mã giảm giá thì gọi API confirm để tăng lượt sử dụng
+    if (appliedCouponId) {
+      const confirmResponse = await fetch('/api/coupon/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ couponId: appliedCouponId }),
+      });
+      const confirmData = await confirmResponse.json();
+      if (!confirmResponse.ok) {
+        toastr.error(confirmData.message || 'Xác nhận mã giảm giá thất bại!');
+        return;  // Dừng thanh toán nếu confirm coupon lỗi
+      }
+    }
+
+    // Gọi API thanh toán
     const response = await fetch(`/api/orders/${orderId}/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

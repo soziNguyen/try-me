@@ -2,8 +2,8 @@
 const btnShowForm = document.getElementById('btnShowForm');      
 const formAddTable = document.getElementById('formAddTable');    
 const tableBody = document.getElementById("tableBody");   
-const btnEditTable = document.getElementById("btnEditTable");
-const btnAssignTable = document.getElementById("btnAssignTable");        
+const btnAssignTable = document.getElementById("btnAssignTable");    
+const searchInput = document.getElementById("searchUserInput");    
 
 // ========== GÁN SỰ KIỆN ==========
 function bindEvents() {
@@ -13,21 +13,21 @@ function bindEvents() {
   });
 
   // Sự kiện nhấn nút Cập nhật
-  btnEditTable.addEventListener("click", () => {
-    const selected = document.querySelectorAll(".tableCheckbox:checked");
+  // btnEditTable.addEventListener("click", () => {
+  //   const selected = document.querySelectorAll(".tableCheckbox:checked");
 
-    if (selected.length === 0) {
-      toastr.warning("Vui lòng chọn 1 bàn để cập nhật.");
-      return;
-    }
-    if (selected.length > 1) {
-      toastr.warning("Chỉ được chọn 1 bàn để cập nhật.");
-      return;
-    }
+  //   if (selected.length === 0) {
+  //     toastr.warning("Vui lòng chọn 1 bàn để cập nhật.");
+  //     return;
+  //   }
+  //   if (selected.length > 1) {
+  //     toastr.warning("Chỉ được chọn 1 bàn để cập nhật.");
+  //     return;
+  //   }
 
-    const tableId = selected[0].dataset.id;
-    updateTable(tableId);  
-  });
+  //   const tableId = selected[0].dataset.id;
+  //   updateTable(tableId);  
+  // });
 
   // Sự kiện submit form Thêm bàn
   formAddTable.addEventListener('submit', async (e) => {
@@ -46,7 +46,7 @@ function bindEvents() {
       formAddTable.reset();
       formAddTable.classList.add('d-none');
       btnShowForm.textContent = '+ Thêm bàn';
-      await getTables(1, (data.area === 'kv1') ? 'kv1' : 'kv2');
+      await getTables( (data.area === 'kv1') ? 'kv1' : 'kv2');
     } catch (error) {
       toastr.error(error.message); 
     }
@@ -98,8 +98,7 @@ document.getElementById('btnConfirmAssignTable').addEventListener('click', async
     }
     
     // Cập nhật danh sách bàn
-    await getTables(1, (area === 'kv1') ? 'kv1' : 'kv2'); 
-    // Đóng modal giao bàn (nên kiểm tra modal tồn tại)
+    await getTables( (area === 'kv1') ? 'kv1' : 'kv2'); 
     const assignModalElement = document.getElementById('assignTableModal');
     if (assignModalElement) {
       const assignModal = bootstrap.Modal.getInstance(assignModalElement) || new bootstrap.Modal(assignModalElement);
@@ -125,11 +124,15 @@ document.addEventListener('click', (e) => {
 });
 
 document.getElementById("btnkv1").addEventListener("click", () => {
-  getTables(1, "KV1"); 
+  getTables( "KV1"); 
 });
 
 document.getElementById("btnkv2").addEventListener("click", () => {
-  getTables(1, "KV2"); 
+  getTables( "KV2"); 
+});
+
+document.getElementById("btnAll").addEventListener("click", () => {
+  getTables("");
 });
 
 }
@@ -138,41 +141,58 @@ document.getElementById("btnkv2").addEventListener("click", () => {
 // ========== CHƯƠNG TRÌNH CHÍNH ==========
 document.addEventListener('DOMContentLoaded', async () => {
   bindEvents();      
-  await getTables(1, "KV1"); 
+  await getTables(""); 
   setInterval(updateSeatedTimes, 1000);
-  paginationHandle((page, limit) => {
-  getTables(page);
-  });
+  searchInput.addEventListener("input", filterTables);
 });
 
 
 // ========== LẤY DỮ LIỆU TỪ SERVER ==========
 let tableData = [];
-let currentPage = 1;
-const limit = 20;
-
-async function getTables(page = 1, area = "") {
+async function getTables(area = "") {
   try {
-    currentPage = page;
-    let url = `/api/tables?page=${page}&limit=${limit}`;
+    let url = `/api/tables`;
     if (area) {
-      url += `&area=${encodeURIComponent(area)}`;
+      url += `?area=${encodeURIComponent(area)}`;
     }
-
     const res = await ajax(url, {}, "GET");
-
     if (res) {
-      const { tables, pagination } = res;
-
+      const { tables } = res;
       tableData = tables;
-      renderTableList(tables);
-      document.getElementById('pagination').innerHTML = renderPagination(pagination);
+      tableData = tables;
+      filterTables();
     }
   } catch (error) {
     toastr.error(error.message);
   }
 }
 
+// SEARCH
+function filterTables() {
+  const searchTerm = searchInput.value.trim().toLowerCase();
+
+  if (!searchTerm) {
+    // Nếu input trống thì hiển thị tất cả
+    renderTableList(tableData);
+    return;
+  }
+
+  const filteredTables = tableData.filter(table => {
+    const name = (table.name || "").toLowerCase();
+    const statusMap = {
+      "available": "trống",
+      "occupied": "có khách",
+      "maintenance": "bảo trì"
+    };
+    const status = (statusMap[table.status] || table.status).toLowerCase();
+    const area = (table.area || "").toLowerCase();
+
+    // Lọc nếu tên hoặc trạng thái hoặc khu vực có chứa từ khóa
+    return name.includes(searchTerm) || status.includes(searchTerm) || area.includes(searchTerm);
+  });
+
+  renderTableList(filteredTables);
+}
 
 // ========== STATUS COLOR ==========
 function getBgClassByStatus(status) {
@@ -227,12 +247,12 @@ function renderTableList(tables = []) {
   document.querySelectorAll('.table-card').forEach(card => {
     card.addEventListener('click', function (e) {
       if (
-      e.target.classList.contains('tableCheckbox') ||
-      e.target.closest('button')
-    ) return;
-      const checkbox = this.querySelector('.tableCheckbox');
-      checkbox.checked = !checkbox.checked;
-      this.classList.toggle('opacity-50', checkbox.checked);
+        e.target.classList.contains('tableCheckbox') ||
+        e.target.closest('button')
+      ) return;
+
+      const tableId = this.querySelector('.tableCheckbox').dataset.id;
+      updateTable(tableId);
     });
   });
   
@@ -325,7 +345,7 @@ async function updateTable(tableId) {
         if (result) {
           toastr.success("Cập nhật thành công");
           updateTableModal.hide();
-          await getTables(1, (result.area === 'kv1') ? "kv1" : 'kv2'); 
+          await getTables( (result.area === 'kv1') ? "kv1" : 'kv2'); 
         }
       } catch (err) {
         toastr.error(err.message);
@@ -357,7 +377,7 @@ async function deleteTables() {
 
     if (result) {
       toastr.success("Đã xóa bàn thành công!");
-      await getTables(1, "KV1"); 
+      await getTables( "KV1"); 
 
     const selectAll = document.getElementById("selectAllTable");
     if (selectAll) {

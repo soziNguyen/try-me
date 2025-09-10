@@ -9,6 +9,7 @@ const OrderSchema = new Schema({
   items: [
     {
       foodId: { type: Schema.Types.ObjectId, ref: 'MenuItem' },
+      comboId: { type: Schema.Types.ObjectId, ref: 'Combo' },
       quantity: { type: Number, default: 1 },
       price: { type: Number, required: true }  
     }

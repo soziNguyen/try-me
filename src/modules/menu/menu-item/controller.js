@@ -10,8 +10,23 @@ export const getActiveMenus = async (req, res) => {
         if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
         
         const pipeline = [
+          ...lookupRef('category', 'MenuCategories', { as: 'category' }),
             { $match: { isActive: true, organization: organizationId } },
             { $sort: { name: 1}},
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+                image: 1,
+                price: 1,
+                description: 1,
+                isActive: 1,
+                category: {
+                  _id: "$category._id",
+                  name: "$category.name"
+                }
+              }
+            }
         ]
 
         const menu = await MenuItem.aggregate(pipeline)

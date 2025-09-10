@@ -4,12 +4,11 @@
 
     <!-- Header -->
     <div class="header text-center mb-4 mt-3">
-      <div><small id="currentTime"></small></div>
       <div><strong>CUONGCHICKEN</strong></div>
       <div>SDT: 0866079523</div>
       <div><strong>HÓA ĐƠN BÁN HÀNG</strong></div>
-      <div>Số <span id="orderId"></span></div>
-      <div>Ngày: <span id="orderDate"></span></div>
+      <div>mã HD <span id="orderId"></span></div>
+      <div>Thời Gian: <span id="orderDate"></span></div>
     </div>
 
     <div class="info">
@@ -62,6 +61,6 @@
   <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
 
   <%- include('../partials/commonjs.html') %>
-  <script src="/js/staff/invoice.js"></script>
+  <script src="/js/staff/printbill.js"></script>
   <%- include('../partials/footer.html') %>
 </body>
