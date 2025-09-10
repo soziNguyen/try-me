@@ -71,41 +71,33 @@ $(function () {
           orderable: false,
           className: 'image-cell',
           render: (data) => {
-            const imgSrc = data || ''
-            const hasImage = imgSrc && imgSrc.trim() !== ''
-            const containerStyle = hasImage
-              ? 'display: block; margin: 0 auto;'
-              : 'display: block; margin: 0 auto; width: 70px; height: 70px;'
-            const imgStyle = hasImage
-              ? 'display: block; margin: 0 auto; cursor: pointer; width: 70px; height: 70px; object-fit: cover; border-radius: 8px;'
-              : 'cursor: pointer; width: 70px; height: 70px; object-fit: cover; border-radius: 6px; opacity: 0.3;'
-            const overlayStyle = hasImage
-              ? 'background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s;'
-              : 'background: rgba(248,249,250,0.9); border: 1px dashed #6c757d; border-radius: 6px; opacity: 0; transition: opacity 0.3s;'
+            const imgSrc = data || '';
+            const hasImage = imgSrc && imgSrc.trim() !== '';
+
+            const containerClass = hasImage ? 'table-image-container' : 'table-image-container no-image';
+            const imgClass = hasImage ? '' : 'no-image';
+            const overlayClass = hasImage ? 'image-overlay has-image' : 'image-overlay no-image';
 
             const previewBtn = hasImage
-              ? `<button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
+              ? `<button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh">
                    <i class="bi bi-eye"></i>
                  </button>`
-              : ''
+              : '';
 
-            const uploadBtnClass = hasImage
-              ? 'btn-outline-light'
-              : 'btn-outline-secondary'
-            const uploadBtnTitle = hasImage ? 'Chọn ảnh mới' : 'Thêm ảnh'
+            const uploadBtnClass = hasImage ? 'btn-outline-light' : 'btn-outline-secondary';
+            const uploadBtnTitle = hasImage ? 'Chọn ảnh mới' : 'Thêm ảnh';
 
             return `
-              <div class="ingredient-image-container position-relative" style="${containerStyle}">
-                <img src="${imgSrc || '/assets/images/default.png'}" alt="Ảnh" class="ingredient-image" style="${imgStyle}">
-                <div class="image-overlay position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
-                     style="${overlayStyle}">
+              <div class="ingredient-image-container ${containerClass}">
+                <img src="${imgSrc || '/assets/images/default.png'}" alt="Ảnh" class="ingredient-image ${imgClass}">
+                <div class="${overlayClass}">
                   ${previewBtn}
-                  <button type="button" class="btn ${uploadBtnClass} btn-sm upload-btn" title="${uploadBtnTitle}" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
+                  <button type="button" class="btn ${uploadBtnClass} btn-sm upload-btn" title="${uploadBtnTitle}">
                     <i class="bi bi-${hasImage ? 'arrow-repeat' : 'upload'}"></i>
                   </button>
                 </div>
               </div>
-            `
+            `;
           }
         },
         {
@@ -268,32 +260,24 @@ $(function () {
 
   // Function to update image container styling after image upload
   function updateImageContainerAfterUpload(imgCell, imgUrl) {
-    const container = imgCell.find('.ingredient-image-container')
+    const container = imgCell.find('.table-image-container')
     const img = container.find('img')
     const overlay = container.find('.image-overlay')
 
-    // Update container style to remove dashed border
-    container.attr('style', 'display: inline-block;')
+    container.removeClass('no-image')
+    img.removeClass('no-image')
+    overlay.removeClass('no-image').addClass('has-image')
 
-    // Update image style
-    img.attr(
-      'style',
-      'cursor: pointer; width: 70px; height: 70px; object-fit: cover; border-radius: 8px;'
-    )
+    // Update new src image
+    img.attr('src', imgUrl || '/assets/images/default.png')
 
-    // Update overlay style for images with content
-    overlay.attr(
-      'style',
-      'background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s;'
-    )
-
-    // Update buttons in overlay
+    // Update button overlay
     const previewBtn = `
-      <button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
+      <button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh">
         <i class="bi bi-eye"></i>
       </button>`
     const uploadBtn = `
-      <button type="button" class="btn btn-outline-light btn-sm upload-btn" title="Chọn ảnh mới" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
+      <button type="button" class="btn btn-outline-light btn-sm upload-btn" title="Chọn ảnh mới">
         <i class="bi bi-arrow-repeat"></i>
       </button>`
 
@@ -392,6 +376,9 @@ $(function () {
   $('#cropBtn').on('click', function () {
     if (!cropper) return
     const cropData = cropper.getData(true)
+    const hasTransparency = false;
+    const { mime, ext } = getBestFormat(hasTransparency);
+
     cropper
       .getCroppedCanvas({
         width: Math.floor(cropData.width),
@@ -402,7 +389,7 @@ $(function () {
       })
       .toBlob((blob) => {
         const formData = new FormData()
-        formData.append('file', blob, 'cropped.jpg')
+        formData.append('file', blob, `$cropped.${ext}`)
 
         // Upload file đã crop lên server
         $.ajax({
@@ -442,6 +429,6 @@ $(function () {
           },
           error: () => toastr.error('Lỗi upload ảnh')
         })
-      }, 'image/jpeg')
+      }, mime)
   })
 })

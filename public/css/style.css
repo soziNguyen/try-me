@@ -1,16 +1,23 @@
 :root {
-  --bg: #ffffff;
-  --surface: #ffffff;
+  /* Base colors */
+  --white: #fff;
+  --black: rgba(0, 0, 0, 0.8);
   --text: #222222;
   --muted: #6c757d;
-  --header-bg: #ffffff;
-  --header-text: #222222;
-  --sidebar-bg: #ffffff;
-  --sidebar-text: #000000;
-  --card-border: #e9ecef;
   --link: #0d6efd;
-  --tooltip-bg: rgba(0,0,0,0.8);
-  --accent-bg: rgba(13,110,253,0.04);
+  --tooltip-bg: rgba(0, 0, 0, 0.8);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  /* Background */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --header-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --accent-bg: rgba(13, 110, 253, 0.04);
+  /* Text colors */
+  --header-text: #222222;
+  --sidebar-text: #000000;
+  /* Borders */
+  --card-border: #e9ecef;
   /* Theme colors */
   --primary: #0d6efd;
   --secondary: #6c757d;
@@ -20,8 +27,6 @@
   --info: #0dcaf0;
   --light: #f8f9fa;
   --dark: #212529;
-  --white: #fff;
-  --black: rgba(0, 0, 0, 0.8);
 }
 
 /* Dark theme overrides */
@@ -36,8 +41,8 @@ html[data-theme=dark] {
   --sidebar-text: #dfe8f2;
   --card-border: #22272b;
   --link: #7ab4ff;
-  --tooltip-bg: rgba(255,255,255,0.12);
-  --accent-bg: rgba(122,180,255,0.06);
+  --tooltip-bg: rgba(255, 255, 255, 0.12);
+  --accent-bg: rgba(122, 180, 255, 0.06);
 }
 
 /* Basic reset / fonts */

@@ -341,3 +341,14 @@ function setCheckbox(tableSelector, checkboxClass) {
     selectAll.checked = all.length > 0 && all.length === checked.length
   })
 }
+
+function getBestFormat(hasTransparency) {
+  const webpSupported = (document.createElement('canvas')
+    .toDataURL('image/webp')
+    .indexOf('data:image/webp') === 0);
+
+  if (webpSupported) return { mime: 'image/webp', ext: 'webp' };
+  return hasTransparency
+    ? { mime: 'image/png', ext: 'png' }
+    : { mime: 'image/jpeg', ext: 'jpg' };
+}

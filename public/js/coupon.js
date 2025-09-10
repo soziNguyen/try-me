@@ -91,7 +91,7 @@ $(function () {
             if (type === 'display') {
               return `
                 <input type="number" 
-                    class="dataInput form-control w-100 border-0" 
+                    class="dataInput form-control w-100 border-0 number" 
                     placeholder="0"
                     data-field="discountValue" 
                     value="${data ?? ''}"
@@ -151,7 +151,7 @@ $(function () {
           render: (data) => {
             return `
               <input type="number"
-                class="dataInput form-control w-100 border-0" 
+                class="dataInput form-control w-100 border-0 number" 
                 placeholder="Số lượng" 
                 data-field="usageLimit"
                 value="${data ?? ''}"
