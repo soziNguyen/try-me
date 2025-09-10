@@ -107,7 +107,6 @@ function bindEvents() {
       const area = document
         .getElementById('assign-table-area')
         .textContent.trim()
-        ;;;
       // Lấy tên khách từ input
       const customerName = document
         .getElementById('customerNameInput')
@@ -271,27 +270,30 @@ function renderTableList(tables = []) {
         <div><strong>Trạng thái:</strong> ${table.status === 'available' ? 'Trống' : 'Có khách'}</div>
         <div><strong>Số Lượng Người:</strong> ${table.capacity || '-'}</div>
         <div><strong>Khu vực:</strong> ${table.area || '-'}</div>
-        ${table.status === 'occupied' && table.checkInTime
-          ? `
+        ${
+          table.status === 'occupied' && table.checkInTime
+            ? `
         <div><strong>Giờ vào:</strong> ${new Date(table.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
         <div><strong>Đã ngồi:</strong> <span class="seated-time" data-checkin="${table.checkInTime}" data-id="${table._id}">Đang tính...</span></div>
       `
-          : ''
+            : ''
         }
-        ${table.status === 'available'
-          ? `
+        ${
+          table.status === 'available'
+            ? `
           <button class ="btnAssignTable btn btn-warning btn-sm mt-2 fw-bold shadow-sm">
             <i class="bi bi-clock me-1"></i> Giao bàn
           </button>`
-          : ''
+            : ''
         }
-        ${table.status === 'occupied'
-          ? `
+        ${
+          table.status === 'occupied'
+            ? `
           <button class="btnOrderFood btn btn-success btn-sm mt-2 fw-bold shadow-sm" data-order-id="${table.currentOrderId}">
             <i class="bi bi-clipboard-check me-1"></i> Gọi món
           </button>
       `
-          : ''
+            : ''
         }
       </div>
     </div>
