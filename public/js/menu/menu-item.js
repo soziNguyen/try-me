@@ -220,7 +220,7 @@ $(function () {
       })
       .toBlob((blob) => {
         const formData = new FormData()
-        formData.append('file', blob, 'cropped.jpg')
+        formData.append('file', blob, 'cropped.webp')
 
         // Upload file đã crop lên server
         $.ajax({
@@ -258,6 +258,6 @@ $(function () {
           },
           error: () => toastr.error('Lỗi upload ảnh')
         })
-      }, 'image/jpeg')
+      }, 'image/webp')
   })
 })

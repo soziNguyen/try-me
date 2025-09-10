@@ -1,14 +1,14 @@
-#ingredientStockTable_wrapper .dt-search .dt-input, #ingredientTable_wrapper .dt-search .dt-input, #menuTable_wrapper .dt-search .dt-input, #comboTable_wrapper .dt-search .dt-input {
+#ingredientTable_wrapper .dt-search .dt-input {
   margin-right: 0 !important;
 }
-#ingredientStockTable_wrapper #ingredientTable, #ingredientStockTable_wrapper #ingredientStockTable, #ingredientStockTable_wrapper #menuTable, #ingredientStockTable_wrapper #comboTable, #ingredientTable_wrapper #ingredientTable, #ingredientTable_wrapper #ingredientStockTable, #ingredientTable_wrapper #menuTable, #ingredientTable_wrapper #comboTable, #menuTable_wrapper #ingredientTable, #menuTable_wrapper #ingredientStockTable, #menuTable_wrapper #menuTable, #menuTable_wrapper #comboTable, #comboTable_wrapper #ingredientTable, #comboTable_wrapper #ingredientStockTable, #comboTable_wrapper #menuTable, #comboTable_wrapper #comboTable {
+#ingredientTable_wrapper #ingredientTable {
   width: 100%;
 }
-#ingredientStockTable_wrapper #ingredientTable #ingredientTableBody td, #ingredientStockTable_wrapper #ingredientTable #ingredientStockTableBody td, #ingredientStockTable_wrapper #ingredientTable #menuTableBody td, #ingredientStockTable_wrapper #ingredientTable #comboTableBody td, #ingredientStockTable_wrapper #ingredientStockTable #ingredientTableBody td, #ingredientStockTable_wrapper #ingredientStockTable #ingredientStockTableBody td, #ingredientStockTable_wrapper #ingredientStockTable #menuTableBody td, #ingredientStockTable_wrapper #ingredientStockTable #comboTableBody td, #ingredientStockTable_wrapper #menuTable #ingredientTableBody td, #ingredientStockTable_wrapper #menuTable #ingredientStockTableBody td, #ingredientStockTable_wrapper #menuTable #menuTableBody td, #ingredientStockTable_wrapper #menuTable #comboTableBody td, #ingredientStockTable_wrapper #comboTable #ingredientTableBody td, #ingredientStockTable_wrapper #comboTable #ingredientStockTableBody td, #ingredientStockTable_wrapper #comboTable #menuTableBody td, #ingredientStockTable_wrapper #comboTable #comboTableBody td, #ingredientTable_wrapper #ingredientTable #ingredientTableBody td, #ingredientTable_wrapper #ingredientTable #ingredientStockTableBody td, #ingredientTable_wrapper #ingredientTable #menuTableBody td, #ingredientTable_wrapper #ingredientTable #comboTableBody td, #ingredientTable_wrapper #ingredientStockTable #ingredientTableBody td, #ingredientTable_wrapper #ingredientStockTable #ingredientStockTableBody td, #ingredientTable_wrapper #ingredientStockTable #menuTableBody td, #ingredientTable_wrapper #ingredientStockTable #comboTableBody td, #ingredientTable_wrapper #menuTable #ingredientTableBody td, #ingredientTable_wrapper #menuTable #ingredientStockTableBody td, #ingredientTable_wrapper #menuTable #menuTableBody td, #ingredientTable_wrapper #menuTable #comboTableBody td, #ingredientTable_wrapper #comboTable #ingredientTableBody td, #ingredientTable_wrapper #comboTable #ingredientStockTableBody td, #ingredientTable_wrapper #comboTable #menuTableBody td, #ingredientTable_wrapper #comboTable #comboTableBody td, #menuTable_wrapper #ingredientTable #ingredientTableBody td, #menuTable_wrapper #ingredientTable #ingredientStockTableBody td, #menuTable_wrapper #ingredientTable #menuTableBody td, #menuTable_wrapper #ingredientTable #comboTableBody td, #menuTable_wrapper #ingredientStockTable #ingredientTableBody td, #menuTable_wrapper #ingredientStockTable #ingredientStockTableBody td, #menuTable_wrapper #ingredientStockTable #menuTableBody td, #menuTable_wrapper #ingredientStockTable #comboTableBody td, #menuTable_wrapper #menuTable #ingredientTableBody td, #menuTable_wrapper #menuTable #ingredientStockTableBody td, #menuTable_wrapper #menuTable #menuTableBody td, #menuTable_wrapper #menuTable #comboTableBody td, #menuTable_wrapper #comboTable #ingredientTableBody td, #menuTable_wrapper #comboTable #ingredientStockTableBody td, #menuTable_wrapper #comboTable #menuTableBody td, #menuTable_wrapper #comboTable #comboTableBody td, #comboTable_wrapper #ingredientTable #ingredientTableBody td, #comboTable_wrapper #ingredientTable #ingredientStockTableBody td, #comboTable_wrapper #ingredientTable #menuTableBody td, #comboTable_wrapper #ingredientTable #comboTableBody td, #comboTable_wrapper #ingredientStockTable #ingredientTableBody td, #comboTable_wrapper #ingredientStockTable #ingredientStockTableBody td, #comboTable_wrapper #ingredientStockTable #menuTableBody td, #comboTable_wrapper #ingredientStockTable #comboTableBody td, #comboTable_wrapper #menuTable #ingredientTableBody td, #comboTable_wrapper #menuTable #ingredientStockTableBody td, #comboTable_wrapper #menuTable #menuTableBody td, #comboTable_wrapper #menuTable #comboTableBody td, #comboTable_wrapper #comboTable #ingredientTableBody td, #comboTable_wrapper #comboTable #ingredientStockTableBody td, #comboTable_wrapper #comboTable #menuTableBody td, #comboTable_wrapper #comboTable #comboTableBody td {
+#ingredientTable_wrapper #ingredientTable #ingredientTableBody td {
   vertical-align: middle;
   padding: 0 !important;
 }
-#ingredientStockTable_wrapper #ingredientTable #ingredientTableBody td img.ingredient-image, #ingredientStockTable_wrapper #ingredientTable #ingredientTableBody td img.menu-image, #ingredientStockTable_wrapper #ingredientTable #ingredientTableBody td img.combo-image, #ingredientStockTable_wrapper #ingredientTable #ingredientStockTableBody td img.ingredient-image, #ingredientStockTable_wrapper #ingredientTable #ingredientStockTableBody td img.menu-image, #ingredientStockTable_wrapper #ingredientTable #ingredientStockTableBody td img.combo-image, #ingredientStockTable_wrapper #ingredientTable #menuTableBody td img.ingredient-image, #ingredientStockTable_wrapper #ingredientTable #menuTableBody td img.menu-image, #ingredientStockTable_wrapper #ingredientTable #menuTableBody td img.combo-image, #ingredientStockTable_wrapper #ingredientTable #comboTableBody td img.ingredient-image, #ingredientStockTable_wrapper #ingredientTable #comboTableBody td img.menu-image, #ingredientStockTable_wrapper #ingredientTable #comboTableBody td img.combo-image, #ingredientStockTable_wrapper #ingredientStockTable #ingredientTableBody td img.ingredient-image, #ingredientStockTable_wrapper #ingredientStockTable #ingredientTableBody td img.menu-image, #ingredientStockTable_wrapper #ingredientStockTable #ingredientTableBody td img.combo-image, #ingredientStockTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.ingredient-image, #ingredientStockTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.menu-image, #ingredientStockTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.combo-image, #ingredientStockTable_wrapper #ingredientStockTable #menuTableBody td img.ingredient-image, #ingredientStockTable_wrapper #ingredientStockTable #menuTableBody td img.menu-image, #ingredientStockTable_wrapper #ingredientStockTable #menuTableBody td img.combo-image, #ingredientStockTable_wrapper #ingredientStockTable #comboTableBody td img.ingredient-image, #ingredientStockTable_wrapper #ingredientStockTable #comboTableBody td img.menu-image, #ingredientStockTable_wrapper #ingredientStockTable #comboTableBody td img.combo-image, #ingredientStockTable_wrapper #menuTable #ingredientTableBody td img.ingredient-image, #ingredientStockTable_wrapper #menuTable #ingredientTableBody td img.menu-image, #ingredientStockTable_wrapper #menuTable #ingredientTableBody td img.combo-image, #ingredientStockTable_wrapper #menuTable #ingredientStockTableBody td img.ingredient-image, #ingredientStockTable_wrapper #menuTable #ingredientStockTableBody td img.menu-image, #ingredientStockTable_wrapper #menuTable #ingredientStockTableBody td img.combo-image, #ingredientStockTable_wrapper #menuTable #menuTableBody td img.ingredient-image, #ingredientStockTable_wrapper #menuTable #menuTableBody td img.menu-image, #ingredientStockTable_wrapper #menuTable #menuTableBody td img.combo-image, #ingredientStockTable_wrapper #menuTable #comboTableBody td img.ingredient-image, #ingredientStockTable_wrapper #menuTable #comboTableBody td img.menu-image, #ingredientStockTable_wrapper #menuTable #comboTableBody td img.combo-image, #ingredientStockTable_wrapper #comboTable #ingredientTableBody td img.ingredient-image, #ingredientStockTable_wrapper #comboTable #ingredientTableBody td img.menu-image, #ingredientStockTable_wrapper #comboTable #ingredientTableBody td img.combo-image, #ingredientStockTable_wrapper #comboTable #ingredientStockTableBody td img.ingredient-image, #ingredientStockTable_wrapper #comboTable #ingredientStockTableBody td img.menu-image, #ingredientStockTable_wrapper #comboTable #ingredientStockTableBody td img.combo-image, #ingredientStockTable_wrapper #comboTable #menuTableBody td img.ingredient-image, #ingredientStockTable_wrapper #comboTable #menuTableBody td img.menu-image, #ingredientStockTable_wrapper #comboTable #menuTableBody td img.combo-image, #ingredientStockTable_wrapper #comboTable #comboTableBody td img.ingredient-image, #ingredientStockTable_wrapper #comboTable #comboTableBody td img.menu-image, #ingredientStockTable_wrapper #comboTable #comboTableBody td img.combo-image, #ingredientTable_wrapper #ingredientTable #ingredientTableBody td img.ingredient-image, #ingredientTable_wrapper #ingredientTable #ingredientTableBody td img.menu-image, #ingredientTable_wrapper #ingredientTable #ingredientTableBody td img.combo-image, #ingredientTable_wrapper #ingredientTable #ingredientStockTableBody td img.ingredient-image, #ingredientTable_wrapper #ingredientTable #ingredientStockTableBody td img.menu-image, #ingredientTable_wrapper #ingredientTable #ingredientStockTableBody td img.combo-image, #ingredientTable_wrapper #ingredientTable #menuTableBody td img.ingredient-image, #ingredientTable_wrapper #ingredientTable #menuTableBody td img.menu-image, #ingredientTable_wrapper #ingredientTable #menuTableBody td img.combo-image, #ingredientTable_wrapper #ingredientTable #comboTableBody td img.ingredient-image, #ingredientTable_wrapper #ingredientTable #comboTableBody td img.menu-image, #ingredientTable_wrapper #ingredientTable #comboTableBody td img.combo-image, #ingredientTable_wrapper #ingredientStockTable #ingredientTableBody td img.ingredient-image, #ingredientTable_wrapper #ingredientStockTable #ingredientTableBody td img.menu-image, #ingredientTable_wrapper #ingredientStockTable #ingredientTableBody td img.combo-image, #ingredientTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.ingredient-image, #ingredientTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.menu-image, #ingredientTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.combo-image, #ingredientTable_wrapper #ingredientStockTable #menuTableBody td img.ingredient-image, #ingredientTable_wrapper #ingredientStockTable #menuTableBody td img.menu-image, #ingredientTable_wrapper #ingredientStockTable #menuTableBody td img.combo-image, #ingredientTable_wrapper #ingredientStockTable #comboTableBody td img.ingredient-image, #ingredientTable_wrapper #ingredientStockTable #comboTableBody td img.menu-image, #ingredientTable_wrapper #ingredientStockTable #comboTableBody td img.combo-image, #ingredientTable_wrapper #menuTable #ingredientTableBody td img.ingredient-image, #ingredientTable_wrapper #menuTable #ingredientTableBody td img.menu-image, #ingredientTable_wrapper #menuTable #ingredientTableBody td img.combo-image, #ingredientTable_wrapper #menuTable #ingredientStockTableBody td img.ingredient-image, #ingredientTable_wrapper #menuTable #ingredientStockTableBody td img.menu-image, #ingredientTable_wrapper #menuTable #ingredientStockTableBody td img.combo-image, #ingredientTable_wrapper #menuTable #menuTableBody td img.ingredient-image, #ingredientTable_wrapper #menuTable #menuTableBody td img.menu-image, #ingredientTable_wrapper #menuTable #menuTableBody td img.combo-image, #ingredientTable_wrapper #menuTable #comboTableBody td img.ingredient-image, #ingredientTable_wrapper #menuTable #comboTableBody td img.menu-image, #ingredientTable_wrapper #menuTable #comboTableBody td img.combo-image, #ingredientTable_wrapper #comboTable #ingredientTableBody td img.ingredient-image, #ingredientTable_wrapper #comboTable #ingredientTableBody td img.menu-image, #ingredientTable_wrapper #comboTable #ingredientTableBody td img.combo-image, #ingredientTable_wrapper #comboTable #ingredientStockTableBody td img.ingredient-image, #ingredientTable_wrapper #comboTable #ingredientStockTableBody td img.menu-image, #ingredientTable_wrapper #comboTable #ingredientStockTableBody td img.combo-image, #ingredientTable_wrapper #comboTable #menuTableBody td img.ingredient-image, #ingredientTable_wrapper #comboTable #menuTableBody td img.menu-image, #ingredientTable_wrapper #comboTable #menuTableBody td img.combo-image, #ingredientTable_wrapper #comboTable #comboTableBody td img.ingredient-image, #ingredientTable_wrapper #comboTable #comboTableBody td img.menu-image, #ingredientTable_wrapper #comboTable #comboTableBody td img.combo-image, #menuTable_wrapper #ingredientTable #ingredientTableBody td img.ingredient-image, #menuTable_wrapper #ingredientTable #ingredientTableBody td img.menu-image, #menuTable_wrapper #ingredientTable #ingredientTableBody td img.combo-image, #menuTable_wrapper #ingredientTable #ingredientStockTableBody td img.ingredient-image, #menuTable_wrapper #ingredientTable #ingredientStockTableBody td img.menu-image, #menuTable_wrapper #ingredientTable #ingredientStockTableBody td img.combo-image, #menuTable_wrapper #ingredientTable #menuTableBody td img.ingredient-image, #menuTable_wrapper #ingredientTable #menuTableBody td img.menu-image, #menuTable_wrapper #ingredientTable #menuTableBody td img.combo-image, #menuTable_wrapper #ingredientTable #comboTableBody td img.ingredient-image, #menuTable_wrapper #ingredientTable #comboTableBody td img.menu-image, #menuTable_wrapper #ingredientTable #comboTableBody td img.combo-image, #menuTable_wrapper #ingredientStockTable #ingredientTableBody td img.ingredient-image, #menuTable_wrapper #ingredientStockTable #ingredientTableBody td img.menu-image, #menuTable_wrapper #ingredientStockTable #ingredientTableBody td img.combo-image, #menuTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.ingredient-image, #menuTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.menu-image, #menuTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.combo-image, #menuTable_wrapper #ingredientStockTable #menuTableBody td img.ingredient-image, #menuTable_wrapper #ingredientStockTable #menuTableBody td img.menu-image, #menuTable_wrapper #ingredientStockTable #menuTableBody td img.combo-image, #menuTable_wrapper #ingredientStockTable #comboTableBody td img.ingredient-image, #menuTable_wrapper #ingredientStockTable #comboTableBody td img.menu-image, #menuTable_wrapper #ingredientStockTable #comboTableBody td img.combo-image, #menuTable_wrapper #menuTable #ingredientTableBody td img.ingredient-image, #menuTable_wrapper #menuTable #ingredientTableBody td img.menu-image, #menuTable_wrapper #menuTable #ingredientTableBody td img.combo-image, #menuTable_wrapper #menuTable #ingredientStockTableBody td img.ingredient-image, #menuTable_wrapper #menuTable #ingredientStockTableBody td img.menu-image, #menuTable_wrapper #menuTable #ingredientStockTableBody td img.combo-image, #menuTable_wrapper #menuTable #menuTableBody td img.ingredient-image, #menuTable_wrapper #menuTable #menuTableBody td img.menu-image, #menuTable_wrapper #menuTable #menuTableBody td img.combo-image, #menuTable_wrapper #menuTable #comboTableBody td img.ingredient-image, #menuTable_wrapper #menuTable #comboTableBody td img.menu-image, #menuTable_wrapper #menuTable #comboTableBody td img.combo-image, #menuTable_wrapper #comboTable #ingredientTableBody td img.ingredient-image, #menuTable_wrapper #comboTable #ingredientTableBody td img.menu-image, #menuTable_wrapper #comboTable #ingredientTableBody td img.combo-image, #menuTable_wrapper #comboTable #ingredientStockTableBody td img.ingredient-image, #menuTable_wrapper #comboTable #ingredientStockTableBody td img.menu-image, #menuTable_wrapper #comboTable #ingredientStockTableBody td img.combo-image, #menuTable_wrapper #comboTable #menuTableBody td img.ingredient-image, #menuTable_wrapper #comboTable #menuTableBody td img.menu-image, #menuTable_wrapper #comboTable #menuTableBody td img.combo-image, #menuTable_wrapper #comboTable #comboTableBody td img.ingredient-image, #menuTable_wrapper #comboTable #comboTableBody td img.menu-image, #menuTable_wrapper #comboTable #comboTableBody td img.combo-image, #comboTable_wrapper #ingredientTable #ingredientTableBody td img.ingredient-image, #comboTable_wrapper #ingredientTable #ingredientTableBody td img.menu-image, #comboTable_wrapper #ingredientTable #ingredientTableBody td img.combo-image, #comboTable_wrapper #ingredientTable #ingredientStockTableBody td img.ingredient-image, #comboTable_wrapper #ingredientTable #ingredientStockTableBody td img.menu-image, #comboTable_wrapper #ingredientTable #ingredientStockTableBody td img.combo-image, #comboTable_wrapper #ingredientTable #menuTableBody td img.ingredient-image, #comboTable_wrapper #ingredientTable #menuTableBody td img.menu-image, #comboTable_wrapper #ingredientTable #menuTableBody td img.combo-image, #comboTable_wrapper #ingredientTable #comboTableBody td img.ingredient-image, #comboTable_wrapper #ingredientTable #comboTableBody td img.menu-image, #comboTable_wrapper #ingredientTable #comboTableBody td img.combo-image, #comboTable_wrapper #ingredientStockTable #ingredientTableBody td img.ingredient-image, #comboTable_wrapper #ingredientStockTable #ingredientTableBody td img.menu-image, #comboTable_wrapper #ingredientStockTable #ingredientTableBody td img.combo-image, #comboTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.ingredient-image, #comboTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.menu-image, #comboTable_wrapper #ingredientStockTable #ingredientStockTableBody td img.combo-image, #comboTable_wrapper #ingredientStockTable #menuTableBody td img.ingredient-image, #comboTable_wrapper #ingredientStockTable #menuTableBody td img.menu-image, #comboTable_wrapper #ingredientStockTable #menuTableBody td img.combo-image, #comboTable_wrapper #ingredientStockTable #comboTableBody td img.ingredient-image, #comboTable_wrapper #ingredientStockTable #comboTableBody td img.menu-image, #comboTable_wrapper #ingredientStockTable #comboTableBody td img.combo-image, #comboTable_wrapper #menuTable #ingredientTableBody td img.ingredient-image, #comboTable_wrapper #menuTable #ingredientTableBody td img.menu-image, #comboTable_wrapper #menuTable #ingredientTableBody td img.combo-image, #comboTable_wrapper #menuTable #ingredientStockTableBody td img.ingredient-image, #comboTable_wrapper #menuTable #ingredientStockTableBody td img.menu-image, #comboTable_wrapper #menuTable #ingredientStockTableBody td img.combo-image, #comboTable_wrapper #menuTable #menuTableBody td img.ingredient-image, #comboTable_wrapper #menuTable #menuTableBody td img.menu-image, #comboTable_wrapper #menuTable #menuTableBody td img.combo-image, #comboTable_wrapper #menuTable #comboTableBody td img.ingredient-image, #comboTable_wrapper #menuTable #comboTableBody td img.menu-image, #comboTable_wrapper #menuTable #comboTableBody td img.combo-image, #comboTable_wrapper #comboTable #ingredientTableBody td img.ingredient-image, #comboTable_wrapper #comboTable #ingredientTableBody td img.menu-image, #comboTable_wrapper #comboTable #ingredientTableBody td img.combo-image, #comboTable_wrapper #comboTable #ingredientStockTableBody td img.ingredient-image, #comboTable_wrapper #comboTable #ingredientStockTableBody td img.menu-image, #comboTable_wrapper #comboTable #ingredientStockTableBody td img.combo-image, #comboTable_wrapper #comboTable #menuTableBody td img.ingredient-image, #comboTable_wrapper #comboTable #menuTableBody td img.menu-image, #comboTable_wrapper #comboTable #menuTableBody td img.combo-image, #comboTable_wrapper #comboTable #comboTableBody td img.ingredient-image, #comboTable_wrapper #comboTable #comboTableBody td img.menu-image, #comboTable_wrapper #comboTable #comboTableBody td img.combo-image {
+#ingredientTable_wrapper #ingredientTable #ingredientTableBody td img.ingredient-image {
   width: 70px;
   height: 70px;
   -o-object-fit: cover;
@@ -17,23 +17,160 @@
   cursor: pointer;
   padding: 0.375rem;
 }
-#ingredientStockTable_wrapper #ingredientTable #ingredientTableBody td select.form-select-sm, #ingredientStockTable_wrapper #ingredientTable #ingredientStockTableBody td select.form-select-sm, #ingredientStockTable_wrapper #ingredientTable #menuTableBody td select.form-select-sm, #ingredientStockTable_wrapper #ingredientTable #comboTableBody td select.form-select-sm, #ingredientStockTable_wrapper #ingredientStockTable #ingredientTableBody td select.form-select-sm, #ingredientStockTable_wrapper #ingredientStockTable #ingredientStockTableBody td select.form-select-sm, #ingredientStockTable_wrapper #ingredientStockTable #menuTableBody td select.form-select-sm, #ingredientStockTable_wrapper #ingredientStockTable #comboTableBody td select.form-select-sm, #ingredientStockTable_wrapper #menuTable #ingredientTableBody td select.form-select-sm, #ingredientStockTable_wrapper #menuTable #ingredientStockTableBody td select.form-select-sm, #ingredientStockTable_wrapper #menuTable #menuTableBody td select.form-select-sm, #ingredientStockTable_wrapper #menuTable #comboTableBody td select.form-select-sm, #ingredientStockTable_wrapper #comboTable #ingredientTableBody td select.form-select-sm, #ingredientStockTable_wrapper #comboTable #ingredientStockTableBody td select.form-select-sm, #ingredientStockTable_wrapper #comboTable #menuTableBody td select.form-select-sm, #ingredientStockTable_wrapper #comboTable #comboTableBody td select.form-select-sm, #ingredientTable_wrapper #ingredientTable #ingredientTableBody td select.form-select-sm, #ingredientTable_wrapper #ingredientTable #ingredientStockTableBody td select.form-select-sm, #ingredientTable_wrapper #ingredientTable #menuTableBody td select.form-select-sm, #ingredientTable_wrapper #ingredientTable #comboTableBody td select.form-select-sm, #ingredientTable_wrapper #ingredientStockTable #ingredientTableBody td select.form-select-sm, #ingredientTable_wrapper #ingredientStockTable #ingredientStockTableBody td select.form-select-sm, #ingredientTable_wrapper #ingredientStockTable #menuTableBody td select.form-select-sm, #ingredientTable_wrapper #ingredientStockTable #comboTableBody td select.form-select-sm, #ingredientTable_wrapper #menuTable #ingredientTableBody td select.form-select-sm, #ingredientTable_wrapper #menuTable #ingredientStockTableBody td select.form-select-sm, #ingredientTable_wrapper #menuTable #menuTableBody td select.form-select-sm, #ingredientTable_wrapper #menuTable #comboTableBody td select.form-select-sm, #ingredientTable_wrapper #comboTable #ingredientTableBody td select.form-select-sm, #ingredientTable_wrapper #comboTable #ingredientStockTableBody td select.form-select-sm, #ingredientTable_wrapper #comboTable #menuTableBody td select.form-select-sm, #ingredientTable_wrapper #comboTable #comboTableBody td select.form-select-sm, #menuTable_wrapper #ingredientTable #ingredientTableBody td select.form-select-sm, #menuTable_wrapper #ingredientTable #ingredientStockTableBody td select.form-select-sm, #menuTable_wrapper #ingredientTable #menuTableBody td select.form-select-sm, #menuTable_wrapper #ingredientTable #comboTableBody td select.form-select-sm, #menuTable_wrapper #ingredientStockTable #ingredientTableBody td select.form-select-sm, #menuTable_wrapper #ingredientStockTable #ingredientStockTableBody td select.form-select-sm, #menuTable_wrapper #ingredientStockTable #menuTableBody td select.form-select-sm, #menuTable_wrapper #ingredientStockTable #comboTableBody td select.form-select-sm, #menuTable_wrapper #menuTable #ingredientTableBody td select.form-select-sm, #menuTable_wrapper #menuTable #ingredientStockTableBody td select.form-select-sm, #menuTable_wrapper #menuTable #menuTableBody td select.form-select-sm, #menuTable_wrapper #menuTable #comboTableBody td select.form-select-sm, #menuTable_wrapper #comboTable #ingredientTableBody td select.form-select-sm, #menuTable_wrapper #comboTable #ingredientStockTableBody td select.form-select-sm, #menuTable_wrapper #comboTable #menuTableBody td select.form-select-sm, #menuTable_wrapper #comboTable #comboTableBody td select.form-select-sm, #comboTable_wrapper #ingredientTable #ingredientTableBody td select.form-select-sm, #comboTable_wrapper #ingredientTable #ingredientStockTableBody td select.form-select-sm, #comboTable_wrapper #ingredientTable #menuTableBody td select.form-select-sm, #comboTable_wrapper #ingredientTable #comboTableBody td select.form-select-sm, #comboTable_wrapper #ingredientStockTable #ingredientTableBody td select.form-select-sm, #comboTable_wrapper #ingredientStockTable #ingredientStockTableBody td select.form-select-sm, #comboTable_wrapper #ingredientStockTable #menuTableBody td select.form-select-sm, #comboTable_wrapper #ingredientStockTable #comboTableBody td select.form-select-sm, #comboTable_wrapper #menuTable #ingredientTableBody td select.form-select-sm, #comboTable_wrapper #menuTable #ingredientStockTableBody td select.form-select-sm, #comboTable_wrapper #menuTable #menuTableBody td select.form-select-sm, #comboTable_wrapper #menuTable #comboTableBody td select.form-select-sm, #comboTable_wrapper #comboTable #ingredientTableBody td select.form-select-sm, #comboTable_wrapper #comboTable #ingredientStockTableBody td select.form-select-sm, #comboTable_wrapper #comboTable #menuTableBody td select.form-select-sm, #comboTable_wrapper #comboTable #comboTableBody td select.form-select-sm {
+#ingredientTable_wrapper #ingredientTable #ingredientTableBody td select.form-select-sm {
   border: none;
   -webkit-box-shadow: none;
           box-shadow: none;
 }
-#ingredientStockTable_wrapper #ingredientTable #ingredientTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #ingredientTable #ingredientStockTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #ingredientTable #menuTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #ingredientTable #comboTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #ingredientStockTable #ingredientTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #ingredientStockTable #menuTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #ingredientStockTable #comboTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #menuTable #ingredientTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #menuTable #ingredientStockTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #menuTable #menuTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #menuTable #comboTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #comboTable #ingredientTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #comboTable #ingredientStockTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #comboTable #menuTableBody td input.form-control[type=text], #ingredientStockTable_wrapper #comboTable #comboTableBody td input.form-control[type=text], #ingredientTable_wrapper #ingredientTable #ingredientTableBody td input.form-control[type=text], #ingredientTable_wrapper #ingredientTable #ingredientStockTableBody td input.form-control[type=text], #ingredientTable_wrapper #ingredientTable #menuTableBody td input.form-control[type=text], #ingredientTable_wrapper #ingredientTable #comboTableBody td input.form-control[type=text], #ingredientTable_wrapper #ingredientStockTable #ingredientTableBody td input.form-control[type=text], #ingredientTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.form-control[type=text], #ingredientTable_wrapper #ingredientStockTable #menuTableBody td input.form-control[type=text], #ingredientTable_wrapper #ingredientStockTable #comboTableBody td input.form-control[type=text], #ingredientTable_wrapper #menuTable #ingredientTableBody td input.form-control[type=text], #ingredientTable_wrapper #menuTable #ingredientStockTableBody td input.form-control[type=text], #ingredientTable_wrapper #menuTable #menuTableBody td input.form-control[type=text], #ingredientTable_wrapper #menuTable #comboTableBody td input.form-control[type=text], #ingredientTable_wrapper #comboTable #ingredientTableBody td input.form-control[type=text], #ingredientTable_wrapper #comboTable #ingredientStockTableBody td input.form-control[type=text], #ingredientTable_wrapper #comboTable #menuTableBody td input.form-control[type=text], #ingredientTable_wrapper #comboTable #comboTableBody td input.form-control[type=text], #menuTable_wrapper #ingredientTable #ingredientTableBody td input.form-control[type=text], #menuTable_wrapper #ingredientTable #ingredientStockTableBody td input.form-control[type=text], #menuTable_wrapper #ingredientTable #menuTableBody td input.form-control[type=text], #menuTable_wrapper #ingredientTable #comboTableBody td input.form-control[type=text], #menuTable_wrapper #ingredientStockTable #ingredientTableBody td input.form-control[type=text], #menuTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.form-control[type=text], #menuTable_wrapper #ingredientStockTable #menuTableBody td input.form-control[type=text], #menuTable_wrapper #ingredientStockTable #comboTableBody td input.form-control[type=text], #menuTable_wrapper #menuTable #ingredientTableBody td input.form-control[type=text], #menuTable_wrapper #menuTable #ingredientStockTableBody td input.form-control[type=text], #menuTable_wrapper #menuTable #menuTableBody td input.form-control[type=text], #menuTable_wrapper #menuTable #comboTableBody td input.form-control[type=text], #menuTable_wrapper #comboTable #ingredientTableBody td input.form-control[type=text], #menuTable_wrapper #comboTable #ingredientStockTableBody td input.form-control[type=text], #menuTable_wrapper #comboTable #menuTableBody td input.form-control[type=text], #menuTable_wrapper #comboTable #comboTableBody td input.form-control[type=text], #comboTable_wrapper #ingredientTable #ingredientTableBody td input.form-control[type=text], #comboTable_wrapper #ingredientTable #ingredientStockTableBody td input.form-control[type=text], #comboTable_wrapper #ingredientTable #menuTableBody td input.form-control[type=text], #comboTable_wrapper #ingredientTable #comboTableBody td input.form-control[type=text], #comboTable_wrapper #ingredientStockTable #ingredientTableBody td input.form-control[type=text], #comboTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.form-control[type=text], #comboTable_wrapper #ingredientStockTable #menuTableBody td input.form-control[type=text], #comboTable_wrapper #ingredientStockTable #comboTableBody td input.form-control[type=text], #comboTable_wrapper #menuTable #ingredientTableBody td input.form-control[type=text], #comboTable_wrapper #menuTable #ingredientStockTableBody td input.form-control[type=text], #comboTable_wrapper #menuTable #menuTableBody td input.form-control[type=text], #comboTable_wrapper #menuTable #comboTableBody td input.form-control[type=text], #comboTable_wrapper #comboTable #ingredientTableBody td input.form-control[type=text], #comboTable_wrapper #comboTable #ingredientStockTableBody td input.form-control[type=text], #comboTable_wrapper #comboTable #menuTableBody td input.form-control[type=text], #comboTable_wrapper #comboTable #comboTableBody td input.form-control[type=text] {
+#ingredientTable_wrapper #ingredientTable #ingredientTableBody td input.form-control[type=text] {
   padding: 0.5rem 0.75rem !important;
 }
-#ingredientStockTable_wrapper #ingredientTable #ingredientTableBody td span.text, #ingredientStockTable_wrapper #ingredientTable #ingredientTableBody td input.text, #ingredientStockTable_wrapper #ingredientTable #ingredientStockTableBody td span.text, #ingredientStockTable_wrapper #ingredientTable #ingredientStockTableBody td input.text, #ingredientStockTable_wrapper #ingredientTable #menuTableBody td span.text, #ingredientStockTable_wrapper #ingredientTable #menuTableBody td input.text, #ingredientStockTable_wrapper #ingredientTable #comboTableBody td span.text, #ingredientStockTable_wrapper #ingredientTable #comboTableBody td input.text, #ingredientStockTable_wrapper #ingredientStockTable #ingredientTableBody td span.text, #ingredientStockTable_wrapper #ingredientStockTable #ingredientTableBody td input.text, #ingredientStockTable_wrapper #ingredientStockTable #ingredientStockTableBody td span.text, #ingredientStockTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.text, #ingredientStockTable_wrapper #ingredientStockTable #menuTableBody td span.text, #ingredientStockTable_wrapper #ingredientStockTable #menuTableBody td input.text, #ingredientStockTable_wrapper #ingredientStockTable #comboTableBody td span.text, #ingredientStockTable_wrapper #ingredientStockTable #comboTableBody td input.text, #ingredientStockTable_wrapper #menuTable #ingredientTableBody td span.text, #ingredientStockTable_wrapper #menuTable #ingredientTableBody td input.text, #ingredientStockTable_wrapper #menuTable #ingredientStockTableBody td span.text, #ingredientStockTable_wrapper #menuTable #ingredientStockTableBody td input.text, #ingredientStockTable_wrapper #menuTable #menuTableBody td span.text, #ingredientStockTable_wrapper #menuTable #menuTableBody td input.text, #ingredientStockTable_wrapper #menuTable #comboTableBody td span.text, #ingredientStockTable_wrapper #menuTable #comboTableBody td input.text, #ingredientStockTable_wrapper #comboTable #ingredientTableBody td span.text, #ingredientStockTable_wrapper #comboTable #ingredientTableBody td input.text, #ingredientStockTable_wrapper #comboTable #ingredientStockTableBody td span.text, #ingredientStockTable_wrapper #comboTable #ingredientStockTableBody td input.text, #ingredientStockTable_wrapper #comboTable #menuTableBody td span.text, #ingredientStockTable_wrapper #comboTable #menuTableBody td input.text, #ingredientStockTable_wrapper #comboTable #comboTableBody td span.text, #ingredientStockTable_wrapper #comboTable #comboTableBody td input.text, #ingredientTable_wrapper #ingredientTable #ingredientTableBody td span.text, #ingredientTable_wrapper #ingredientTable #ingredientTableBody td input.text, #ingredientTable_wrapper #ingredientTable #ingredientStockTableBody td span.text, #ingredientTable_wrapper #ingredientTable #ingredientStockTableBody td input.text, #ingredientTable_wrapper #ingredientTable #menuTableBody td span.text, #ingredientTable_wrapper #ingredientTable #menuTableBody td input.text, #ingredientTable_wrapper #ingredientTable #comboTableBody td span.text, #ingredientTable_wrapper #ingredientTable #comboTableBody td input.text, #ingredientTable_wrapper #ingredientStockTable #ingredientTableBody td span.text, #ingredientTable_wrapper #ingredientStockTable #ingredientTableBody td input.text, #ingredientTable_wrapper #ingredientStockTable #ingredientStockTableBody td span.text, #ingredientTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.text, #ingredientTable_wrapper #ingredientStockTable #menuTableBody td span.text, #ingredientTable_wrapper #ingredientStockTable #menuTableBody td input.text, #ingredientTable_wrapper #ingredientStockTable #comboTableBody td span.text, #ingredientTable_wrapper #ingredientStockTable #comboTableBody td input.text, #ingredientTable_wrapper #menuTable #ingredientTableBody td span.text, #ingredientTable_wrapper #menuTable #ingredientTableBody td input.text, #ingredientTable_wrapper #menuTable #ingredientStockTableBody td span.text, #ingredientTable_wrapper #menuTable #ingredientStockTableBody td input.text, #ingredientTable_wrapper #menuTable #menuTableBody td span.text, #ingredientTable_wrapper #menuTable #menuTableBody td input.text, #ingredientTable_wrapper #menuTable #comboTableBody td span.text, #ingredientTable_wrapper #menuTable #comboTableBody td input.text, #ingredientTable_wrapper #comboTable #ingredientTableBody td span.text, #ingredientTable_wrapper #comboTable #ingredientTableBody td input.text, #ingredientTable_wrapper #comboTable #ingredientStockTableBody td span.text, #ingredientTable_wrapper #comboTable #ingredientStockTableBody td input.text, #ingredientTable_wrapper #comboTable #menuTableBody td span.text, #ingredientTable_wrapper #comboTable #menuTableBody td input.text, #ingredientTable_wrapper #comboTable #comboTableBody td span.text, #ingredientTable_wrapper #comboTable #comboTableBody td input.text, #menuTable_wrapper #ingredientTable #ingredientTableBody td span.text, #menuTable_wrapper #ingredientTable #ingredientTableBody td input.text, #menuTable_wrapper #ingredientTable #ingredientStockTableBody td span.text, #menuTable_wrapper #ingredientTable #ingredientStockTableBody td input.text, #menuTable_wrapper #ingredientTable #menuTableBody td span.text, #menuTable_wrapper #ingredientTable #menuTableBody td input.text, #menuTable_wrapper #ingredientTable #comboTableBody td span.text, #menuTable_wrapper #ingredientTable #comboTableBody td input.text, #menuTable_wrapper #ingredientStockTable #ingredientTableBody td span.text, #menuTable_wrapper #ingredientStockTable #ingredientTableBody td input.text, #menuTable_wrapper #ingredientStockTable #ingredientStockTableBody td span.text, #menuTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.text, #menuTable_wrapper #ingredientStockTable #menuTableBody td span.text, #menuTable_wrapper #ingredientStockTable #menuTableBody td input.text, #menuTable_wrapper #ingredientStockTable #comboTableBody td span.text, #menuTable_wrapper #ingredientStockTable #comboTableBody td input.text, #menuTable_wrapper #menuTable #ingredientTableBody td span.text, #menuTable_wrapper #menuTable #ingredientTableBody td input.text, #menuTable_wrapper #menuTable #ingredientStockTableBody td span.text, #menuTable_wrapper #menuTable #ingredientStockTableBody td input.text, #menuTable_wrapper #menuTable #menuTableBody td span.text, #menuTable_wrapper #menuTable #menuTableBody td input.text, #menuTable_wrapper #menuTable #comboTableBody td span.text, #menuTable_wrapper #menuTable #comboTableBody td input.text, #menuTable_wrapper #comboTable #ingredientTableBody td span.text, #menuTable_wrapper #comboTable #ingredientTableBody td input.text, #menuTable_wrapper #comboTable #ingredientStockTableBody td span.text, #menuTable_wrapper #comboTable #ingredientStockTableBody td input.text, #menuTable_wrapper #comboTable #menuTableBody td span.text, #menuTable_wrapper #comboTable #menuTableBody td input.text, #menuTable_wrapper #comboTable #comboTableBody td span.text, #menuTable_wrapper #comboTable #comboTableBody td input.text, #comboTable_wrapper #ingredientTable #ingredientTableBody td span.text, #comboTable_wrapper #ingredientTable #ingredientTableBody td input.text, #comboTable_wrapper #ingredientTable #ingredientStockTableBody td span.text, #comboTable_wrapper #ingredientTable #ingredientStockTableBody td input.text, #comboTable_wrapper #ingredientTable #menuTableBody td span.text, #comboTable_wrapper #ingredientTable #menuTableBody td input.text, #comboTable_wrapper #ingredientTable #comboTableBody td span.text, #comboTable_wrapper #ingredientTable #comboTableBody td input.text, #comboTable_wrapper #ingredientStockTable #ingredientTableBody td span.text, #comboTable_wrapper #ingredientStockTable #ingredientTableBody td input.text, #comboTable_wrapper #ingredientStockTable #ingredientStockTableBody td span.text, #comboTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.text, #comboTable_wrapper #ingredientStockTable #menuTableBody td span.text, #comboTable_wrapper #ingredientStockTable #menuTableBody td input.text, #comboTable_wrapper #ingredientStockTable #comboTableBody td span.text, #comboTable_wrapper #ingredientStockTable #comboTableBody td input.text, #comboTable_wrapper #menuTable #ingredientTableBody td span.text, #comboTable_wrapper #menuTable #ingredientTableBody td input.text, #comboTable_wrapper #menuTable #ingredientStockTableBody td span.text, #comboTable_wrapper #menuTable #ingredientStockTableBody td input.text, #comboTable_wrapper #menuTable #menuTableBody td span.text, #comboTable_wrapper #menuTable #menuTableBody td input.text, #comboTable_wrapper #menuTable #comboTableBody td span.text, #comboTable_wrapper #menuTable #comboTableBody td input.text, #comboTable_wrapper #comboTable #ingredientTableBody td span.text, #comboTable_wrapper #comboTable #ingredientTableBody td input.text, #comboTable_wrapper #comboTable #ingredientStockTableBody td span.text, #comboTable_wrapper #comboTable #ingredientStockTableBody td input.text, #comboTable_wrapper #comboTable #menuTableBody td span.text, #comboTable_wrapper #comboTable #menuTableBody td input.text, #comboTable_wrapper #comboTable #comboTableBody td span.text, #comboTable_wrapper #comboTable #comboTableBody td input.text {
+#ingredientTable_wrapper #ingredientTable #ingredientTableBody td span.text,
+#ingredientTable_wrapper #ingredientTable #ingredientTableBody td input.text {
   text-align: left;
 }
-#ingredientStockTable_wrapper #ingredientTable #ingredientTableBody td span.number, #ingredientStockTable_wrapper #ingredientTable #ingredientTableBody td input.number, #ingredientStockTable_wrapper #ingredientTable #ingredientStockTableBody td span.number, #ingredientStockTable_wrapper #ingredientTable #ingredientStockTableBody td input.number, #ingredientStockTable_wrapper #ingredientTable #menuTableBody td span.number, #ingredientStockTable_wrapper #ingredientTable #menuTableBody td input.number, #ingredientStockTable_wrapper #ingredientTable #comboTableBody td span.number, #ingredientStockTable_wrapper #ingredientTable #comboTableBody td input.number, #ingredientStockTable_wrapper #ingredientStockTable #ingredientTableBody td span.number, #ingredientStockTable_wrapper #ingredientStockTable #ingredientTableBody td input.number, #ingredientStockTable_wrapper #ingredientStockTable #ingredientStockTableBody td span.number, #ingredientStockTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.number, #ingredientStockTable_wrapper #ingredientStockTable #menuTableBody td span.number, #ingredientStockTable_wrapper #ingredientStockTable #menuTableBody td input.number, #ingredientStockTable_wrapper #ingredientStockTable #comboTableBody td span.number, #ingredientStockTable_wrapper #ingredientStockTable #comboTableBody td input.number, #ingredientStockTable_wrapper #menuTable #ingredientTableBody td span.number, #ingredientStockTable_wrapper #menuTable #ingredientTableBody td input.number, #ingredientStockTable_wrapper #menuTable #ingredientStockTableBody td span.number, #ingredientStockTable_wrapper #menuTable #ingredientStockTableBody td input.number, #ingredientStockTable_wrapper #menuTable #menuTableBody td span.number, #ingredientStockTable_wrapper #menuTable #menuTableBody td input.number, #ingredientStockTable_wrapper #menuTable #comboTableBody td span.number, #ingredientStockTable_wrapper #menuTable #comboTableBody td input.number, #ingredientStockTable_wrapper #comboTable #ingredientTableBody td span.number, #ingredientStockTable_wrapper #comboTable #ingredientTableBody td input.number, #ingredientStockTable_wrapper #comboTable #ingredientStockTableBody td span.number, #ingredientStockTable_wrapper #comboTable #ingredientStockTableBody td input.number, #ingredientStockTable_wrapper #comboTable #menuTableBody td span.number, #ingredientStockTable_wrapper #comboTable #menuTableBody td input.number, #ingredientStockTable_wrapper #comboTable #comboTableBody td span.number, #ingredientStockTable_wrapper #comboTable #comboTableBody td input.number, #ingredientTable_wrapper #ingredientTable #ingredientTableBody td span.number, #ingredientTable_wrapper #ingredientTable #ingredientTableBody td input.number, #ingredientTable_wrapper #ingredientTable #ingredientStockTableBody td span.number, #ingredientTable_wrapper #ingredientTable #ingredientStockTableBody td input.number, #ingredientTable_wrapper #ingredientTable #menuTableBody td span.number, #ingredientTable_wrapper #ingredientTable #menuTableBody td input.number, #ingredientTable_wrapper #ingredientTable #comboTableBody td span.number, #ingredientTable_wrapper #ingredientTable #comboTableBody td input.number, #ingredientTable_wrapper #ingredientStockTable #ingredientTableBody td span.number, #ingredientTable_wrapper #ingredientStockTable #ingredientTableBody td input.number, #ingredientTable_wrapper #ingredientStockTable #ingredientStockTableBody td span.number, #ingredientTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.number, #ingredientTable_wrapper #ingredientStockTable #menuTableBody td span.number, #ingredientTable_wrapper #ingredientStockTable #menuTableBody td input.number, #ingredientTable_wrapper #ingredientStockTable #comboTableBody td span.number, #ingredientTable_wrapper #ingredientStockTable #comboTableBody td input.number, #ingredientTable_wrapper #menuTable #ingredientTableBody td span.number, #ingredientTable_wrapper #menuTable #ingredientTableBody td input.number, #ingredientTable_wrapper #menuTable #ingredientStockTableBody td span.number, #ingredientTable_wrapper #menuTable #ingredientStockTableBody td input.number, #ingredientTable_wrapper #menuTable #menuTableBody td span.number, #ingredientTable_wrapper #menuTable #menuTableBody td input.number, #ingredientTable_wrapper #menuTable #comboTableBody td span.number, #ingredientTable_wrapper #menuTable #comboTableBody td input.number, #ingredientTable_wrapper #comboTable #ingredientTableBody td span.number, #ingredientTable_wrapper #comboTable #ingredientTableBody td input.number, #ingredientTable_wrapper #comboTable #ingredientStockTableBody td span.number, #ingredientTable_wrapper #comboTable #ingredientStockTableBody td input.number, #ingredientTable_wrapper #comboTable #menuTableBody td span.number, #ingredientTable_wrapper #comboTable #menuTableBody td input.number, #ingredientTable_wrapper #comboTable #comboTableBody td span.number, #ingredientTable_wrapper #comboTable #comboTableBody td input.number, #menuTable_wrapper #ingredientTable #ingredientTableBody td span.number, #menuTable_wrapper #ingredientTable #ingredientTableBody td input.number, #menuTable_wrapper #ingredientTable #ingredientStockTableBody td span.number, #menuTable_wrapper #ingredientTable #ingredientStockTableBody td input.number, #menuTable_wrapper #ingredientTable #menuTableBody td span.number, #menuTable_wrapper #ingredientTable #menuTableBody td input.number, #menuTable_wrapper #ingredientTable #comboTableBody td span.number, #menuTable_wrapper #ingredientTable #comboTableBody td input.number, #menuTable_wrapper #ingredientStockTable #ingredientTableBody td span.number, #menuTable_wrapper #ingredientStockTable #ingredientTableBody td input.number, #menuTable_wrapper #ingredientStockTable #ingredientStockTableBody td span.number, #menuTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.number, #menuTable_wrapper #ingredientStockTable #menuTableBody td span.number, #menuTable_wrapper #ingredientStockTable #menuTableBody td input.number, #menuTable_wrapper #ingredientStockTable #comboTableBody td span.number, #menuTable_wrapper #ingredientStockTable #comboTableBody td input.number, #menuTable_wrapper #menuTable #ingredientTableBody td span.number, #menuTable_wrapper #menuTable #ingredientTableBody td input.number, #menuTable_wrapper #menuTable #ingredientStockTableBody td span.number, #menuTable_wrapper #menuTable #ingredientStockTableBody td input.number, #menuTable_wrapper #menuTable #menuTableBody td span.number, #menuTable_wrapper #menuTable #menuTableBody td input.number, #menuTable_wrapper #menuTable #comboTableBody td span.number, #menuTable_wrapper #menuTable #comboTableBody td input.number, #menuTable_wrapper #comboTable #ingredientTableBody td span.number, #menuTable_wrapper #comboTable #ingredientTableBody td input.number, #menuTable_wrapper #comboTable #ingredientStockTableBody td span.number, #menuTable_wrapper #comboTable #ingredientStockTableBody td input.number, #menuTable_wrapper #comboTable #menuTableBody td span.number, #menuTable_wrapper #comboTable #menuTableBody td input.number, #menuTable_wrapper #comboTable #comboTableBody td span.number, #menuTable_wrapper #comboTable #comboTableBody td input.number, #comboTable_wrapper #ingredientTable #ingredientTableBody td span.number, #comboTable_wrapper #ingredientTable #ingredientTableBody td input.number, #comboTable_wrapper #ingredientTable #ingredientStockTableBody td span.number, #comboTable_wrapper #ingredientTable #ingredientStockTableBody td input.number, #comboTable_wrapper #ingredientTable #menuTableBody td span.number, #comboTable_wrapper #ingredientTable #menuTableBody td input.number, #comboTable_wrapper #ingredientTable #comboTableBody td span.number, #comboTable_wrapper #ingredientTable #comboTableBody td input.number, #comboTable_wrapper #ingredientStockTable #ingredientTableBody td span.number, #comboTable_wrapper #ingredientStockTable #ingredientTableBody td input.number, #comboTable_wrapper #ingredientStockTable #ingredientStockTableBody td span.number, #comboTable_wrapper #ingredientStockTable #ingredientStockTableBody td input.number, #comboTable_wrapper #ingredientStockTable #menuTableBody td span.number, #comboTable_wrapper #ingredientStockTable #menuTableBody td input.number, #comboTable_wrapper #ingredientStockTable #comboTableBody td span.number, #comboTable_wrapper #ingredientStockTable #comboTableBody td input.number, #comboTable_wrapper #menuTable #ingredientTableBody td span.number, #comboTable_wrapper #menuTable #ingredientTableBody td input.number, #comboTable_wrapper #menuTable #ingredientStockTableBody td span.number, #comboTable_wrapper #menuTable #ingredientStockTableBody td input.number, #comboTable_wrapper #menuTable #menuTableBody td span.number, #comboTable_wrapper #menuTable #menuTableBody td input.number, #comboTable_wrapper #menuTable #comboTableBody td span.number, #comboTable_wrapper #menuTable #comboTableBody td input.number, #comboTable_wrapper #comboTable #ingredientTableBody td span.number, #comboTable_wrapper #comboTable #ingredientTableBody td input.number, #comboTable_wrapper #comboTable #ingredientStockTableBody td span.number, #comboTable_wrapper #comboTable #ingredientStockTableBody td input.number, #comboTable_wrapper #comboTable #menuTableBody td span.number, #comboTable_wrapper #comboTable #menuTableBody td input.number, #comboTable_wrapper #comboTable #comboTableBody td span.number, #comboTable_wrapper #comboTable #comboTableBody td input.number {
+#ingredientTable_wrapper #ingredientTable #ingredientTableBody td span.number,
+#ingredientTable_wrapper #ingredientTable #ingredientTableBody td input.number {
   text-align: right;
   padding: 0.375rem 0.5rem;
 }
 
-#ingredientStockTableBody span, #comboTableBody span {
+#menuTable_wrapper .dt-search .dt-input {
+  margin-right: 0 !important;
+}
+#menuTable_wrapper #menuTable {
+  width: 100%;
+}
+#menuTable_wrapper #menuTable #menuTableBody td {
+  vertical-align: middle;
+  padding: 0 !important;
+}
+#menuTable_wrapper #menuTable #menuTableBody td img.menu-image {
+  width: 70px;
+  height: 70px;
+  -o-object-fit: cover;
+     object-fit: cover;
+  margin: 0 auto;
+  cursor: pointer;
+  padding: 0.375rem;
+}
+#menuTable_wrapper #menuTable #menuTableBody td select.form-select-sm {
+  border: none;
+  -webkit-box-shadow: none;
+          box-shadow: none;
+}
+#menuTable_wrapper #menuTable #menuTableBody td input.form-control[type=text] {
+  padding: 0.5rem 0.75rem !important;
+}
+#menuTable_wrapper #menuTable #menuTableBody td span.text,
+#menuTable_wrapper #menuTable #menuTableBody td input.text {
+  text-align: left;
+}
+#menuTable_wrapper #menuTable #menuTableBody td span.number,
+#menuTable_wrapper #menuTable #menuTableBody td input.number {
+  text-align: right;
+  padding: 0.375rem 0.5rem;
+}
+
+#comboTable_wrapper .dt-search .dt-input {
+  margin-right: 0 !important;
+}
+#comboTable_wrapper #comboTable {
+  width: 100%;
+}
+#comboTable_wrapper #comboTable #comboTableBody td {
+  vertical-align: middle;
+  padding: 0 !important;
+}
+#comboTable_wrapper #comboTable #comboTableBody td img.combo-image {
+  width: 70px;
+  height: 70px;
+  -o-object-fit: cover;
+     object-fit: cover;
+  margin: 0 auto;
+  cursor: pointer;
+  padding: 0.375rem;
+}
+#comboTable_wrapper #comboTable #comboTableBody td select.form-select-sm {
+  border: none;
+  -webkit-box-shadow: none;
+          box-shadow: none;
+}
+#comboTable_wrapper #comboTable #comboTableBody td input.form-control[type=text] {
+  padding: 0.5rem 0.75rem !important;
+}
+#comboTable_wrapper #comboTable #comboTableBody td span.text,
+#comboTable_wrapper #comboTable #comboTableBody td input.text {
+  text-align: left;
+}
+#comboTable_wrapper #comboTable #comboTableBody td span.number,
+#comboTable_wrapper #comboTable #comboTableBody td input.number {
+  text-align: right;
+  padding: 0.375rem 0.5rem;
+}
+
+.table-image-container {
+  display: block;
+  margin: 0 auto;
+  position: relative;
+}
+.table-image-container.no-image {
+  width: 70px;
+  height: 70px;
+}
+.table-image-container img {
+  display: block;
+  margin: 0 auto;
+  cursor: pointer;
+  width: 70px;
+  height: 70px;
+  -o-object-fit: cover;
+     object-fit: cover;
+  border-radius: 8px;
+}
+.table-image-container img.no-image {
+  border-radius: 6px;
+  opacity: 0.3;
+}
+.table-image-container .image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-transition: opacity 0.3s;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+.table-image-container .image-overlay.has-image {
+  background: var(--black);
+}
+.table-image-container .image-overlay.no-image {
+  background: var(--light);
+  border: 1px dashed var(--muted);
+  border-radius: 6px;
+}
+.table-image-container:hover .image-overlay {
+  opacity: 1;
+}
+
+.image-overlay .btn {
+  --bs-btn-padding-y: 0.25rem;
+  --bs-btn-padding-x: 0.4rem;
+  --bs-btn-font-size: 0.75rem;
+}
+
+#ingredientStockTableBody span,
+#comboTableBody span {
   display: block;
   padding: 0.5rem 0.75rem !important;
 }
@@ -82,6 +219,15 @@ table tbody td .form-control-sm {
 table tbody td .form-select-sm {
   padding: 0.5rem 0.75rem !important;
   border-radius: 0 !important;
+}
+table tbody td span.text,
+table tbody td input.text {
+  text-align: left;
+}
+table tbody td span.number,
+table tbody td input.number {
+  text-align: right;
+  padding: 0.375rem 0.5rem;
 }
 
 .form-select {
@@ -153,10 +299,12 @@ table tbody td .form-select-sm {
 }
 
 #imageCropModal .modal-dialog {
-  max-width: 700px;
-  margin: auto;
+  max-width: 800px;
 }
 #imageCropModal .modal-body {
+  max-height: 80vh;
+  padding: 0;
+  overflow: hidden;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -166,13 +314,14 @@ table tbody td .form-select-sm {
   -webkit-box-align: center;
       -ms-flex-align: center;
           align-items: center;
-  padding: 1rem;
-  max-height: 80vh;
-  overflow: hidden;
+}
+#imageCropModal img#imagePreview {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  height: auto;
 }
 #imageCropModal .cropper-container {
-  margin: 0 auto !important;
-  display: block;
   max-width: 100%;
   max-height: 70vh;
 }
@@ -199,14 +348,20 @@ input[type=number]::-webkit-inner-spin-button {
   }
 }
 @media print {
-  #entry-detail thead th:last-child, #entry-detail tbody td:last-child, #issue-detail thead th:last-child, #issue-detail tbody td:last-child, #transfer-detail thead th:last-child, #transfer-detail tbody td:last-child {
+  #entry-detail thead th:last-child,
+  #entry-detail tbody td:last-child,
+  #issue-detail thead th:last-child,
+  #issue-detail tbody td:last-child,
+  #transfer-detail thead th:last-child,
+  #transfer-detail tbody td:last-child {
     display: none;
   }
   body {
     margin: 0;
     font-size: 12px;
   }
-  .container, .container-xxl {
+  .container,
+  .container-xxl {
     width: 100% !important;
     max-width: 100% !important;
     padding: 0;
@@ -219,7 +374,8 @@ input[type=number]::-webkit-inner-spin-button {
     margin: 0;
     padding: 0;
   }
-  .card-header, .card-body {
+  .card-header,
+  .card-body {
     padding: 8px !important;
   }
   table {
@@ -227,13 +383,19 @@ input[type=number]::-webkit-inner-spin-button {
     border-collapse: collapse !important;
     font-size: 12px;
   }
-  table th, table td {
+  table th,
+  table td {
     padding: 4px !important;
   }
-  .no-print, .btn, a, i.bi {
+  .no-print,
+  .btn,
+  a,
+  i.bi {
     display: none !important;
   }
-  h1, h5, p {
+  h1,
+  h5,
+  p {
     margin: 2px 0 !important;
   }
   @page {

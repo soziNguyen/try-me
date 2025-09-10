@@ -1,17 +1,27 @@
 :root {
-  --bg: #ffffff;
-  --surface: #ffffff;
+  /* Base colors */
+  --white: #fff;
+  --black: rgba(0, 0, 0, 0.8);
   --text: #222222;
   --muted: #6c757d;
-  --header-bg: #ffffff;
-  --header-text: #222222;
-  --sidebar-bg: #ffffff;
-  --sidebar-text: #000000;
-  --card-border: #e9ecef;
   --link: #0d6efd;
-  --tooltip-bg: rgba(0,0,0,0.8);
-  --accent-bg: rgba(13,110,253,0.04);
-  
+  --tooltip-bg: rgba(0, 0, 0, 0.8);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+
+  /* Background */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --header-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --accent-bg: rgba(13, 110, 253, 0.04);
+
+  /* Text colors */
+  --header-text: #222222;
+  --sidebar-text: #000000;
+
+  /* Borders */
+  --card-border: #e9ecef;
+
   /* Theme colors */
   --primary: #0d6efd;
   --secondary: #6c757d;
@@ -21,9 +31,8 @@
   --info: #0dcaf0;
   --light: #f8f9fa;
   --dark: #212529;
-  --white: #fff;
-  --black: rgba(0, 0, 0, 0.8);
 }
+
 
 
 /* Dark theme overrides */
@@ -38,8 +47,8 @@ html[data-theme="dark"] {
   --sidebar-text: #dfe8f2;
   --card-border: #22272b;
   --link: #7ab4ff;
-  --tooltip-bg: rgba(255,255,255,0.12);
-  --accent-bg: rgba(122,180,255,0.06);
+  --tooltip-bg: rgba(255, 255, 255, 0.12);
+  --accent-bg: rgba(122, 180, 255, 0.06);
 }
 
 /* Basic reset / fonts */
@@ -77,6 +86,7 @@ body {
       .info__icon {
         color: var(--header-text);
       }
+
       ul li a {
         cursor: pointer;
         color: inherit;
@@ -101,7 +111,7 @@ body {
 
       /* --- Firefox --- */
       scrollbar-width: none;
-      -ms-overflow-style: none;  // IE / Edge legacy
+      -ms-overflow-style: none; // IE / Edge legacy
 
       ul {
         list-style: none;
@@ -135,7 +145,7 @@ body {
           display: block;
         }
 
-        li > .accordion {
+        li>.accordion {
           width: 100%;
 
           .accordion-item {
@@ -158,6 +168,7 @@ body {
               i {
                 margin-right: 10px;
               }
+
               span {
                 flex: 1;
                 text-align: left;
@@ -179,6 +190,7 @@ body {
           .accordion-collapse {
             .accordion-body {
               padding: 0;
+
               a {
                 display: flex;
                 align-items: center;
@@ -212,16 +224,19 @@ body {
         padding: 1rem 0;
 
         ul {
-          > li,
-          li > .accordion {
+
+          >li,
+          li>.accordion {
             justify-content: center;
 
             a,
             .accordion-button {
               justify-content: center;
+
               i {
                 margin: 0 !important;
               }
+
               span {
                 display: none;
               }
@@ -314,8 +329,10 @@ body {
 
 /* Mobile (<992px) */
 @media (max-width: 991px) {
+
   .admin__layout,
   .staff__layout {
+
     .admin__main #admin__sidebar,
     .staff__main #staff__sidebar {
       position: fixed;
@@ -332,12 +349,14 @@ body {
         transform: translateX(0);
       }
 
-      ul > li,
-      ul li > .accordion {
+      ul>li,
+      ul li>.accordion {
         justify-content: flex-start;
+
         a,
         .accordion-button {
           display: flex;
+
           span {
             display: inline;
           }

@@ -1,42 +1,49 @@
-#ingredientStockTable_wrapper, #ingredientTable_wrapper, #menuTable_wrapper, #comboTable_wrapper {
-  .dt-search {
-    .dt-input {
-      margin-right: 0 !important;
+$tables: ingredient, menu, combo;
+
+@each $name in $tables {
+  ##{$name}Table_wrapper {
+    .dt-search {
+      .dt-input {
+        margin-right: 0 !important;
+      }
     }
-  }
-  #ingredientTable, #ingredientStockTable, #menuTable, #comboTable {
-    width: 100%;
-    #ingredientTableBody, #ingredientStockTableBody, #menuTableBody, #comboTableBody {
-      td {
-        vertical-align: middle;
-        padding: 0 !important;
 
-        img.ingredient-image, img.menu-image, img.combo-image{
-          width: 70px;
-          height: 70px;
-          object-fit: cover;
-          margin: 0 auto;
-          cursor: pointer;
-          padding: .375rem;
-        }
+    ##{$name}Table {
+      width: 100%;
 
-        select.form-select-sm {
-          border: none;
-          box-shadow: none;
-        }
+      ##{$name}TableBody {
+        td {
+          vertical-align: middle;
+          padding: 0 !important;
 
-        input.form-control[type="text"] {
-          padding: .5rem .75rem !important;
-        }
-
-        span, input {
-          &.text {
-            text-align: left;
+          img.#{$name}-image {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            margin: 0 auto;
+            cursor: pointer;
+            padding: .375rem;
           }
 
-          &.number {
-            text-align: right;
-            padding: .375rem .5rem;
+          select.form-select-sm {
+            border: none;
+            box-shadow: none;
+          }
+
+          input.form-control[type="text"] {
+            padding: .5rem .75rem !important;
+          }
+
+          span,
+          input {
+            &.text {
+              text-align: left;
+            }
+
+            &.number {
+              text-align: right;
+              padding: .375rem .5rem;
+            }
           }
         }
       }
@@ -44,7 +51,69 @@
   }
 }
 
-#ingredientStockTableBody, #comboTableBody {
+// Container image + overlay
+.table-image-container {
+  display: block;
+  margin: 0 auto;
+  position: relative;
+
+  &.no-image {
+    width: 70px;
+    height: 70px;
+  }
+
+  img {
+    display: block;
+    margin: 0 auto;
+    cursor: pointer;
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 8px;
+
+    &.no-image {
+      border-radius: 6px;
+      opacity: 0.3;
+    }
+  }
+
+  .image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s;
+    opacity: 0;
+
+    &.has-image {
+      background: var(--black);
+    }
+
+    &.no-image {
+      background: var(--light);
+      border: 1px dashed var(--muted);
+      border-radius: 6px;
+    }
+  }
+
+  &:hover .image-overlay {
+    opacity: 1;
+  }
+}
+
+// button in overlay
+.image-overlay .btn {
+  --bs-btn-padding-y: 0.25rem;
+  --bs-btn-padding-x: 0.4rem;
+  --bs-btn-font-size: 0.75rem;
+}
+
+#ingredientStockTableBody,
+#comboTableBody {
   span {
     display: block;
     padding: .5rem .75rem !important;
@@ -56,12 +125,12 @@ table {
     th {
       &:first-child {
         vertical-align: middle;
-        
+
         input[type="checkbox"] {
           text-align: center;
           vertical-align: middle;
           cursor: pointer;
-          
+
           &:hover {
             cursor: pointer;
           }
@@ -69,12 +138,14 @@ table {
       }
     }
   }
+
   tbody {
     td {
       input[type="checkbox"] {
         display: block;
         margin: auto;
       }
+
       text-align: left;
       vertical-align: middle;
       padding: 0 !important;
@@ -99,15 +170,29 @@ table {
         border: none;
         box-shadow: none !important;
       }
+
       .form-control-sm {
         border: none;
         box-shadow: none !important;
         padding: .5rem .75rem !important;
         border-radius: 0 !important;
       }
+
       .form-select-sm {
         padding: .5rem .75rem !important;
         border-radius: 0 !important;
+      }
+
+      span,
+      input {
+        &.text {
+          text-align: left;
+        }
+
+        &.number {
+          text-align: right;
+          padding: .375rem .5rem;
+        }
       }
     }
   }
@@ -155,6 +240,7 @@ table {
 
     .select2-results__option {
       padding-left: 4px;
+
       &:hover {
         background-color: var(--link) !important;
         color: var(--white);
@@ -176,6 +262,7 @@ table {
 
 .select2-dropdown {
   display: block !important;
+
   .select2-search__field {
     width: 100%;
     position: relative;
@@ -191,22 +278,26 @@ table {
 
 #imageCropModal {
   .modal-dialog {
-    max-width: 700px;
-    margin: auto;
+    max-width: 800px;
   }
 
   .modal-body {
+    max-height: 80vh;
+    padding: 0;
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 1rem;
-    max-height: 80vh;
-    overflow: hidden;
+  }
+
+  img#imagePreview {
+    display: block;
+    max-width: 100%;
+    max-height: 70vh;
+    height: auto;
   }
 
   .cropper-container {
-    margin: 0 auto !important;
-    display: block;
     max-width: 100%;
     max-height: 70vh;
   }
@@ -221,7 +312,7 @@ textarea {
   &::-webkit-scrollbar {
     display: none; // Chrome, Safari
   }
-  
+
 }
 
 input[type=number]::-webkit-outer-spin-button,
@@ -242,8 +333,12 @@ input[type=number]::-webkit-inner-spin-button {
 
 @media print {
 
-  #entry-detail, #issue-detail, #transfer-detail {
-    thead th:last-child, tbody td:last-child {
+  #entry-detail,
+  #issue-detail,
+  #transfer-detail {
+
+    thead th:last-child,
+    tbody td:last-child {
       display: none;
     }
   }
@@ -253,7 +348,8 @@ input[type=number]::-webkit-inner-spin-button {
     font-size: 12px;
   }
 
-  .container, .container-xxl {
+  .container,
+  .container-xxl {
     width: 100% !important;
     max-width: 100% !important;
     padding: 0;
@@ -267,7 +363,8 @@ input[type=number]::-webkit-inner-spin-button {
     padding: 0;
   }
 
-  .card-header, .card-body {
+  .card-header,
+  .card-body {
     padding: 8px !important;
   }
 
@@ -277,15 +374,21 @@ input[type=number]::-webkit-inner-spin-button {
     font-size: 12px;
   }
 
-  table th, table td {
+  table th,
+  table td {
     padding: 4px !important;
   }
 
-  .no-print, .btn, a, i.bi {
+  .no-print,
+  .btn,
+  a,
+  i.bi {
     display: none !important;
   }
 
-  h1, h5, p {
+  h1,
+  h5,
+  p {
     margin: 2px 0 !important;
   }
 

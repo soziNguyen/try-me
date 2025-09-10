@@ -72,7 +72,7 @@ $(function () {
             if (type === 'display') {
               return `
                 <input type="number" 
-                    class="dataInput form-control w-100 border-0" 
+                    class="dataInput number form-control w-100 border-0" 
                     placeholder="0"
                     data-field="rate" 
                     value="${data ?? ''}"
