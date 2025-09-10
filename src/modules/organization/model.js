@@ -1,4 +1,4 @@
-import mongoose from "mongoose"
+import mongoose from 'mongoose'
 
 const Schema = mongoose.Schema
 
@@ -13,37 +13,37 @@ const OrganizationSchema = new Schema(
     isActive: { type: Boolean, default: true }
   },
   {
-    collection: "Organizations",
+    collection: 'Organizations',
     timestamps: true
   }
 )
 
 OrganizationSchema.index(
-  { name: 1 }, 
-  { 
-    partialFilterExpression: { 
-      name: { $exists: true, $ne: "" } 
+  { name: 1 },
+  {
+    partialFilterExpression: {
+      name: { $exists: true, $ne: '' }
     }
   }
 )
 OrganizationSchema.index(
-  { email: 1 }, 
-  { 
+  { email: 1 },
+  {
     unique: true,
-    partialFilterExpression: { 
-      email: { $exists: true, $ne: "" } 
+    partialFilterExpression: {
+      email: { $exists: true, $ne: '' }
     }
   }
 )
 OrganizationSchema.index(
-  { phone: 1 }, 
-  { 
+  { phone: 1 },
+  {
     unique: true,
-    partialFilterExpression: { 
-      phone: { $exists: true, $ne: "" } 
+    partialFilterExpression: {
+      phone: { $exists: true, $ne: '' }
     }
   }
 )
 
-const Organization = mongoose.model("Organization", OrganizationSchema)
+const Organization = mongoose.model('Organization', OrganizationSchema)
 export default Organization

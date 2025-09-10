@@ -14,7 +14,8 @@ export const getIngredientStockList = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // Khởi tạo pipeline với lookup
     const pipeline = [
@@ -26,25 +27,25 @@ export const getIngredientStockList = async (req, res) => {
 
     // Search
     if (searchValue) {
-      const isNumeric = !isNaN(searchValue);
+      const isNumeric = !isNaN(searchValue)
       const orConditions = [
-        { "ingredient.name": { $regex: searchValue, $options: "i" } },
-        { "ingredient.unit": { $regex: searchValue, $options: "i" } },
-        { "warehouse.name": { $regex: searchValue, $options: "i" } },
-        { "supplier.name": { $regex: searchValue, $options: "i" } }
-      ];
-    
+        { 'ingredient.name': { $regex: searchValue, $options: 'i' } },
+        { 'ingredient.unit': { $regex: searchValue, $options: 'i' } },
+        { 'warehouse.name': { $regex: searchValue, $options: 'i' } },
+        { 'supplier.name': { $regex: searchValue, $options: 'i' } }
+      ]
+
       if (isNumeric) {
-        orConditions.push({ quantity: Number(searchValue) });
+        orConditions.push({ quantity: Number(searchValue) })
       }
-    
+
       pipeline.push({
         $match: { $or: orConditions }
-      });
+      })
     }
 
     // Đếm bản ghi sau lọc (recordsFiltered)
-    const countPipeline = [...pipeline, { $count: "count" }]
+    const countPipeline = [...pipeline, { $count: 'count' }]
     const countResult = await IngredientStock.aggregate(countPipeline)
     const recordsFiltered = countResult.length > 0 ? countResult[0].count : 0
 
@@ -81,28 +82,31 @@ export const getIngredientStockList = async (req, res) => {
       { $limit: length },
       {
         $project: {
-        _id: 1,
-        quantity: 1,
-        ingredient: {
-          name: "$ingredient.name",
-          unit: "$ingredient.unit"
-        },
-        warehouse: {
-          name: "$warehouse.name",
-          location: "$warehouse.location"
-        },
-        supplier: {
-          name: "$supplier.name"
-        },
-        createdAt: 1,
-        updatedAt: 1
+          _id: 1,
+          quantity: 1,
+          ingredient: {
+            name: '$ingredient.name',
+            unit: '$ingredient.unit'
+          },
+          warehouse: {
+            name: '$warehouse.name',
+            location: '$warehouse.location'
+          },
+          supplier: {
+            name: '$supplier.name'
+          },
+          createdAt: 1,
+          updatedAt: 1
+        }
       }
-    })
+    )
     // pipeline.push({ $match: { quantity: { $gt: 0 } } });
 
     // Lấy dữ liệu và tổng bản ghi
     const data = await IngredientStock.aggregate(pipeline)
-    const recordsTotal = await IngredientStock.countDocuments({ organization: organizationId })
+    const recordsTotal = await IngredientStock.countDocuments({
+      organization: organizationId
+    })
 
     return res.json({
       draw,

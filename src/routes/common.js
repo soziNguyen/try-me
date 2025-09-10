@@ -33,39 +33,57 @@ import uploadRouter from '../modules/upload/route.js'
 const router = express.Router()
 
 const routes = [
-    // Core
-    userRoutes, adminRoutes, organizationRoutes, uploadRouter,
+  // Core
+  userRoutes,
+  adminRoutes,
+  organizationRoutes,
+  uploadRouter,
 
-    // Inventory
-    ingredientRoutes, ingredientCategoryRoutes, ingredientStockRoute,
-    supplierRoutes, warehouseRoutes, inventoryRoutes,
+  // Inventory
+  ingredientRoutes,
+  ingredientCategoryRoutes,
+  ingredientStockRoute,
+  supplierRoutes,
+  warehouseRoutes,
+  inventoryRoutes,
 
-    // Stock transactions  
-    stockEntryRoutes, stockIssueRoutes, stockTransferRoutes, stockHistoryRoutes,
+  // Stock transactions
+  stockEntryRoutes,
+  stockIssueRoutes,
+  stockTransferRoutes,
+  stockHistoryRoutes,
 
-    // Menu
-    menuRoutes, menuCategoryRoutes, menuItemRoutes, recipeRoutes, comboRoutes,
-    shiftRoutes,
+  // Menu
+  menuRoutes,
+  menuCategoryRoutes,
+  menuItemRoutes,
+  recipeRoutes,
+  comboRoutes,
+  shiftRoutes,
 
-    // Table & order
-    tableRoutes, orderRoutes,
+  // Table & order
+  tableRoutes,
+  orderRoutes,
 
-    // Staff
-    staffRoutes, scheduleRoutes, attendanceRoute, payrollRoutes,
+  // Staff
+  staffRoutes,
+  scheduleRoutes,
+  attendanceRoute,
+  payrollRoutes,
 
-    // Report
-    reportRoutes,
+  // Report
+  reportRoutes,
 
-    // Coupon
-    couponRoutes,
+  // Coupon
+  couponRoutes,
 
-    // Tax
-    taxRoutes,
+  // Tax
+  taxRoutes,
 
-    // Activity
-    activityRoutes
+  // Activity
+  activityRoutes
 ]
 
-routes.forEach(route => router.use('/', route))
+routes.forEach((route) => router.use('/', route))
 
 export default router

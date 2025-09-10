@@ -36,7 +36,10 @@ function handlerDeleteEvent(tableSelector, btnSelector, checkboxClass, module) {
 
   $wrapper.on('click', btnSelector, function () {
     const $btn = $(this) // chưa disable ngay
-    const selected = $wrapper.find(`.${checkboxClass}:checked`).map((_, el) => $(el).data('id')).get()
+    const selected = $wrapper
+      .find(`.${checkboxClass}:checked`)
+      .map((_, el) => $(el).data('id'))
+      .get()
 
     if (!selected.length) {
       toastr.remove()
@@ -124,10 +127,13 @@ function initTableCheckboxEvents(tableSelector, checkboxClass) {
 
   // Click 'tr' event
   $table.on('click', 'tbody tr', function (e) {
-    if ($(e.target).is(`
+    if (
+      $(e.target).is(`
       input[type=checkbox], img, input[type=text], input[type=number], select, button, span, .dataInput, i, td:nth-child(n+2)
-      `) || $(e.target).closest('.image-cell').length)
-    return
+      `) ||
+      $(e.target).closest('.image-cell').length
+    )
+      return
     const checkbox = $(this).find(`.${checkboxClass}`)
     checkbox.prop('checked', !checkbox.prop('checked')).trigger('change')
   })
@@ -238,13 +244,13 @@ function setupBackButton(btnSelector = '#btn-back') {
 
 /**
  * Hiển thị modal xác nhận (Confirm Modal).
- * 
+ *
  * @param {Object} options - Các tùy chọn cấu hình cho modal.
  * @param {string} [options.title='Xác nhận'] - Tiêu đề của modal.
  * @param {string} [options.message=''] - Nội dung hiển thị trong modal.
  * @param {string} [options.confirmed='Xóa'] - Nội dung nút xác nhận (OK button).
  * @param {Function|null} [options.onConfirm=null] - Callback sẽ được gọi khi người dùng bấm nút xác nhận.
- * 
+ *
  * @example
  * showConfirmModal({
  *   title: 'Xóa bản ghi',
@@ -257,21 +263,26 @@ function setupBackButton(btnSelector = '#btn-back') {
  */
 
 function showConfirmModal(options) {
-  const settings = $.extend({
-    title: 'Xác nhận',
-    message: '',
-    confirmed: '',
-    onConfirm: null
-  }, options)
+  const settings = $.extend(
+    {
+      title: 'Xác nhận',
+      message: '',
+      confirmed: '',
+      onConfirm: null
+    },
+    options
+  )
 
   $('#confirmModalTitle').text(settings.title)
   $('#confirmModalOk').text(settings.confirmed || 'Xóa')
   $('#confirmModalBody').html(settings.message)
 
   const $okBtn = $('#confirmModalOk')
-  $okBtn.off('click').on('click', function() {
+  $okBtn.off('click').on('click', function () {
     if (typeof settings.onConfirm === 'function') settings.onConfirm()
-    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'))
+    const modal = bootstrap.Modal.getInstance(
+      document.getElementById('confirmModal')
+    )
     modal.hide()
   })
 
@@ -279,29 +290,32 @@ function showConfirmModal(options) {
   modal.show()
 }
 
-
 function setupSaveButtonWatcher(formSelector, saveBtnSelector) {
   const $form = $(formSelector)
   const $saveBtn = $(saveBtnSelector)
 
   // Sau khi lưu thành công thì disable nút, đổi text thành "Đã lưu"
   function disableSave() {
-    $saveBtn.prop("disabled", true).html('<i class="bi bi-check-circle me-2"></i>Đã lưu')
+    $saveBtn
+      .prop('disabled', true)
+      .html('<i class="bi bi-check-circle me-2"></i>Đã lưu')
   }
 
   // Khi có thay đổi trong form thì bật lại nút
   function enableSave() {
-    $saveBtn.prop("disabled", false).html('<i class="bi bi-check-circle me-2"></i>Lưu phiếu')
+    $saveBtn
+      .prop('disabled', false)
+      .html('<i class="bi bi-check-circle me-2"></i>Lưu phiếu')
   }
 
   // Bất kỳ thay đổi nào trên input/select/textarea
-  $form.on("input change", "input, select, textarea", enableSave)
+  $form.on('input change', 'input, select, textarea', enableSave)
 
   // Khi thêm dòng nguyên liệu
-  $(document).on("click", `${formSelector} .addItemBtn`, enableSave)
+  $(document).on('click', `${formSelector} .addItemBtn`, enableSave)
 
   // Khi xóa dòng nguyên liệu
-  $(document).on("click", `${formSelector} .remove-item-btn`, enableSave)
+  $(document).on('click', `${formSelector} .remove-item-btn`, enableSave)
 
   // Trả về hàm disableSave để gọi ở success(res)
   return disableSave

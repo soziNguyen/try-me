@@ -1,23 +1,22 @@
 $(function () {
-
   let table
   let units = []
   let categories = []
 
-  Promise.all([
-    fetchData('inventory/categories'),
-  ])
+  Promise.all([fetchData('inventory/categories')])
     .then(([cats]) => {
       categories = cats
       initDataTable()
     })
-    .catch(err => {
+    .catch((err) => {
       toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
     })
 
   // Render dataTable
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#ingredientTableBody').offset().top - 120) / 70)
+  const numRows = Math.floor(
+    ($(window).height() - $('#ingredientTableBody').offset().top - 120) / 70
+  )
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -25,7 +24,8 @@ $(function () {
 
   function initDataTable() {
     table = $('#ingredientTable').DataTable({
-      dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+      dom:
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -57,9 +57,7 @@ $(function () {
         emptyTable: 'Không có dữ liệu trong bảng'
       },
       pageLength: numRows,
-      columnDefs: [
-        { width: "70px", target: 1 }
-      ],
+      columnDefs: [{ width: '70px', target: 1 }],
       columns: [
         {
           data: null,
@@ -91,7 +89,9 @@ $(function () {
                  </button>`
               : ''
 
-            const uploadBtnClass = hasImage ? 'btn-outline-light' : 'btn-outline-secondary'
+            const uploadBtnClass = hasImage
+              ? 'btn-outline-light'
+              : 'btn-outline-secondary'
             const uploadBtnTitle = hasImage ? 'Chọn ảnh mới' : 'Thêm ảnh'
 
             return `
@@ -131,10 +131,12 @@ $(function () {
           name: 'category.name',
           render: (data, type, row) => {
             if (type === 'display') {
-              const opts = categories.map(cat => {
-                const sel = cat._id === (row.category?._id) ? 'selected' : ''
-                return `<option value="${cat._id}" ${sel}>${cat.name}</option>`
-              }).join('')
+              const opts = categories
+                .map((cat) => {
+                  const sel = cat._id === row.category?._id ? 'selected' : ''
+                  return `<option value="${cat._id}" ${sel}>${cat.name}</option>`
+                })
+                .join('')
               return `
                 <select class="dataInput form-select form-select-sm" data-field="category" data-id="${row._id}">
                   <option value="">— Chọn danh mục —</option>
@@ -157,10 +159,12 @@ $(function () {
           data: 'unit',
           render: (data, type, row) => {
             if (type === 'display') {
-              const opts = units.map(unit => {
-                const selected = unit === data ? 'selected' : ''
-                return `<option value="${unit}" ${selected}>${unit}</option>`
-              }).join('')
+              const opts = units
+                .map((unit) => {
+                  const selected = unit === data ? 'selected' : ''
+                  return `<option value="${unit}" ${selected}>${unit}</option>`
+                })
+                .join('')
               return `
                 <select class="dataInput form-select form-select-sm" data-field="unit" data-id="${row._id}">
                   <option value="">— Chọn đơn vị —</option>
@@ -243,8 +247,17 @@ $(function () {
 
     // =======================================================
     // EVENT HANDLER
-    handlerAddEvent('#ingredientTable', '#addIngredientBtn', 'inventory/ingredient')
-    handlerDeleteEvent('#ingredientTable', '#deleteIngredientBtn', 'ingredientCheckbox', 'inventory/ingredient')
+    handlerAddEvent(
+      '#ingredientTable',
+      '#addIngredientBtn',
+      'inventory/ingredient'
+    )
+    handlerDeleteEvent(
+      '#ingredientTable',
+      '#deleteIngredientBtn',
+      'ingredientCheckbox',
+      'inventory/ingredient'
+    )
     handlerUpdateEvent('#ingredientTable', 'inventory/ingredient')
 
     initTableCheckboxEvents('#ingredientTable', 'ingredientCheckbox')
@@ -263,18 +276,26 @@ $(function () {
     container.attr('style', 'display: inline-block;')
 
     // Update image style
-    img.attr('style', 'cursor: pointer; width: 70px; height: 70px; object-fit: cover; border-radius: 8px;')
+    img.attr(
+      'style',
+      'cursor: pointer; width: 70px; height: 70px; object-fit: cover; border-radius: 8px;'
+    )
 
     // Update overlay style for images with content
-    overlay.attr('style', 'background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s;')
+    overlay.attr(
+      'style',
+      'background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s;'
+    )
 
     // Update buttons in overlay
-    const previewBtn = `<button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
-                         <i class="bi bi-eye"></i>
-                       </button>`
-    const uploadBtn = `<button type="button" class="btn btn-outline-light btn-sm upload-btn" title="Chọn ảnh mới" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
-                         <i class="bi bi-arrow-repeat"></i>
-                       </button>`
+    const previewBtn = `
+      <button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
+        <i class="bi bi-eye"></i>
+      </button>`
+    const uploadBtn = `
+      <button type="button" class="btn btn-outline-light btn-sm upload-btn" title="Chọn ảnh mới" style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.4rem; --bs-btn-font-size: 0.75rem;">
+        <i class="bi bi-arrow-repeat"></i>
+      </button>`
 
     overlay.html(previewBtn + uploadBtn)
   }
@@ -282,7 +303,10 @@ $(function () {
   // Event handler preview btn
   $('#ingredientTable').on('click', '.preview-btn', function (e) {
     e.stopPropagation()
-    const imgSrc = $(this).closest('.ingredient-image-container').find('img').attr('src')
+    const imgSrc = $(this)
+      .closest('.ingredient-image-container')
+      .find('img')
+      .attr('src')
 
     if (!imgSrc || imgSrc.includes('default.png') || imgSrc.trim() === '') {
       toastr.info('Chưa có ảnh để xem')
@@ -310,7 +334,9 @@ $(function () {
     $('#imagePreviewModal').remove()
     $('body').append(previewModal)
 
-    const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'))
+    const modal = new bootstrap.Modal(
+      document.getElementById('imagePreviewModal')
+    )
     modal.show()
 
     $('#imagePreviewModal').on('hidden.bs.modal', function () {
@@ -340,21 +366,22 @@ $(function () {
           modal.show()
 
           // Khi modal đã hiển thị hết animation, khởi tạo Cropper
-          modalEl.addEventListener('shown.bs.modal', () => {
-            if (cropper) {
-              cropper.destroy()
-            }
-            cropper = new Cropper(
-              document.getElementById('imagePreview'),
-              {
+          modalEl.addEventListener(
+            'shown.bs.modal',
+            () => {
+              if (cropper) {
+                cropper.destroy()
+              }
+              cropper = new Cropper(document.getElementById('imagePreview'), {
                 viewMode: 1,
                 autoCropArea: 1,
                 responsive: true,
                 background: true,
                 center: true
-              }
-            )
-          }, { once: true })
+              })
+            },
+            { once: true }
+          )
         }
         reader.readAsDataURL(file)
       })
@@ -365,54 +392,56 @@ $(function () {
   $('#cropBtn').on('click', function () {
     if (!cropper) return
     const cropData = cropper.getData(true)
-    cropper.getCroppedCanvas({
-      width: Math.floor(cropData.width),
-      height: Math.floor(cropData.height),
-      fillColor: '#fff',
-      imageSmoothingEnabled: true,
-      imageSmoothingQuality: 'high'
-    }).toBlob(blob => {
-      const formData = new FormData()
-      formData.append('file', blob, 'cropped.jpg')
-
-      // Upload file đã crop lên server
-      $.ajax({
-        url: '/api/upload',
-        method: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: res => {
-          const imgUrl = '/' + res.file.path.replace(/\\/g, '/')
-          const timestamp = new Date().getTime()
-          // Update src ảnh trong table, thêm timestamp để bust cache
-          currentImgCell.find('img').attr('src', `${imgUrl}?t=${timestamp}`)
-
-          updateImageContainerAfterUpload(currentImgCell, imgUrl)
-
-          // Cập nhật trường image của bản ghi
-          const row = currentImgCell.closest('tr')
-          const id = row.data('id')
-          if (id) {
-            $.ajax({
-              url: `/api/inventory/ingredient/update/${id}`,
-              method: 'POST',
-              contentType: 'application/json',
-              data: JSON.stringify({ image: imgUrl }),
-              success: () => toastr.success('Cập nhật ảnh thành công'),
-              error: () => toastr.error('Lỗi khi cập nhật ảnh'),
-            })
-          }
-
-          // Đóng modal và destroy cropper
-          bootstrap.Modal.getInstance(
-            document.getElementById('imageCropModal')
-          ).hide()
-          cropper.destroy()
-          cropper = null
-        },
-        error: () => toastr.error('Lỗi upload ảnh'),
+    cropper
+      .getCroppedCanvas({
+        width: Math.floor(cropData.width),
+        height: Math.floor(cropData.height),
+        fillColor: '#fff',
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
       })
-    }, 'image/jpeg')
+      .toBlob((blob) => {
+        const formData = new FormData()
+        formData.append('file', blob, 'cropped.jpg')
+
+        // Upload file đã crop lên server
+        $.ajax({
+          url: '/api/upload',
+          method: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: (res) => {
+            const imgUrl = '/' + res.file.path.replace(/\\/g, '/')
+            const timestamp = new Date().getTime()
+            // Update src ảnh trong table, thêm timestamp để bust cache
+            currentImgCell.find('img').attr('src', `${imgUrl}?t=${timestamp}`)
+
+            updateImageContainerAfterUpload(currentImgCell, imgUrl)
+
+            // Cập nhật trường image của bản ghi
+            const row = currentImgCell.closest('tr')
+            const id = row.data('id')
+            if (id) {
+              $.ajax({
+                url: `/api/inventory/ingredient/update/${id}`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ image: imgUrl }),
+                success: () => toastr.success('Cập nhật ảnh thành công'),
+                error: () => toastr.error('Lỗi khi cập nhật ảnh')
+              })
+            }
+
+            // Đóng modal và destroy cropper
+            bootstrap.Modal.getInstance(
+              document.getElementById('imageCropModal')
+            ).hide()
+            cropper.destroy()
+            cropper = null
+          },
+          error: () => toastr.error('Lỗi upload ảnh')
+        })
+      }, 'image/jpeg')
   })
 })

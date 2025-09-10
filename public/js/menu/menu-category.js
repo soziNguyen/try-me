@@ -2,14 +2,17 @@ $(function () {
   let table
 
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#menuCateTableBody').offset().top - 100) / 45)
+  const numRows = Math.floor(
+    ($(window).height() - $('#menuCateTableBody').offset().top - 100) / 45
+  )
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
   showList.sort((a, b) => a - b)
 
   table = $('#menuCateTable').DataTable({
-    dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+    dom:
+      '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
       'l' +
       'f' +
       '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -41,7 +44,8 @@ $(function () {
         orderable: false,
         title: '<input type="checkbox" id="selectAll">',
         className: 'text-center',
-        render: (data, type, row) => `<input type="checkbox" class="menuCateCheckbox" data-id="${row._id}">`
+        render: (data, type, row) =>
+          `<input type="checkbox" class="menuCateCheckbox" data-id="${row._id}">`
       },
       {
         data: 'name',
@@ -81,24 +85,28 @@ $(function () {
     },
     initComplete: function () {
       $('.right-group').html(`
-            <div class="btn-group flex-wrap">
-              <button class="btn btn-outline-danger me-2" id="deleteMenuCategoryBtn">
-              <i class="bi bi-trash"></i> Xóa
-              </button>
-              <button class="btn btn-outline-success" id="addMenuCategoryBtn">
-              <i class="bi bi-plus-circle"></i> Thêm
-              </button>
-            </div>
-          `)
+        <div class="btn-group flex-wrap">
+          <button class="btn btn-outline-danger me-2" id="deleteMenuCategoryBtn">
+          <i class="bi bi-trash"></i> Xóa
+          </button>
+          <button class="btn btn-outline-success" id="addMenuCategoryBtn">
+          <i class="bi bi-plus-circle"></i> Thêm
+          </button>
+        </div>
+      `)
     }
   })
 
-  //====================================================================================  
+  //====================================================================================
   // EVENT HANDLER
   handlerAddEvent('#menuCateTable', '#addMenuCategoryBtn', 'menu/category')
-  handlerDeleteEvent('#menuCateTable', '#deleteMenuCategoryBtn', 'menuCateCheckbox', 'menu/category')
+  handlerDeleteEvent(
+    '#menuCateTable',
+    '#deleteMenuCategoryBtn',
+    'menuCateCheckbox',
+    'menu/category'
+  )
   handlerUpdateEvent('#menuCateTable', 'menu/category')
 
   initTableCheckboxEvents('#menuCateTable', 'menuCateCheckbox')
-
 })

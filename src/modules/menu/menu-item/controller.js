@@ -5,35 +5,36 @@ import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
 export const getActiveMenus = async (req, res) => {
-    try {
-        const organizationId = getCurrentOrg(req)
-        if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
-        
-        const pipeline = [
-          ...lookupRef('category', 'MenuCategories', { as: 'category' }),
-            { $match: { isActive: true, organization: organizationId } },
-            { $sort: { name: 1}},
-            {
-              $project: {
-                _id: 1,
-                name: 1,
-                image: 1,
-                price: 1,
-                description: 1,
-                isActive: 1,
-                category: {
-                  _id: "$category._id",
-                  name: "$category.name"
-                }
-              }
-            }
-        ]
+  try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-        const menu = await MenuItem.aggregate(pipeline)
-        responseHelper.success(res, menu)
-    } catch (error) {
-        responseHelper.error(res, error.message)
-    }
+    const pipeline = [
+      ...lookupRef('category', 'MenuCategories', { as: 'category' }),
+      { $match: { isActive: true, organization: organizationId } },
+      { $sort: { name: 1 } },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          image: 1,
+          price: 1,
+          description: 1,
+          isActive: 1,
+          category: {
+            _id: '$category._id',
+            name: '$category.name'
+          }
+        }
+      }
+    ]
+
+    const menu = await MenuItem.aggregate(pipeline)
+    responseHelper.success(res, menu)
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
 }
 
 export const getMenus = async (req, res) => {
@@ -47,7 +48,8 @@ export const getMenus = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // Base pipeline
     const pipeline = [
@@ -63,21 +65,21 @@ export const getMenus = async (req, res) => {
       const orConditions = [
         { name: { $regex: searchValue, $options: 'i' } },
         { description: { $regex: searchValue, $options: 'i' } },
-        { "category.name": { $regex: searchValue, $options: 'i' } }
+        { 'category.name': { $regex: searchValue, $options: 'i' } }
       ]
 
       // Add numeric search for stock and expirationDays if searchValue is a number
       if (!isNaN(searchNumber)) {
-        orConditions.push(
-          { price: searchNumber }
-        )
+        orConditions.push({ price: searchNumber })
       }
 
       pipeline.push({ $match: { $or: orConditions } })
     }
 
     // Get total count
-    const recordsTotal = await MenuItem.countDocuments({ organization: organizationId }) 
+    const recordsTotal = await MenuItem.countDocuments({
+      organization: organizationId
+    })
 
     // Get filtered count
     const countPipeline = [...pipeline, { $count: 'count' }]
@@ -129,14 +131,14 @@ export const getMenus = async (req, res) => {
           createdAt: 1,
           updatedAt: 1,
           category: {
-            _id: "$category._id",
-            name: "$category.name"
+            _id: '$category._id',
+            name: '$category.name'
           },
           createdBy: {
-            username: "$createdBy.username"
+            username: '$createdBy.username'
           },
           updatedBy: {
-            username: "$updatedBy.username"
+            username: '$updatedBy.username'
           }
         }
       }
@@ -151,7 +153,6 @@ export const getMenus = async (req, res) => {
       recordsFiltered,
       data
     })
-
   } catch (error) {
     return res.status(500).json({
       draw: +req.query.draw || 0,
@@ -164,100 +165,109 @@ export const getMenus = async (req, res) => {
 }
 
 export const createMenu = async (req, res) => {
-    try {
+  try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
-    
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
     if (!req.user || !req.user._id) {
-        return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
+      return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
     }
 
     const data = {
-        ...req.body,
-        createdBy: req.user._id,
-        organization: organizationId
+      ...req.body,
+      createdBy: req.user._id,
+      organization: organizationId
     }
 
     const newMenu = new MenuItem(data)
     await newMenu.save()
 
     const saved = await MenuItem.findById(newMenu._id)
-    .populate('category', 'name')
-    .populate('createdBy', 'username -_id')
+      .populate('category', 'name')
+      .populate('createdBy', 'username -_id')
 
     responseHelper.success(res, saved, 'Tạo thực đơn thành công')
-    } catch (error) {
-        responseHelper.error(res, error.message)
-    }
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
 }
 
 export const updateMenu = async (req, res) => {
   try {
-      const { id } = req.params
-      const { image, name, category, price, description, isActive } = req.body
+    const { id } = req.params
+    const { image, name, category, price, description, isActive } = req.body
 
-      const organizationId = getCurrentOrg(req)
-      if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-      const menu = await MenuItem.findOne({
-          _id: id,
-          organization: organizationId
-      })
+    const menu = await MenuItem.findOne({
+      _id: id,
+      organization: organizationId
+    })
 
-      if (!menu) return responseHelper.error(res, "Thực đơn không tồn tại", 404)
-      const existing = await MenuItem.findOne({
-          _id: { $ne: id },
-          name,
-          organization: organizationId
-      })
+    if (!menu) return responseHelper.error(res, 'Thực đơn không tồn tại', 404)
+    const existing = await MenuItem.findOne({
+      _id: { $ne: id },
+      name,
+      organization: organizationId
+    })
 
-      if (existing) return responseHelper.error(res, 'Thực đơn đã tồn tại', 400)
+    if (existing) return responseHelper.error(res, 'Thực đơn đã tồn tại', 400)
 
-      const dataUpdate = { updatedBy: req.user._id }
+    const dataUpdate = { updatedBy: req.user._id }
 
-      const oldImage = menu.image
-      if (image !== undefined) dataUpdate.image = image
-      if (name !== undefined) dataUpdate.name = name
-      if (category !== undefined) dataUpdate.category = category
-      if (price !== undefined) dataUpdate.price = price
-      if (description !== undefined) dataUpdate.description = description
-      if (isActive !== undefined) dataUpdate.isActive = isActive
+    const oldImage = menu.image
+    if (image !== undefined) dataUpdate.image = image
+    if (name !== undefined) dataUpdate.name = name
+    if (category !== undefined) dataUpdate.category = category
+    if (price !== undefined) dataUpdate.price = price
+    if (description !== undefined) dataUpdate.description = description
+    if (isActive !== undefined) dataUpdate.isActive = isActive
 
-      if (Object.keys(dataUpdate).length == 0) return
+    if (Object.keys(dataUpdate).length === 0) return
 
-      const updated = await MenuItem.findOneAndUpdate({
-          _id: id, organization: organizationId
+    const updated = await MenuItem.findOneAndUpdate(
+      {
+        _id: id,
+        organization: organizationId
       },
       dataUpdate,
       { new: true }
-      )
+    )
       .populate('category', 'name')
       .populate('createdBy', 'username -_id')
       .populate('updatedBy', 'username -_id')
 
-      if (oldImage && oldImage !== updated.image) {
-        try {
-          await deleteFile(oldImage)
-        } catch (err) {
-          console.error('Không xóa được file cũ:', err)
-        }
+    if (oldImage && oldImage !== updated.image) {
+      try {
+        await deleteFile(oldImage)
+      } catch (err) {
+        console.error('Không xóa được file cũ:', err)
       }
+    }
 
-      responseHelper.success(res, updated, 'Cập nhật thành công')
+    responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
-      responseHelper.error(res, error.message)
+    responseHelper.error(res, error.message)
   }
 }
 
 export const deleteMenus = async (req, res) => {
   try {
     const { ids } = req.body
-    
+
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(res, "Không có thực đơn nào được chọn để xóa", 400)
+      return responseHelper.error(
+        res,
+        'Không có thực đơn nào được chọn để xóa',
+        400
+      )
     }
 
     const result = await MenuItem.deleteMany({

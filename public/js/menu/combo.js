@@ -1,7 +1,6 @@
 'use strict'
 
 $(function () {
-
   let table
   let menuItem = []
   let cropper = null
@@ -9,26 +8,32 @@ $(function () {
   let croppedImageUrl = null
   let croppedImageFile = null
 
-  Promise.all([
-    fetchData('menu/get/active')
-  ])
+  Promise.all([fetchData('menu/get/active')])
     .then(([items]) => {
       menuItem = items
       initDataTable()
     })
-    .catch(err => {
+    .catch((err) => {
       toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
       initDataTable() // Vẫn khởi tạo tránh treo giao diện
     })
 
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - ($('#comboTableBody').offset() ? $('#comboTableBody').offset().top : 200) - 100) / 71)
+  const numRows = Math.floor(
+    ($(window).height() -
+      ($('#comboTableBody').offset()
+        ? $('#comboTableBody').offset().top
+        : 200) -
+      100) /
+      71
+  )
   if (!showList.includes(numRows) && numRows > 0) showList.push(numRows)
   showList.sort((a, b) => a - b)
 
   function initDataTable() {
     table = $('#comboTable').DataTable({
-      dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+      dom:
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -64,17 +69,19 @@ $(function () {
         },
         {
           data: 'sku',
-          render: (data, type, row) => type === 'display' ? `<span>${data || ''}</span>` : data
+          render: (data, type, row) =>
+            type === 'display' ? `<span>${data || ''}</span>` : data
         },
         {
           data: 'name',
-          render: (data, type, row) => type === 'display' ? `<span>${data || ''}</span>` : data
+          render: (data, type, row) =>
+            type === 'display' ? `<span>${data || ''}</span>` : data
         },
         {
           data: 'image',
           orderable: false,
           className: 'image-cell',
-          render: data => {
+          render: (data) => {
             const imgSrc = data || ''
             return `<img src="${imgSrc}" alt="Ảnh" class="combo-image" width="70" height="70">`
           }
@@ -83,9 +90,9 @@ $(function () {
           data: 'items',
           className: 'text-start px-1',
           title: 'Nguyên liệu',
-          render: items => {
+          render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const names = items.map(it => it.menuItem?.name).filter(Boolean)
+            const names = items.map((it) => it.menuItem?.name).filter(Boolean)
             const uniqueNames = new Set(names)
             if (uniqueNames.size === 0) return ''
             const arr = [...uniqueNames]
@@ -99,7 +106,10 @@ $(function () {
           render: (data, type, row) => {
             if (type === 'display') {
               const price = parseFloat(data) || 0
-              const formatted = price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+              const formatted = price.toLocaleString('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+              })
               return `<span>${formatted}</span>`
             }
             return data
@@ -107,28 +117,36 @@ $(function () {
         },
         {
           data: 'note',
-          render: (data, type, row) => type === 'display' ? `<span>${data || ''}</span>` : data
+          render: (data, type, row) =>
+            type === 'display' ? `<span>${data || ''}</span>` : data
         },
         {
           data: 'createdBy',
-          render: (data, type, row) => type === 'display' ? `<span>${data || ''}</span>` : data
+          render: (data, type, row) =>
+            type === 'display' ? `<span>${data || ''}</span>` : data
         },
         {
           data: 'createdAt',
           render: (data, type, row) => {
             if (type === 'display') {
               const dt = new Date(data)
-              const dateStr = dt.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-              const timeStr = dt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+              const dateStr = dt.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })
+              const timeStr = dt.toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+              })
               return `<span>${dateStr} ${timeStr}</span>`
             }
             return data
           }
         }
       ],
-      columnDefs: [
-        { width: "70px", target: 3 }
-      ],
+      columnDefs: [{ width: '70px', target: 3 }],
       rowCallback: function (row, data) {
         $(row).attr('data-id', data._id)
       },
@@ -155,7 +173,12 @@ $(function () {
 
     // =======================================================
     // EVENT HANDLER chung
-    handlerDeleteEvent('#comboTable', '#deleteComboBtn', 'comboCheckbox', 'menu/combo')
+    handlerDeleteEvent(
+      '#comboTable',
+      '#deleteComboBtn',
+      'comboCheckbox',
+      'menu/combo'
+    )
     initTableCheckboxEvents('#comboTable', 'comboCheckbox')
 
     // Add new combo
@@ -170,7 +193,9 @@ $(function () {
 
       // Reset ảnh tạm
       if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-        try { URL.revokeObjectURL(croppedImageUrl) } catch (e) { }
+        try {
+          URL.revokeObjectURL(croppedImageUrl)
+        } catch (e) {}
       }
       croppedImageUrl = null
       croppedImageFile = null
@@ -180,7 +205,7 @@ $(function () {
       showForm()
     })
 
-    // Click row 
+    // Click row
     $('#comboTable tbody').on('click', 'tr', function (e) {
       if ($(e.target).is('input[type="checkbox"], tbody td:first-child')) return
       const data = table.row(this).data()
@@ -206,10 +231,14 @@ $(function () {
       const $itemBody = $('#itemTableBody')
       $itemBody.empty()
       if (Array.isArray(data.items)) {
-        data.items.forEach(it => {
-          const options = menuItem.map(o => `
+        data.items.forEach((it) => {
+          const options = menuItem
+            .map(
+              (o) => `
             <option value="${o._id}" ${o._id === it.menuItem?._id ? 'selected' : ''}>${o.name}</option>
-          `).join('')
+          `
+            )
+            .join('')
 
           const $row = $(`
             <tr>
@@ -295,27 +324,33 @@ $(function () {
           imageSmoothingQuality: 'high'
         })
 
-        canvas.toBlob(function (blob) {
-          const croppedFile = new File([blob], currentImageFile.name, {
-            type: currentImageFile.type,
-            lastModified: Date.now()
-          })
+        canvas.toBlob(
+          function (blob) {
+            const croppedFile = new File([blob], currentImageFile.name, {
+              type: currentImageFile.type,
+              lastModified: Date.now()
+            })
 
-          // Lưu file tạm để upload khi bấm Lưu form
-          croppedImageFile = croppedFile
+            // Lưu file tạm để upload khi bấm Lưu form
+            croppedImageFile = croppedFile
 
-          // Dọn objectURL
-          if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-            try { URL.revokeObjectURL(croppedImageUrl) } catch (e) { }
-          }
+            // Dọn objectURL
+            if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
+              try {
+                URL.revokeObjectURL(croppedImageUrl)
+              } catch (e) {}
+            }
 
-          // Tạo preview bằng objectURL
-          croppedImageUrl = URL.createObjectURL(croppedFile)
-          updateImagePreview()
+            // Tạo preview bằng objectURL
+            croppedImageUrl = URL.createObjectURL(croppedFile)
+            updateImagePreview()
 
-          // Đóng modal
-          $('#imageCropModal').modal('hide')
-        }, currentImageFile.type, 0.9)
+            // Đóng modal
+            $('#imageCropModal').modal('hide')
+          },
+          currentImageFile.type,
+          0.9
+        )
       }
     })
 
@@ -338,7 +373,8 @@ $(function () {
       $('#itemTableBody tr').each(function () {
         const menuItemId = $(this).find('[name="menuItem"]').val()
         const quantity = parseFloat($(this).find('[name="quantity"]').val())
-        if (menuItemId && quantity > 0) items.push({ menuItem: menuItemId, quantity })
+        if (menuItemId && quantity > 0)
+          items.push({ menuItem: menuItemId, quantity })
       })
 
       if (!name || !items.length || isNaN(price)) {
@@ -360,7 +396,9 @@ $(function () {
             }
             // revoke objectURL nếu là blob
             if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-              try { URL.revokeObjectURL(croppedImageUrl) } catch (e) { }
+              try {
+                URL.revokeObjectURL(croppedImageUrl)
+              } catch (e) {}
             }
             // reset file tạm
             croppedImageFile = null
@@ -409,7 +447,9 @@ $(function () {
 
     // Thêm dòng items
     $('#addItemRow').on('click', function () {
-      const options = menuItem.map(o => `<option value="${o._id}">${o.name}</option>`).join('')
+      const options = menuItem
+        .map((o) => `<option value="${o._id}">${o.name}</option>`)
+        .join('')
       const rowHtml = `
         <tr>
           <td>
@@ -479,7 +519,9 @@ $(function () {
   // Remove image handler — giải phóng objectURL nếu là blob và xóa file tạm
   $('#comboForm').on('click', '.remove-image', function () {
     if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-      try { URL.revokeObjectURL(croppedImageUrl) } catch (e) { }
+      try {
+        URL.revokeObjectURL(croppedImageUrl)
+      } catch (e) {}
     }
     croppedImageUrl = null
     croppedImageFile = null
@@ -522,7 +564,9 @@ $(function () {
 
     setTimeout(() => {
       if (typeof table !== 'undefined' && table) {
-        try { table.columns.adjust().draw(false) } catch (e) { }
+        try {
+          table.columns.adjust().draw(false)
+        } catch (e) {}
       }
     }, 150)
   }
@@ -534,9 +578,10 @@ $(function () {
 
     setTimeout(() => {
       if (typeof table !== 'undefined' && table) {
-        try { table.columns.adjust().draw(false) } catch (e) { }
+        try {
+          table.columns.adjust().draw(false)
+        } catch (e) {}
       }
     }, 150)
   }
-
 })

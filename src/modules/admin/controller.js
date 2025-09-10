@@ -2,7 +2,11 @@ import User from '../user/model.js'
 import bcrypt from 'bcryptjs'
 import validator from 'validator'
 import responseHelper from '../../helpers/responseHelper.js'
-import { isValidUsername, isValidPassword, isPasswordMatch } from '../../helpers/validator.js'
+import {
+  isValidUsername,
+  isValidPassword,
+  isPasswordMatch
+} from '../../helpers/validator.js'
 import { lookupRef } from '../../helpers/lookupHelper.js'
 import ActivityLog from '../activity-logs/model.js'
 import dayjs from 'dayjs'
@@ -12,32 +16,30 @@ export const getAllUsers = async (req, res) => {
     const draw = +req.query.draw || 0
     const start = +req.query.start || 0
     const length = +req.query.length || 10
-    const searchValue = (req.query["search[value]"] || "").trim()
-    const colIdx = req.query["order[0][column]"]
-    const sortField = req.query[`columns[${colIdx}][data]`] || "createdAt"
-    const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
+    const searchValue = (req.query['search[value]'] || '').trim()
+    const colIdx = req.query['order[0][column]']
+    const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
+    const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     // pipeline aggregation
-    const pipeline = [
-      ...lookupRef("organization", "Organizations")
-    ]
+    const pipeline = [...lookupRef('organization', 'Organizations')]
 
     // filter search
     if (searchValue) {
       pipeline.push({
         $match: {
           $or: [
-            { username: { $regex: searchValue, $options: "i" } },
-            { email: { $regex: searchValue, $options: "i" } },
-            { role: { $regex: searchValue, $options: "i" } },
-            { "organization.name": { $regex: searchValue, $options: "i" } }
+            { username: { $regex: searchValue, $options: 'i' } },
+            { email: { $regex: searchValue, $options: 'i' } },
+            { role: { $regex: searchValue, $options: 'i' } },
+            { 'organization.name': { $regex: searchValue, $options: 'i' } }
           ]
         }
       })
     }
 
     // count filtered
-    const countPipeline = [...pipeline, { $count: "count" }]
+    const countPipeline = [...pipeline, { $count: 'count' }]
     const countResult = await User.aggregate(countPipeline)
     const recordsFiltered = countResult[0]?.count || 0
 
@@ -56,12 +58,24 @@ export const getAllUsers = async (req, res) => {
           email: 1,
           role: 1,
           organization: {
-            _id: "$organization._id",
-            name: { $ifNull: ["$organization.name", ""] },
-            province: "$organization.province"
+            _id: '$organization._id',
+            name: { $ifNull: ['$organization.name', ''] },
+            province: '$organization.province'
           },
-          createdAt: { $dateToString: { date: "$createdAt", timezone: "Asia/Ho_Chi_Minh", format: "%d-%m-%Y %H:%M:%S" } },
-          updatedAt: { $dateToString: { date: "$updatedAt", timezone: "Asia/Ho_Chi_Minh", format: "%d-%m-%Y %H:%M:%S" } }
+          createdAt: {
+            $dateToString: {
+              date: '$createdAt',
+              timezone: 'Asia/Ho_Chi_Minh',
+              format: '%d-%m-%Y %H:%M:%S'
+            }
+          },
+          updatedAt: {
+            $dateToString: {
+              date: '$updatedAt',
+              timezone: 'Asia/Ho_Chi_Minh',
+              format: '%d-%m-%Y %H:%M:%S'
+            }
+          }
         }
       }
     )
@@ -91,13 +105,15 @@ export const getUserById = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { username, email, organization, password, confirmPassword } = req.body
+    const { username, email, organization, password, confirmPassword } =
+      req.body
 
     if (!username || !email || !password || !organization) {
-      return responseHelper.error(res, "Vui lòng điền đầy đủ thông tin", 400)
+      return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin', 400)
     }
 
-    if (!validator.isEmail(email)) return responseHelper.error(res, "Email không hợp lệ", 400)
+    if (!validator.isEmail(email))
+      return responseHelper.error(res, 'Email không hợp lệ', 400)
 
     const usernameError = isValidUsername(username)
     if (usernameError) {
@@ -115,19 +131,23 @@ export const createUser = async (req, res) => {
     }
 
     const existingUser = await User.findOne({
-      $or: [{ username }, { email }],
+      $or: [{ username }, { email }]
     })
 
     if (existingUser) {
-      return responseHelper.error(res, "Tên đăng nhập hoặc email đã tồn tại", 400)
+      return responseHelper.error(
+        res,
+        'Tên đăng nhập hoặc email đã tồn tại',
+        400
+      )
     }
 
     const newUser = new User({ username, email, password, organization })
     await newUser.save()
-    responseHelper.success(res, newUser, "Tạo người dùng thành công")
+    responseHelper.success(res, newUser, 'Tạo người dùng thành công')
   } catch (error) {
     if (error.code === 11000) {
-      return responseHelper.error(res, "Username hoặc email đã tồn tại", 400)
+      return responseHelper.error(res, 'Username hoặc email đã tồn tại', 400)
     }
     responseHelper.error(res, error.message)
   }
@@ -136,7 +156,8 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params
-    const { username, email, organization, role, password, confirmPassword } = req.body
+    const { username, email, organization, role, password, confirmPassword } =
+      req.body
 
     if (!id) return responseHelper.error(res, 'Id người dùng không hợp lệ', 400)
     if (!validator.isEmail(email)) {
@@ -149,14 +170,16 @@ export const updateUser = async (req, res) => {
     }
 
     const existingUser = await User.findOne({
-      $or: [
-        { username },
-        { email }
-      ],
+      $or: [{ username }, { email }],
       _id: { $ne: id }
     })
 
-    if (existingUser) return responseHelper.error(res, 'Tên hoặc email người dùng đã tồn tại', 400)
+    if (existingUser)
+      return responseHelper.error(
+        res,
+        'Tên hoặc email người dùng đã tồn tại',
+        400
+      )
 
     const dataUpdates = {
       username,
@@ -166,7 +189,7 @@ export const updateUser = async (req, res) => {
     }
 
     if (password || confirmPassword) {
-      const passwordValidationError = isValidPassword(password);
+      const passwordValidationError = isValidPassword(password)
       if (passwordValidationError) {
         return responseHelper.error(res, passwordValidationError, 400)
       }
@@ -178,14 +201,12 @@ export const updateUser = async (req, res) => {
 
       const hashedPassword = await bcrypt.hash(password, 10)
       dataUpdates.password = hashedPassword
-
     }
 
-    const updated = await User.findByIdAndUpdate(
-      id,
-      dataUpdates,
-      { new: true, runValidators: true }
-    ).populate('organization', '_id name')
+    const updated = await User.findByIdAndUpdate(id, dataUpdates, {
+      new: true,
+      runValidators: true
+    }).populate('organization', '_id name')
 
     responseHelper.success(res, updated, 'Cập nhật người dùng thành công')
   } catch (error) {
@@ -197,13 +218,16 @@ export const deleteUsers = async (req, res) => {
   try {
     const { ids } = req.body
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(res, "Không có người dùng nào được chọn để xóa")
+      return responseHelper.error(
+        res,
+        'Không có người dùng nào được chọn để xóa'
+      )
     }
     const result = await User.deleteMany({ _id: { $in: ids } })
     if (result.deletedCount === 0) {
-      return responseHelper.error(res, "Không tìm thấy người dùng để xóa")
+      return responseHelper.error(res, 'Không tìm thấy người dùng để xóa')
     }
-    responseHelper.success(res, null, "Xóa người dùng thành công")
+    responseHelper.success(res, null, 'Xóa người dùng thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -220,7 +244,6 @@ export const setOrg = (req, res) => {
   res.json({ ok: true, currentOrg: orgId })
 }
 
-
 export const exitOrg = (req, res) => {
   if (req.session) {
     delete req.session.currentOrg
@@ -233,10 +256,10 @@ export const getAllAuditLogs = async (req, res) => {
     const draw = +req.query.draw || 0
     const start = Math.max(0, +req.query.start || 0)
     const length = Math.max(1, +req.query.length || 10)
-    const searchValue = (req.query["search[value]"] || "").trim()
-    const colIdx = req.query["order[0][column]"]
-    const sortField = req.query[`columns[${colIdx}][data]`] || "createdAt"
-    const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
+    const searchValue = (req.query['search[value]'] || '').trim()
+    const colIdx = req.query['order[0][column]']
+    const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
+    const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const pipeline = [
       ...lookupRef('userId', 'Users', { as: 'user' }),
@@ -246,23 +269,29 @@ export const getAllAuditLogs = async (req, res) => {
     // Multi-token search
     if (searchValue) {
       const tokens = searchValue.split(/\s+/).filter(Boolean)
-      const andConditions = tokens.map(token => {
+      const andConditions = tokens.map((token) => {
         const regex = { $regex: token, $options: 'i' }
         return {
           $or: [
             {
               $expr: {
                 $regexMatch: {
-                  input: { $dateToString: { format: "%d/%m/%Y %H:%M:%S", date: "$createdAt", timezone: "+07:00" } },
+                  input: {
+                    $dateToString: {
+                      format: '%d/%m/%Y %H:%M:%S',
+                      date: '$createdAt',
+                      timezone: '+07:00'
+                    }
+                  },
                   regex: token,
-                  options: "i"
+                  options: 'i'
                 }
               }
             },
             { userName: regex },
             { description: regex },
             { status: regex },
-            { "organizationInfo.name": regex }
+            { 'organizationInfo.name': regex }
           ]
         }
       })
@@ -276,13 +305,19 @@ export const getAllAuditLogs = async (req, res) => {
     const countResult = await ActivityLog.aggregate(countPipeline)
     const recordsFiltered = countResult[0]?.count || 0
 
-    const allowedSort = ['userName', 'description', 'createdAt', 'organizationName']
+    const allowedSort = [
+      'userName',
+      'description',
+      'createdAt',
+      'organizationName'
+    ]
     const sortObj = {}
 
     if (sortField === 'organizationName') {
       sortObj['organizationInfo.name'] = sortDir
     } else {
-      sortObj[allowedSort.includes(sortField) ? sortField : 'createdAt'] = sortDir
+      sortObj[allowedSort.includes(sortField) ? sortField : 'createdAt'] =
+        sortDir
     }
 
     // Sort, phân trang, projection
@@ -304,7 +339,7 @@ export const getAllAuditLogs = async (req, res) => {
 
     let data = await ActivityLog.aggregate(pipeline)
 
-    data = data.map(item => ({
+    data = data.map((item) => ({
       time: dayjs(item.createdAt).format('DD/MM/YYYY HH:mm:ss'),
       userName: item.userName,
       organizationName: item.organizationName || 'N/A',
@@ -313,7 +348,6 @@ export const getAllAuditLogs = async (req, res) => {
     }))
 
     return res.json({ draw, recordsTotal, recordsFiltered, data })
-
   } catch (error) {
     console.error('getActivityLogs error:', error)
     return res.status(500).json({

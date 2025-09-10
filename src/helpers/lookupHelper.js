@@ -1,17 +1,17 @@
 export function lookupUser(field) {
-    return [
-      {
-        $lookup: {
-          from: 'Users',
-          localField: field,
-          foreignField: '_id',
-          as: field
-        }
-      },
-      {
-        $unwind: { path: `$${field}`, preserveNullAndEmptyArrays: true }
+  return [
+    {
+      $lookup: {
+        from: 'Users',
+        localField: field,
+        foreignField: '_id',
+        as: field
       }
-    ]
+    },
+    {
+      $unwind: { path: `$${field}`, preserveNullAndEmptyArrays: true }
+    }
+  ]
 }
 
 export function lookupRef(field, from, options = {}) {

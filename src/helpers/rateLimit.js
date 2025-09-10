@@ -1,4 +1,4 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit from 'express-rate-limit'
 
 // Rate limit cho login
 export const loginLimiter = rateLimit({
@@ -8,12 +8,12 @@ export const loginLimiter = rateLimit({
     // Trả JSON hợp lệ
     return res.status(429).json({
       message: 'Bạn đã nhập sai thông tin quá 5 lần. Hãy thử lại sau 15 phút.'
-    });
+    })
   },
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true
-});
+})
 
 // Rate limit cho API công khai
 export const apiLimiter = rateLimit({
@@ -23,4 +23,4 @@ export const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true
-});
+})

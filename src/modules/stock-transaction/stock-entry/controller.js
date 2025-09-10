@@ -1,26 +1,29 @@
-import mongoose from "mongoose"
-import { StockEntry, units } from "./model.js"
-import IngredientStock from "../../inventory/ingredient-stock/model.js"
-import { Ingredient } from "../../inventory/ingredient/model.js"
-import responseHelper from "../../../helpers/responseHelper.js"
-import withTransaction from "../../../helpers/withTransaction.js"
-import { generateDocumentCode } from "../../../helpers/common.js"
-import { lookupRef, lookupUser } from "../../../helpers/lookupHelper.js"
-import StockHistory from "../stock-history/model.js"
+import mongoose from 'mongoose'
+import { StockEntry, units } from './model.js'
+import IngredientStock from '../../inventory/ingredient-stock/model.js'
+import { Ingredient } from '../../inventory/ingredient/model.js'
+import responseHelper from '../../../helpers/responseHelper.js'
+import withTransaction from '../../../helpers/withTransaction.js'
+import { generateDocumentCode } from '../../../helpers/common.js'
+import { lookupRef, lookupUser } from '../../../helpers/lookupHelper.js'
+import StockHistory from '../stock-history/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
 // GET ALL
 export const getAllStockEntries = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const entries = await StockEntry.aggregate([
       { $match: { organization: organizationId } },
       ...lookupRef('supplier', 'Suppliers'),
       ...lookupRef('warehouse', 'Warehouses'),
       { $sort: { createdAt: -1 } },
-      { $project: { _id: 1, code: 1, "supplier.name": 1, "warehouse.name": 1 } }
+      {
+        $project: { _id: 1, code: 1, 'supplier.name': 1, 'warehouse.name': 1 }
+      }
     ])
     responseHelper.success(res, entries)
   } catch (err) {
@@ -34,21 +37,22 @@ export const getStockEntries = async (req, res) => {
     const draw = +req.query.draw || 0
     const start = +req.query.start || 0
     const length = +req.query.length || 10
-    const searchValue = (req.query["search[value]"] || "").trim()
-    const colIdx = req.query["order[0][column]"]
-    const sortField = req.query[`columns[${colIdx}][data]`] || "createdAt"
-    const sortDir = req.query["order[0][dir]"] === "asc" ? 1 : -1
+    const searchValue = (req.query['search[value]'] || '').trim()
+    const colIdx = req.query['order[0][column]']
+    const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
+    const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const basePipeline = [
       { $match: { organization: organizationId } },
-      ...lookupRef("supplier", "Suppliers"),
-      ...lookupRef("warehouse", "Warehouses"),
-      { $unwind: { path: "$items", preserveNullAndEmptyArrays: true } },
-      ...lookupRef("items.ingredient", "Ingredients", { as: "ingredient" }),
-      ...lookupUser("createdBy")
+      ...lookupRef('supplier', 'Suppliers'),
+      ...lookupRef('warehouse', 'Warehouses'),
+      { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
+      ...lookupRef('items.ingredient', 'Ingredients', { as: 'ingredient' }),
+      ...lookupUser('createdBy')
     ]
 
     // Search before grouping
@@ -56,15 +60,15 @@ export const getStockEntries = async (req, res) => {
       basePipeline.push({
         $match: {
           $or: [
-            { code: { $regex: searchValue, $options: "i" } },
-            { note: { $regex: searchValue, $options: "i" } },
-            { "supplier.name": { $regex: searchValue, $options: "i" } },
-            { "warehouse.name": { $regex: searchValue, $options: "i" } },
-            { "ingredient.name": { $regex: searchValue, $options: "i" } },
+            { code: { $regex: searchValue, $options: 'i' } },
+            { note: { $regex: searchValue, $options: 'i' } },
+            { 'supplier.name': { $regex: searchValue, $options: 'i' } },
+            { 'warehouse.name': { $regex: searchValue, $options: 'i' } },
+            { 'ingredient.name': { $regex: searchValue, $options: 'i' } },
             {
               $expr: {
                 $regexMatch: {
-                  input: { $toString: "$items.quantity" },
+                  input: { $toString: '$items.quantity' },
                   regex: searchValue
                 }
               }
@@ -72,9 +76,11 @@ export const getStockEntries = async (req, res) => {
             {
               $expr: {
                 $regexMatch: {
-                  input: { $dateToString: { format: "%d/%m/%Y", date: "$date" } },
+                  input: {
+                    $dateToString: { format: '%d/%m/%Y', date: '$date' }
+                  },
                   regex: searchValue,
-                  options: "i"
+                  options: 'i'
                 }
               }
             }
@@ -87,70 +93,70 @@ export const getStockEntries = async (req, res) => {
     basePipeline.push(
       {
         $addFields: {
-          "items.ingredient": {
-            _id: "$ingredient._id",
-            name: "$ingredient.name"
+          'items.ingredient': {
+            _id: '$ingredient._id',
+            name: '$ingredient.name'
           }
         }
       },
       {
         $group: {
-          _id: "$_id",
-          code: { $first: "$code" },
-          note: { $first: "$note" },
-          date: { $first: "$date" },
+          _id: '$_id',
+          code: { $first: '$code' },
+          note: { $first: '$note' },
+          date: { $first: '$date' },
           supplier: {
             $first: {
-              _id: "$supplier._id",
-              code: "$supplier.code",
-              name: "$supplier.name"
+              _id: '$supplier._id',
+              code: '$supplier.code',
+              name: '$supplier.name'
             }
           },
           warehouse: {
             $first: {
-              _id: "$warehouse._id",
-              name: "$warehouse.name",
-              location: "$warehouse.location",
+              _id: '$warehouse._id',
+              name: '$warehouse.name',
+              location: '$warehouse.location'
             }
           },
-          createdAt: { $first: "$createdAt" },
-          createdBy: { $first: "$createdBy.username" },
-          items: { $push: "$items" },
-          isLocked: { $first: "$isLocked" },
-          lockedAt: { $first: "$lockedAt" },
-          lockedBy: { $first: "$lockedBy" },
-          subTotal: { $first: "$subTotal" },
-          taxRate: { $first: "$taxRate" },
-          taxAmount: { $first: "$taxAmount" },
-          grandTotal: { $first: "$grandTotal" }
+          createdAt: { $first: '$createdAt' },
+          createdBy: { $first: '$createdBy.username' },
+          items: { $push: '$items' },
+          isLocked: { $first: '$isLocked' },
+          lockedAt: { $first: '$lockedAt' },
+          lockedBy: { $first: '$lockedBy' },
+          subTotal: { $first: '$subTotal' },
+          taxRate: { $first: '$taxRate' },
+          taxAmount: { $first: '$taxAmount' },
+          grandTotal: { $first: '$grandTotal' }
         }
       }
     )
 
     // Count pipeline (KHÔNG sort/pagination)
-    const countPipeline = [...basePipeline, { $count: "count" }]
+    const countPipeline = [...basePipeline, { $count: 'count' }]
     const countResult = await StockEntry.aggregate(countPipeline)
     const recordsFiltered = countResult[0]?.count || 0
 
     // Sort
     const sortObj = {}
     switch (sortField) {
-      case "supplier.name":
-      case "supplier":
-        sortObj["supplier.name"] = sortDir
+      case 'supplier.name':
+      case 'supplier':
+        sortObj['supplier.name'] = sortDir
         break
-      case "warehouse.name":
-      case "warehouse":
-        sortObj["warehouse.name"] = sortDir
+      case 'warehouse.name':
+      case 'warehouse':
+        sortObj['warehouse.name'] = sortDir
         break
-      case "code":
-        sortObj["code"] = sortDir
+      case 'code':
+        sortObj['code'] = sortDir
         break
-      case "note":
-        sortObj["note"] = sortDir
+      case 'note':
+        sortObj['note'] = sortDir
         break
-      case "date":
-        sortObj["date"] = sortDir
+      case 'date':
+        sortObj['date'] = sortDir
         break
       default:
         sortObj[sortField] = sortDir
@@ -165,7 +171,9 @@ export const getStockEntries = async (req, res) => {
     ]
 
     const data = await StockEntry.aggregate(dataPipeline)
-    const recordsTotal = await StockEntry.countDocuments({ organization: organizationId })
+    const recordsTotal = await StockEntry.countDocuments({
+      organization: organizationId
+    })
 
     res.json({
       draw,
@@ -183,7 +191,8 @@ export const getStockEntryById = async (req, res) => {
   try {
     const { id } = req.params
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!mongoose.isValidObjectId(id)) {
       return responseHelper.error(res, 'ID không hợp lệ', 400)
@@ -205,7 +214,11 @@ export const getStockEntryById = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
     }
 
-    responseHelper.success(res, { stockEntry, units }, 'Lấy thông tin phiếu nhập thành công')
+    responseHelper.success(
+      res,
+      { stockEntry, units },
+      'Lấy thông tin phiếu nhập thành công'
+    )
   } catch (err) {
     responseHelper.error(res, err.message)
   }
@@ -215,7 +228,8 @@ export const getStockEntryById = async (req, res) => {
 export const createStockEntry = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const entry = await withTransaction(async (session) => {
       const code = await generateDocumentCode(StockEntry, 'SE')
@@ -229,7 +243,11 @@ export const createStockEntry = async (req, res) => {
       await doc.save({ session })
       return doc
     })
-    responseHelper.success(res, { id: entry._id, code: entry.code }, "Khởi tạo phiếu nhập thành công")
+    responseHelper.success(
+      res,
+      { id: entry._id, code: entry.code },
+      'Khởi tạo phiếu nhập thành công'
+    )
   } catch (err) {
     responseHelper.error(res, err.message)
   }
@@ -239,7 +257,8 @@ export const createStockEntry = async (req, res) => {
 export const updateStockEntryFromForm = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const updatedDoc = await withTransaction(async (session) => {
       const { id } = req.params
@@ -254,14 +273,19 @@ export const updateStockEntryFromForm = async (req, res) => {
       }).session(session)
 
       if (!oldEntry) throw new Error('Phiếu nhập không tồn tại')
-      if (oldEntry.isLocked) throw new Error('Phiếu nhập đã bị khóa, không thể chỉnh sửa')
+      if (oldEntry.isLocked)
+        throw new Error('Phiếu nhập đã bị khóa, không thể chỉnh sửa')
 
       // Trừ tồn kho cũ khỏi IngredientStock (sử dụng warehouse từ phiếu nhập)
       if (oldEntry.warehouse) {
         for (const item of oldEntry.items) {
           if (item.ingredient && item.quantity) {
             await IngredientStock.updateOne(
-              { ingredient: item.ingredient, warehouse: oldEntry.warehouse, organization: organizationId },
+              {
+                ingredient: item.ingredient,
+                warehouse: oldEntry.warehouse,
+                organization: organizationId
+              },
               { $inc: { quantity: -Math.abs(item.quantity) } },
               { session }
             )
@@ -274,7 +298,7 @@ export const updateStockEntryFromForm = async (req, res) => {
       let subTotal = 0
 
       // Chuẩn hóa dữ liệu items và tính tổng tiền
-      const items = rawItems.map(item => {
+      const items = rawItems.map((item) => {
         const quantity = parseFloat(item.quantity) || 0
         const unit = item.unit || null
         const unitPrice = parseFloat(item.unitPrice) || 0
@@ -307,10 +331,11 @@ export const updateStockEntryFromForm = async (req, res) => {
       }
 
       // Cập nhật phiếu nhập
-      const newEntry = await StockEntry.findOneAndUpdate({
-        _id: id,
-        organization: organizationId
-      },
+      const newEntry = await StockEntry.findOneAndUpdate(
+        {
+          _id: id,
+          organization: organizationId
+        },
         updateData,
         { new: true, session }
       )
@@ -322,7 +347,11 @@ export const updateStockEntryFromForm = async (req, res) => {
         for (const item of newEntry.items) {
           if (item.ingredient && item.quantity) {
             await IngredientStock.updateOne(
-              { ingredient: item.ingredient, warehouse: newEntry.warehouse, organization: organizationId },
+              {
+                ingredient: item.ingredient,
+                warehouse: newEntry.warehouse,
+                organization: organizationId
+              },
               {
                 $inc: { quantity: Math.abs(item.quantity) },
                 $set: { supplier: newEntry.supplier }
@@ -334,11 +363,18 @@ export const updateStockEntryFromForm = async (req, res) => {
       }
 
       // Cập nhật lại tổng tồn kho trong Ingredient
-      const updatedIngredientIds = [...new Set(newEntry.items.map(i => i.ingredient.toString()))]
+      const updatedIngredientIds = [
+        ...new Set(newEntry.items.map((i) => i.ingredient.toString()))
+      ]
 
       for (const ingId of updatedIngredientIds) {
         const totalStockAgg = await IngredientStock.aggregate([
-          { $match: { ingredient: new mongoose.Types.ObjectId(ingId), organization: organizationId } },
+          {
+            $match: {
+              ingredient: new mongoose.Types.ObjectId(ingId),
+              organization: organizationId
+            }
+          },
           { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
         ]).session(session)
 
@@ -374,19 +410,18 @@ export const deleteStockEntries = async (req, res) => {
     await withTransaction(async (session) => {
       const { ids } = req.body
       if (!Array.isArray(ids) || ids.length === 0) {
-        throw new Error("Không có phiếu nào được chọn")
+        throw new Error('Không có phiếu nào được chọn')
       }
 
       const organizationId = getCurrentOrg(req)
-      if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+      if (!organizationId)
+        return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
       // Lấy các phiếu nhập
-      const entries = await StockEntry.find(
-        {
-          _id: { $in: ids },
-          organization: organizationId
-        })
-        .session(session)
+      const entries = await StockEntry.find({
+        _id: { $in: ids },
+        organization: organizationId
+      }).session(session)
 
       // Trừ tồn kho từ IngredientStock
       for (const entry of entries) {
@@ -399,7 +434,11 @@ export const deleteStockEntries = async (req, res) => {
           for (const item of entry.items) {
             const { ingredient, quantity } = item
             await IngredientStock.updateOne(
-              { ingredient, warehouse: entry.warehouse, organization: organizationId },
+              {
+                ingredient,
+                warehouse: entry.warehouse,
+                organization: organizationId
+              },
               { $inc: { quantity: -Math.abs(quantity) } },
               { session }
             )
@@ -414,15 +453,13 @@ export const deleteStockEntries = async (req, res) => {
       }
 
       // Xóa phiếu
-      await StockEntry.deleteMany(
-        {
-          _id: { $in: ids },
-          organization: organizationId
-        })
-        .session(session)
+      await StockEntry.deleteMany({
+        _id: { $in: ids },
+        organization: organizationId
+      }).session(session)
     })
 
-    responseHelper.success(res, null, "Xóa thành công và cập nhật tồn kho")
+    responseHelper.success(res, null, 'Xóa thành công và cập nhật tồn kho')
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -438,14 +475,13 @@ export const lockStockEntry = async (req, res) => {
     }
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, "Thiếu thông tin tổ chức", 400)
+    if (!organizationId)
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const entry = await StockEntry.findOne(
-      {
-        _id: id,
-        organization: organizationId
-      }
-    )
+    const entry = await StockEntry.findOne({
+      _id: id,
+      organization: organizationId
+    })
     if (!entry) {
       return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
     }
@@ -461,11 +497,19 @@ export const lockStockEntry = async (req, res) => {
     // Validate items (với cast an toàn)
     for (const item of entry.items) {
       if (!item.ingredient) {
-        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin ingredient', 400)
+        return responseHelper.error(
+          res,
+          'Có sản phẩm thiếu thông tin ingredient',
+          400
+        )
       }
       const qty = Number(item.quantity)
       if (!Number.isFinite(qty) || qty <= 0) {
-        return responseHelper.error(res, 'Có sản phẩm với số lượng không hợp lệ', 400)
+        return responseHelper.error(
+          res,
+          'Có sản phẩm với số lượng không hợp lệ',
+          400
+        )
       }
     }
 
@@ -498,7 +542,7 @@ export const lockStockEntry = async (req, res) => {
         return sum + (Number(item.quantity) || 0)
       }, 0)
 
-      const itemsSummary = entry.items.map(item => ({
+      const itemsSummary = entry.items.map((item) => ({
         ingredient: item.ingredient._id || item.ingredient,
         quantity: Number(item.quantity) || 0
       }))
@@ -537,6 +581,9 @@ export const lockStockEntry = async (req, res) => {
 
     responseHelper.success(res, finalEntry, 'Đã khóa phiếu nhập thành công')
   } catch (err) {
-    responseHelper.error(res, err.message || 'Có lỗi xảy ra khi khóa phiếu nhập')
+    responseHelper.error(
+      res,
+      err.message || 'Có lỗi xảy ra khi khóa phiếu nhập'
+    )
   }
 }

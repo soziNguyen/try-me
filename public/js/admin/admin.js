@@ -1,5 +1,4 @@
 $(function () {
-
   let table
   let fullData = []
 
@@ -9,23 +8,26 @@ $(function () {
       fullData = res.data
     }
   })
-  
+
   const dataFields = ['username', 'email', 'role']
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#userTableBody').offset().top - 100) / 45)
+  const numRows = Math.floor(
+    ($(window).height() - $('#userTableBody').offset().top - 100) / 45
+  )
   if (!showList.includes(numRows)) {
-      showList.push(numRows)
+    showList.push(numRows)
   }
   showList.sort((a, b) => a - b)
-  
+
   table = $('#userTable').DataTable({
-    dom: '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
-    'l' +
-    'f' +
-    '<"right-group d-flex align-items-center btn-group flex-wrap">' +
-    '>' +
-    'rt' +
-    '<"bottom-bar d-flex justify-content-between mt-3"ip>',
+    dom:
+      '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+      'l' +
+      'f' +
+      '<"right-group d-flex align-items-center btn-group flex-wrap">' +
+      '>' +
+      'rt' +
+      '<"bottom-bar d-flex justify-content-between mt-3"ip>',
     serverSide: true,
     processing: true,
     autoWidth: false,
@@ -52,9 +54,10 @@ $(function () {
         data: null,
         orderable: false,
         className: 'text-center',
-        render: (data, type, row) => `<input type="checkbox" class="userCheckbox" data-id="${row._id}">`
+        render: (data, type, row) =>
+          `<input type="checkbox" class="userCheckbox" data-id="${row._id}">`
       },
-      ...dataFields.map(field => {
+      ...dataFields.map((field) => {
         return {
           data: field,
           render: (data, type, row) => {
@@ -71,7 +74,7 @@ $(function () {
         render: function (data, type, row) {
           if (type === 'display') {
             if (!data) return ''
-            const provinceObj = fullData.find(p => p.id === data.province)
+            const provinceObj = fullData.find((p) => p.id === data.province)
             const provinceName = provinceObj ? provinceObj.name : ''
             return `${data.name}${provinceName ? ' - ' + provinceName : ''}`
           }
@@ -105,7 +108,7 @@ $(function () {
         }
       }
     ],
-    rowCallback: function(row, data) {
+    rowCallback: function (row, data) {
       // Tag row with data-id for update
       $(row).attr('data-id', data._id)
     },
@@ -161,17 +164,24 @@ $(function () {
       })
 
       // Handle delete user
-      handlerDeleteEvent('#userTable', '#deleteUserBtn', 'userCheckbox', 'admin')
-      
+      handlerDeleteEvent(
+        '#userTable',
+        '#deleteUserBtn',
+        'userCheckbox',
+        'admin'
+      )
+
       // Handle update user
       $('#userTable_wrapper').on('click', '.updateUserBtn', function () {
         const userId = $(this).data('id')
         const roles = ['Admin', 'Org', 'Member']
-        const $roleSelected = $('#new-role');
+        const $roleSelected = $('#new-role')
         $roleSelected.empty().append(
-          roles.map(role => {
-            return `<option value=${role}>${role}</option>`
-          }).join('')
+          roles
+            .map((role) => {
+              return `<option value=${role}>${role}</option>`
+            })
+            .join('')
         )
         $.getJSON(`/api/admin/users/${userId}`, function (res) {
           if (res.success) {
@@ -180,21 +190,20 @@ $(function () {
             $('#new-email').val(user.email || '')
             $roleSelected.val(user.role || 'Member')
             loadOrganizations($('#new-organizations'), user.organization?._id)
-            .then(() => {
-              $('#updateUserForm').data({
-                'user-id': userId,
-                'original-role': user.role || 'Member'
+              .then(() => {
+                $('#updateUserForm').data({
+                  'user-id': userId,
+                  'original-role': user.role || 'Member'
+                })
+                $('#updateUserModal').modal('show')
               })
-              $('#updateUserModal').modal('show')
-            })
-            .catch(error => {
-              // console.error('Error loading organizations:', error)
-            })
+              .catch((error) => {
+                // console.error('Error loading organizations:', error)
+              })
           } else {
             toastr.error('Không thể tải thông tin người dùng')
           }
-        })
-        .fail(function(xhr) {
+        }).fail(function (xhr) {
           toastr.error(xhr.responseJSON?.message || 'Đã có lỗi xảy ra')
         })
       })
