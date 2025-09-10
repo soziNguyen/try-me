@@ -42,6 +42,7 @@ $(function () {
         '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
+      scrollX: true,
       order: [],
       ajax: {
         url: '/api/menu/combos',
@@ -80,7 +81,7 @@ $(function () {
         {
           data: 'image',
           orderable: false,
-          className: 'image-cell',
+          className: 'image-cell text-center',
           render: (data) => {
             const imgSrc = data || ''
             return `<img src="${imgSrc}" alt="Ảnh" class="combo-image" width="70" height="70">`
@@ -324,33 +325,29 @@ $(function () {
           imageSmoothingQuality: 'high'
         })
 
-        canvas.toBlob(
-          function (blob) {
-            const croppedFile = new File([blob], currentImageFile.name, {
-              type: currentImageFile.type,
-              lastModified: Date.now()
-            })
+        canvas.toBlob(function (blob) {
+          const croppedFile = new File([blob], currentImageFile.name, {
+            type: currentImageFile.type,
+            lastModified: Date.now()
+          })
 
-            // Lưu file tạm để upload khi bấm Lưu form
-            croppedImageFile = croppedFile
+          // Lưu file tạm để upload khi bấm Lưu form
+          croppedImageFile = croppedFile
 
-            // Dọn objectURL
-            if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-              try {
-                URL.revokeObjectURL(croppedImageUrl)
-              } catch (e) {}
-            }
+          // Dọn objectURL
+          if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
+            try {
+              URL.revokeObjectURL(croppedImageUrl)
+            } catch (e) {}
+          }
 
-            // Tạo preview bằng objectURL
-            croppedImageUrl = URL.createObjectURL(croppedFile)
-            updateImagePreview()
+          // Tạo preview bằng objectURL
+          croppedImageUrl = URL.createObjectURL(croppedFile)
+          updateImagePreview()
 
-            // Đóng modal
-            $('#imageCropModal').modal('hide')
-          },
-          currentImageFile.type,
-          0.9
-        )
+          // Đóng modal
+          $('#imageCropModal').modal('hide')
+        }, currentImageFile.type)
       }
     })
 
@@ -493,8 +490,8 @@ $(function () {
     if ($imageContainer.length === 0) {
       const $imageInput = $('#comboForm').find('input[name="image"]')
       $imageInput.after(`
-        <div class="image-preview-container mt-2" style="display: none">
-          <img class="preview-image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd">
+        <div class="image-preview-container mt-2 d-none">
+          <img class="preview-image image-square">
           <div class="mt-1">
             <button type="button" class="btn btn-outline-danger btn-sm remove-image">
               <i class="bi bi-trash"></i> Xóa ảnh

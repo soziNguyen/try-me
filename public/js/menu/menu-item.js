@@ -67,7 +67,38 @@ $(function () {
           className: 'image-cell',
           render: (data) => {
             const imgSrc = data || ''
-            return `<img src="${imgSrc}" alt="Ảnh" class="menu-image">`
+            const hasImage = imgSrc && imgSrc.trim() !== ''
+
+            const containerClass = hasImage
+              ? 'table-image-container'
+              : 'table-image-container no-image'
+            const imgClass = hasImage ? '' : 'no-image'
+            const overlayClass = hasImage
+              ? 'image-overlay has-image'
+              : 'image-overlay no-image'
+
+            const previewBtn = hasImage
+              ? `<button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh">
+                   <i class="bi bi-eye"></i>
+                 </button>`
+              : ''
+
+            const uploadBtnClass = hasImage
+              ? 'btn-outline-light'
+              : 'btn-outline-secondary'
+            const uploadBtnTitle = hasImage ? 'Chọn ảnh mới' : 'Thêm ảnh'
+
+            return `
+              <div class="menu-image-container ${containerClass}">
+                <img src="${imgSrc || '/assets/images/default.png'}" alt="Ảnh" class="menu-image ${imgClass}">
+                <div class="${overlayClass}">
+                  ${previewBtn}
+                  <button type="button" class="btn ${uploadBtnClass} btn-sm upload-btn" title="${uploadBtnTitle}">
+                    <i class="bi bi-${hasImage ? 'arrow-repeat' : 'upload'}"></i>
+                  </button>
+                </div>
+              </div>
+            `
           }
         },
         {
@@ -92,7 +123,7 @@ $(function () {
                   <option value="">— Chọn danh mục —</option>
                   ${options}
                 </select>
-                `
+              `
             }
             return data?.name || ''
           }
@@ -131,26 +162,40 @@ $(function () {
         // Tag row with data-id for update
         $(row).attr('data-id', data._id)
       },
-      drawCallback: function (settings) {
+      drawCallback: function () {
         $('#menuTable select.dataInput').each(function () {
           initSelect2($(this), '— Chọn danh mục —')
         })
+
+        $('#menuTable img').each(function () {
+          const $img = $(this)
+
+          $img.off('error').off('load')
+
+          $img.on('error', function () {
+            $img.addClass('img-error')
+          })
+
+          $img.on('load', function () {
+            $img.removeClass('img-error')
+          })
+
+          if (this.complete && this.naturalWidth === 0) {
+            $img.addClass('img-error')
+          }
+        })
       },
       initComplete: function () {
-        // const api = this.api()
         $('.right-group').html(`
-            <div class="btn-group flex-wrap">
-              <button class="btn btn-outline-danger me-2" id="deleteMenus">
-              <i class="bi bi-trash"></i> Xóa
-              </button>
-              <button class="btn btn-outline-success" id="addMenu">
-              <i class="bi bi-plus-circle"></i> Thêm
-              </button>
-            </div>
-          `)
-        // $(window).on('resize', function () {
-        //   api.columns.adjust()
-        // })
+          <div class="btn-group flex-wrap">
+            <button class="btn btn-outline-danger me-2" id="deleteMenus">
+            <i class="bi bi-trash"></i> Xóa
+            </button>
+            <button class="btn btn-outline-success" id="addMenu">
+            <i class="bi bi-plus-circle"></i> Thêm
+            </button>
+          </div>
+        `)
       }
     })
 
@@ -166,9 +211,55 @@ $(function () {
   let cropper
   let currentImgCell
 
-  // Khi click vào ảnh trong table
-  $('#menuTable').on('click', '.menu-image', function () {
-    currentImgCell = $(this).closest('td')
+  $('#menuTable').on('click', '.preview-btn', function (e) {
+    e.stopPropagation()
+    const $img = $(this).closest('.menu-image-container').find('img')
+    const imgSrc = $img.attr('src')
+
+    if (!imgSrc || imgSrc.includes('default.png') || imgSrc.trim() === '') {
+      toastr.info('Chưa có ảnh để xem')
+      return
+    }
+
+    if ($img.hasClass('img-error')) {
+      toastr.info('Ảnh bị lỗi, vui lòng sửa ảnh và thử lại sau')
+      return
+    }
+
+    // Tạo modal preview
+    const previewModal = `
+      <div class="modal fade" id="imagePreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Xem ảnh</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+              <img src="${imgSrc}" class="img-fluid vh-70">
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+
+    // Remove existing preview modal and add new one
+    $('#imagePreviewModal').remove()
+    $('body').append(previewModal)
+
+    const modal = new bootstrap.Modal(
+      document.getElementById('imagePreviewModal')
+    )
+    modal.show()
+
+    $('#imagePreviewModal').on('hidden.bs.modal', function () {
+      $(this).remove()
+    })
+  })
+
+  $('#menuTable').on('click', '.upload-btn', function (e) {
+    e.stopPropagation()
+    currentImgCell = $(this).closest('.image-cell')
 
     // Tạo input file ẩn và trigger chọn file
     $('<input type="file" accept="image/*">')
@@ -195,7 +286,10 @@ $(function () {
               }
               cropper = new Cropper(document.getElementById('imagePreview'), {
                 viewMode: 1,
-                autoCropArea: 1
+                autoCropArea: 1,
+                responsive: true,
+                background: true,
+                center: true
               })
             },
             { once: true }
@@ -206,10 +300,11 @@ $(function () {
       .trigger('click')
   })
 
-  // Khi nhấn nút Crop & Save
   $('#cropBtn').on('click', function () {
     if (!cropper) return
     const cropData = cropper.getData(true)
+    const { mime, ext } = getBestFormat()
+
     cropper
       .getCroppedCanvas({
         width: Math.floor(cropData.width),
@@ -220,7 +315,7 @@ $(function () {
       })
       .toBlob((blob) => {
         const formData = new FormData()
-        formData.append('file', blob, 'cropped.webp')
+        formData.append('file', blob, `$cropped.${ext}`)
 
         // Upload file đã crop lên server
         $.ajax({
@@ -258,6 +353,6 @@ $(function () {
           },
           error: () => toastr.error('Lỗi upload ảnh')
         })
-      }, 'image/webp')
+      }, mime)
   })
 })

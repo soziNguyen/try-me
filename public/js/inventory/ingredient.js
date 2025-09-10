@@ -71,21 +71,27 @@ $(function () {
           orderable: false,
           className: 'image-cell',
           render: (data) => {
-            const imgSrc = data || '';
-            const hasImage = imgSrc && imgSrc.trim() !== '';
+            const imgSrc = data || ''
+            const hasImage = imgSrc && imgSrc.trim() !== ''
 
-            const containerClass = hasImage ? 'table-image-container' : 'table-image-container no-image';
-            const imgClass = hasImage ? '' : 'no-image';
-            const overlayClass = hasImage ? 'image-overlay has-image' : 'image-overlay no-image';
+            const containerClass = hasImage
+              ? 'table-image-container'
+              : 'table-image-container no-image'
+            const imgClass = hasImage ? '' : 'no-image'
+            const overlayClass = hasImage
+              ? 'image-overlay has-image'
+              : 'image-overlay no-image'
 
             const previewBtn = hasImage
               ? `<button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh">
                    <i class="bi bi-eye"></i>
                  </button>`
-              : '';
+              : ''
 
-            const uploadBtnClass = hasImage ? 'btn-outline-light' : 'btn-outline-secondary';
-            const uploadBtnTitle = hasImage ? 'Chọn ảnh mới' : 'Thêm ảnh';
+            const uploadBtnClass = hasImage
+              ? 'btn-outline-light'
+              : 'btn-outline-secondary'
+            const uploadBtnTitle = hasImage ? 'Chọn ảnh mới' : 'Thêm ảnh'
 
             return `
               <div class="ingredient-image-container ${containerClass}">
@@ -97,7 +103,7 @@ $(function () {
                   </button>
                 </div>
               </div>
-            `;
+            `
           }
         },
         {
@@ -222,6 +228,24 @@ $(function () {
             $(this).find('.image-overlay').css('opacity', '0')
           }
         )
+
+        $('#ingredientTable img').each(function () {
+          const $img = $(this)
+
+          $img.off('error').off('load')
+
+          $img.on('error', function () {
+            $img.addClass('img-error')
+          })
+
+          $img.on('load', function () {
+            $img.removeClass('img-error')
+          })
+
+          if (this.complete && this.naturalWidth === 0) {
+            $img.addClass('img-error')
+          }
+        })
       },
       initComplete: function () {
         $('.right-group').html(`
@@ -287,13 +311,16 @@ $(function () {
   // Event handler preview btn
   $('#ingredientTable').on('click', '.preview-btn', function (e) {
     e.stopPropagation()
-    const imgSrc = $(this)
-      .closest('.ingredient-image-container')
-      .find('img')
-      .attr('src')
+    const $img = $(this).closest('.ingredient-image-container').find('img')
+    const imgSrc = $img.attr('src')
 
     if (!imgSrc || imgSrc.includes('default.png') || imgSrc.trim() === '') {
       toastr.info('Chưa có ảnh để xem')
+      return
+    }
+
+    if ($img.hasClass('img-error')) {
+      toastr.info('Ảnh bị lỗi, vui lòng sửa ảnh và thử lại sau')
       return
     }
 
@@ -307,7 +334,7 @@ $(function () {
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center">
-              <img src="${imgSrc}" class="img-fluid" style="max-height: 70vh;">
+              <img src="${imgSrc}" class="img-fluid vh-70">
             </div>
           </div>
         </div>
@@ -376,8 +403,7 @@ $(function () {
   $('#cropBtn').on('click', function () {
     if (!cropper) return
     const cropData = cropper.getData(true)
-    const hasTransparency = false;
-    const { mime, ext } = getBestFormat(hasTransparency);
+    const { mime, ext } = getBestFormat()
 
     cropper
       .getCroppedCanvas({
