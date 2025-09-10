@@ -1,69 +1,71 @@
 <%- include('../partials/header.html') %>
 
-  <body>
-    <div class="invoice">
-
-      <!-- Header -->
-      <div class="header text-center mb-4 mt-3">
-        <div><strong>CUONGCHICKEN</strong></div>
-        <div>SDT: 0866079523</div>
-        <div><strong>HÓA ĐƠN BÁN HÀNG</strong></div>
-        <div>mã HD <span id="orderId"></span></div>
-        <div>Thời Gian: <span id="orderDate"></span></div>
-      </div>
-
-      <div class="info">
-        <p><strong>Khách hàng:</strong> <span id="customerName">Khách lẻ</span></p>
-
-        <div class="d-flex justify-content-between">
-          <p class="mb-0"><strong>Thu ngân:</strong> <span id="cashier">
-              <%= user.username %>
-            </span></p>
-          <p class="mb-0"><strong>Loại hóa đơn:</strong> <span id="orderType">--</span></p>
-        </div>
-      </div>
-
-
-      <table class="invoice-table fw-bold">
-        <thead>
-          <tr>
-            <th class="stt">STT</th>
-            <th class="name">Tên hàng</th>
-            <th class="price">Đ.giá</th>
-            <th class="qty">SL</th>
-            <th class="total text-end">TT</th>
-          </tr>
-        </thead>
-        <tbody id="orderItems">
-          <!-- Các món ăn sẽ được render ở đây -->
-        </tbody>
-      </table>
-
-      <!-- Tổng kết -->
-      <div class="summary fw-bold">
-        <p><span>Tổng thành tiền</span><span id="totalAmount"></span></p>
-        <p><span>Giảm được</span><span id="discount"></span></p>
-        <p><span>Phụ thu dịch vụ</span><span id="serviceCharge"></span></p>
-        <p><span>VAT</span><span id="vatAmount"></span></p>
-        <p><span>Tổng cộng</span><span id="total"></span></p>
-        <p><span>Tiền khách trả</span><span id="customerPaid"></span></p>
-        <p><span>Tiền thừa</span><span id="changeAmount"></span></p>
-      </div>
-
-      <!-- Đường kẻ phân cách -->
-      <div class="divider"></div>
-
-      <!-- Footer -->
-      <div class="footer text-center">
-        <p>Xin cảm ơn, hẹn gặp lại quý khách</p>
-      </div>
-
+  <div class="invoice">
+    <!-- Header -->
+    <div class="header text-center mb-4 mt-3">
+      <div><strong>CUONGCHICKEN</strong></div>
+      <div>SDT: 0866079523</div>
+      <div><strong>HÓA ĐƠN BÁN HÀNG</strong></div>
+      <div>mã HD <span id="orderId"></span></div>
+      <div>Thời Gian: <span id="orderDate"></span></div>
     </div>
 
-    <input type="hidden" id="orderIdInput" value="<%= orderId %>">
-    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <div class="info">
+      <p>
+        <strong>Khách hàng:</strong> <span id="customerName">Khách lẻ</span>
+      </p>
 
-    <%- include('../partials/commonjs.html') %>
-      <script src="/js/staff/printbill.js"></script>
-      <%- include('../partials/footer.html') %>
-  </body>
+      <div class="d-flex justify-content-between">
+        <p class="mb-0">
+          <strong>Thu ngân:</strong>
+          <span id="cashier">
+            <%= user.username %>
+          </span>
+        </p>
+        <p class="mb-0">
+          <strong>Loại hóa đơn:</strong> <span id="orderType">--</span>
+        </p>
+      </div>
+    </div>
+
+    <table class="invoice-table fw-bold">
+      <thead>
+        <tr>
+          <th class="stt">STT</th>
+          <th class="name">Tên hàng</th>
+          <th class="price">Đ.giá</th>
+          <th class="qty">SL</th>
+          <th class="total text-end">TT</th>
+        </tr>
+      </thead>
+      <tbody id="orderItems">
+        <!-- Các món ăn sẽ được render ở đây -->
+      </tbody>
+    </table>
+
+    <!-- Tổng kết -->
+    <div class="summary fw-bold">
+      <p><span>Tổng thành tiền</span><span id="totalAmount"></span></p>
+      <p><span>Giảm được</span><span id="discount"></span></p>
+      <p><span>Phụ thu dịch vụ</span><span id="serviceCharge"></span></p>
+      <p><span>VAT</span><span id="vatAmount"></span></p>
+      <p><span>Tổng cộng</span><span id="total"></span></p>
+      <p><span>Tiền khách trả</span><span id="customerPaid"></span></p>
+      <p><span>Tiền thừa</span><span id="changeAmount"></span></p>
+    </div>
+
+    <!-- Đường kẻ phân cách -->
+    <div class="divider"></div>
+
+    <!-- Footer -->
+    <div class="footer text-center">
+      <p>Xin cảm ơn, hẹn gặp lại quý khách</p>
+    </div>
+  </div>
+
+  <input type="hidden" id="orderIdInput" value="<%= orderId %>" />
+  <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
+
+  <%- include('../partials/commonjs.html') %>
+    <script src="/js/staff/printbill.js"></script>
+    <%- include('../partials/footer.html') %>

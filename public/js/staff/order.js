@@ -1,6 +1,6 @@
 // ======== Biến toàn cục ========
-const urlParams = new URLSearchParams(window.location.search);
-const orderId = urlParams.get('orderId');
+const urlParams = new URLSearchParams(window.location.search)
+const orderId = urlParams.get('orderId')
 
 // ======== Event Listeners ========
 
@@ -10,160 +10,162 @@ document.addEventListener('DOMContentLoaded', async () => {
     const [foods, combos] = await Promise.all([
       ajax('/api/menu/get/active', {}, 'GET'),
       fetchCombos()
-    ]);
+    ])
 
     if (!Array.isArray(foods)) {
-      console.error('foods không phải là mảng:', foods);
-      return;
+      console.error('foods không phải là mảng:', foods)
+      return
     }
 
-    allFoods = foods;
-    allCombos = combos;
-    allItems = mergeMenus(allFoods, allCombos);
+    allFoods = foods
+    allCombos = combos
+    allItems = mergeMenus(allFoods, allCombos)
 
-    renderMenu(allItems);
+    renderMenu(allItems)
 
     // Lấy và hiển thị danh mục (từ allItems để combo cũng có thể lọc theo)
-    const categories = extractCategories(allItems);
-    renderCategories(categories);
+    const categories = extractCategories(allItems)
+    renderCategories(categories)
 
     // Xử lý orderId như trước
     if (orderId) {
-      const orderRes = await fetch(`/api/orders/${orderId}`);
-      const orderData = await orderRes.json();
+      const orderRes = await fetch(`/api/orders/${orderId}`)
+      const orderData = await orderRes.json()
       if (orderRes.ok) {
-        updateOrderUI(orderData);
+        updateOrderUI(orderData)
       }
     } else {
-      const warningDiv = document.getElementById("orderWarning");
+      const warningDiv = document.getElementById('orderWarning')
       if (warningDiv) {
         warningDiv.innerHTML = `
           <div class="alert alert-warning mt-3">
             ⚠️ Vui lòng chọn bàn trước khi thao tác gọi món.
           </div>
-        `;
+        `
       }
     }
   } catch (error) {
-    console.error('Lỗi khi tải thực đơn và combo:', error);
+    console.error('Lỗi khi tải thực đơn và combo:', error)
   }
 
   // Các xử lý sự kiện xóa món, cập nhật số lượng món vẫn giữ nguyên
-  const tbody = document.getElementById("orderItems");
-  tbody.addEventListener("click", (e) => {
-    const btn = e.target.closest(".remove-item");
+  const tbody = document.getElementById('orderItems')
+  tbody.addEventListener('click', (e) => {
+    const btn = e.target.closest('.remove-item')
     if (btn) {
-      const id = btn.dataset.id;
-      const type = btn.dataset.type;
-      removeItemFromOrder(id, type);
+      const id = btn.dataset.id
+      const type = btn.dataset.type
+      removeItemFromOrder(id, type)
     }
-  });
-  tbody.addEventListener("change", (e) => {
-  const input = e.target.closest(".item-quantity");
-  if (input) {
-    const newQuantity = parseInt(input.value, 10);
-    if (newQuantity > 0) {
-      const id = input.dataset.id;
-      const type = input.dataset.type;  
-      updateItemQuantity(id, type, newQuantity);
-    } else {
-      input.value = 1;
+  })
+  tbody.addEventListener('change', (e) => {
+    const input = e.target.closest('.item-quantity')
+    if (input) {
+      const newQuantity = parseInt(input.value, 10)
+      if (newQuantity > 0) {
+        const id = input.dataset.id
+        const type = input.dataset.type
+        updateItemQuantity(id, type, newQuantity)
+      } else {
+        input.value = 1
+      }
     }
-  }
-  });
+  })
 
   // Nút hiển thị danh sách bàn
-  const viewTable = document.querySelector('.btn-select-table');
+  const viewTable = document.querySelector('.btn-select-table')
   viewTable.addEventListener('click', () => {
-    const table = document.getElementById('tableGrid');
-    getTables();
-    table.classList.toggle('show');
-  });
-});
-
+    const table = document.getElementById('tableGrid')
+    getTables()
+    table.classList.toggle('show')
+  })
+})
 
 // Xử lý click chọn bàn trong bảng bàn (bao gồm nút "Mang Về" và bàn bình thường)
 document.getElementById('tableGrid').addEventListener('click', async (e) => {
-  const btnTable = e.target.closest('.table-button');
-  if (!btnTable) return;
+  const btnTable = e.target.closest('.table-button')
+  if (!btnTable) return
 
   // Xử lý "Mang Về"
   if (btnTable.hasAttribute('data-mang-ve')) {
     try {
-      const orderResult = await ajax('/api/orders', { tableId: null, isTakeaway: true }, 'POST');
+      const orderResult = await ajax(
+        '/api/orders',
+        { tableId: null, isTakeaway: true },
+        'POST'
+      )
 
       if (orderResult && orderResult.orderId) {
         if (orderResult.isNewOrder) {
-          if (!confirm(`Bạn có muốn tạo order mang về không?`)) return;
+          if (!confirm(`Bạn có muốn tạo order mang về không?`)) return
         }
-        toastr.success('Order mang về đã được tạo thành công!');
-        window.location.href = `/orders?orderId=${orderResult.orderId}`;
+        toastr.success('Order mang về đã được tạo thành công!')
+        window.location.href = `/orders?orderId=${orderResult.orderId}`
       } else {
-        toastr.error('Không thể tạo hoặc lấy order mang về.');
+        toastr.error('Không thể tạo hoặc lấy order mang về.')
       }
     } catch (err) {
-      toastr.error('Lỗi khi xử lý order mang về: ' + err.message);
+      toastr.error('Lỗi khi xử lý order mang về: ' + err.message)
     }
-    return;
+    return
   }
 
   // Bàn bình thường
-  const tableId = btnTable.getAttribute('data-table-id');
-  const orderId = btnTable.getAttribute('data-order-id');
-  const status = btnTable.getAttribute('data-status');
+  const tableId = btnTable.getAttribute('data-table-id')
+  const orderId = btnTable.getAttribute('data-order-id')
+  const status = btnTable.getAttribute('data-status')
 
   if (status === 'available') {
     if (confirm(`Bạn có muốn tạo order và gọi món cho bàn này không?`)) {
       try {
-        const orderResult = await ajax('/api/orders', { tableId }, 'POST');
+        const orderResult = await ajax('/api/orders', { tableId }, 'POST')
         if (orderResult && orderResult.orderId) {
-          toastr.success('Order cho bàn đã được tạo thành công!');
+          toastr.success('Order cho bàn đã được tạo thành công!')
           setTimeout(() => {
-            window.location.href = `/orders?orderId=${orderResult.orderId}`;
-          }, 500);
+            window.location.href = `/orders?orderId=${orderResult.orderId}`
+          }, 500)
         } else {
-          toastr.error('Không thể tạo order mới.');
+          toastr.error('Không thể tạo order mới.')
         }
       } catch (err) {
-        toastr.error('Lỗi khi tạo order: ' + err.message);
+        toastr.error('Lỗi khi tạo order: ' + err.message)
       }
     }
   } else if (status === 'occupied') {
     if (orderId) {
-      window.location.href = `/orders?orderId=${orderId}`;
+      window.location.href = `/orders?orderId=${orderId}`
     } else {
-      toastr.warning('Bàn này đang bận nhưng không tìm thấy order.');
+      toastr.warning('Bàn này đang bận nhưng không tìm thấy order.')
     }
   } else {
-    toastr.info('Trạng thái bàn chưa xác định.');
+    toastr.info('Trạng thái bàn chưa xác định.')
   }
-});
-
-
+})
 
 // ======== Các hàm lấy dữ liệu và render UI ========
 
 // Lấy danh sách bàn và render
 async function getTables() {
   try {
-    const res = await ajax('/api/tables', {}, 'GET');
+    const res = await ajax('/api/tables', {}, 'GET')
     if (res && Array.isArray(res.tables)) {
-      renderTableList(res.tables);
+      renderTableList(res.tables)
     } else {
-      document.getElementById("tableGrid").innerHTML = `<div>Không có bàn nào.</div>`;
+      document.getElementById('tableGrid').innerHTML =
+        `<div>Không có bàn nào.</div>`
     }
   } catch (error) {
-    console.error('Lỗi khi lấy danh sách bàn:', error);
+    console.error('Lỗi khi lấy danh sách bàn:', error)
   }
 }
 
 // Render danh sách bàn lên giao diện
 function renderTableList(tables = []) {
-  const tableGrid = document.getElementById("tableGrid");
+  const tableGrid = document.getElementById('tableGrid')
 
   if (!Array.isArray(tables) || tables.length === 0) {
-    tableGrid.innerHTML = `<div>Không có bàn nào.</div>`;
-    return;
+    tableGrid.innerHTML = `<div>Không có bàn nào.</div>`
+    return
   }
 
   // Nút "Mang Về"
@@ -175,16 +177,19 @@ function renderTableList(tables = []) {
     >
       <i class="bi bi-bag"></i> Mang Về
     </button>
-  `;
+  `
 
-  html += tables.map(table => {
-    let btnClass = 'btn-secondary';
-    if (table.status === 'available') btnClass = 'btn-success';
-    else if (table.status === 'occupied') btnClass = 'btn-danger';
+  html += tables
+    .map((table) => {
+      let btnClass = 'btn-secondary'
+      if (table.status === 'available') btnClass = 'btn-success'
+      else if (table.status === 'occupied') btnClass = 'btn-danger'
 
-    const orderId = table.currentOrderId ? table.currentOrderId.toString() : '';
+      const orderId = table.currentOrderId
+        ? table.currentOrderId.toString()
+        : ''
 
-    return `
+      return `
       <button 
         class="btn ${btnClass} m-1 table-button" 
         style="min-width: 110px; height: 60px; font-weight: 600;"
@@ -194,94 +199,120 @@ function renderTableList(tables = []) {
       >
         ${table.name}
       </button>
-    `;
-  }).join("");
+    `
+    })
+    .join('')
 
-  tableGrid.innerHTML = html;
+  tableGrid.innerHTML = html
 }
 
 // categories
-let allFoods = [];
-let allItems = [];
+let allFoods = []
+let allItems = []
 
 function extractCategories(items) {
-  const categories = [];
-  const names = new Set();
+  const categories = []
+  const names = new Set()
 
   for (const item of items) {
-    const catName = item.category?.name;
+    const catName = item.category?.name
     if (catName && !names.has(catName)) {
-      categories.push(catName);
-      names.add(catName);
+      categories.push(catName)
+      names.add(catName)
     }
   }
 
-  return categories;
+  return categories
 }
 
 function renderCategories(categories) {
-  const categoryList = document.getElementById("categoryList");
-  if (!categoryList) return;
+  const categoryList = document.getElementById('categoryList')
+  if (!categoryList) return
 
   categoryList.innerHTML = `
-    <button class="btn btn-outline-danger" onclick="renderMenu(allItems)">Tất cả</button>
-    <button class="btn btn-outline-success" onclick="filterComboOnly()">Combo</button>
-    ${categories.map(cate => `
-      <button class="btn btn-outline-primary" onclick="filterMenuByCategory('${cate}')">
+    <button class="btn btn-outline-danger" data-action="all">Tất cả</button>
+    <button class="btn btn-outline-success" data-action="combo">Combo</button>
+    ${categories
+      .map(
+        (cate) => `
+      <button class="btn btn-outline-primary" data-category="${cate}">
         ${cate}
       </button>
-    `).join('')}
-  `;
+    `
+      )
+      .join('')}
+  `
+
+  const buttons = categoryList.querySelectorAll('button')
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.getAttribute('data-action')
+      const category = button.getAttribute('data-category')
+
+      if (action === 'all') {
+        renderMenu(allItems)
+      } else if (action === 'combo') {
+        filterComboOnly()
+      } else if (category) {
+        filterMenuByCategory(category)
+      }
+    })
+  })
 }
 
 function filterMenuByCategory(categoryName) {
-  const filtered = allItems.filter(item => item.category?.name === categoryName);
-  renderMenu(filtered);
+  const filtered = allItems.filter(
+    (item) => item.category?.name === categoryName
+  )
+  renderMenu(filtered)
 }
 
 function filterComboOnly() {
-  const combos = allItems.filter(item => item.isCombo);
-  renderMenu(combos);
+  const combos = allItems.filter((item) => item.isCombo)
+  renderMenu(combos)
 }
 
 function mergeMenus(foods, combos) {
-  const combosMapped = combos.map(combo => ({
+  const combosMapped = combos.map((combo) => ({
     ...combo,
     isCombo: true
-  }));
-  const foodsMapped = foods.map(food => ({
+  }))
+  const foodsMapped = foods.map((food) => ({
     ...food,
     isCombo: false
-  }));
-  return [...combosMapped, ...foodsMapped];
+  }))
+  return [...combosMapped, ...foodsMapped]
 }
 
 // Render thực đơn món ăn
 function renderMenu(items) {
-  const menuDiv = document.getElementById('foodMenu');
+  const menuDiv = document.getElementById('foodMenu')
   if (!menuDiv) {
-    console.error('Không tìm thấy phần tử #foodMenu trong HTML');
-    return;
+    console.error('Không tìm thấy phần tử #foodMenu trong HTML')
+    return
   }
 
-  menuDiv.innerHTML = items.map(item => {
-    let imgSrc = '/images/default-food.png';
-    if (item.image) {
-      imgSrc = (item.image.startsWith('/') || item.image.startsWith('http'))
-        ? item.image
-        : '/uploads/' + item.image;
-    }
+  menuDiv.innerHTML = items
+    .map((item) => {
+      let imgSrc = '/images/default-food.png'
+      if (item.image) {
+        imgSrc =
+          item.image.startsWith('/') || item.image.startsWith('http')
+            ? item.image
+            : '/uploads/' + item.image
+      }
 
-    const name = item.name || (item.isCombo ? 'Combo không rõ tên' : 'Không rõ tên');
-    const price = typeof item.price === 'number' ? item.price : 0;
-    const priceFormatted = price.toLocaleString();
+      const name =
+        item.name || (item.isCombo ? 'Combo không rõ tên' : 'Không rõ tên')
+      const price = typeof item.price === 'number' ? item.price : 0
+      const priceFormatted = price.toLocaleString()
 
-    // Nếu là combo thì hiển thị danh sách món trong combo
-    const comboItemsList = item.isCombo && Array.isArray(item.items)
-      ? item.items.map(i => i.menuItem?.name || 'Không rõ món').join(', ')
-      : '';
+      const comboItemsList =
+        item.isCombo && Array.isArray(item.items)
+          ? item.items.map((i) => i.menuItem?.name || 'Không rõ món').join(', ')
+          : ''
 
-    return `
+      return `
       <div class="col">
         <div class="card shadow-sm h-100 rounded-3">
           <img src="${imgSrc}" alt="${name}" class="card-img-top" style="object-fit: cover; height: 180px;">
@@ -289,78 +320,113 @@ function renderMenu(items) {
             <h5 class="card-title fw-semibold">${name}</h5>
             ${item.isCombo ? `<p class="card-text text-secondary">Gồm: ${comboItemsList}</p>` : ''}
             <p class="card-text text-danger fw-bold fs-5 flex-grow-1">Giá: ${priceFormatted} đ</p>
-            <button class="btn ${item.isCombo ? 'btn-success' : 'btn-primary'} btn-sm rounded-pill px-3 mt-auto" 
-              onclick="${item.isCombo ? `addComboToOrder('${item._id}', '${name}', ${price})` : `addToOrder('${item._id}', '${name}', ${price})`}">
+            <button 
+              class="btn ${item.isCombo ? 'btn-success' : 'btn-primary'} btn-sm rounded-pill px-3 mt-auto btn-add-to-order"
+              data-id="${item._id}"
+              data-name="${name}"
+              data-price="${price}"
+              data-is-combo="${item.isCombo}">
               <i class="bi bi-bag-plus"></i> Thêm${item.isCombo ? ' combo' : ''}
             </button>
           </div>
         </div>
       </div>
-    `;
-  }).join('');
+    `
+    })
+    .join('')
+  // Gán sự kiện cho các nút "Thêm"
+  const buttons = menuDiv.querySelectorAll('.btn-add-to-order')
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.id
+      const name = button.dataset.name
+      const price = Number(button.dataset.price)
+      const isCombo = button.dataset.isCombo === 'true'
+
+      if (isCombo) {
+        addComboToOrder(id, name, price)
+      } else {
+        addToOrder(id, name, price)
+      }
+    })
+  })
 }
+
+document.querySelectorAll('.btn-add-to-order').forEach((button) => {
+  button.addEventListener('click', () => {
+    const id = button.dataset.id
+    const name = button.dataset.name
+    const price = Number(button.dataset.price)
+    const isCombo = button.dataset.isCombo === 'true'
+
+    if (isCombo) {
+      addComboToOrder(id, name, price)
+    } else {
+      addToOrder(id, name, price)
+    }
+  })
+})
 
 // Ẩn hóa đơn
 function updateOrderSectionVisibility() {
-  const orderItems = document.querySelectorAll('#orderItems tr');
-  const orderSection = document.getElementById('orderSection');
-  const foodMenuCol = document.getElementById('foodMenuCol');
+  const orderItems = document.querySelectorAll('#orderItems tr')
+  const orderSection = document.getElementById('orderSection')
+  const foodMenuCol = document.getElementById('foodMenuCol')
 
   if (orderItems.length > 0) {
-    orderSection.classList.remove('d-none');
-    foodMenuCol.classList.remove('col-lg-12');
-    foodMenuCol.classList.add('col-lg-8');
+    orderSection.classList.remove('d-none')
+    foodMenuCol.classList.remove('col-lg-12')
+    foodMenuCol.classList.add('col-lg-8')
   } else {
-    orderSection.classList.add('d-none');
-    foodMenuCol.classList.remove('col-lg-8');
-    foodMenuCol.classList.add('col-lg-12');
+    orderSection.classList.add('d-none')
+    foodMenuCol.classList.remove('col-lg-8')
+    foodMenuCol.classList.add('col-lg-12')
   }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  updateOrderSectionVisibility();
-});
+  updateOrderSectionVisibility()
+})
 
-let allCombos = [];
+let allCombos = []
 async function fetchCombos() {
   try {
-    const combos = await ajax('/api/menu/combos/active', {}, 'GET');
+    const combos = await ajax('/api/menu/combos/active', {}, 'GET')
     if (!Array.isArray(combos)) {
-      console.error('combos không phải là mảng:', combos);
-      return [];
+      console.error('combos không phải là mảng:', combos)
+      return []
     }
-    return combos;
+    return combos
   } catch (error) {
-    console.error('Lỗi khi tải combo:', error);
-    return [];
+    console.error('Lỗi khi tải combo:', error)
+    return []
   }
 }
 
-
 // Cập nhật giao diện hóa đơn
 function updateOrderUI(order) {
-  const tbody = document.getElementById("orderItems");
-  const totalAmountEl = document.getElementById("totalAmount");
-  const titleEl = document.getElementById("orderTitle");
+  const tbody = document.getElementById('orderItems')
+  const totalAmountEl = document.getElementById('totalAmount')
+  const titleEl = document.getElementById('orderTitle')
 
   if (order.isTakeaway) {
-    titleEl.textContent = '🧾 Hóa đơn mang về';
+    titleEl.textContent = '🧾 Hóa đơn mang về'
   } else if (order.tableId && order.tableId.name) {
-    titleEl.textContent = `🧾 Hóa đơn bàn ${order.tableId.name} (${order.tableId.area})`;
+    titleEl.textContent = `🧾 Hóa đơn bàn ${order.tableId.name} (${order.tableId.area})`
   } else {
-    titleEl.textContent = '🧾 Hóa đơn';
+    titleEl.textContent = '🧾 Hóa đơn'
   }
 
-  tbody.innerHTML = "";
+  tbody.innerHTML = ''
 
   for (const item of order.items) {
     // Lấy tên tùy theo có món hay combo
-    const name = item.foodId?.name || item.comboId?.name || "Không rõ";
-    const price = item.price || 0;
-    const quantity = item.quantity || 0;
-    const amount = price * quantity;
+    const name = item.foodId?.name || item.comboId?.name || 'Không rõ'
+    const price = item.price || 0
+    const quantity = item.quantity || 0
+    const amount = price * quantity
 
-    const id = item.foodId?._id || item.comboId?._id || "";
+    const id = item.foodId?._id || item.comboId?._id || ''
 
     const row = `
       <tr>
@@ -386,141 +452,140 @@ function updateOrderUI(order) {
           </button>
         </td>
       </tr>
-    `;
+    `
 
-    tbody.insertAdjacentHTML("beforeend", row);
+    tbody.insertAdjacentHTML('beforeend', row)
   }
 
-  const total = calculateTotalAmount(order.items);
-  totalAmountEl.textContent = `${total.toLocaleString()}đ`;
+  const total = calculateTotalAmount(order.items)
+  totalAmountEl.textContent = `${total.toLocaleString()}đ`
 
   // Thêm nút Thanh toán nếu chưa có
-  if (!document.getElementById("checkoutBtn")) {
-    const orderSummary = document.getElementById("orderSummary");
+  if (!document.getElementById('checkoutBtn')) {
+    const orderSummary = document.getElementById('orderSummary')
     const btnHTML = `
       <div class="text-end mt-3">
         <button class="btn btn-outline-success" id="checkoutBtn">
           <i class="bi bi-credit-card"></i> CHI TIẾT HÓA ĐƠN
         </button>
       </div>
-    `;
-    orderSummary.insertAdjacentHTML('beforeend', btnHTML);
+    `
+    orderSummary.insertAdjacentHTML('beforeend', btnHTML)
   }
-  syncCheckoutDetailTotal();
+  syncCheckoutDetailTotal()
 }
-
 
 // ======== Các hàm xử lý thêm/xóa/sửa món ========
 
 // Thêm món vào hóa đơn
 async function addToOrder(foodId, foodName, price) {
   if (!orderId) {
-    toastr.error("Không tìm thấy hóa đơn.");
-    return;
+    toastr.error('Không tìm thấy hóa đơn.')
+    return
   }
   try {
     const res = await fetch(`/api/orders/${orderId}/items`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ foodId, quantity: 1 })
-    });
-    const result = await res.json();
+    })
+    const result = await res.json()
     if (!res.ok) {
-      toastr.error(result.message || "Lỗi khi thêm món");
-      return;
+      toastr.error(result.message || 'Lỗi khi thêm món')
+      return
     }
-    toastr.success(`Đã thêm ${foodName} vào hóa đơn`);
-    updateOrderUI(result.data);
+    toastr.success(`Đã thêm ${foodName} vào hóa đơn`)
+    updateOrderUI(result.data)
   } catch (err) {
-    console.error("Lỗi khi thêm món:", err);
-    toastr.error("Lỗi kết nối server");
+    console.error('Lỗi khi thêm món:', err)
+    toastr.error('Lỗi kết nối server')
   }
-  updateOrderSectionVisibility();
+  updateOrderSectionVisibility()
 }
-
 
 async function addComboToOrder(comboId, comboName, price) {
   if (!orderId) {
-    toastr.error("Không tìm thấy hóa đơn.");
-    return;
+    toastr.error('Không tìm thấy hóa đơn.')
+    return
   }
   try {
     const res = await fetch(`/api/orders/${orderId}/items`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ comboId, quantity: 1 }) 
-    });
-    const result = await res.json();
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comboId, quantity: 1 })
+    })
+    const result = await res.json()
     if (!res.ok) {
-      toastr.error(result.message || "Lỗi khi thêm combo");
-      return;
+      toastr.error(result.message || 'Lỗi khi thêm combo')
+      return
     }
-    toastr.success(`Đã thêm combo ${comboName} vào hóa đơn`);
-    updateOrderUI(result.data);
+    toastr.success(`Đã thêm combo ${comboName} vào hóa đơn`)
+    updateOrderUI(result.data)
   } catch (err) {
-    console.error("Lỗi khi thêm combo:", err);
-    toastr.error("Lỗi kết nối server");
+    console.error('Lỗi khi thêm combo:', err)
+    toastr.error('Lỗi kết nối server')
   }
-  updateOrderSectionVisibility();
+  updateOrderSectionVisibility()
 }
 
 // Cập nhật số lượng món ăn trong hóa đơn
 async function updateItemQuantity(itemId, type, newQuantity) {
   if (!orderId) {
-    toastr.error("Không tìm thấy hóa đơn.");
-    return;
+    toastr.error('Không tìm thấy hóa đơn.')
+    return
   }
   try {
     const res = await fetch(`/api/orders/${orderId}/items/${itemId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ itemId, quantity: Number(newQuantity), type })
-    });
-    const result = await res.json();
+    })
+    const result = await res.json()
     if (!res.ok) {
-      toastr.error(result.message || "Lỗi khi cập nhật số lượng");
-      return;
+      toastr.error(result.message || 'Lỗi khi cập nhật số lượng')
+      return
     }
-    toastr.success("Cập nhật số lượng thành công");
-    updateOrderUI(result.data);
+    toastr.success('Cập nhật số lượng thành công')
+    updateOrderUI(result.data)
   } catch (err) {
-    console.error("Lỗi khi cập nhật số lượng:", err);
-    toastr.error("Lỗi kết nối server");
+    console.error('Lỗi khi cập nhật số lượng:', err)
+    toastr.error('Lỗi kết nối server')
   }
 }
 
 // Xóa món khỏi hóa đơn
 async function removeItemFromOrder(itemId, type) {
   if (!orderId) {
-    toastr.error("Không tìm thấy hóa đơn.");
-    return;
+    toastr.error('Không tìm thấy hóa đơn.')
+    return
   }
   try {
-    const res = await fetch(`/api/orders/${orderId}/items/${itemId}?type=${type}`, {
-      method: "DELETE"
-    });
-    const result = await res.json();
+    const res = await fetch(
+      `/api/orders/${orderId}/items/${itemId}?type=${type}`,
+      {
+        method: 'DELETE'
+      }
+    )
+    const result = await res.json()
     if (!res.ok) {
-      toastr.error(result.message || "Lỗi khi xóa món");
-      return;
+      toastr.error(result.message || 'Lỗi khi xóa món')
+      return
     }
-    toastr.success("Đã xóa khỏi hóa đơn");
-    updateOrderUI(result.data); 
+    toastr.success('Đã xóa khỏi hóa đơn')
+    updateOrderUI(result.data)
   } catch (err) {
-    console.error("Lỗi khi xóa món:", err);
-    toastr.error("Lỗi kết nối server");
+    console.error('Lỗi khi xóa món:', err)
+    toastr.error('Lỗi kết nối server')
   }
 }
 
-
-
 // ===== GÁN orderId VÀO window.currentOrderId =====
 document.addEventListener('DOMContentLoaded', () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const orderId = urlParams.get('orderId');
+  const urlParams = new URLSearchParams(window.location.search)
+  const orderId = urlParams.get('orderId')
 
   if (orderId) {
-    window.currentOrderId = orderId;
-    console.log('Order hiện tại:', window.currentOrderId);
+    window.currentOrderId = orderId
+    console.log('Order hiện tại:', window.currentOrderId)
   }
-});
+})

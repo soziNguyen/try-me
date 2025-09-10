@@ -12,7 +12,7 @@ export const createOrder = async (req, res) => {
       return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     }
 
-    const { tableId, isTakeaway } = req.body
+    const { tableId, isTakeaway, customerName } = req.body
 
     if (isTakeaway) {
       const existingOrder = await Order.findOne({
@@ -57,7 +57,8 @@ export const createOrder = async (req, res) => {
       tableId,
       isTakeaway: false,
       status: 'open',
-      organization: organizationId
+      organization: organizationId,
+      customerName: customerName ? customerName.trim() : ''
     })
 
     table.status = 'occupied'

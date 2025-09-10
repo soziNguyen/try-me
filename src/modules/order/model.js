@@ -6,6 +6,7 @@ const OrderSchema = new Schema(
   {
     tableId: { type: Schema.Types.ObjectId, ref: 'Table', required: false },
     isTakeaway: { type: Boolean, default: false },
+    customerName: { type: String, default: '' },
     status: {
       type: String,
       enum: ['open', 'completed', 'cancelled'],
