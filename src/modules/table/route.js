@@ -17,6 +17,11 @@ router.post(
   isAuthenticated,
   tableController.updateTable
 )
+router.get(
+  '/api/tables-total',
+  isAuthenticated,
+  tableController.getTablesWithTotal
+)
 router.post('/api/tables/delete', isAuthenticated, tableController.deleteTables)
 
 export default router

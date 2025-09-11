@@ -12,23 +12,6 @@ function bindEvents() {
     btnShowForm.textContent = isHidden ? '+ Thêm bàn' : 'Đóng'
   })
 
-  // Sự kiện nhấn nút Cập nhật
-  // btnEditTable.addEventListener("click", () => {
-  //   const selected = document.querySelectorAll(".tableCheckbox:checked");
-
-  //   if (selected.length === 0) {
-  //     toastr.warning("Vui lòng chọn 1 bàn để cập nhật.");
-  //     return;
-  //   }
-  //   if (selected.length > 1) {
-  //     toastr.warning("Chỉ được chọn 1 bàn để cập nhật.");
-  //     return;
-  //   }
-
-  //   const tableId = selected[0].dataset.id;
-  //   updateTable(tableId);
-  // });
-
   // Sự kiện submit form Thêm bàn
   formAddTable.addEventListener('submit', async (e) => {
     e.preventDefault()
@@ -261,47 +244,77 @@ function renderTableList(tables = []) {
   tableGrid.innerHTML = tables
     .map((table) => {
       const bgClass = getBgClassByStatus(table.status)
-      return `
-  <div class="col">
-    <div class="table-card card h-100 ${bgClass} shadow-sm border rounded-3 p-3 position-relative">
-      <input type="checkbox" class="tableCheckbox form-check-input position-absolute top-0 end-0 m-2 d-none" data-id="${table._id}" />
-      <div class="text-center mt-4">
-        <h5 class="mb-3"> 👩‍🍳 ${table.name}</h5>
-        <div><strong>Trạng thái:</strong> ${table.status === 'available' ? 'Trống' : 'Có khách'}</div>
-        <div><strong>Số Lượng Người:</strong> ${table.capacity || '-'}</div>
-        <div><strong>Khu vực:</strong> ${table.area || '-'}</div>
-        ${
-          table.status === 'occupied' && table.checkInTime
-            ? `
-        <div><strong>Giờ vào:</strong> ${new Date(table.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-        <div><strong>Đã ngồi:</strong> <span class="seated-time" data-checkin="${table.checkInTime}" data-id="${table._id}">Đang tính...</span></div>
-      `
-            : ''
-        }
-        ${
-          table.status === 'available'
-            ? `
-          <button class ="btnAssignTable btn btn-warning btn-sm mt-2 fw-bold shadow-sm">
-            <i class="bi bi-clock me-1"></i> Giao bàn
-          </button>`
-            : ''
-        }
-        ${
-          table.status === 'occupied'
-            ? `
-          <button class="btnOrderFood btn btn-success btn-sm mt-2 fw-bold shadow-sm" data-order-id="${table.currentOrderId}">
-            <i class="bi bi-clipboard-check me-1"></i> Gọi món
+
+      // Nếu bàn đang occupied thì dùng giao diện mới
+      if (table.status === 'occupied') {
+        const total = table.totalAmount || 0
+        const formattedTotal = `${total.toLocaleString()}đ`
+        return `
+    <div class="col">
+      <div class="table-card card h-100 ${bgClass} shadow-sm border rounded-3 p-3 position-relative d-flex flex-column justify-content-center fs-6">
+        <input type="checkbox" 
+          class="tableCheckbox form-check-input position-absolute top-0 end-0 m-2 d-none" 
+          data-id="${table._id}" 
+        />
+
+        <div class="d-flex justify-content-between">
+          <div><strong>${table.area || 'KV?'} - ${table.name}</strong></div>
+          <div>${new Date(table.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-1">
+          <div>Khách: ${table.customerName || 'Khách lẻ'}</div>
+          <div>
+            <span class="seated-time" 
+              data-checkin="${table.checkInTime}" 
+              data-id="${table._id}">
+              Đang tính...
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-1 fw-bold">
+          Số tiền: ${formattedTotal}
+        </div>
+
+        <div class="d-flex justify-content-between gap-2 mt-4">
+          <button class="btnOrderFood btn btn-success btn-sm fw-bold shadow-sm" data-order-id="${table.currentOrderId}">
+            <i class="bi bi-clipboard-check me-1"></i> Thêm món
           </button>
-      `
-            : ''
-        }
+          <button class="btnCheckout btn btn-primary btn-sm fw-bold shadow-sm" ">
+            <i class="bi bi-credit-card me-1"></i> Thanh toán
+          </button>
+        </div>
       </div>
     </div>
-  </div>
   `
+      }
+
+      // Nếu bàn available thì giữ nguyên giao diện cũ
+      return `
+      <div class="col">
+        <div class="table-card card h-100 ${bgClass} shadow-sm border rounded-3 p-3 position-relative">
+          <input type="checkbox" 
+            class="tableCheckbox form-check-input position-absolute top-0 end-0 m-2 d-none" 
+            data-id="${table._id}" 
+          />
+
+          <div class="text-center mt-4">
+            <h5 class="mb-3"> 👩‍🍳 ${table.name}</h5>
+            <div><strong>Trạng thái:</strong> Trống</div>
+            <div><strong>Số Lượng Người:</strong> ${table.capacity || '-'}</div>
+            <div><strong>Khu vực:</strong> ${table.area || '-'}</div>
+            <button class="btnAssignTable btn btn-warning btn-sm mt-2 fw-bold shadow-sm">
+              <i class="bi bi-clock me-1"></i> Giao bàn
+            </button>
+          </div>
+        </div>
+      </div>
+      `
     })
     .join('')
 
+  // sự kiện click cho thẻ card
   document.querySelectorAll('.table-card').forEach((card) => {
     card.addEventListener('click', function (e) {
       if (
@@ -315,6 +328,27 @@ function renderTableList(tables = []) {
     })
   })
 }
+
+function fetchAndRenderTableList() {
+  fetch('/api/tables-total')
+    .then((res) => res.json())
+    .then((data) => {
+      console.log('Response data:', data)
+      if (data.data && data.data.tables) {
+        renderTableList(data.data.tables)
+      } else {
+        console.error('Không tìm thấy trường tables trong response')
+      }
+    })
+    .catch((err) => {
+      console.error('Lỗi khi gọi API:', err)
+    })
+}
+
+// Gọi hàm khi trang load xong
+window.addEventListener('DOMContentLoaded', () => {
+  fetchAndRenderTableList()
+})
 
 // TIME ĐÃ NGỒI
 function updateSeatedTimes() {
