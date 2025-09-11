@@ -342,13 +342,32 @@ function setCheckbox(tableSelector, checkboxClass) {
   })
 }
 
-function getBestFormat(hasTransparency) {
-  const webpSupported = (document.createElement('canvas')
-    .toDataURL('image/webp')
-    .indexOf('data:image/webp') === 0);
+/**
+ * Chọn định dạng ảnh tối ưu dựa trên:
+ * 1. Trình duyệt có hỗ trợ WebP hay không
+ * 2. Ảnh có nền trong suốt (transparency) hay không
+ *
+ * @param {boolean} hasTransparency - Ảnh có nền trong suốt hay không
+ * @returns {Object} - Định dạng ảnh tối ưu gồm:
+ *   - mime: MIME type tương ứng ("image/webp" | "image/png" | "image/jpeg")
+ *   - ext: Phần mở rộng file ("webp" | "png" | "jpg")
+ *
+ * Quy tắc:
+ * - Nếu trình duyệt hỗ trợ WebP → Ưu tiên WebP (nhỏ, chất lượng tốt)
+ * - Nếu không hỗ trợ WebP:
+ *    + Ảnh trong suốt → Dùng PNG để giữ alpha channel
+ *    + Ảnh không trong suốt → Dùng JPEG để giảm dung lượng
+ */
+function getBestFormat(hasTransparency = false) {
+  const webpSupported =
+    document
+      .createElement('canvas')
+      .toDataURL('image/webp')
+      .indexOf('data:image/webp') === 0
 
-  if (webpSupported) return { mime: 'image/webp', ext: 'webp' };
+  if (webpSupported) return { mime: 'image/webp', ext: 'webp' }
+
   return hasTransparency
     ? { mime: 'image/png', ext: 'png' }
-    : { mime: 'image/jpeg', ext: 'jpg' };
+    : { mime: 'image/jpeg', ext: 'jpg' }
 }

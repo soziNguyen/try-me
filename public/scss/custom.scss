@@ -22,7 +22,7 @@ $tables: ingredient, menu, combo;
             object-fit: cover;
             margin: 0 auto;
             cursor: pointer;
-            padding: .375rem;
+            padding: 0.375rem;
           }
 
           select.form-select-sm {
@@ -30,8 +30,8 @@ $tables: ingredient, menu, combo;
             box-shadow: none;
           }
 
-          input.form-control[type="text"] {
-            padding: .5rem .75rem !important;
+          input.form-control[type='text'] {
+            padding: 0.5rem 0.75rem !important;
           }
 
           span,
@@ -42,7 +42,7 @@ $tables: ingredient, menu, combo;
 
             &.number {
               text-align: right;
-              padding: .375rem .5rem;
+              padding: 0.375rem 0.5rem;
             }
           }
         }
@@ -116,7 +116,7 @@ $tables: ingredient, menu, combo;
 #comboTableBody {
   span {
     display: block;
-    padding: .5rem .75rem !important;
+    padding: 0.5rem 0.75rem !important;
   }
 }
 
@@ -126,7 +126,7 @@ table {
       &:first-child {
         vertical-align: middle;
 
-        input[type="checkbox"] {
+        input[type='checkbox'] {
           text-align: center;
           vertical-align: middle;
           cursor: pointer;
@@ -141,7 +141,7 @@ table {
 
   tbody {
     td {
-      input[type="checkbox"] {
+      input[type='checkbox'] {
         display: block;
         margin: auto;
       }
@@ -151,15 +151,15 @@ table {
       padding: 0 !important;
 
       &:first-child {
-        input[type="checkbox"] {
+        input[type='checkbox'] {
           &:hover {
             cursor: pointer;
           }
         }
       }
 
-      input.form-control[type="text"] {
-        padding: .5rem .75rem !important;
+      input.form-control[type='text'] {
+        padding: 0.5rem 0.75rem !important;
       }
 
       .form-control {
@@ -174,12 +174,12 @@ table {
       .form-control-sm {
         border: none;
         box-shadow: none !important;
-        padding: .5rem .75rem !important;
+        padding: 0.5rem 0.75rem !important;
         border-radius: 0 !important;
       }
 
       .form-select-sm {
-        padding: .5rem .75rem !important;
+        padding: 0.5rem 0.75rem !important;
         border-radius: 0 !important;
       }
 
@@ -191,7 +191,7 @@ table {
 
         &.number {
           text-align: right;
-          padding: .375rem .5rem;
+          padding: 0.375rem 0.5rem;
         }
       }
     }
@@ -278,7 +278,7 @@ table {
 
 #imageCropModal {
   .modal-dialog {
-    max-width: 800px;
+    max-width: 810px;
   }
 
   .modal-body {
@@ -293,7 +293,7 @@ table {
   img#imagePreview {
     display: block;
     max-width: 100%;
-    max-height: 70vh;
+    max-height: 80vh;
     height: auto;
   }
 
@@ -301,6 +301,14 @@ table {
     max-width: 100%;
     max-height: 70vh;
   }
+}
+
+.image-square {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--gray-light);
 }
 
 textarea {
@@ -312,16 +320,13 @@ textarea {
   &::-webkit-scrollbar {
     display: none; // Chrome, Safari
   }
-
 }
 
-input[type=number]::-webkit-outer-spin-button,
-input[type=number]::-webkit-inner-spin-button {
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
-
 
 @media (max-width: 767px) {
   #imageCropModal {
@@ -332,11 +337,9 @@ input[type=number]::-webkit-inner-spin-button {
 }
 
 @media print {
-
   #entry-detail,
   #issue-detail,
   #transfer-detail {
-
     thead th:last-child,
     tbody td:last-child {
       display: none;
