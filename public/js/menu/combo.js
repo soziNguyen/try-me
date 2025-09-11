@@ -25,7 +25,7 @@ $(function () {
         ? $('#comboTableBody').offset().top
         : 200) -
       100) /
-      71
+    71
   )
   if (!showList.includes(numRows) && numRows > 0) showList.push(numRows)
   showList.sort((a, b) => a - b)
@@ -192,12 +192,6 @@ $(function () {
       $form.data('mode', 'create')
       $form.removeData('comboId')
 
-      // Reset ảnh tạm
-      if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-        try {
-          URL.revokeObjectURL(croppedImageUrl)
-        } catch (e) {}
-      }
       croppedImageUrl = null
       croppedImageFile = null
       currentImageFile = null
@@ -293,17 +287,11 @@ $(function () {
         cropper.destroy()
       }
       cropper = new Cropper(image, {
-        aspectRatio: 1,
         viewMode: 1,
         autoCropArea: 1,
         responsive: true,
-        background: false,
-        guides: false,
-        center: false,
-        highlight: false,
         cropBoxMovable: true,
-        cropBoxResizable: true,
-        toggleDragModeOnDblclick: false
+        cropBoxResizable: true
       })
     })
 
@@ -318,42 +306,46 @@ $(function () {
     // Crop
     $('#cropBtn').on('click', function () {
       if (cropper && currentImageFile) {
-        const canvas = cropper.getCroppedCanvas({
-          width: 400,
-          height: 400,
+        const cropData = cropper.getData(true)
+        const { mime, ext } = getBestFormat()
+
+        cropper.getCroppedCanvas({
+          width: Math.floor(cropData.width),
+          height: Math.floor(cropData.height),
+          fillColor: '--white',
           imageSmoothingEnabled: true,
           imageSmoothingQuality: 'high'
         })
+          .toBlob(function (blob) {
+            const newName = currentImageFile.name.replace(/\.[^/.]+$/, `.${ext}`)
+            const croppedFile = new File([blob], newName, {
+              type: mime,
+              lastModified: Date.now()
+            })
 
-        canvas.toBlob(function (blob) {
-          const croppedFile = new File([blob], currentImageFile.name, {
-            type: currentImageFile.type,
-            lastModified: Date.now()
-          })
+            // lưu file tạm để upload 
+            croppedImageFile = croppedFile
 
-          // Lưu file tạm để upload khi bấm Lưu form
-          croppedImageFile = croppedFile
-
-          // Dọn objectURL
-          if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-            try {
-              URL.revokeObjectURL(croppedImageUrl)
-            } catch (e) {}
-          }
-
-          // Tạo preview bằng objectURL
-          croppedImageUrl = URL.createObjectURL(croppedFile)
-          updateImagePreview()
-
-          // Đóng modal
-          $('#imageCropModal').modal('hide')
-        }, currentImageFile.type)
+            const fr = new FileReader()
+            fr.onload = function (ev) {
+              croppedImageUrl = ev.target.result
+              updateImagePreview()
+              $('#imageCropModal').modal('hide')
+            }
+            fr.onerror = function () {
+              $('#imageCropModal').modal('hide')
+              toastr.error('Không thể xử lý ảnh để xem trước')
+            }
+            fr.readAsDataURL(blob)
+          }, mime)
       }
     })
 
     // Submit form
     $('#comboForm').on('submit', async function (e) {
       e.preventDefault()
+      const csrfToken = $('#_csrf').val()
+
       const $form = $(this)
       const mode = $form.data('mode')
       const comboId = $form.data('comboId')
@@ -391,12 +383,6 @@ $(function () {
             if (uploadedPath) {
               image = uploadedPath
             }
-            // revoke objectURL nếu là blob
-            if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-              try {
-                URL.revokeObjectURL(croppedImageUrl)
-              } catch (e) {}
-            }
             // reset file tạm
             croppedImageFile = null
             currentImageFile = null
@@ -419,7 +405,8 @@ $(function () {
           url,
           method: 'POST',
           contentType: 'application/json',
-          data: JSON.stringify(payload)
+          data: JSON.stringify(payload),
+          headers: { 'x-csrf-token': csrfToken },
         })
 
         if (res.success) {
@@ -506,20 +493,15 @@ $(function () {
 
     if (croppedImageUrl) {
       $previewImg.attr('src', croppedImageUrl)
-      $container.show()
+      $container.removeClass('d-none')
     } else {
-      $container.hide()
       $previewImg.attr('src', '')
+      $container.addClass('d-none')
     }
   }
 
   // Remove image handler — giải phóng objectURL nếu là blob và xóa file tạm
   $('#comboForm').on('click', '.remove-image', function () {
-    if (croppedImageUrl && croppedImageUrl.startsWith('blob:')) {
-      try {
-        URL.revokeObjectURL(croppedImageUrl)
-      } catch (e) {}
-    }
     croppedImageUrl = null
     croppedImageFile = null
     currentImageFile = null
@@ -563,7 +545,7 @@ $(function () {
       if (typeof table !== 'undefined' && table) {
         try {
           table.columns.adjust().draw(false)
-        } catch (e) {}
+        } catch (e) { }
       }
     }, 150)
   }
@@ -577,7 +559,7 @@ $(function () {
       if (typeof table !== 'undefined' && table) {
         try {
           table.columns.adjust().draw(false)
-        } catch (e) {}
+        } catch (e) { }
       }
     }, 150)
   }

@@ -1,6 +1,7 @@
 $(function () {
   let table
   let fullData = []
+  const csrfToken = $('#_csrf').val()
 
   loadOrganizations($('#organizations'))
   $.getJSON('data/full_address.json', (res) => {
@@ -145,6 +146,7 @@ $(function () {
           method: 'POST',
           contentType: 'application/json',
           data: JSON.stringify(data),
+          headers: { 'x-csrf-token': csrfToken },
           success: function (res) {
             if (res.success) {
               toastr.remove()
@@ -233,6 +235,7 @@ $(function () {
           method: 'PUT',
           contentType: 'application/json',
           data: JSON.stringify(formData),
+          headers: { 'x-csrf-token': csrfToken },
           success: function (res) {
             if (res.success) {
               toastr.success(res.message)

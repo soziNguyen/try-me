@@ -26,7 +26,7 @@ router.get(
   isPermit('Admin', 'Org'),
   userController.getUsers
 ) // get data json
-router.get('/api/users/:id', isAuthenticated, userController.getUser) // get data json
+router.get('/api/users/:id', isAuthenticated, userController.getUserById) // get data json
 router.post(
   '/api/users/create',
   isAuthenticated,

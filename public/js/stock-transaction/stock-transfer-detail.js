@@ -125,7 +125,7 @@ $(function () {
       .empty()
       .html(
         '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
-          ingredientOptions
+        ingredientOptions
       )
 
     // Update warehouse options
@@ -139,7 +139,7 @@ $(function () {
       .empty()
       .html(
         '<option value="" class="text-center">— Chọn kho nguồn —</option>' +
-          warehouseOptions
+        warehouseOptions
       )
 
     initSelect2($fSelected, '— Chọn kho nguồn —')
@@ -148,7 +148,7 @@ $(function () {
       .empty()
       .html(
         '<option value="" class="text-center">— Chọn kho đích —</option>' +
-          warehouseOptions
+        warehouseOptions
       )
     initSelect2(tSelected, '— Chọn kho đích —')
   }
@@ -271,7 +271,7 @@ $(function () {
 
   function saveStockTransfer(e) {
     e.preventDefault()
-
+    const csrfToken = $('#_csrf').val()
     const $rows = $('#itemsTableBody tr')
     const partialErrors = []
 
@@ -386,6 +386,7 @@ $(function () {
       method: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(stockTransferData),
+      headers: { 'x-csrf-token': csrfToken },
       success(res) {
         if (res.success) {
           toastr.remove()

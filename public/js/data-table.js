@@ -3,6 +3,7 @@
 function handlerAddEvent(tableSelector, btnSelector, module) {
   const $wrapper = $(`${tableSelector}_wrapper`)
   const table = $(tableSelector).DataTable()
+  const csrfToken = $('#_csrf').val()
 
   $wrapper.on('click', btnSelector, function () {
     const $btn = $(this).prop('disabled', true)
@@ -10,6 +11,7 @@ function handlerAddEvent(tableSelector, btnSelector, module) {
     $.ajax({
       url: `/api/${module}/create`,
       method: 'POST',
+      headers: { 'x-csrf-token': csrfToken },
       success(res) {
         toastr.remove()
         if (res.success) {
@@ -33,6 +35,7 @@ function handlerAddEvent(tableSelector, btnSelector, module) {
 function handlerDeleteEvent(tableSelector, btnSelector, checkboxClass, module) {
   const $wrapper = $(`${tableSelector}_wrapper`)
   const table = $(tableSelector).DataTable()
+  const csrfToken = $('#_csrf').val()
 
   $wrapper.on('click', btnSelector, function () {
     const $btn = $(this) // chưa disable ngay
@@ -57,6 +60,7 @@ function handlerDeleteEvent(tableSelector, btnSelector, checkboxClass, module) {
           method: 'POST',
           contentType: 'application/json',
           data: JSON.stringify({ ids: selected }),
+          headers: { 'x-csrf-token': csrfToken },
           success(res) {
             if (res.success) {
               toastr.remove()
@@ -86,6 +90,7 @@ function handlerUpdateEvent(tableSelector, module, transform) {
     const id = $(this).closest('tr').data('id')
     const field = $(this).data('field')
     let value = $(this).is(':checkbox') ? $(this).is(':checked') : $(this).val()
+    const csrfToken = $('#_csrf').val()
 
     if (typeof value === 'string') {
       value = value.trim()
@@ -104,6 +109,7 @@ function handlerUpdateEvent(tableSelector, module, transform) {
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(payload),
+      headers: { 'x-csrf-token': csrfToken },
       success: function (res) {
         toastr.remove()
         if (res.success) {
@@ -204,11 +210,13 @@ function fetchData(endpoint) {
 
 // Create New Record
 function createNewRecord(module, data, callback) {
+  const csrfToken = $('#_csrf').val()
   $.ajax({
     url: `/api/${module}/create`,
     method: 'POST',
     contentType: 'application/json',
     data: JSON.stringify(data),
+    headers: { 'x-csrf-token': csrfToken },
     success: function (res) {
       if (res.success && typeof callback === 'function') {
         callback(res.data)

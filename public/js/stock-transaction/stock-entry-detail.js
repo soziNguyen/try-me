@@ -67,7 +67,7 @@ $(function () {
       .join('')
     const $supplierSelect = $('#supplier').html(
       '<option value="" class="text-center">— Chọn nhà cung cấp —</option>' +
-        supplierOptions
+      supplierOptions
     )
     initSelect2($supplierSelect, '— Chọn nhà cung cấp —')
 
@@ -79,7 +79,7 @@ $(function () {
       .join('')
     const $warehouseSelected = $('#warehouse').html(
       '<option value="" class="text-center">— Chọn kho —</option>' +
-        warehouseOptions
+      warehouseOptions
     )
 
     initSelect2($warehouseSelected, '— Chọn kho —')
@@ -156,7 +156,7 @@ $(function () {
       .empty()
       .html(
         '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
-          ingredientOptions
+        ingredientOptions
       )
 
     const $unitSelect = $(`select[name="items[${rowIndex}][unit]"]`)
@@ -333,6 +333,7 @@ $(function () {
 
   function saveStockEntry(e) {
     e.preventDefault()
+    const csrfToken = $('#_csrf').val()
 
     const $rows = $('#itemsTableBody tr')
     const partialErrors = []
@@ -422,16 +423,19 @@ $(function () {
     })
 
     if (!stockEntryData.supplier) {
+      toastr.remove()
       toastr.error('Vui lòng chọn nhà cung cấp', 'Lỗi dữ liệu')
       return
     }
 
     if (!stockEntryData.warehouse) {
+      toastr.remove()
       toastr.error('Vui lòng chọn kho', 'Lỗi dữ liệu')
       return
     }
 
     if (stockEntryData.items.length === 0) {
+      toastr.remove()
       toastr.error('Phải có ít nhất 1 dòng nguyên liệu hợp lệ', 'Lỗi dữ liệu')
       return
     }
@@ -456,6 +460,7 @@ $(function () {
       method: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(stockEntryData),
+      headers: { 'x-csrf-token': csrfToken },
       success(res) {
         if (res.success) {
           toastr.remove()

@@ -6,9 +6,13 @@ toastr.options = {
 }
 
 async function ajax(url, data = {}, method = 'POST') {
+  const csrfToken = document.getElementById('_csrf').value
   const options = {
     method: method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-csrf-token': csrfToken
+    },
     credentials: 'include'
   }
   if (method == 'POST' || method == 'PUT') {
