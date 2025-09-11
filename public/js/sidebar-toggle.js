@@ -169,4 +169,25 @@ document.addEventListener('DOMContentLoaded', () => {
     f.style.display = 'block'
   })
   // — flyout code end —
+
+  $('#exitOrgBtn').on('click', function () {
+    exitOrg()
+  })
+
+  const csrfToken = $('#_csrf').val()
+
+  function exitOrg() {
+    $.ajax({
+      url: '/api/admin/exit-org',
+      method: 'POST',
+      contentType: 'application/json',
+      headers: { 'x-csrf-token': csrfToken },
+      success: function () {
+        window.location.href = '/'
+      },
+      error: function (xhr) {
+        console.error('Error:', xhr.responseText)
+      }
+    })
+  }
 })

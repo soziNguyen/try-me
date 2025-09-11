@@ -105,7 +105,7 @@ $(function () {
 
   function saveRecipe(e) {
     e.preventDefault()
-
+    const csrfToken = $('#_csrf').val()
     const recipeData = {
       menuItem: $('#menuItem').val(),
       note: $('#note').val(),
@@ -142,8 +142,8 @@ $(function () {
       url,
       method: 'POST',
       contentType: 'application/json',
-
       data: JSON.stringify(recipeData),
+      headers: { 'x-csrf-token': csrfToken },
       success(res) {
         if (res.success) {
           toastr.success(res.message || 'Lưu công thức thành công')

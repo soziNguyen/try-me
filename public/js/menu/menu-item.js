@@ -1,6 +1,7 @@
 $(function () {
   let table
   let categories = []
+  const csrfToken = $('#_csrf').val()
 
   Promise.all([fetchData('menu/category/active')])
     .then(([cats]) => {
@@ -222,6 +223,7 @@ $(function () {
     }
 
     if ($img.hasClass('img-error')) {
+      toastr.remove()
       toastr.info('Ảnh bị lỗi, vui lòng sửa ảnh và thử lại sau')
       return
     }
@@ -324,12 +326,13 @@ $(function () {
           data: formData,
           processData: false,
           contentType: false,
+          headers: { 'x-csrf-token': csrfToken },
           success: (res) => {
             const imgUrl = '/' + res.file.path.replace(/\\/g, '/')
             const timestamp = new Date().getTime()
             // Update src ảnh trong table, thêm timestamp để bust cache
             currentImgCell.find('img').attr('src', `${imgUrl}?t=${timestamp}`)
-
+            updateImageContainerAfterUpload(currentImgCell, imgUrl)
             // Cập nhật trường image của bản ghi
             const row = currentImgCell.closest('tr')
             const id = row.data('id')
@@ -339,6 +342,7 @@ $(function () {
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({ image: imgUrl }),
+                headers: { 'x-csrf-token': csrfToken },
                 success: () => toastr.success('Cập nhật ảnh thành công'),
                 error: () => toastr.error('Lỗi khi cập nhật ảnh')
               })

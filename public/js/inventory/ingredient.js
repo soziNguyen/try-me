@@ -2,6 +2,7 @@ $(function () {
   let table
   let units = []
   let categories = []
+  const csrfToken = $('#_csrf').val()
 
   Promise.all([fetchData('inventory/categories')])
     .then(([cats]) => {
@@ -282,32 +283,6 @@ $(function () {
   let cropper
   let currentImgCell
 
-  // Function to update image container styling after image upload
-  function updateImageContainerAfterUpload(imgCell, imgUrl) {
-    const container = imgCell.find('.table-image-container')
-    const img = container.find('img')
-    const overlay = container.find('.image-overlay')
-
-    container.removeClass('no-image')
-    img.removeClass('no-image')
-    overlay.removeClass('no-image').addClass('has-image')
-
-    // Update new src image
-    img.attr('src', imgUrl || '/assets/images/default.png')
-
-    // Update button overlay
-    const previewBtn = `
-      <button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh">
-        <i class="bi bi-eye"></i>
-      </button>`
-    const uploadBtn = `
-      <button type="button" class="btn btn-outline-light btn-sm upload-btn" title="Chọn ảnh mới">
-        <i class="bi bi-arrow-repeat"></i>
-      </button>`
-
-    overlay.html(previewBtn + uploadBtn)
-  }
-
   // Event handler preview btn
   $('#ingredientTable').on('click', '.preview-btn', function (e) {
     e.stopPropagation()
@@ -320,6 +295,7 @@ $(function () {
     }
 
     if ($img.hasClass('img-error')) {
+      toastr.remove()
       toastr.info('Ảnh bị lỗi, vui lòng sửa ảnh và thử lại sau')
       return
     }
@@ -424,6 +400,7 @@ $(function () {
           data: formData,
           processData: false,
           contentType: false,
+          headers: { 'x-csrf-token': csrfToken },
           success: (res) => {
             const imgUrl = '/' + res.file.path.replace(/\\/g, '/')
             const timestamp = new Date().getTime()
@@ -441,6 +418,7 @@ $(function () {
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({ image: imgUrl }),
+                headers: { 'x-csrf-token': csrfToken },
                 success: () => toastr.success('Cập nhật ảnh thành công'),
                 error: () => toastr.error('Lỗi khi cập nhật ảnh')
               })

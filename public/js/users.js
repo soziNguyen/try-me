@@ -467,18 +467,16 @@ function renderTable(users = []) {
     .map(
       (user) =>
         `<tr>
-            <td class="text-center"><input type="checkbox" class="userCheckbox" data-id="${
-              user._id
-            }"></td>
-            <td>${user.username}</td>
-            <td>${user.email}</td>
-            <td>${user.role}</td>
-            <td>${formatDate(user.createdAt)}</td>
-            <td>${formatDate(user.updatedAt)}</td>
+            <td class="text-center"><input type="checkbox" class="userCheckbox" data-id="${user._id
+        }"></td>
+            <td><span class="form-control border-0 w-100">${user.username}</span></td>
+            <td><span class="form-control border-0 w-100">${user.email}</span></td>
+            <td><span class="form-control border-0 w-100">${user.role}</span></td>
+            <td><span class="form-control border-0 w-100">${formatDate(user.createdAt)}</span></td>
+            <td><span class="form-control border-0 w-100">${formatDate(user.updatedAt)}</span></td>
             <td>
-                <button class="updateUserBtn btn btn-outline-info" data-id="${
-                  user._id
-                }">
+                <button class="updateUserBtn btn btn-outline-info" data-id="${user._id
+        }">
                     <i class="bi bi-pencil-square"></i>
                 </button>
             </td>

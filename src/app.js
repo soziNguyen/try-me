@@ -77,7 +77,7 @@ app.use(
     secret: process.env.SESSION_SECRET,
     rolling: true,
     resave: true,
-    saveUninitialized: false,
+    saveUninitialized: true,
     store: sessionStore,
     cookie: { secure: false } // local: false
   })
@@ -90,11 +90,16 @@ app.use(passport.session())
 
 app.use(
   lusca({
-    // csrf: true,  // CSRF protection
+    csrf: true,  // CSRF protection
     xframe: 'SAMEORIGIN',
     xssProtection: true
   })
 )
+
+app.use((req, res, next) => {
+  if (req.csrfToken) res.locals.csrfToken = req.csrfToken()
+  next()
+})
 
 // Custom Middleware
 app.use((req, res, next) => {

@@ -75,22 +75,27 @@ export const getUsers = async (req, res) => {
  * [GET] / User/:id
  */
 
-export const getUser = async (req, res) => {
+export const getUserById = async (req, res) => {
   const { id } = req.params
   const organizationId = getCurrentOrg(req)
-  if (!organizationId)
-    return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
   try {
-    const user = await User.findOne({
-      _id: id,
-      organization: organizationId
-    })
+    let query = { _id: id }
+
+    if (req.user.role !== 'Admin') {
+      if (!organizationId) {
+        return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+      }
+      query.organization = organizationId
+    }
+
+    const user = await User.findOne(query).populate('organization', '_id name')
 
     if (!user) {
-      responseHelper.error(res, 'Không tìm thấy người dùng', 404)
+      return responseHelper.error(res, 'Không tìm thấy người dùng', 404)
     }
-    responseHelper.success(res, user)
+
+    responseHelper.success(res, user, 'Lấy thông tin người dùng thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }
