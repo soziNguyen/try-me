@@ -298,33 +298,86 @@ function showConfirmModal(options) {
   modal.show()
 }
 
-function setupSaveButtonWatcher(formSelector, saveBtnSelector) {
-  const $form = $(formSelector)
-  const $saveBtn = $(saveBtnSelector)
+/**
+ * Cập nhật giao diện container chứa ảnh sau khi upload thành công
+ * @param {jQuery} imgCell - Ô (cell) trong bảng chứa phần tử ảnh
+ * @param {string} imgUrl - URL ảnh mới sau khi upload
+ */
+function updateImageContainerAfterUpload(imgCell, imgUrl) {
+  // Lấy phần tử container chứa ảnh bên trong ô
+  const container = imgCell.find('.table-image-container')
 
-  // Sau khi lưu thành công thì disable nút, đổi text thành "Đã lưu"
+  // Lấy thẻ <img> trong container
+  const img = container.find('img')
+
+  // Lấy lớp overlay (lớp phủ) trên ảnh để hiển thị các nút thao tác
+  const overlay = container.find('.image-overlay')
+
+  // Bỏ class "no-image" nếu trước đó là trạng thái chưa có ảnh
+  container.removeClass('no-image')
+  img.removeClass('no-image')
+  overlay.removeClass('no-image').addClass('has-image')
+
+  // Cập nhật đường dẫn ảnh mới hoặc dùng ảnh mặc định nếu không có URL
+  img.attr('src', imgUrl || '/assets/images/default.png')
+
+  // Tạo nút xem ảnh (preview)
+  const previewBtn = `
+      <button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh">
+        <i class="bi bi-eye"></i>
+      </button>`
+
+  // Tạo nút chọn lại ảnh (upload mới)
+  const uploadBtn = `
+      <button type="button" class="btn btn-outline-light btn-sm upload-btn" title="Chọn ảnh mới">
+        <i class="bi bi-arrow-repeat"></i>
+      </button>`
+
+  // Gắn 2 nút vào overlay (nút xem ảnh + nút chọn lại ảnh)
+  overlay.html(previewBtn + uploadBtn)
+}
+
+/**
+ * Thiết lập "watcher" cho nút Lưu:
+ * - Khi form có thay đổi => bật nút Lưu
+ * - Khi lưu thành công => disable nút, đổi text thành "Đã lưu"
+ *
+ * @param {string} formSelector - Selector của form cần theo dõi
+ * @param {string} saveBtnSelector - Selector của nút Lưu
+ * @returns {function} Hàm disableSave để gọi khi lưu thành công
+ */
+function setupSaveButtonWatcher(formSelector, saveBtnSelector) {
+  const $form = $(formSelector) // Lấy form theo selector
+  const $saveBtn = $(saveBtnSelector) // Lấy nút Lưu theo selector
+
+  // Hàm disableSave: dùng khi lưu thành công
+  // - Disable nút Lưu
+  // - Đổi text thành "Đã lưu"
   function disableSave() {
     $saveBtn
       .prop('disabled', true)
       .html('<i class="bi bi-check-circle me-2"></i>Đã lưu')
   }
 
-  // Khi có thay đổi trong form thì bật lại nút
+  // Hàm enableSave: dùng khi có thay đổi dữ liệu
+  // - Bật lại nút Lưu
+  // - Đổi text về "Lưu phiếu"
   function enableSave() {
     $saveBtn
       .prop('disabled', false)
       .html('<i class="bi bi-check-circle me-2"></i>Lưu phiếu')
   }
 
-  // Bất kỳ thay đổi nào trên input/select/textarea
+  // Lắng nghe sự kiện thay đổi dữ liệu trong form
+  // Bất kỳ input, select hoặc textarea nào thay đổi => enableSave
   $form.on('input change', 'input, select, textarea', enableSave)
 
-  // Khi thêm dòng nguyên liệu
+  // Khi click nút "Thêm dòng nguyên liệu" => bật nút Lưu
   $(document).on('click', `${formSelector} .addItemBtn`, enableSave)
 
-  // Khi xóa dòng nguyên liệu
+  // Khi click nút "Xóa dòng nguyên liệu" => bật nút Lưu
   $(document).on('click', `${formSelector} .remove-item-btn`, enableSave)
 
-  // Trả về hàm disableSave để gọi ở success(res)
+  // Trả về hàm disableSave để có thể gọi sau khi lưu thành công
   return disableSave
 }

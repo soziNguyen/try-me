@@ -25,7 +25,7 @@ $(function () {
         ? $('#comboTableBody').offset().top
         : 200) -
       100) /
-    71
+      71
   )
   if (!showList.includes(numRows) && numRows > 0) showList.push(numRows)
   showList.sort((a, b) => a - b)
@@ -309,21 +309,25 @@ $(function () {
         const cropData = cropper.getData(true)
         const { mime, ext } = getBestFormat()
 
-        cropper.getCroppedCanvas({
-          width: Math.floor(cropData.width),
-          height: Math.floor(cropData.height),
-          fillColor: '--white',
-          imageSmoothingEnabled: true,
-          imageSmoothingQuality: 'high'
-        })
+        cropper
+          .getCroppedCanvas({
+            width: Math.floor(cropData.width),
+            height: Math.floor(cropData.height),
+            fillColor: '--white',
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+          })
           .toBlob(function (blob) {
-            const newName = currentImageFile.name.replace(/\.[^/.]+$/, `.${ext}`)
+            const newName = currentImageFile.name.replace(
+              /\.[^/.]+$/,
+              `.${ext}`
+            )
             const croppedFile = new File([blob], newName, {
               type: mime,
               lastModified: Date.now()
             })
 
-            // lưu file tạm để upload 
+            // lưu file tạm để upload
             croppedImageFile = croppedFile
 
             const fr = new FileReader()
@@ -406,7 +410,7 @@ $(function () {
           method: 'POST',
           contentType: 'application/json',
           data: JSON.stringify(payload),
-          headers: { 'x-csrf-token': csrfToken },
+          headers: { 'x-csrf-token': csrfToken }
         })
 
         if (res.success) {
@@ -510,6 +514,7 @@ $(function () {
   })
 
   function uploadImageFile(file) {
+    const csrfToken = $('#_csrf').val()
     return new Promise((resolve, reject) => {
       if (!file) return resolve(null)
       const formData = new FormData()
@@ -520,6 +525,7 @@ $(function () {
         data: formData,
         processData: false,
         contentType: false,
+        headers: { 'x-csrf-token': csrfToken },
         success: function (response) {
           if (response.file) {
             const path = '/' + response.file.path.replace(/\\/g, '/')
@@ -545,7 +551,7 @@ $(function () {
       if (typeof table !== 'undefined' && table) {
         try {
           table.columns.adjust().draw(false)
-        } catch (e) { }
+        } catch (e) {}
       }
     }, 150)
   }
@@ -559,7 +565,7 @@ $(function () {
       if (typeof table !== 'undefined' && table) {
         try {
           table.columns.adjust().draw(false)
-        } catch (e) { }
+        } catch (e) {}
       }
     }, 150)
   }

@@ -248,7 +248,7 @@ export const exitOrg = (req, res) => {
   if (req.session) {
     delete req.session.currentOrg
   }
-  res.redirect('/')
+  res.status(200).send('OK')
 }
 
 export const getAllAuditLogs = async (req, res) => {

@@ -8,21 +8,33 @@
   vertical-align: middle;
   padding: 0 !important;
 }
-#ingredientTable_wrapper #ingredientTable #ingredientTableBody td img.ingredient-image {
+#ingredientTable_wrapper
+  #ingredientTable
+  #ingredientTableBody
+  td
+  img.ingredient-image {
   width: 70px;
   height: 70px;
   -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   margin: 0 auto;
   cursor: pointer;
   padding: 0.375rem;
 }
-#ingredientTable_wrapper #ingredientTable #ingredientTableBody td select.form-select-sm {
+#ingredientTable_wrapper
+  #ingredientTable
+  #ingredientTableBody
+  td
+  select.form-select-sm {
   border: none;
   -webkit-box-shadow: none;
-          box-shadow: none;
+  box-shadow: none;
 }
-#ingredientTable_wrapper #ingredientTable #ingredientTableBody td input.form-control[type=text] {
+#ingredientTable_wrapper
+  #ingredientTable
+  #ingredientTableBody
+  td
+  input.form-control[type='text'] {
   padding: 0.5rem 0.75rem !important;
 }
 #ingredientTable_wrapper #ingredientTable #ingredientTableBody td span.text,
@@ -49,7 +61,7 @@
   width: 70px;
   height: 70px;
   -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   margin: 0 auto;
   cursor: pointer;
   padding: 0.375rem;
@@ -57,9 +69,13 @@
 #menuTable_wrapper #menuTable #menuTableBody td select.form-select-sm {
   border: none;
   -webkit-box-shadow: none;
-          box-shadow: none;
+  box-shadow: none;
 }
-#menuTable_wrapper #menuTable #menuTableBody td input.form-control[type=text] {
+#menuTable_wrapper
+  #menuTable
+  #menuTableBody
+  td
+  input.form-control[type='text'] {
   padding: 0.5rem 0.75rem !important;
 }
 #menuTable_wrapper #menuTable #menuTableBody td span.text,
@@ -86,7 +102,7 @@
   width: 70px;
   height: 70px;
   -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   margin: 0 auto;
   cursor: pointer;
   padding: 0.375rem;
@@ -94,9 +110,13 @@
 #comboTable_wrapper #comboTable #comboTableBody td select.form-select-sm {
   border: none;
   -webkit-box-shadow: none;
-          box-shadow: none;
+  box-shadow: none;
 }
-#comboTable_wrapper #comboTable #comboTableBody td input.form-control[type=text] {
+#comboTable_wrapper
+  #comboTable
+  #comboTableBody
+  td
+  input.form-control[type='text'] {
   padding: 0.5rem 0.75rem !important;
 }
 #comboTable_wrapper #comboTable #comboTableBody td span.text,
@@ -125,7 +145,7 @@
   width: 70px;
   height: 70px;
   -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   border-radius: 8px;
 }
 .table-image-container img.no-image {
@@ -142,11 +162,11 @@
   display: -ms-flexbox;
   display: flex;
   -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
   -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
   -webkit-transition: opacity 0.3s;
   transition: opacity 0.3s;
   opacity: 0;
@@ -178,12 +198,12 @@
 table thead th:first-child {
   vertical-align: middle;
 }
-table thead th:first-child input[type=checkbox] {
+table thead th:first-child input[type='checkbox'] {
   text-align: center;
   vertical-align: middle;
   cursor: pointer;
 }
-table thead th:first-child input[type=checkbox]:hover {
+table thead th:first-child input[type='checkbox']:hover {
   cursor: pointer;
 }
 table tbody td {
@@ -191,14 +211,14 @@ table tbody td {
   vertical-align: middle;
   padding: 0 !important;
 }
-table tbody td input[type=checkbox] {
+table tbody td input[type='checkbox'] {
   display: block;
   margin: auto;
 }
-table tbody td:first-child input[type=checkbox]:hover {
+table tbody td:first-child input[type='checkbox']:hover {
   cursor: pointer;
 }
-table tbody td input.form-control[type=text] {
+table tbody td input.form-control[type='text'] {
   padding: 0.5rem 0.75rem !important;
 }
 table tbody td .form-control {
@@ -207,12 +227,12 @@ table tbody td .form-control {
 table tbody td select.form-select-sm {
   border: none;
   -webkit-box-shadow: none !important;
-          box-shadow: none !important;
+  box-shadow: none !important;
 }
 table tbody td .form-control-sm {
   border: none;
   -webkit-box-shadow: none !important;
-          box-shadow: none !important;
+  box-shadow: none !important;
   padding: 0.5rem 0.75rem !important;
   border-radius: 0 !important;
 }
@@ -232,7 +252,7 @@ table tbody td input.number {
 
 .form-select {
   -webkit-box-shadow: none !important;
-          box-shadow: none !important;
+  box-shadow: none !important;
 }
 
 .updateUserBtn {
@@ -256,7 +276,10 @@ table tbody td input.number {
   width: 100% !important;
   padding: 0.5rem;
 }
-.select2-container--default .selection .select2-selection .select2-selection__rendered {
+.select2-container--default
+  .selection
+  .select2-selection
+  .select2-selection__rendered {
   padding: 0 !important;
 }
 .select2-container--default .select2-results__options {
@@ -271,16 +294,22 @@ table tbody td input.number {
 .select2-container--default .select2-results__options .select2-results__option {
   padding-left: 4px;
 }
-.select2-container--default .select2-results__options .select2-results__option:hover {
+.select2-container--default
+  .select2-results__options
+  .select2-results__option:hover {
   background-color: var(--link) !important;
   color: var(--white);
   cursor: pointer;
 }
-.select2-container--default .select2-results__options .select2-results__option--highlighted {
+.select2-container--default
+  .select2-results__options
+  .select2-results__option--highlighted {
   background-color: var(--link) !important;
   color: var(--white);
 }
-.select2-container--default .select2-results__options .select2-results__option--selected {
+.select2-container--default
+  .select2-results__options
+  .select2-results__option--selected {
   background-color: var(--link) !important;
   color: var(--white);
 }
@@ -309,11 +338,11 @@ table tbody td input.number {
   display: -ms-flexbox;
   display: flex;
   -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
   -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
 }
 #imageCropModal img#imagePreview {
   display: block;
@@ -330,7 +359,7 @@ table tbody td input.number {
   width: 100px;
   height: 100px;
   -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   border-radius: 4px;
   border: 1px solid var(--gray-light);
 }
@@ -345,8 +374,8 @@ textarea::-webkit-scrollbar {
   display: none;
 }
 
-input[type=number]::-webkit-outer-spin-button,
-input[type=number]::-webkit-inner-spin-button {
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
@@ -379,7 +408,7 @@ input[type=number]::-webkit-inner-spin-button {
   .card {
     border: none;
     -webkit-box-shadow: none;
-            box-shadow: none;
+    box-shadow: none;
     margin: 0;
     padding: 0;
   }
