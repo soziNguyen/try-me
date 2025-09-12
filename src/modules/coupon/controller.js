@@ -125,7 +125,7 @@ export const createCoupon = async (req, res) => {
     const coupon = new Coupon(data)
     await coupon.save()
 
-    responseHelper.success(res, coupon)
+    responseHelper.success(res, coupon, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }

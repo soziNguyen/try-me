@@ -36,5 +36,6 @@ router.get(
   page.couponPage
 )
 router.get('/tax', isAuthenticated, isPermit('Admin', 'Org'), page.taxPage)
+router.get('/payment-methods', isAuthenticated, isPermit('Admin', 'Org'), page.paymentMethodPage)
 
 export default router
