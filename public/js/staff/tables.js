@@ -330,7 +330,14 @@ function renderTableList(tables = []) {
 }
 
 function fetchAndRenderTableList() {
-  fetch('/api/tables-total')
+  const csrfToken = document.getElementById('_csrf').value
+
+  fetch('/api/tables-total', {
+    method: 'GET',
+    headers: {
+      'x-csrf-token': csrfToken
+    }
+  })
     .then((res) => res.json())
     .then((data) => {
       console.log('Response data:', data)

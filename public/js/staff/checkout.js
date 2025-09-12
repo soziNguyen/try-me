@@ -1,6 +1,7 @@
 // ========== XỬ LÝ SỰ KIỆN CLICK ==========
 
 document.addEventListener('click', (e) => {
+  const csrfToken = document.getElementById('_csrf').value
   const checkoutBtn = e.target.closest('#checkoutBtn')
 
   // Mở/ẩn chi tiết thanh toán và xử lý gợi ý tiền mặt
@@ -272,57 +273,70 @@ function renderTaxOptions() {
 }
 
 // ========== ÁP MÃ GIẢM GIÁ ==========
+const applyDiscountBtn = document.getElementById('applyDiscountBtn')
+applyDiscountBtn.addEventListener('click', async () => {
+  const codeInput = document.getElementById('discountCodeInput')
+  const discountInput = document.getElementById('discountInput')
+  const discountMessage = document.getElementById('discountMessage')
+  const totalAmountEl = document.getElementById('totalAmount')
 
-document
-  .getElementById('applyDiscountBtn')
-  .addEventListener('click', async () => {
-    const codeInput = document.getElementById('discountCodeInput')
-    const discountInput = document.getElementById('discountInput')
-    const discountMessage = document.getElementById('discountMessage')
-    const totalAmountEl = document.getElementById('totalAmount')
+  const code = codeInput.value.trim()
+  if (!code) {
+    discountMessage.textContent = 'Vui lòng nhập mã giảm giá'
+    discountMessage.className = 'text-danger d-block mt-1'
+    return
+  }
 
-    const code = codeInput.value.trim()
-    if (!code) {
-      discountMessage.textContent = 'Vui lòng nhập mã giảm giá'
+  let totalAmount = parseCurrency(totalAmountEl.textContent)
+  if (totalAmount <= 0) {
+    discountMessage.textContent = 'Tổng tiền không hợp lệ'
+    discountMessage.className = 'text-danger d-block mt-1'
+    return
+  }
+
+  try {
+    const response = await fetch('/api/coupon/apply', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken
+      },
+      body: JSON.stringify({ code, totalAmount })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      discountMessage.textContent = data.message || 'Mã giảm giá không hợp lệ'
       discountMessage.className = 'text-danger d-block mt-1'
       return
     }
 
-    let totalAmount = parseCurrency(totalAmountEl.textContent)
-    if (totalAmount <= 0) {
-      discountMessage.textContent = 'Tổng tiền không hợp lệ'
-      discountMessage.className = 'text-danger d-block mt-1'
-      return
+    const discountAmount = data.data.discountAmount || 0
+    discountInput.value = discountAmount.toLocaleString()
+    if (applyDiscountBtn.classList.contains('btn-primary')) {
+      applyDiscountBtn.classList.remove('btn-primary')
+      applyDiscountBtn.classList.add('btn-danger', 'btn-clear')
+      applyDiscountBtn.textContent = 'X'
+      document
+        .querySelector('.btn-clear')
+        .addEventListener('click', function () {
+          document.getElementById('discountCodeInput').value = ''
+        })
+    } else {
+      applyDiscountBtn.textContent = 'Áp dụng'
+      applyDiscountBtn.classList.add('btn-primary')
+      applyDiscountBtn.classList.remove('btn-danger')
     }
 
-    try {
-      const response = await fetch('/api/coupon/apply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, totalAmount })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        discountMessage.textContent = data.message || 'Mã giảm giá không hợp lệ'
-        discountMessage.className = 'text-danger d-block mt-1'
-        return
-      }
-
-      const discountAmount = data.data.discountAmount || 0
-      discountInput.value = discountAmount.toLocaleString()
-      discountMessage.textContent = `Áp dụng thành công! Giảm ${discountAmount.toLocaleString()}đ`
-      discountMessage.className = 'text-success d-block mt-1'
-
-      window.appliedCouponId = data.data.couponId
-      calculateTotals()
-    } catch (error) {
-      discountMessage.textContent = 'Lỗi khi áp dụng mã giảm giá'
-      discountMessage.className = 'text-danger d-block mt-1'
-      console.error(error)
-    }
-  })
+    window.appliedCouponId = data.data.couponId
+    calculateTotals()
+  } catch (error) {
+    discountMessage.textContent = 'Lỗi khi áp dụng mã giảm giá'
+    discountMessage.className = 'text-danger d-block mt-1'
+    console.error(error)
+  }
+})
 
 function calculateTotalAmount(items) {
   let total = 0
@@ -388,7 +402,10 @@ document
       if (appliedCouponId) {
         const confirmResponse = await fetch('/api/coupon/confirm', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken
+          },
           body: JSON.stringify({ couponId: appliedCouponId })
         })
         const confirmData = await confirmResponse.json()
@@ -401,7 +418,10 @@ document
       // Gọi API thanh toán
       const response = await fetch(`/api/orders/${orderId}/checkout`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken
+        },
         body: JSON.stringify({
           discount,
           serviceCharge,

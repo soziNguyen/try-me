@@ -46,7 +46,10 @@
 
             <!-- Chi tiết thanh toán (ẩn mặc định) -->
             <div id="checkoutDetail" class="card p-3 shadow-sm mt-3" style="display: none">
-              <h5 class="mb-3">Chi tiết thanh toán</h5>
+              <div class="d-flex justify-content-between">
+                <h5 class="mb-3">Chi tiết thanh toán</h5>
+                <button id="cancelCheckoutDetail" class="btn btn-close"></button>
+              </div>
 
               <div class="mb-2">
                 <label for="discountCodeInput">Mã giảm giá:</label>
@@ -60,8 +63,8 @@
               </div>
 
               <div class="mb-2">
-                <label>Giảm Được:</label>
-                <input type="number" id="discountInput" class="form-control" value="0" min="0" />
+                <label>Giảm theo mã:</label>
+                <input type="number" id="discountInput" class="form-control" placeholder="0" min="0" readonly />
               </div>
 
               <div class="mb-2">
@@ -153,11 +156,11 @@
                 </div>
               </div>
 
-              <div class="text-end">
-                <button type="button" class="btn btn-danger me-2" id="cancelCheckoutDetail">
-                  ĐÓNG
+              <div class="d-flex justify-content-between">
+                <button id="btn-print" type="button" class="btn btn-outline-info me-2">
+                  IN HÓA ĐƠN
                 </button>
-                <button type="button" class="btn btn-success" id="confirmCheckoutBtn">
+                <button type="button" class="btn btn-outline-success" id="confirmCheckoutBtn">
                   THANH TOÁN
                 </button>
               </div>
