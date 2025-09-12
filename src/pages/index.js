@@ -467,6 +467,16 @@ export const couponPage = async (req, res) => {
   )
 }
 
+export const paymentMethodPage = async (req, res) => {
+  res.render(
+    'payment/payment_method',
+    getPageData(req, 'Quản lý phương thức thanh toán', 'Payment Method', {
+      headerClass: 'admin__header',
+      pageTitle: 'PHƯƠNG THỨC THANH TOÁN'
+    })
+  )
+}
+
 export const taxPage = async (req, res) => {
   res.render(
     'tax/index',
