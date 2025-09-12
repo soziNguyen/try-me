@@ -1,6 +1,8 @@
 $orange-800: #9a3412;
 .table-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 
   &:hover {
     transform: scale(1.02);
@@ -28,17 +30,17 @@ $orange-800: #9a3412;
     transition: all 0.3s ease;
 
     &.show {
-      display: flex;        
+      display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 10px;      
+      gap: 10px;
       opacity: 1;
       pointer-events: auto;
       z-index: 10;
       background-color: #fff;
     }
   }
-    .btn-select-table {
+  .btn-select-table {
     margin-bottom: 15px;
   }
 }
@@ -50,13 +52,13 @@ $orange-800: #9a3412;
   border-top: 1px solid #000;
 
   thead {
-    border-bottom: 1px solid #000; 
+    border-bottom: 1px solid #000;
   }
 
   th,
   td {
     padding: 6px 8px;
-    border: none; 
+    border: none;
   }
 
   th.stt,
@@ -84,11 +86,11 @@ $orange-800: #9a3412;
   }
 
   tbody tr {
-    border-bottom: 1px solid #000; 
+    border-bottom: 1px solid #000;
   }
 
   tbody tr:last-child {
-    border-bottom: 1px solid #000; 
+    border-bottom: 1px solid #000;
   }
 }
 

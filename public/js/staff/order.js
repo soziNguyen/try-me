@@ -4,6 +4,7 @@ const orderId = urlParams.get('orderId')
 let allFoods = []
 let allCombos = []
 let allItems = []
+const csrfToken = document.getElementById('_csrf').value
 
 // ======== Event Listeners ========
 
@@ -445,7 +446,10 @@ async function addToOrder(foodId, foodName, price) {
   try {
     const res = await fetch(`/api/orders/${orderId}/items`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken
+      },
       body: JSON.stringify({ foodId, quantity: 1 })
     })
     const result = await res.json()
@@ -470,7 +474,10 @@ async function addComboToOrder(comboId, comboName, price) {
   try {
     const res = await fetch(`/api/orders/${orderId}/items`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken
+      },
       body: JSON.stringify({ comboId, quantity: 1 })
     })
     const result = await res.json()
@@ -496,7 +503,10 @@ async function updateItemQuantity(itemId, type, newQuantity) {
   try {
     const res = await fetch(`/api/orders/${orderId}/items/${itemId}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken
+      },
       body: JSON.stringify({ itemId, quantity: Number(newQuantity), type })
     })
     const result = await res.json()
@@ -522,7 +532,8 @@ async function removeItemFromOrder(itemId, type) {
     const res = await fetch(
       `/api/orders/${orderId}/items/${itemId}?type=${type}`,
       {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'x-csrf-token': csrfToken }
       }
     )
     const result = await res.json()
