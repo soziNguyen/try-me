@@ -64,6 +64,7 @@ export const createOrder = async (req, res) => {
     table.status = 'occupied'
     table.checkInTime = new Date()
     table.currentOrderId = newOrder._id
+    table.customerName = customerName ? customerName.trim() : 'Khách lẻ'
     await table.save()
 
     responseHelper.success(res, { orderId: newOrder._id, tableId: table._id })
@@ -89,6 +90,15 @@ export const getOrderById = async (req, res) => {
   }
 }
 
+function calcOrderTotal(items = []) {
+  if (!Array.isArray(items)) return 0
+  return items.reduce((sum, it) => {
+    const price = Number(it.price || 0)
+    const qty = Number(it.quantity || 0)
+    return sum + price * qty
+  }, 0)
+}
+
 export const addItemToOrder = async (req, res) => {
   try {
     const { orderId } = req.params
@@ -103,7 +113,7 @@ export const addItemToOrder = async (req, res) => {
     if (order.status !== 'open')
       return responseHelper.error(res, 'Order đã đóng', 400)
 
-    // 👉 Nếu là combo
+    // Nếu là combo
     if (comboId) {
       const combo = await Combo.findById(comboId)
       if (!combo) return responseHelper.error(res, 'Combo không tồn tại', 404)
@@ -122,7 +132,7 @@ export const addItemToOrder = async (req, res) => {
       }
     }
 
-    // 👉 Nếu là món ăn
+    // Nếu là món ăn
     if (foodId) {
       const menuItem = await MenuItem.findById(foodId)
       if (!menuItem)
@@ -142,7 +152,21 @@ export const addItemToOrder = async (req, res) => {
       }
     }
 
+    // tính tổng và lưu luôn vào order.totalAmount (cache)
+    order.totalAmount = calcOrderTotal(order.items)
     await order.save()
+
+    // nếu order gắn bàn thì cập nhật total trong bảng Table
+    if (order.tableId) {
+      try {
+        await Table.findByIdAndUpdate(order.tableId, {
+          totalAmount: order.totalAmount
+        })
+      } catch (e) {
+        // không block flow nếu cập nhật table lỗi
+        console.warn('Warning: không cập nhật được table.totalAmount', e)
+      }
+    }
 
     const populatedOrder = await Order.findById(orderId)
       .populate('items.foodId', 'name price')
@@ -187,7 +211,20 @@ export const updateItemQuantity = async (req, res) => {
       )
 
     item.quantity = quantity
+
+    // cập nhật total và save
+    order.totalAmount = calcOrderTotal(order.items)
     await order.save()
+
+    if (order.tableId) {
+      try {
+        await Table.findByIdAndUpdate(order.tableId, {
+          totalAmount: order.totalAmount
+        })
+      } catch (e) {
+        console.warn('Warning: không cập nhật được table.totalAmount', e)
+      }
+    }
 
     const populatedOrder = await Order.findById(orderId)
       .populate('items.foodId', 'name price')
@@ -230,7 +267,20 @@ export const removeItemFromOrder = async (req, res) => {
     }
 
     order.items.splice(itemIndex, 1)
+
+    // cập nhật total và lưu
+    order.totalAmount = calcOrderTotal(order.items)
     await order.save()
+
+    if (order.tableId) {
+      try {
+        await Table.findByIdAndUpdate(order.tableId, {
+          totalAmount: order.totalAmount
+        })
+      } catch (e) {
+        console.warn('Warning: không cập nhật được table.totalAmount', e)
+      }
+    }
 
     const populatedOrder = await Order.findById(orderId)
       .populate('items.foodId', 'name price')

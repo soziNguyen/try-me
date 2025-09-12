@@ -1,5 +1,6 @@
 import Table from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
+import Order from '../order/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
 export const tablePage = async (req, res) => {
@@ -180,6 +181,36 @@ export const deleteTables = async (req, res) => {
 
     responseHelper.success(res, 'Xóa bàn thành công')
   } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
+export const getTablesWithTotal = async (req, res) => {
+  try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) {
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    }
+
+    const tables = await Table.find({ organization: organizationId }).lean()
+    const orders = await Order.find({
+      tableId: { $in: tables.map((t) => t._id) },
+      status: 'open',
+      organization: organizationId
+    }).lean()
+    const tablesWithTotal = tables.map((table) => {
+      const order = orders.find(
+        (o) => o.tableId.toString() === table._id.toString()
+      )
+      return {
+        ...table,
+        totalAmount: order ? order.totalAmount || 0 : 0
+      }
+    })
+
+    responseHelper.success(res, { tables: tablesWithTotal })
+  } catch (error) {
+    console.error(error)
     responseHelper.error(res, error.message)
   }
 }

@@ -18,6 +18,7 @@ const TableSchema = new Schema(
       ref: 'Order',
       default: null
     },
+    customerName: { type: String, default: '' },
     organization: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Organization',
