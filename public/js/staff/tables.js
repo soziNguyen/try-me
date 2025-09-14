@@ -28,7 +28,6 @@ function bindEvents() {
         capacity,
         area
       })
-      console.log(data.area)
       if (!data) return
       toastr.success('Thêm bàn thành công!')
       formAddTable.reset()
@@ -95,6 +94,10 @@ function bindEvents() {
         .getElementById('customerNameInput')
         .value.trim()
 
+      const customerPhone = document
+        .getElementById('customerPhoneInput')
+        .value.trim()
+
       if (!tableId) {
         toastr.warning('Không tìm thấy bàn để giao.')
         return
@@ -104,7 +107,7 @@ function bindEvents() {
         // Gửi dữ liệu bao gồm tableId và customerName lên API
         const orderResult = await ajax(
           '/api/orders',
-          { tableId, customerName },
+          { tableId, customerName, customerPhone },
           'POST'
         )
 
@@ -241,13 +244,15 @@ function renderTableList(tables = []) {
     return
   }
 
+  console.log(tables)
+
   tableGrid.innerHTML = tables
     .map((table) => {
       const bgClass = getBgClassByStatus(table.status)
 
       // Nếu bàn đang occupied thì dùng giao diện mới
       if (table.status === 'occupied') {
-        const total = table.totalAmount || 0
+        const total = table.currentOrderId?.totalAmount || 0
         const formattedTotal = `${total.toLocaleString()}đ`
         return `
     <div class="col">
@@ -263,7 +268,7 @@ function renderTableList(tables = []) {
         </div>
 
         <div class="d-flex justify-content-between mt-1">
-          <div>Khách: ${table.customerName || 'Khách lẻ'}</div>
+          <div>Khách: ${table.currentOrderId?.customerId?.name || 'Khách lẻ'}</div>
           <div>
             <span class="seated-time" 
               data-checkin="${table.checkInTime}" 
@@ -278,7 +283,7 @@ function renderTableList(tables = []) {
         </div>
 
         <div class="d-flex justify-content-between gap-2 mt-4">
-          <button class="btnOrderFood btn btn-success btn-sm fw-bold shadow-sm" data-order-id="${table.currentOrderId}">
+          <button class="btnOrderFood btn btn-success btn-sm fw-bold shadow-sm" data-order-id="${table.currentOrderId?._id}">
             <i class="bi bi-clipboard-check me-1"></i> Thêm món
           </button>
           <button class="btnCheckout btn btn-primary btn-sm fw-bold shadow-sm" ">
@@ -300,9 +305,9 @@ function renderTableList(tables = []) {
           />
 
           <div class="text-center mt-4">
-            <h5 class="mb-3"> 👩‍🍳 ${table.name}</h5>
+            <h5 class="mb-3 fw-bold">${table.name}</h5>
             <div><strong>Trạng thái:</strong> Trống</div>
-            <div><strong>Số Lượng Người:</strong> ${table.capacity || '-'}</div>
+            <div><strong>Số người:</strong> ${table.capacity || '-'}</div>
             <div><strong>Khu vực:</strong> ${table.area || '-'}</div>
             <button class="btnAssignTable btn btn-warning btn-sm mt-2 fw-bold shadow-sm">
               <i class="bi bi-clock me-1"></i> Giao bàn
@@ -340,7 +345,6 @@ function fetchAndRenderTableList() {
   })
     .then((res) => res.json())
     .then((data) => {
-      console.log('Response data:', data)
       if (data.data && data.data.tables) {
         renderTableList(data.data.tables)
       } else {

@@ -47,6 +47,7 @@
   pointer-events: auto;
   z-index: 10;
   background-color: #fff;
+  width: 100%;
 }
 .table-order .btn-select-table {
   margin-bottom: 15px;

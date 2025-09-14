@@ -331,10 +331,7 @@ export const logIn = async (req, res, next) => {
 
       const userData = {
         id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        organization: user.organization
+        username: user.username
       }
 
       return responseHelper.success(res, userData, 'Đăng nhập thành công')

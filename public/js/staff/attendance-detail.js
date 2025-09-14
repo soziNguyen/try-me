@@ -15,7 +15,6 @@ $(function () {
 
   function fillData(att) {
     if (!att) return
-    console.log(att.sessions)
     // Thông tin chung
     $('#employeeName').text(att.user?.username || '')
     $('#workDate').text(new Date(att.date).toLocaleDateString('vi-VN'))

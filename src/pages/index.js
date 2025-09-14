@@ -496,3 +496,23 @@ export const activityLog = async (req, res) => {
     })
   )
 }
+
+export const tableManagementPage = async (req, res) => {
+  res.render(
+    'admin/table',
+    getPageData(req, 'Quản lý bàn', 'Table Management', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ BÀN'
+    })
+  )
+}
+
+export const revenuePage = async (req, res) => {
+  res.render(
+    'admin/revenue',
+    getPageData(req, 'Quản lý doanh thu', 'Revenue', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ DOANH THU'
+    })
+  )
+}

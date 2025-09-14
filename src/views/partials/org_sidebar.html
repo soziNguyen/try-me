@@ -156,6 +156,13 @@
                   </div>
                 </li>
 
+                <li class="<%= page === 'Table Management' ? 'active' : '' %>">
+                  <a class="w-100" href="/table/lists">
+                    <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>
+                    <span>Quản lý Bàn</span>
+                  </a>
+                </li>
+
                 <!-- Reports Section -->
                 <% const inReports=['SalesReport','InventoryReport','StaffReport','TaxReport'].includes(page); %>
                   <li class="reports-accordion">

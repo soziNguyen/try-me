@@ -12,7 +12,7 @@ export const getActivePaymentMethods = async (req, res) => {
       isActive: true,
       organization: organizationId
     })
-      .select('_id code')
+      .select('_id name type')
       .sort({ name: 1 })
     responseHelper.success(res, coupons)
   } catch (error) {
@@ -56,7 +56,9 @@ export const getPaymentMethods = async (req, res) => {
     }
 
     // Đếm tổng & sau lọc
-    const recordsTotal = await PaymentMethod.countDocuments({ organization: organizationId })
+    const recordsTotal = await PaymentMethod.countDocuments({
+      organization: organizationId
+    })
     const recordsFiltered = await PaymentMethod.countDocuments(query)
 
     // Query chính
@@ -90,7 +92,12 @@ export const updatePaymentMethod = async (req, res) => {
       _id: id,
       organization: organizationId
     })
-    if (!paymentMethod) return responseHelper.error(res, 'Phương thức thanh toán không tồn tại', 404)
+    if (!paymentMethod)
+      return responseHelper.error(
+        res,
+        'Phương thức thanh toán không tồn tại',
+        404
+      )
 
     // Check trùng tên
     const existing = await PaymentMethod.findOne({
@@ -98,7 +105,8 @@ export const updatePaymentMethod = async (req, res) => {
       organization: organizationId,
       name
     })
-    if (existing) return responseHelper.error(res, 'Tên phương thức đã tồn tại', 400)
+    if (existing)
+      return responseHelper.error(res, 'Tên phương thức đã tồn tại', 400)
 
     const dataUpdate = {}
     if (name !== undefined) dataUpdate.name = name
@@ -112,7 +120,6 @@ export const updatePaymentMethod = async (req, res) => {
       { new: true }
     )
     responseHelper.success(res, updated, 'Cập nhật thành công')
-
   } catch (error) {
     responseHelper.error(res, error.message)
   }

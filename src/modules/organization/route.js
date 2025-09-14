@@ -12,7 +12,7 @@ router.get('/organizations', isAuthenticated, isAdmin, orgManagementPage) // get
 router.get(
   '/api/organizations',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin'),
   org.getActiveOrganizations
 ) // get all organizations
 router.get(

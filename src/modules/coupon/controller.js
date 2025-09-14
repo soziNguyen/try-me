@@ -374,8 +374,6 @@ export const applyCoupon = async (req, res) => {
       }
     })
 
-    console.log(coupon)
-
     if (!coupon)
       return responseHelper.error(
         res,

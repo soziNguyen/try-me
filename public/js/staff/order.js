@@ -267,7 +267,7 @@ function renderMenu(items) {
 
   menuDiv.innerHTML = items
     .map((item) => {
-      let imgSrc = '/images/default-food.png'
+      let imgSrc = '/assets/images/default.png'
       if (item.image) {
         imgSrc =
           item.image.startsWith('/') || item.image.startsWith('http')
@@ -386,21 +386,20 @@ function updateOrderUI(order) {
 
     const row = `
       <tr>
-        <td>${name}</td>
+        <td><span class="d-block w-100 text">${name}</span></td>
         <td>
           <input 
             type="number" 
-            class="border-0 item-quantity"
+            class="border-0 number item-quantity d-block w-100"
             min="1" 
             value="${quantity}" 
-            style="width: 60px;" 
             data-id="${id}"
             data-type="${item.foodId ? 'food' : 'combo'}"
           />
         </td>
-        <td>${price.toLocaleString()}</td>
-        <td>${amount.toLocaleString()}đ</td>
-        <td>
+        <td><span class="d-block w-100 number">${price.toLocaleString()}</span></td>
+        <td><span class="d-block w-100 number">${amount.toLocaleString()}đ</span></td>
+        <td class="text-center">
           <button class="btn btn-sm btn-outline-danger remove-item" 
             data-id="${id}" 
             data-type="${item.foodId ? 'food' : 'combo'}">
