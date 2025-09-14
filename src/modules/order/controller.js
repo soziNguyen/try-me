@@ -9,7 +9,6 @@ import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import withTransaction from '../../helpers/withTransaction.js'
 import QRCode from 'qrcode'
-import vietqr from 'vietqr'
 
 export const createOrder = async (req, res) => {
   try {
@@ -36,6 +35,15 @@ export const createOrder = async (req, res) => {
         },
         { upsert: true, new: true }
       )
+    } else if (customerName) {
+      // Chỉ có name -> luôn tạo mới
+      customer = await Customer.create({
+        organization: organizationId,
+        name: customerName.trim(),
+        phone: null,
+        totalOrders: 0,
+        lastOrderDate: null
+      })
     }
 
     // 2. Đơn mang đi
