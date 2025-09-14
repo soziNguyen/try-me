@@ -5,24 +5,15 @@ import { isPermit } from '../helpers/isPermit.js'
 
 const router = express.Router()
 
-router.get(
-  '/table/lists',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.tableManagementPage
-)
+router.get('/table/lists', isAuthenticated, isPermit('Admin', 'Org'), page.tableManagementPage)
 router.get('/tax', isAuthenticated, isPermit('Admin', 'Org'), page.taxPage)
+router.get('/payment-methods', isAuthenticated, isPermit('Admin', 'Org'), page.paymentMethodPage)
+router.get('/revenue', isAuthenticated, isPermit('Admin', 'Org'), page.revenuePage)
 router.get(
-  '/payment-methods',
+  '/receiving-accounts',
   isAuthenticated,
   isPermit('Admin', 'Org'),
-  page.paymentMethodPage
-)
-router.get(
-  '/revenue',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.revenuePage
+  page.receivingAccountPage
 )
 
 export default router

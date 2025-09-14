@@ -40,6 +40,7 @@ const OrderSchema = new Schema(
     customerPaid: { type: Number, default: 0 }, // Tiền khách trả
     changeAmount: { type: Number, default: 0 }, // Tiền thừa
     createdAt: { type: Date, default: Date.now },
+    qrCode: { type: String, default: null },
     organization: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',

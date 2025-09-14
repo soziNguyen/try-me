@@ -3,9 +3,13 @@ import Table from '../table/model.js'
 import { MenuItem } from '../menu/menu-item/model.js'
 import { Combo } from '../menu/combo/model.js'
 import Customer from '../customer/model.js'
+import PaymentMethod from '../payment/model.js'
+import ReceivingAccount from '../receiving-account/model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import withTransaction from '../../helpers/withTransaction.js'
+import QRCode from 'qrcode'
+import vietqr from 'vietqr'
 
 export const createOrder = async (req, res) => {
   try {
@@ -79,8 +83,7 @@ export const createOrder = async (req, res) => {
 
     const table = await Table.findById(tableId)
     if (!table) return responseHelper.error(res, 'Bàn không tồn tại', 404)
-    if (table.status === 'occupied')
-      return responseHelper.error(res, 'Bàn đã có khách', 400)
+    if (table.status === 'occupied') return responseHelper.error(res, 'Bàn đã có khách', 400)
 
     const newOrder = await Order.create({
       tableId,
@@ -118,6 +121,7 @@ export const getOrderById = async (req, res) => {
       .populate('tableId', 'name area')
       .populate('items.foodId', 'name price')
       .populate('items.comboId', 'name price')
+      .populate('customerId', 'name phone')
       .lean()
 
     if (!order) return res.status(404).json({ message: 'Order không tồn tại' })
@@ -148,17 +152,14 @@ export const addItemToOrder = async (req, res) => {
 
     const order = await Order.findById(orderId)
     if (!order) return responseHelper.error(res, 'Order không tồn tại', 404)
-    if (order.status !== 'open')
-      return responseHelper.error(res, 'Order đã đóng', 400)
+    if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400)
 
     // Nếu là combo
     if (comboId) {
       const combo = await Combo.findById(comboId)
       if (!combo) return responseHelper.error(res, 'Combo không tồn tại', 404)
 
-      const existingCombo = order.items.find(
-        (item) => item.comboId?.toString() === comboId
-      )
+      const existingCombo = order.items.find((item) => item.comboId?.toString() === comboId)
       if (existingCombo) {
         existingCombo.quantity += quantity
       } else {
@@ -173,12 +174,9 @@ export const addItemToOrder = async (req, res) => {
     // Nếu là món ăn
     if (foodId) {
       const menuItem = await MenuItem.findById(foodId)
-      if (!menuItem)
-        return responseHelper.error(res, 'Món ăn không tồn tại', 404)
+      if (!menuItem) return responseHelper.error(res, 'Món ăn không tồn tại', 404)
 
-      const existingItem = order.items.find(
-        (item) => item.foodId?.toString() === foodId
-      )
+      const existingItem = order.items.find((item) => item.foodId?.toString() === foodId)
       if (existingItem) {
         existingItem.quantity += quantity
       } else {
@@ -233,8 +231,7 @@ export const updateItemQuantity = async (req, res) => {
 
     const order = await Order.findById(orderId)
     if (!order) return responseHelper.error(res, 'Order không tồn tại', 404)
-    if (order.status !== 'open')
-      return responseHelper.error(res, 'Order đã đóng', 400)
+    if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400)
 
     const item = order.items.find((item) => {
       if (type === 'food') return item.foodId?.toString() === itemId
@@ -287,8 +284,7 @@ export const removeItemFromOrder = async (req, res) => {
 
     const order = await Order.findById(orderId)
     if (!order) return responseHelper.error(res, 'Order không tồn tại', 404)
-    if (order.status !== 'open')
-      return responseHelper.error(res, 'Order đã đóng', 400)
+    if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400)
 
     // Tìm item cần xoá
     const itemIndex = order.items.findIndex((item) => {
@@ -297,11 +293,7 @@ export const removeItemFromOrder = async (req, res) => {
     })
 
     if (itemIndex === -1) {
-      return responseHelper.error(
-        res,
-        'Món/combo không tồn tại trong order',
-        404
-      )
+      return responseHelper.error(res, 'Món/combo không tồn tại trong order', 404)
     }
 
     order.items.splice(itemIndex, 1)
@@ -344,16 +336,9 @@ export const checkoutOrder = async (req, res) => {
       customerPaid
     } = req.body
 
-    console.log(paymentMethodId)
-
-    // === VALIDATION ===
     if (!orderId) return responseHelper.error(res, 'Thiếu orderId', 400)
     if (!paymentMethodId)
-      return responseHelper.error(
-        res,
-        'Phương thức thanh toán không hợp lệ',
-        400
-      )
+      return responseHelper.error(res, 'Phương thức thanh toán không hợp lệ', 400)
 
     const parsedDiscount = Number(discount) || 0
     const parsedPointsUsed = Number(pointsUsed) || 0
@@ -361,83 +346,58 @@ export const checkoutOrder = async (req, res) => {
     const parsedVatRate = Number(vatRate) || 0
     const parsedCustomerPaid = Number(customerPaid) || 0
 
-    // Validate số âm
-    if (
-      parsedDiscount < 0 ||
-      parsedPointsUsed < 0 ||
-      parsedServiceCharge < 0 ||
-      parsedVatRate < 0
-    ) {
+    if (parsedDiscount < 0 || parsedPointsUsed < 0 || parsedServiceCharge < 0 || parsedVatRate < 0)
       return responseHelper.error(res, 'Các giá trị không được âm', 400)
-    }
 
-    if (parsedCustomerPaid <= 0) {
+    if (parsedCustomerPaid <= 0)
       return responseHelper.error(res, 'Số tiền khách trả không hợp lệ', 400)
-    }
 
-    // === TRANSACTION LOGIC ===
+    // === TRANSACTION ===
     const result = await withTransaction(async (session) => {
-      // === GET ORDER ===
       const order = await Order.findById(orderId).session(session)
-      if (!order) {
-        throw new Error('Order không tồn tại')
-      }
+      if (!order) throw new Error('Order không tồn tại')
+      if (order.status !== 'open') throw new Error('Order đã được thanh toán hoặc đã đóng')
 
-      if (order.status !== 'open') {
-        throw new Error('Order đã được thanh toán hoặc đã đóng')
-      }
+      const paymentMethod = await PaymentMethod.findById(paymentMethodId).session(session)
+      if (!paymentMethod) throw new Error('Phương thức thanh toán không hợp lệ')
+      const { type: paymentType, receivingAccountId } = paymentMethod
 
       // === CUSTOMER POINTS VALIDATION ===
       let customer = null
       if (order.customerId && parsedPointsUsed > 0) {
         customer = await Customer.findById(order.customerId).session(session)
-        if (!customer) {
-          throw new Error('Khách hàng không tồn tại')
-        }
+        if (!customer) throw new Error('Khách hàng không tồn tại')
 
-        if (customer.totalPoints < parsedPointsUsed) {
+        if (customer.totalPoints < parsedPointsUsed)
           throw new Error(
             `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`
           )
-        }
       }
 
       // === CALCULATE AMOUNTS ===
       const POINT_VALUE = 500
+      const totalAmount = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
-      // Tính tổng tiền gốc
-      const totalAmount = order.items.reduce((sum, item) => {
-        return sum + item.price * item.quantity
-      }, 0)
+      if (parsedDiscount > totalAmount) throw new Error('Giảm giá không được vượt quá tổng tiền')
 
-      // Validate discount không vượt quá totalAmount
-      if (parsedDiscount > totalAmount) {
-        throw new Error('Giảm giá không được vượt quá tổng tiền')
-      }
-
-      // Tính điểm giảm giá (chỉ tính ở backend để đảm bảo chính xác)
       const calculatedPointsDiscount = parsedPointsUsed * POINT_VALUE
-
-      // Tổng sau giảm giá & phụ phí
       const totalPayable =
-        totalAmount -
-        parsedDiscount -
-        calculatedPointsDiscount +
-        parsedServiceCharge
+        totalAmount - parsedDiscount - calculatedPointsDiscount + parsedServiceCharge
+      const total = Math.round(totalPayable + (totalPayable * parsedVatRate) / 100)
 
-      // Tổng cuối cùng sau VAT
-      const total = Math.round(
-        totalPayable + (totalPayable * parsedVatRate) / 100
-      )
-
-      if (parsedCustomerPaid < total) {
+      if (parsedCustomerPaid < total)
         throw new Error(
           `Số tiền khách trả chưa đủ. Cần: ${total.toLocaleString()}, có: ${parsedCustomerPaid.toLocaleString()}`
         )
+
+      let qrCodeDataUrl = null
+      if (['bank', 'e-wallet'].includes(paymentType)) {
+        const qrText = JSON.stringify({ orderId, amount: total, method: paymentType })
+        const qrBase64 = Buffer.from(qrText).toString('base64')
+        qrCodeDataUrl = await QRCode.toDataURL(qrBase64)
       }
 
-      // === UPDATE DATABASE ===
-      // 1. Cập nhật Order
+      // === UPDATE ORDER ===
       order.discount = parsedDiscount
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = calculatedPointsDiscount
@@ -451,43 +411,30 @@ export const checkoutOrder = async (req, res) => {
       order.changeAmount = parsedCustomerPaid - total
       order.status = 'completed'
       order.updatedAt = new Date()
+      if (qrCodeDataUrl) order.qrCode = qrCodeDataUrl
 
       await order.save({ session })
 
-      // 2. Giải phóng bàn
+      // === RELEASE TABLE ===
       if (order.tableId) {
         await Table.findByIdAndUpdate(
           order.tableId,
-          {
-            status: 'available',
-            currentOrderId: null,
-            updatedAt: new Date()
-          },
+          { status: 'available', currentOrderId: null, updatedAt: new Date() },
           { session }
         )
       }
 
-      // 3. Cập nhật thông tin khách hàng
+      // === UPDATE CUSTOMER ===
       if (order.customerId) {
-        if (!customer) {
-          customer = await Customer.findById(order.customerId).session(session)
-        }
-
+        if (!customer) customer = await Customer.findById(order.customerId).session(session)
         if (customer) {
-          // Tính điểm tích lũy mới (1 điểm cho mỗi 10,000 VNĐ)
           const pointsEarned = Math.floor(total / 10000)
-
-          // Cập nhật customer
           await Customer.findByIdAndUpdate(
             order.customerId,
             {
-              $inc: {
-                totalOrders: 1,
-                totalSpent: total
-              },
+              $inc: { totalOrders: 1, totalSpent: total },
               $set: {
-                totalPoints:
-                  customer.totalPoints - parsedPointsUsed + pointsEarned,
+                totalPoints: customer.totalPoints - parsedPointsUsed + pointsEarned,
                 lastOrderDate: new Date(),
                 updatedAt: new Date()
               }
@@ -497,7 +444,6 @@ export const checkoutOrder = async (req, res) => {
         }
       }
 
-      // Trả về dữ liệu cho response
       return {
         totalAmount,
         discount: parsedDiscount,
@@ -507,7 +453,8 @@ export const checkoutOrder = async (req, res) => {
         vatRate: parsedVatRate,
         totalPayable,
         total,
-        changeAmount: parsedCustomerPaid - total
+        changeAmount: parsedCustomerPaid - total,
+        qrCodeDataUrl
       }
     })
 
@@ -515,7 +462,6 @@ export const checkoutOrder = async (req, res) => {
   } catch (error) {
     console.error('Lỗi thanh toán:', error)
 
-    // Xử lý các lỗi business logic
     if (
       error.message.includes('không tồn tại') ||
       error.message.includes('đã được thanh toán') ||
@@ -537,6 +483,8 @@ export const printInvoice = async (req, res) => {
     const order = await Order.findById(orderId)
       .populate('items.foodId', 'name price')
       .populate('tableId', 'name')
+      .populate('organization', 'name phone')
+    console.log(order)
 
     if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
 
@@ -545,7 +493,9 @@ export const printInvoice = async (req, res) => {
       order,
       orderId: order._id,
       currentUserId: req.user ? req.user._id : null,
-      user: req.user || { username: 'Admin' }
+      user: req.user || { username: 'Admin' },
+      storeName: order.organization?.name || 'Tên cửa hàng',
+      storePhone: order.organization?.phone
     })
   } catch (error) {
     console.error('Lỗi khi in hóa đơn:', error)

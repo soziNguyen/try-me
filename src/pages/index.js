@@ -20,18 +20,12 @@ export const userPage = async (req, res) => {
 
 // User Log In Page
 export const logInPage = async (req, res) => {
-  res.render(
-    'users/log_in',
-    getPageData(req, 'Log In', { headerClass: 'staff__header' })
-  )
+  res.render('users/log_in', getPageData(req, 'Log In', { headerClass: 'staff__header' }))
 }
 
 // User Sign Up Page
 export const signUpPage = async (req, res) => {
-  res.render(
-    'users/sign_up',
-    getPageData(req, 'Sign Up', { headerClass: 'staff__header' })
-  )
+  res.render('users/sign_up', getPageData(req, 'Sign Up', { headerClass: 'staff__header' }))
 }
 
 // User Forgot Password Page
@@ -196,8 +190,7 @@ export const newStockEntryPage = (req, res) => {
   const stockEntryId = req.params.id
   const mode = req.query.mode || ''
 
-  const isNew =
-    mode === 'new' ? 'Nhập Nguyên Liệu Mới' : 'Chi Tiết Nhập Nguyên Liệu'
+  const isNew = mode === 'new' ? 'Nhập Nguyên Liệu Mới' : 'Chi Tiết Nhập Nguyên Liệu'
   res.render(
     'inventory/stock_entry_detail',
     getPageData(req, isNew, 'New Stock Entry', {
@@ -513,6 +506,16 @@ export const revenuePage = async (req, res) => {
     getPageData(req, 'Quản lý doanh thu', 'Revenue', {
       headerClass: 'admin__header',
       pageTitle: 'QUẢN LÝ DOANH THU'
+    })
+  )
+}
+
+export const receivingAccountPage = async (req, res) => {
+  res.render(
+    'payment/receiving_account',
+    getPageData(req, 'Quản lý tài khoản ngân hàng', 'Receiving', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ NGÂN HÀNG'
     })
   )
 }

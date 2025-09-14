@@ -93,18 +93,10 @@ document.getElementById('tableGrid').addEventListener('click', async (e) => {
   // ===== Mang Về =====
   if (btnTable.hasAttribute('data-mang-ve')) {
     try {
-      const orderResult = await ajax(
-        '/api/orders',
-        { tableId: null, isTakeaway: true },
-        'POST'
-      )
+      const orderResult = await ajax('/api/orders', { tableId: null, isTakeaway: true }, 'POST')
 
       if (orderResult?.orderId) {
-        if (
-          orderResult.isNewOrder &&
-          !confirm('Bạn có muốn tạo order mang về không?')
-        )
-          return
+        if (orderResult.isNewOrder && !confirm('Bạn có muốn tạo order mang về không?')) return
         toastr.success('Order mang về đã được tạo thành công!')
         window.location.href = `/orders?orderId=${orderResult.orderId}`
       } else {
@@ -156,9 +148,9 @@ async function getTables() {
     const res = await ajax('/api/tables', {}, 'GET')
     if (Array.isArray(res?.tables)) {
       renderTableList(res.tables)
+      console.log(res.tables)
     } else {
-      document.getElementById('tableGrid').innerHTML =
-        `<div>Không có bàn nào.</div>`
+      document.getElementById('tableGrid').innerHTML = `<div>Không có bàn nào.</div>`
     }
   } catch (error) {
     console.error('Lỗi khi lấy danh sách bàn:', error)
@@ -186,9 +178,7 @@ function renderTableList(tables = []) {
       if (table.status === 'available') btnClass = 'btn-success'
       else if (table.status === 'occupied') btnClass = 'btn-danger'
 
-      const orderId = table.currentOrderId
-        ? table.currentOrderId.toString()
-        : ''
+      const orderId = table.currentOrderId ? table.currentOrderId._id.toString() : ''
 
       return `
       <button class="btn ${btnClass} m-1 table-button" style="min-width:110px;height:60px;font-weight:600;" 
@@ -225,8 +215,7 @@ function renderCategories(categories) {
     <button class="btn btn-outline-success" data-action="combo">Combo</button>
     ${categories
       .map(
-        (cate) =>
-          `<button class="btn btn-outline-primary" data-category="${cate}">${cate}</button>`
+        (cate) => `<button class="btn btn-outline-primary" data-category="${cate}">${cate}</button>`
       )
       .join('')}
   `
@@ -275,8 +264,7 @@ function renderMenu(items) {
             : '/uploads/' + item.image
       }
 
-      const name =
-        item.name || (item.isCombo ? 'Combo không rõ tên' : 'Không rõ tên')
+      const name = item.name || (item.isCombo ? 'Combo không rõ tên' : 'Không rõ tên')
       const price = typeof item.price === 'number' ? item.price : 0
       const priceFormatted = price.toLocaleString()
 
@@ -528,13 +516,10 @@ async function removeItemFromOrder(itemId, type) {
     return
   }
   try {
-    const res = await fetch(
-      `/api/orders/${orderId}/items/${itemId}?type=${type}`,
-      {
-        method: 'DELETE',
-        headers: { 'x-csrf-token': csrfToken }
-      }
-    )
+    const res = await fetch(`/api/orders/${orderId}/items/${itemId}?type=${type}`, {
+      method: 'DELETE',
+      headers: { 'x-csrf-token': csrfToken }
+    })
     const result = await res.json()
     if (!res.ok) {
       toastr.error(result.message || 'Lỗi khi xóa món')

@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const orderId = document.getElementById('orderIdInput').value
 
   function formatCurrency(num) {
-    return Number(num).toLocaleString('vi-VN', {
+    return Number(num || 0).toLocaleString('vi-VN', {
       style: 'currency',
       currency: 'VND'
     })
@@ -14,23 +14,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const order = await response.json()
 
-    const now = new Date()
-
     // Header
     document.getElementById('orderId').textContent = order._id
-    document.getElementById('orderDate').textContent = new Date(
-      order.createdAt
-    ).toLocaleString()
+    document.getElementById('orderDate').textContent = new Date(order.createdAt).toLocaleString()
 
     // Khách hàng và thu ngân
-    const customerName = order.customerName?.trim()
-    document.getElementById('customerName').textContent =
-      customerName || 'Khách lẻ'
+    const customerInfo = `${order.customerId?.name.trim()} - ${order.customerId?.phone.trim()}`
+    document.getElementById('customerInfo').textContent = customerInfo || 'Khách lẻ'
+
     const orderTypeEl = document.getElementById('orderType')
     if (order.isTakeaway) {
       orderTypeEl.textContent = 'Mang về'
-    } else if (order.tableId && order.tableId.name) {
-      orderTypeEl.textContent = `Bàn ${order.tableId.name} - ${order.tableId.area}`
+    } else if (order.tableId?.name) {
+      orderTypeEl.textContent = `Bàn ${order.tableId.name} - ${order.tableId.area || ''}`
     } else {
       orderTypeEl.textContent = 'Không xác định'
     }
@@ -38,10 +34,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Danh sách món ăn
     const itemsContainer = document.getElementById('orderItems')
     itemsContainer.innerHTML = ''
-
     order.items.forEach((item, index) => {
       const tr = document.createElement('tr')
-
       tr.innerHTML = `
         <td class="stt">${index + 1}</td>
         <td class="name">${item.foodId?.name || item.comboId?.name || 'Không rõ'}</td>
@@ -52,25 +46,36 @@ document.addEventListener('DOMContentLoaded', async () => {
       itemsContainer.appendChild(tr)
     })
 
-    document.getElementById('totalAmount').textContent = formatCurrency(
-      order.totalAmount
+    // Tổng giảm
+    const totalDiscount = (order.discount || 0) + (order.pointsDiscount || 0)
+
+    // Tổng tiền & giảm
+    document.getElementById('totalAmount').textContent = formatCurrency(order.totalAmount)
+    document.getElementById('discount').textContent = formatCurrency(order.discount)
+    document.getElementById('pointsDiscount').textContent = formatCurrency(order.pointsDiscount)
+    document.getElementById('totalDiscount').textContent = formatCurrency(totalDiscount)
+    document.getElementById('serviceCharge').textContent = formatCurrency(order.serviceCharge)
+
+    // VAT
+    const vatAmount = Math.round(
+      (order.totalAmount - totalDiscount + order.serviceCharge) * (order.vatRate / 100)
     )
-    document.getElementById('discount').textContent = formatCurrency(
-      order.discount
-    )
-    document.getElementById('serviceCharge').textContent = formatCurrency(
-      order.serviceCharge
-    )
-    const vatRate =
-      order.vatRate || document.getElementById('vatInput')?.value || 0
-    document.getElementById('vatAmount').textContent = vatRate + ' %'
+    const vatRateText = order.vatRate ? `${order.vatRate}%` : '0%'
+    document.getElementById('vatAmount').textContent =
+      `${vatRateText} (${formatCurrency(vatAmount)})`
+
+    // Thành tiền & khách trả
     document.getElementById('total').textContent = formatCurrency(order.total)
-    document.getElementById('customerPaid').textContent = formatCurrency(
-      order.customerPaid
-    )
-    document.getElementById('changeAmount').textContent = formatCurrency(
-      order.changeAmount
-    )
+    document.getElementById('customerPaid').textContent = formatCurrency(order.customerPaid)
+    document.getElementById('changeAmount').textContent = formatCurrency(order.changeAmount)
+
+    // Hiển thị QR nếu có
+    if (order.qrCode) {
+      const qrContainer = document.getElementById('qrCodeContainer')
+      qrContainer.innerHTML = `<img src="${order.qrCode}" alt="QR Code thanh toán" style="width:150px; height:150px;" />`
+    }
+
+    // In hóa đơn
     window.print()
   } catch (error) {
     console.error('Lỗi lấy dữ liệu đơn hàng:', error)
