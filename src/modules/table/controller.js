@@ -56,26 +56,32 @@ export const getTables = async (req, res) => {
       return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     }
 
-    // Lấy các query filter
     const { status, area } = req.query
 
-    // Tạo bộ lọc
-    const filter = {
-      organization: organizationId
-    }
-    if (status) {
-      filter.status = status
-    }
-    if (area) {
-      filter.area = new RegExp(`^${area}$`, 'i') // không phân biệt hoa thường
-    }
+    const filter = { organization: organizationId }
+    if (status) filter.status = status
+    if (area) filter.area = new RegExp(`^${area}$`, 'i')
 
-    // Lấy toàn bộ danh sách bàn theo filter (không phân trang)
-    const tables = await Table.find(filter).lean()
+    let tables = await Table.find(filter)
+      .populate({
+        path: 'currentOrderId',
+        populate: {
+          path: 'customerId',
+          model: 'Customer',
+          select: 'name phone totalPoints'
+        }
+      })
+      .lean()
 
-    responseHelper.success(res, {
-      tables
+    // Ép ObjectId về string + lấy tên khách
+    tables = tables.map((t) => {
+      if (t.currentOrderId?._id) {
+        t.currentOrderId._id = t.currentOrderId._id.toString()
+      }
+      return t
     })
+
+    responseHelper.success(res, { tables })
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -141,15 +147,16 @@ export const updateTable = async (req, res) => {
       updatedFields.checkInTime = checkInTime
     }
 
+    if (status === 'available') {
+      updatedFields.currentOrderId = null
+      updatedFields.checkInTime = null
+    }
+
     const updatedTable = await Table.findOneAndUpdate(
       { _id: id, organization: organizationId },
       updatedFields,
       { new: true }
     )
-
-    if (!updatedTable) {
-      return responseHelper.error(res, 'Cập nhật thất bại.', 400)
-    }
 
     responseHelper.success(res, updatedTable)
   } catch (error) {

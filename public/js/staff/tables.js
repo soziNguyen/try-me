@@ -28,7 +28,6 @@ function bindEvents() {
         capacity,
         area
       })
-      console.log(data.area)
       if (!data) return
       toastr.success('Thêm bàn thành công!')
       formAddTable.reset()
@@ -49,17 +48,16 @@ function bindEvents() {
 
       const card = btnAssign.closest('.table-card')
       const tableName = card.querySelector('h5').textContent.trim()
-      const capacityText = card
-        .querySelector('div:nth-child(3)')
-        .textContent.trim()
+      const capacityText = card.querySelector('div:nth-child(3)').textContent.trim()
       const areaText = card.querySelector('div:nth-child(4)').textContent.trim()
 
       // Gán thông tin vào modal
       document.getElementById('assign-table-question').textContent =
         `Bạn có chắc chắn muốn giao bàn "${tableName}" không?`
       document.getElementById('assign-table-name').textContent = tableName
-      document.getElementById('assign-table-capacity').textContent =
-        capacityText.replace('Số Lượng Người:', '').trim()
+      document.getElementById('assign-table-capacity').textContent = capacityText
+        .replace('Số Lượng Người:', '')
+        .trim()
       document.getElementById('assign-table-area').textContent = areaText
         .replace('Khu vực:', '')
         .trim()
@@ -67,69 +65,58 @@ function bindEvents() {
       // Reset input tên khách
       document.getElementById('customerNameInput').value = ''
       // Lưu ID bàn để xử lý sau khi xác nhận
-      const tableId = card
-        .querySelector('.tableCheckbox')
-        .getAttribute('data-id')
-      document
-        .getElementById('btnConfirmAssignTable')
-        .setAttribute('data-id', tableId)
+      const tableId = card.querySelector('.tableCheckbox').getAttribute('data-id')
+      document.getElementById('btnConfirmAssignTable').setAttribute('data-id', tableId)
 
       // Hiển thị modal
-      const assignModal = new bootstrap.Modal(
-        document.getElementById('assignTableModal')
-      )
+      const assignModal = new bootstrap.Modal(document.getElementById('assignTableModal'))
       assignModal.show()
     }
   })
 
   // Xác nhận giao bàn
-  document
-    .getElementById('btnConfirmAssignTable')
-    .addEventListener('click', async function () {
-      const tableId = this.getAttribute('data-id')
-      const area = document
-        .getElementById('assign-table-area')
-        .textContent.trim()
-      // Lấy tên khách từ input
-      const customerName = document
-        .getElementById('customerNameInput')
-        .value.trim()
+  document.getElementById('btnConfirmAssignTable').addEventListener('click', async function () {
+    const tableId = this.getAttribute('data-id')
+    const area = document.getElementById('assign-table-area').textContent.trim()
+    // Lấy tên khách từ input
+    const customerName = document.getElementById('customerNameInput').value.trim()
 
-      if (!tableId) {
-        toastr.warning('Không tìm thấy bàn để giao.')
+    const customerPhone = document.getElementById('customerPhoneInput').value.trim()
+
+    if (!tableId) {
+      toastr.warning('Không tìm thấy bàn để giao.')
+      return
+    }
+
+    try {
+      // Gửi dữ liệu bao gồm tableId và customerName lên API
+      const orderResult = await ajax(
+        '/api/orders',
+        { tableId, customerName, customerPhone },
+        'POST'
+      )
+
+      if (!orderResult || !orderResult.orderId) {
+        toastr.error('Lỗi khi tạo order')
         return
       }
 
-      try {
-        // Gửi dữ liệu bao gồm tableId và customerName lên API
-        const orderResult = await ajax(
-          '/api/orders',
-          { tableId, customerName },
-          'POST'
-        )
+      // Cập nhật danh sách bàn
+      await getTables(area === 'kv1' ? 'kv1' : 'kv2')
 
-        if (!orderResult || !orderResult.orderId) {
-          toastr.error('Lỗi khi tạo order')
-          return
-        }
-
-        // Cập nhật danh sách bàn
-        await getTables(area === 'kv1' ? 'kv1' : 'kv2')
-
-        // Ẩn modal
-        const assignModalElement = document.getElementById('assignTableModal')
-        if (assignModalElement) {
-          const assignModal =
-            bootstrap.Modal.getInstance(assignModalElement) ||
-            new bootstrap.Modal(assignModalElement)
-          assignModal.hide()
-        }
-
-        toastr.success('Giao bàn thành công!')
-      } catch (err) {
-        toastr.error('Lỗi khi giao bàn: ' + err.message)
+      // Ẩn modal
+      const assignModalElement = document.getElementById('assignTableModal')
+      if (assignModalElement) {
+        const assignModal =
+          bootstrap.Modal.getInstance(assignModalElement) || new bootstrap.Modal(assignModalElement)
+        assignModal.hide()
       }
-    })
+
+      toastr.success('Giao bàn thành công!')
+    } catch (err) {
+      toastr.error('Lỗi khi giao bàn: ' + err.message)
+    }
+  })
 
   // BTN gọi món (sử dụng event delegation)
   document.addEventListener('click', (e) => {
@@ -139,9 +126,7 @@ function bindEvents() {
       if (orderId) {
         window.location.href = `/orders?orderId=${orderId}`
       } else {
-        toastr.warning(
-          'Bàn chưa có hóa đơn, vui lòng giao bàn trước khi gọi món.'
-        )
+        toastr.warning('Bàn chưa có hóa đơn, vui lòng giao bàn trước khi gọi món.')
       }
     }
   })
@@ -208,11 +193,7 @@ function filterTables() {
     const area = (table.area || '').toLowerCase()
 
     // Lọc nếu tên hoặc trạng thái hoặc khu vực có chứa từ khóa
-    return (
-      name.includes(searchTerm) ||
-      status.includes(searchTerm) ||
-      area.includes(searchTerm)
-    )
+    return name.includes(searchTerm) || status.includes(searchTerm) || area.includes(searchTerm)
   })
 
   renderTableList(filteredTables)
@@ -241,13 +222,15 @@ function renderTableList(tables = []) {
     return
   }
 
+  console.log(tables)
+
   tableGrid.innerHTML = tables
     .map((table) => {
       const bgClass = getBgClassByStatus(table.status)
 
       // Nếu bàn đang occupied thì dùng giao diện mới
       if (table.status === 'occupied') {
-        const total = table.totalAmount || 0
+        const total = table.currentOrderId?.totalAmount || 0
         const formattedTotal = `${total.toLocaleString()}đ`
         return `
     <div class="col">
@@ -263,7 +246,7 @@ function renderTableList(tables = []) {
         </div>
 
         <div class="d-flex justify-content-between mt-1">
-          <div>Khách: ${table.customerName || 'Khách lẻ'}</div>
+          <div>Khách: ${table.currentOrderId?.customerId?.name || 'Khách lẻ'}</div>
           <div>
             <span class="seated-time" 
               data-checkin="${table.checkInTime}" 
@@ -278,7 +261,7 @@ function renderTableList(tables = []) {
         </div>
 
         <div class="d-flex justify-content-between gap-2 mt-4">
-          <button class="btnOrderFood btn btn-success btn-sm fw-bold shadow-sm" data-order-id="${table.currentOrderId}">
+          <button class="btnOrderFood btn btn-success btn-sm fw-bold shadow-sm" data-order-id="${table.currentOrderId?._id}">
             <i class="bi bi-clipboard-check me-1"></i> Thêm món
           </button>
           <button class="btnCheckout btn btn-primary btn-sm fw-bold shadow-sm" ">
@@ -300,9 +283,9 @@ function renderTableList(tables = []) {
           />
 
           <div class="text-center mt-4">
-            <h5 class="mb-3"> 👩‍🍳 ${table.name}</h5>
+            <h5 class="mb-3 fw-bold">${table.name}</h5>
             <div><strong>Trạng thái:</strong> Trống</div>
-            <div><strong>Số Lượng Người:</strong> ${table.capacity || '-'}</div>
+            <div><strong>Số người:</strong> ${table.capacity || '-'}</div>
             <div><strong>Khu vực:</strong> ${table.area || '-'}</div>
             <button class="btnAssignTable btn btn-warning btn-sm mt-2 fw-bold shadow-sm">
               <i class="bi bi-clock me-1"></i> Giao bàn
@@ -317,11 +300,7 @@ function renderTableList(tables = []) {
   // sự kiện click cho thẻ card
   document.querySelectorAll('.table-card').forEach((card) => {
     card.addEventListener('click', function (e) {
-      if (
-        e.target.classList.contains('tableCheckbox') ||
-        e.target.closest('button')
-      )
-        return
+      if (e.target.classList.contains('tableCheckbox') || e.target.closest('button')) return
 
       const tableId = this.querySelector('.tableCheckbox').dataset.id
       updateTable(tableId)
@@ -340,7 +319,6 @@ function fetchAndRenderTableList() {
   })
     .then((res) => res.json())
     .then((data) => {
-      console.log('Response data:', data)
       if (data.data && data.data.tables) {
         renderTableList(data.data.tables)
       } else {
@@ -439,11 +417,7 @@ async function updateTable(tableId) {
       }
 
       try {
-        const result = await ajax(
-          `/api/tables/update/${tableId}`,
-          dataUpdate,
-          'POST'
-        )
+        const result = await ajax(`/api/tables/update/${tableId}`, dataUpdate, 'POST')
         if (result) {
           toastr.success('Cập nhật thành công')
           updateTableModal.hide()
@@ -459,22 +433,18 @@ async function updateTable(tableId) {
 }
 
 // ========== DELETE ==========
-document
-  .getElementById('btnDeleteTable')
-  ?.addEventListener('click', deleteTables)
+document.getElementById('btnDeleteTable')?.addEventListener('click', deleteTables)
 async function deleteTables() {
-  const selectedTableIds = [
-    ...document.querySelectorAll('.tableCheckbox:checked')
-  ].map((cb) => cb.dataset.id)
+  const selectedTableIds = [...document.querySelectorAll('.tableCheckbox:checked')].map(
+    (cb) => cb.dataset.id
+  )
 
   if (selectedTableIds.length === 0) {
     toastr.warning('Vui lòng chọn ít nhất 1 bàn để xóa.')
     return
   }
 
-  const confirmDelete = confirm(
-    `Bạn có chắc chắn muốn xóa ${selectedTableIds.length} bàn này?`
-  )
+  const confirmDelete = confirm(`Bạn có chắc chắn muốn xóa ${selectedTableIds.length} bàn này?`)
   if (!confirmDelete) return
 
   try {

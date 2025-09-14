@@ -28,7 +28,10 @@ import shiftRoutes from '../modules/shift/route.js'
 import payrollRoutes from '../modules/payroll/route.js'
 import taxRoutes from '../modules/tax/route.js'
 import activityRoutes from '../modules/activity-logs/route.js'
+import paymentRoutes from '../modules/payment/route.js'
+import receivingAccountRoutes from '../modules/receiving-account/route.js'
 import uploadRouter from '../modules/upload/route.js'
+import pageRoute from '../pages/route.js'
 
 const router = express.Router()
 
@@ -81,7 +84,12 @@ const routes = [
   taxRoutes,
 
   // Activity
-  activityRoutes
+  activityRoutes,
+
+  // Payment Method
+  paymentRoutes,
+  pageRoute,
+  receivingAccountRoutes
 ]
 
 routes.forEach((route) => router.use('/', route))

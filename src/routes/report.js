@@ -35,6 +35,5 @@ router.get(
   isPermit('Admin', 'Org'),
   page.couponPage
 )
-router.get('/tax', isAuthenticated, isPermit('Admin', 'Org'), page.taxPage)
 
 export default router

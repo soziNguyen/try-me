@@ -6,7 +6,11 @@ const OrderSchema = new Schema(
   {
     tableId: { type: Schema.Types.ObjectId, ref: 'Table', required: false },
     isTakeaway: { type: Boolean, default: false },
-    customerName: { type: String, default: '' },
+    customerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Customer',
+      required: false
+    },
     status: {
       type: String,
       enum: ['open', 'completed', 'cancelled'],
@@ -22,20 +26,23 @@ const OrderSchema = new Schema(
     ],
     totalAmount: { type: Number, default: 0 }, // Tổng tiền gốc
     discount: { type: Number, default: 0 }, // Chiết khấu (nếu có)
+    pointsUsed: { type: Number, default: 0 }, // Số điểm khách dùng
+    pointsDiscount: { type: Number, default: 0 }, // Số tiền giảm theo điểm
     serviceCharge: { type: Number, default: 0 }, // Phí dịch vụ (nếu có)
     totalPayable: { type: Number, default: 0 }, // Tổng tiền trước thuế
     vatRate: { type: Number, default: 0 }, // VAT %
     total: { type: Number, default: 0 }, // Tổng cuối, phải trả
-    paymentMethod: {
-      type: String,
-      enum: ['cash', 'card', 'bank'],
+    paymentMethodId: {
+      type: Schema.Types.ObjectId,
+      ref: 'PaymentMethod',
       required: false
     },
     customerPaid: { type: Number, default: 0 }, // Tiền khách trả
     changeAmount: { type: Number, default: 0 }, // Tiền thừa
     createdAt: { type: Date, default: Date.now },
+    qrCode: { type: String, default: null },
     organization: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'Organization',
       required: true
     }

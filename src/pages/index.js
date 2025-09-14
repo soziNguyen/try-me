@@ -20,18 +20,12 @@ export const userPage = async (req, res) => {
 
 // User Log In Page
 export const logInPage = async (req, res) => {
-  res.render(
-    'users/log_in',
-    getPageData(req, 'Log In', { headerClass: 'staff__header' })
-  )
+  res.render('users/log_in', getPageData(req, 'Log In', { headerClass: 'staff__header' }))
 }
 
 // User Sign Up Page
 export const signUpPage = async (req, res) => {
-  res.render(
-    'users/sign_up',
-    getPageData(req, 'Sign Up', { headerClass: 'staff__header' })
-  )
+  res.render('users/sign_up', getPageData(req, 'Sign Up', { headerClass: 'staff__header' }))
 }
 
 // User Forgot Password Page
@@ -196,8 +190,7 @@ export const newStockEntryPage = (req, res) => {
   const stockEntryId = req.params.id
   const mode = req.query.mode || ''
 
-  const isNew =
-    mode === 'new' ? 'Nhập Nguyên Liệu Mới' : 'Chi Tiết Nhập Nguyên Liệu'
+  const isNew = mode === 'new' ? 'Nhập Nguyên Liệu Mới' : 'Chi Tiết Nhập Nguyên Liệu'
   res.render(
     'inventory/stock_entry_detail',
     getPageData(req, isNew, 'New Stock Entry', {
@@ -467,6 +460,16 @@ export const couponPage = async (req, res) => {
   )
 }
 
+export const paymentMethodPage = async (req, res) => {
+  res.render(
+    'payment/payment_method',
+    getPageData(req, 'Quản lý phương thức thanh toán', 'Payment Method', {
+      headerClass: 'admin__header',
+      pageTitle: 'PHƯƠNG THỨC THANH TOÁN'
+    })
+  )
+}
+
 export const taxPage = async (req, res) => {
   res.render(
     'tax/index',
@@ -483,6 +486,36 @@ export const activityLog = async (req, res) => {
     getPageData(req, 'Nhật ký hoạt động', 'ActivityLog', {
       headerClass: 'admin__header',
       pageTitle: 'NHẬT KÝ HOẠT ĐỘNG'
+    })
+  )
+}
+
+export const tableManagementPage = async (req, res) => {
+  res.render(
+    'admin/table',
+    getPageData(req, 'Quản lý bàn', 'Table Management', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ BÀN'
+    })
+  )
+}
+
+export const revenuePage = async (req, res) => {
+  res.render(
+    'admin/revenue',
+    getPageData(req, 'Quản lý doanh thu', 'Revenue', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ DOANH THU'
+    })
+  )
+}
+
+export const receivingAccountPage = async (req, res) => {
+  res.render(
+    'payment/receiving_account',
+    getPageData(req, 'Quản lý tài khoản ngân hàng', 'Receiving', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ NGÂN HÀNG'
     })
   )
 }

@@ -38,6 +38,7 @@ $orange-800: #9a3412;
       pointer-events: auto;
       z-index: 10;
       background-color: #fff;
+      width: 100%;
     }
   }
   .btn-select-table {
@@ -105,4 +106,9 @@ $orange-800: #9a3412;
       text-align: right;
     }
   }
+}
+
+.qr-code {
+  width: 150px;
+  height: 150px;
 }

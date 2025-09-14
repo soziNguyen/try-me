@@ -26,7 +26,6 @@ $(function () {
         data: 'status',
         className: 'p-2',
         render: (data, type, row) => {
-          console.log(row)
           if (type === 'display') {
             return data === 'SUCCESS'
               ? `<span class="bg-success text-white badge p-2">Thành công</span>`

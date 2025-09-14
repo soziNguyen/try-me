@@ -156,6 +156,13 @@
                   </div>
                 </li>
 
+                <li class="<%= page === 'Table Management' ? 'active' : '' %>">
+                  <a class="w-100" href="/table/lists">
+                    <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>
+                    <span>Quản lý Bàn</span>
+                  </a>
+                </li>
+
                 <!-- Reports Section -->
                 <% const inReports=['SalesReport','InventoryReport','StaffReport','TaxReport'].includes(page); %>
                   <li class="reports-accordion">
@@ -197,7 +204,38 @@
                     </div>
                   </li>
 
+                  <li class="methods-accordion">
+                    <div class="accordion" id="accordionReports">
+                      <div class="accordion-item">
+                        <h2 class="accordion-header">
+                          <button
+                            class="accordion-button <%= ['Payment Method', 'Receiving'].includes(page) ? 'active' : '' %> <%= ['Payment Method', 'Receiving'].includes(page) ? '' : 'collapsed' %>"
+                            type="button" data-bs-toggle="collapse" data-bs-target="#collapseMethods"
+                            aria-expanded="<%= ['Payment Method', 'Receiving'].includes(page) ? 'true' : 'false' %>" aria-controls="collapseMethods">
+                            <i class="las la-university text-danger me-2"></i>
+                            <span>Thông tin thanh toán</span>
+                          </button>
+                        </h2>
+                        <div id="collapseMethods" class="accordion-collapse collapse <%= ['Payment Method', 'Receiving'].includes(page) ? 'show' : '' %>"
+                          data-bs-parent="#accordionMethods">
+                          <div class="accordion-body">
+                            <a class="<%= page === 'Payment Method' ? 'accordion-active' : '' %>" href="/payment-methods">
+                              <i class="bi bi-wallet2 text-white-emphasis me-2"></i>
+                              <span>Phương thức thanh toán</span>
+                            </a>
+                            <a class="<%= page === 'Receiving' ? 'accordion-active' : '' %>"
+                              href="/receiving-accounts">
+                              <i class="bi bi-bank text-info me-2"></i>
+                              <span>Ngân hàng</span>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+
                   <!-- Other Features -->
+
                   <li class="<%= page === 'Tax' ? 'active' : '' %>">
                     <a class="w-100" href="/tax">
                       <i class="bi bi-file-earmark-text text-danger-emphasis me-2"></i>
