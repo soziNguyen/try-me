@@ -16,8 +16,7 @@ export const createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const exist = await User.findOne({
       organization: organizationId,
@@ -25,11 +24,7 @@ export const createUser = async (req, res) => {
     })
 
     if (exist) {
-      return responseHelper.error(
-        res,
-        'Tên đăng nhập hoặc email đã tồn tại.',
-        400
-      )
+      return responseHelper.error(res, 'Tên đăng nhập hoặc email đã tồn tại.', 400)
     }
     const newUser = await User.create({
       username,
@@ -54,8 +49,7 @@ export const getUsers = async (req, res) => {
   try {
     const { s } = req.query
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const filter = { organization: organizationId }
     if (s) {
@@ -80,7 +74,7 @@ export const getUserById = async (req, res) => {
   const organizationId = getCurrentOrg(req)
 
   try {
-    let query = { _id: id }
+    const query = { _id: id }
 
     if (req.user.role !== 'Admin') {
       if (!organizationId) {
@@ -108,8 +102,7 @@ export const getUserById = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     const { username, email, password, confirmPassword, role } = req.body
     const { id } = req.params
 
@@ -165,24 +158,15 @@ export const updateUser = async (req, res) => {
 export const deleteUsers = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const { userIds } = req.body
     if (!userIds || userIds.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có người dùng nào được chọn để xóa',
-        400
-      )
+      return responseHelper.error(res, 'Không có người dùng nào được chọn để xóa', 400)
     }
 
     if (userIds.includes(req.user._id.toString())) {
-      return responseHelper.error(
-        res,
-        'Bạn không thể xóa tài khoản của chính mình',
-        400
-      )
+      return responseHelper.error(res, 'Bạn không thể xóa tài khoản của chính mình', 400)
     }
 
     const result = await User.deleteMany({
@@ -191,11 +175,7 @@ export const deleteUsers = async (req, res) => {
     })
 
     if (result.deletedCount === 0) {
-      return responseHelper.error(
-        res,
-        'Không có người dùng nào được chọn để xóa ',
-        404
-      )
+      return responseHelper.error(res, 'Không có người dùng nào được chọn để xóa ', 404)
     }
     responseHelper.success(res, 'Xóa thành công')
   } catch (error) {
@@ -238,9 +218,7 @@ export const logIn = async (req, res, next) => {
       if (err) return next(err)
 
       // Remember me
-      req.session.cookie.maxAge = req.body?.remember
-        ? 30 * 24 * 60 * 60 * 1000
-        : false
+      req.session.cookie.maxAge = req.body?.remember ? 30 * 24 * 60 * 60 * 1000 : false
 
       try {
         if ((user.role || '').toLowerCase() === 'member') {
@@ -305,10 +283,7 @@ export const logIn = async (req, res, next) => {
             })
           } else {
             // Update status nếu đang absent/late
-            if (
-              attendance.status !== statusForDay &&
-              attendance.status !== 'leave'
-            ) {
+            if (attendance.status !== statusForDay && attendance.status !== 'leave') {
               attendance.status = statusForDay
               await attendance.save()
             }
@@ -460,11 +435,7 @@ export const forgotPassword = async (req, res) => {
                 <p>Click <a href="${resetLink}"><i>here</i></a> to reset your password</p>
             `
     })
-    responseHelper.success(
-      res,
-      '1',
-      'A password reset link has been sent to your email.'
-    )
+    responseHelper.success(res, '1', 'A password reset link has been sent to your email.')
   } catch (error) {
     responseHelper.error(res, error.message)
   }

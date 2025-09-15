@@ -6,8 +6,7 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 export const getActiveWarehouses = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const warehouses = await Warehouse.aggregate([
       {
@@ -36,8 +35,7 @@ export const getWareHouses = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // Base pipeline with manager lookup
     const pipeline = [
@@ -51,11 +49,7 @@ export const getWareHouses = async (req, res) => {
       const andConditions = tokens.map((token) => {
         const regex = { $regex: token, $options: 'i' }
         return {
-          $or: [
-            { name: regex },
-            { location: regex },
-            { 'manager.username': regex }
-          ]
+          $or: [{ name: regex }, { location: regex }, { 'manager.username': regex }]
         }
       })
       pipeline.push({ $match: { $and: andConditions } })
@@ -130,8 +124,7 @@ export const getWareHouses = async (req, res) => {
 export const createWareHouse = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const data = {
       ...req.body,
@@ -153,8 +146,7 @@ export const updateWareHouse = async (req, res) => {
     const { name, location, manager, isActive } = req.body
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const warehouse = await Warehouse.findOne({
       _id: id,
@@ -214,15 +206,10 @@ export const deleteWarehouses = async (req, res) => {
   try {
     const { ids } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có nhà kho nào được chọn để xóa',
-        400
-      )
+      return responseHelper.error(res, 'Không có nhà kho nào được chọn để xóa', 400)
     }
 
     const result = await Warehouse.updateMany(
@@ -241,17 +228,10 @@ export const restoreWarehouses = async (req, res) => {
     const { ids } = req.body
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có nhà kho nào được chọn để khôi phục',
-        400
-      )
+      return responseHelper.error(res, 'Không có nhà kho nào được chọn để khôi phục', 400)
     }
 
-    await Warehouse.updateMany(
-      { _id: { $in: ids } },
-      { $set: { status: 'active' } }
-    )
+    await Warehouse.updateMany({ _id: { $in: ids } }, { $set: { status: 'active' } })
     responseHelper.success(res, 'Khôi phục thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -262,15 +242,10 @@ export const forceDeleteWareHouses = async (req, res) => {
   try {
     const { ids } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có nhà kho nào được chọn để xóa',
-        400
-      )
+      return responseHelper.error(res, 'Không có nhà kho nào được chọn để xóa', 400)
     }
 
     const result = await Warehouse.deleteMany({

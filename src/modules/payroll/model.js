@@ -30,10 +30,7 @@ const payrollSchema = new mongoose.Schema(
   }
 )
 
-payrollSchema.index(
-  { organization: 1, user: 1, year: 1, month: 1 },
-  { unique: true }
-)
+payrollSchema.index({ organization: 1, user: 1, year: 1, month: 1 }, { unique: true })
 payrollSchema.index({ organization: 1, createdAt: -1 })
 payrollSchema.index({ organization: 1, year: 1, month: 1 })
 

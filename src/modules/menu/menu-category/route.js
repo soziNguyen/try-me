@@ -17,12 +17,7 @@ router.get(
   isPermit('Admin', 'Org'),
   getActiveMenuCategory
 )
-router.get(
-  '/api/menu/category/',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  getMenuCategory
-)
+router.get('/api/menu/category/', isAuthenticated, isPermit('Admin', 'Org'), getMenuCategory)
 router.post(
   '/api/menu/category/create',
   isAuthenticated,

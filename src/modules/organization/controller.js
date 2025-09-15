@@ -36,15 +36,13 @@ export const createOrganization = async (req, res) => {
         $or: [{ email: cleanOrgEmail }, { phone: orgPhone }]
       }).session(session)
 
-      if (existingOrg)
-        throw new Error('Tổ chức với email hoặc số điện thoại này đã tồn tại.')
+      if (existingOrg) throw new Error('Tổ chức với email hoặc số điện thoại này đã tồn tại.')
 
       const existingUserEmail = await User.findOne({
         email: cleanAdminEmail
       }).session(session)
 
-      if (existingUserEmail)
-        throw new Error('Email quản trị viên đã tồn tại trong hệ thống.')
+      if (existingUserEmail) throw new Error('Email quản trị viên đã tồn tại trong hệ thống.')
 
       // Tạo organization
       const organization = new Organization({
@@ -80,22 +78,14 @@ export const createOrganization = async (req, res) => {
       }
     }
 
-    responseHelper.success(
-      res,
-      responseData,
-      'Tổ chức và quản trị viên đã được tạo thành công'
-    )
+    responseHelper.success(res, responseData, 'Tổ chức và quản trị viên đã được tạo thành công')
   } catch (error) {
     if (error.code === 11000) {
       if (error.keyPattern?.email) {
         return responseHelper.error(res, 'Email đã tồn tại', 400)
       }
       if (error.keyPattern?.username) {
-        return responseHelper.error(
-          res,
-          'Tên đăng nhập đã tồn tại trong tổ chức',
-          400
-        )
+        return responseHelper.error(res, 'Tên đăng nhập đã tồn tại trong tổ chức', 400)
       }
     }
     responseHelper.error(res, error.message)
@@ -108,11 +98,7 @@ export const getActiveOrganizations = async (req, res) => {
       createdAt: -1
     })
 
-    responseHelper.success(
-      res,
-      organizations,
-      'Lấy danh sách tổ chức thành công'
-    )
+    responseHelper.success(res, organizations, 'Lấy danh sách tổ chức thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -152,11 +138,7 @@ export const getAllOrganizations = async (req, res) => {
     sortObj[sortField] = sortDir
 
     // Lấy dữ liệu với paginate + sort
-    const data = await Organization.find(filter)
-      .sort(sortObj)
-      .skip(start)
-      .limit(length)
-      .lean()
+    const data = await Organization.find(filter).sort(sortObj).skip(start).limit(length).lean()
 
     const cleanData = data.map((row) => ({
       name: row.name || '',
@@ -204,8 +186,7 @@ export const updateOrg = async (req, res) => {
     if (!id) return responseHelper.error(res, 'Id không hợp lệ', 400)
 
     const organization = await Organization.findById(id)
-    if (!organization)
-      return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
+    if (!organization) return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
 
     // VALIDATE PHONE
     let processedPhone = phone
@@ -229,11 +210,7 @@ export const updateOrg = async (req, res) => {
     })
 
     if (existing)
-      return responseHelper.error(
-        res,
-        'Tổ chức với email hoặc số điện thoại đã tồn tại',
-        400
-      )
+      return responseHelper.error(res, 'Tổ chức với email hoặc số điện thoại đã tồn tại', 400)
 
     const data = {}
     if (name !== undefined) data.name = name
@@ -253,9 +230,7 @@ export const updateOrg = async (req, res) => {
       ...updated.toObject(),
       phoneDisplay: {
         local: updated.phone ? displayPhoneNumber(updated.phone, false) : null, // 0987 654 321
-        international: updated.phone
-          ? displayPhoneNumber(updated.phone, true)
-          : null, // +84 987 654 321
+        international: updated.phone ? displayPhoneNumber(updated.phone, true) : null, // +84 987 654 321
         raw: `+${updated.phone}`, // 84987654321
         type: updated.phone ? getPhoneType(updated.phone) : null // mobile/landline
       }
@@ -294,8 +269,7 @@ export const getOrgDashboard = async (req, res) => {
 
     if (
       req.user.role === 'Admin' ||
-      (req.user.role === 'Org' &&
-        String(req.user.organization) === String(orgId))
+      (req.user.role === 'Org' && String(req.user.organization) === String(orgId))
     ) {
       return res.render(
         'users/org_dashboard',

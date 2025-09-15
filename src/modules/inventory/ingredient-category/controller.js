@@ -5,8 +5,7 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 export const getIngredientCategories = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     const data = await IngredientCategory.find({ organization: organizationId })
       .populate('createdBy', 'username -_id')
       .populate('updatedBy', 'username -_id')
@@ -20,8 +19,7 @@ export const getIngredientCategories = async (req, res) => {
 export const createInredientCategory = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!req.user || !req.user._id) {
       return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
@@ -52,8 +50,7 @@ export const updateIngredientCategory = async (req, res) => {
     const { name, description } = req.body
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const ingredientCate = await IngredientCategory.findOne({
       _id: id,
@@ -69,11 +66,7 @@ export const updateIngredientCategory = async (req, res) => {
       organization: organizationId
     })
     if (existing) {
-      return responseHelper.error(
-        res,
-        'Tên danh mục nguyên liệu đã tồn tại',
-        400
-      )
+      return responseHelper.error(res, 'Tên danh mục nguyên liệu đã tồn tại', 400)
     }
     const data = await IngredientCategory.findOneAndUpdate(
       { _id: id, organization: organizationId },
@@ -93,15 +86,10 @@ export const deleteIngredientCategories = async (req, res) => {
     const { ids } = req.body
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có danh mục nào được chọn để xóa',
-        400
-      )
+      return responseHelper.error(res, 'Không có danh mục nào được chọn để xóa', 400)
     }
 
     const result = await IngredientCategory.deleteMany({

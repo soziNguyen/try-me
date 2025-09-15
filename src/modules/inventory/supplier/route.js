@@ -17,12 +17,7 @@ router.get(
   isPermit('Admin', 'Org'),
   getAllSuppliers
 )
-router.get(
-  '/api/inventory/suppliers',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  getSuppliers
-)
+router.get('/api/inventory/suppliers', isAuthenticated, isPermit('Admin', 'Org'), getSuppliers)
 router.post(
   '/api/inventory/supplier/create',
   isAuthenticated,

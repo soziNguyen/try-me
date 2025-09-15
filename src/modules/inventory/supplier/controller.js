@@ -6,8 +6,7 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 export const getAllSuppliers = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const suppliers = await Supplier.find({
       isActive: true,
@@ -31,20 +30,10 @@ export const getSuppliers = async (req, res) => {
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
-    const fieldToSearch = [
-      'code',
-      'name',
-      'phone',
-      'email',
-      'country',
-      'address',
-      'taxId',
-      'note'
-    ]
+    const fieldToSearch = ['code', 'name', 'phone', 'email', 'country', 'address', 'taxId', 'note']
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const pipeline = [
       { $match: { organization: organizationId } },
@@ -106,8 +95,7 @@ export const getSuppliers = async (req, res) => {
 export const createSupplier = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const data = {
       ...req.body,
@@ -125,21 +113,10 @@ export const createSupplier = async (req, res) => {
 export const updateSupplier = async (req, res) => {
   try {
     const { id } = req.params
-    const {
-      code,
-      name,
-      phone,
-      email,
-      country,
-      address,
-      taxId,
-      isActive,
-      note
-    } = req.body
+    const { code, name, phone, email, country, address, taxId, isActive, note } = req.body
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const supplier = await Supplier.findOne({
       _id: id,
@@ -161,11 +138,7 @@ export const updateSupplier = async (req, res) => {
       })
 
       if (existing) {
-        return responseHelper.error(
-          res,
-          'Mã hoặc tên khách hàng đã tồn tại',
-          400
-        )
+        return responseHelper.error(res, 'Mã hoặc tên khách hàng đã tồn tại', 400)
       }
     }
 
@@ -198,17 +171,10 @@ export const deleteSuppliers = async (req, res) => {
     const { ids } = req.body
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có nhà cung cấp nào được chọn để xóa',
-        400
-      )
+      return responseHelper.error(res, 'Không có nhà cung cấp nào được chọn để xóa', 400)
     }
 
-    const result = await Supplier.updateMany(
-      { _id: { $in: ids } },
-      { $set: { isActive: false } }
-    )
+    const result = await Supplier.updateMany({ _id: { $in: ids } }, { $set: { isActive: false } })
 
     responseHelper.success(res, result.modifiedCount, 'Xóa thành công')
   } catch (error) {
@@ -219,10 +185,7 @@ export const deleteSuppliers = async (req, res) => {
 export const restoreSuppliers = async (req, res) => {
   try {
     const { ids } = req.body
-    await Supplier.updateMany(
-      { _id: { $in: ids } },
-      { $set: { isActive: true } }
-    )
+    await Supplier.updateMany({ _id: { $in: ids } }, { $set: { isActive: true } })
     responseHelper.success(res, 'Khôi phục thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -233,15 +196,10 @@ export const forceDeleteSuppliers = async (req, res) => {
   try {
     const { ids } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có nhà cung cấp nào được chọn để xóa',
-        400
-      )
+      return responseHelper.error(res, 'Không có nhà cung cấp nào được chọn để xóa', 400)
     }
 
     const result = await Supplier.deleteMany({
@@ -249,11 +207,7 @@ export const forceDeleteSuppliers = async (req, res) => {
       organization: organizationId
     })
 
-    responseHelper.success(
-      res,
-      result.deletedCount,
-      'Đã xóa vĩnh viễn các nhà cung cấp thành công'
-    )
+    responseHelper.success(res, result.deletedCount, 'Đã xóa vĩnh viễn các nhà cung cấp thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }

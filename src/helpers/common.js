@@ -60,8 +60,7 @@ export function getCreatedAt() {
   const dd = String(today.getDate()).padStart(2, '0')
   const mm = String(today.getMonth() + 1).padStart(2, '0') //January is 0!
   const yyyy = today.getFullYear()
-  const created_at =
-    yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + minutes + ':00'
+  const created_at = yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + minutes + ':00'
   return created_at
 }
 
@@ -86,8 +85,7 @@ export function formatPhoneNumber(phone) {
 
 export function makeid(length) {
   let text = ''
-  const possible =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
   for (let i = 0; i < length; i++)
     text += possible.charAt(Math.floor(Math.random() * possible.length))
@@ -124,11 +122,7 @@ export function serialize(obj) {
  * Mã hóa base64 với việc thay đổi các ký tự để phù hợp với URL và loại bỏ các ký tự = ở cuối
  */
 export function base64UrlEncode(str) {
-  return str
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '')
+  return str.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 /**
  * Generate a random salt
@@ -179,9 +173,7 @@ export const parseNumberField = (value, defaultValue = 0) => {
 }
 
 export const parseStringField = (value) => {
-  return typeof value === 'string' && value.trim() !== ''
-    ? value.trim()
-    : undefined
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : undefined
 }
 
 export const normalizeValue = (val) => {

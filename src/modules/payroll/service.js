@@ -1,13 +1,7 @@
 import Attendance from '../attendance/model.js'
 import Payroll from './model.js'
 
-export async function generatePayroll(
-  orgId,
-  userId,
-  year,
-  month,
-  hourlyRate = 50000
-) {
+export async function generatePayroll(orgId, userId, year, month, hourlyRate = 50000) {
   const start = new Date(year, month - 1, 1)
   const end = new Date(year, month, 0, 23, 59, 59)
 

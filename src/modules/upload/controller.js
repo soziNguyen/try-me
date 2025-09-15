@@ -26,9 +26,7 @@ const uploadFile = (req, res) => {
 
     res.json({
       success: true,
-      message: fileInfo.isImage
-        ? 'Upload và nén ảnh thành công'
-        : 'Upload file thành công',
+      message: fileInfo.isImage ? 'Upload và nén ảnh thành công' : 'Upload file thành công',
       file: fileInfo
     })
   } catch (error) {

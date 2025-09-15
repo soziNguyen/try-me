@@ -17,12 +17,7 @@ router.get(
   isPermit('Admin', 'Org'),
   getActiveWarehouses
 )
-router.get(
-  '/api/inventory/warehouses',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  getWareHouses
-)
+router.get('/api/inventory/warehouses', isAuthenticated, isPermit('Admin', 'Org'), getWareHouses)
 router.post(
   '/api/inventory/warehouse/create',
   isAuthenticated,

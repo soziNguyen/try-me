@@ -15,11 +15,7 @@ export function lookupUser(field) {
 }
 
 export function lookupRef(field, from, options = {}) {
-  const {
-    as = field,
-    unwind = true,
-    preserveNullAndEmptyArrays = true
-  } = options
+  const { as = field, unwind = true, preserveNullAndEmptyArrays = true } = options
 
   const stages = [
     {

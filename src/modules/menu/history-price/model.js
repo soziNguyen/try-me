@@ -23,8 +23,5 @@ const menuPriceHistorySchema = new mongoose.Schema(
   }
 )
 
-const MenuPriceHistory = mongoose.model(
-  'MenuPriceHistory',
-  menuPriceHistorySchema
-)
+const MenuPriceHistory = mongoose.model('MenuPriceHistory', menuPriceHistorySchema)
 export { MenuPriceHistory }

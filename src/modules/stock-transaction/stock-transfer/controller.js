@@ -22,8 +22,7 @@ export const getStockTransfers = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const baseMatch = { organization: organizationId }
 
@@ -151,8 +150,7 @@ export const getStockTransferById = async (req, res) => {
     }
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const stockTransfer = await StockTransfer.findOne({
       _id: id,
@@ -170,11 +168,7 @@ export const getStockTransferById = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy phiếu chuyển kho', 404)
     }
 
-    responseHelper.success(
-      res,
-      stockTransfer,
-      'Lấy thông tin phiếu chuyển kho thành công'
-    )
+    responseHelper.success(res, stockTransfer, 'Lấy thông tin phiếu chuyển kho thành công')
   } catch (err) {
     responseHelper.error(res, err.message)
   }
@@ -184,8 +178,7 @@ export const getStockTransferById = async (req, res) => {
 export const createStockTransfer = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     const transfer = await withTransaction(async (session) => {
       const code = await generateDocumentCode(StockTransfer, 'ST')
       const date = new Date()
@@ -218,8 +211,7 @@ export const updateStockTransferFromForm = async (req, res) => {
       }
 
       const organizationId = getCurrentOrg(req)
-      if (!organizationId)
-        return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+      if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
       // Lấy phiếu chuyển kho cũ
       const oldTransfer = await StockTransfer.findOne({
@@ -238,11 +230,7 @@ export const updateStockTransferFromForm = async (req, res) => {
       const newItems = await Promise.all(
         rawItems
           .filter(
-            (item) =>
-              item.ingredient &&
-              item.fromWarehouse &&
-              item.toWarehouse &&
-              item.quantity > 0
+            (item) => item.ingredient && item.fromWarehouse && item.toWarehouse && item.quantity > 0
           )
           .map(async (item) => {
             const quantity = parseFloat(item.quantity) || 0
@@ -271,12 +259,9 @@ export const updateStockTransferFromForm = async (req, res) => {
               }).session(session)
             ])
 
-            if (!ingredient)
-              throw new Error(`Nguyên liệu không tồn tại: ${item.ingredient}`)
-            if (!fromWarehouse)
-              throw new Error(`Kho nguồn không tồn tại: ${item.fromWarehouse}`)
-            if (!toWarehouse)
-              throw new Error(`Kho đích không tồn tại: ${item.toWarehouse}`)
+            if (!ingredient) throw new Error(`Nguyên liệu không tồn tại: ${item.ingredient}`)
+            if (!fromWarehouse) throw new Error(`Kho nguồn không tồn tại: ${item.fromWarehouse}`)
+            if (!toWarehouse) throw new Error(`Kho đích không tồn tại: ${item.toWarehouse}`)
 
             return {
               ingredient: item.ingredient,
@@ -306,15 +291,9 @@ export const updateStockTransferFromForm = async (req, res) => {
           const toKey = `${oldItem.ingredient}_${oldItem.toWarehouse}`
 
           // Hoàn tác: Cộng lại vào kho nguồn
-          stockChanges.set(
-            fromKey,
-            (stockChanges.get(fromKey) || 0) + Math.abs(oldItem.quantity)
-          )
+          stockChanges.set(fromKey, (stockChanges.get(fromKey) || 0) + Math.abs(oldItem.quantity))
           // Hoàn tác: Trừ khỏi kho đích
-          stockChanges.set(
-            toKey,
-            (stockChanges.get(toKey) || 0) - Math.abs(oldItem.quantity)
-          )
+          stockChanges.set(toKey, (stockChanges.get(toKey) || 0) - Math.abs(oldItem.quantity))
         }
       }
 
@@ -324,15 +303,9 @@ export const updateStockTransferFromForm = async (req, res) => {
         const toKey = `${newItem.ingredient}_${newItem.toWarehouse}`
 
         // Trừ từ kho nguồn
-        stockChanges.set(
-          fromKey,
-          (stockChanges.get(fromKey) || 0) - Math.abs(newItem.quantity)
-        )
+        stockChanges.set(fromKey, (stockChanges.get(fromKey) || 0) - Math.abs(newItem.quantity))
         // Cộng vào kho đích
-        stockChanges.set(
-          toKey,
-          (stockChanges.get(toKey) || 0) + Math.abs(newItem.quantity)
-        )
+        stockChanges.set(toKey, (stockChanges.get(toKey) || 0) + Math.abs(newItem.quantity))
       }
 
       // KIỂM TRA tồn kho có đủ cho tất cả thay đổi
@@ -482,11 +455,7 @@ export const updateStockTransferFromForm = async (req, res) => {
       return updatedTransfer
     })
 
-    responseHelper.success(
-      res,
-      updatedDoc,
-      'Cập nhật phiếu chuyển kho thành công'
-    )
+    responseHelper.success(res, updatedDoc, 'Cập nhật phiếu chuyển kho thành công')
   } catch (err) {
     responseHelper.error(res, err.message)
   }
@@ -496,8 +465,7 @@ export const updateStockTransferFromForm = async (req, res) => {
 export const deleteStockTransfers = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     await withTransaction(async (session) => {
       const { ids } = req.body
@@ -533,9 +501,7 @@ export const deleteStockTransfers = async (req, res) => {
       const lockedTransfers = transfers.filter((t) => t.isLocked)
       if (lockedTransfers.length > 0) {
         const lockedCodes = lockedTransfers.map((t) => t.code).join(', ')
-        throw new Error(
-          `Các phiếu chuyển kho sau đã bị khóa, không thể xóa: ${lockedCodes}`
-        )
+        throw new Error(`Các phiếu chuyển kho sau đã bị khóa, không thể xóa: ${lockedCodes}`)
       }
 
       // TÍNH TOÁN THAY ĐỔI TỒN KHO (hoàn tác tất cả transfers)
@@ -544,12 +510,7 @@ export const deleteStockTransfers = async (req, res) => {
 
       for (const transfer of transfers) {
         for (const item of transfer.items) {
-          if (
-            !item.ingredient ||
-            !item.quantity ||
-            !item.fromWarehouse ||
-            !item.toWarehouse
-          ) {
+          if (!item.ingredient || !item.quantity || !item.fromWarehouse || !item.toWarehouse) {
             continue
           }
 
@@ -571,10 +532,7 @@ export const deleteStockTransfers = async (req, res) => {
           const toKey = `${ingredientId}_${toWarehouseId}`
 
           // HOÀN TÁC: Cộng lại vào kho nguồn (vì trước đó đã trừ đi)
-          stockChanges.set(
-            fromKey,
-            (stockChanges.get(fromKey) || 0) + absQuantity
-          )
+          stockChanges.set(fromKey, (stockChanges.get(fromKey) || 0) + absQuantity)
 
           // HOÀN TÁC: Trừ khỏi kho đích (vì trước đó đã cộng vào)
           stockChanges.set(toKey, (stockChanges.get(toKey) || 0) - absQuantity)
@@ -623,9 +581,7 @@ export const deleteStockTransfers = async (req, res) => {
 
           const ingredientName = ingredientInfo?.ingredient?.name || 'Unknown'
           const warehouseName =
-            warehouseInfo?.fromWarehouse?.name ||
-            warehouseInfo?.toWarehouse?.name ||
-            'Unknown'
+            warehouseInfo?.fromWarehouse?.name || warehouseInfo?.toWarehouse?.name || 'Unknown'
 
           validationErrors.push(
             `Không thể hoàn tác: Nguyên liệu "${ingredientName}" ` +
@@ -636,9 +592,7 @@ export const deleteStockTransfers = async (req, res) => {
       }
 
       if (validationErrors.length > 0) {
-        throw new Error(
-          `Không thể xóa do các xung đột tồn kho:\n${validationErrors.join('\n')}`
-        )
+        throw new Error(`Không thể xóa do các xung đột tồn kho:\n${validationErrors.join('\n')}`)
       }
 
       // ÁP DỤNG THAY ĐỔI TỒN KHO
@@ -665,32 +619,30 @@ export const deleteStockTransfers = async (req, res) => {
       await Promise.all(stockUpdatePromises)
 
       // CẬP NHẬT TỔNG TỒN KHO TRONG INGREDIENT
-      const ingredientUpdatePromises = Array.from(affectedIngredients).map(
-        async (ingredientId) => {
-          const totalStockAgg = await IngredientStock.aggregate([
-            {
-              $match: {
-                ingredient: new mongoose.Types.ObjectId(String(ingredientId)),
-                organization: organizationId
-              }
-            },
-            { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
-          ]).session(session)
+      const ingredientUpdatePromises = Array.from(affectedIngredients).map(async (ingredientId) => {
+        const totalStockAgg = await IngredientStock.aggregate([
+          {
+            $match: {
+              ingredient: new mongoose.Types.ObjectId(String(ingredientId)),
+              organization: organizationId
+            }
+          },
+          { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
+        ]).session(session)
 
-          const totalStock = Math.max(0, totalStockAgg[0]?.totalQuantity || 0)
+        const totalStock = Math.max(0, totalStockAgg[0]?.totalQuantity || 0)
 
-          return Ingredient.updateOne(
-            { _id: ingredientId, organization: organizationId },
-            {
-              $set: {
-                stock: totalStock,
-                updatedAt: new Date()
-              }
-            },
-            { session }
-          )
-        }
-      )
+        return Ingredient.updateOne(
+          { _id: ingredientId, organization: organizationId },
+          {
+            $set: {
+              stock: totalStock,
+              updatedAt: new Date()
+            }
+          },
+          { session }
+        )
+      })
 
       await Promise.all(ingredientUpdatePromises)
 
@@ -731,8 +683,7 @@ export const lockStockTransfer = async (req, res) => {
     }
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const transfer = await StockTransfer.findOne({
       _id: id,
@@ -743,44 +694,24 @@ export const lockStockTransfer = async (req, res) => {
     }
 
     if (transfer.isLocked) {
-      return responseHelper.error(
-        res,
-        'Phiếu chuyển kho đã được khóa trước đó',
-        400
-      )
+      return responseHelper.error(res, 'Phiếu chuyển kho đã được khóa trước đó', 400)
     }
 
     if (!transfer.items || transfer.items.length === 0) {
-      return responseHelper.error(
-        res,
-        'Phiếu chuyển kho không có sản phẩm nào',
-        400
-      )
+      return responseHelper.error(res, 'Phiếu chuyển kho không có sản phẩm nào', 400)
     }
 
     // Validate items
     for (const item of transfer.items) {
       if (!item.ingredient) {
-        return responseHelper.error(
-          res,
-          'Có sản phẩm thiếu thông tin ingredient',
-          400
-        )
+        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin ingredient', 400)
       }
       const qty = Number(item.quantity)
       if (!Number.isFinite(qty) || qty <= 0) {
-        return responseHelper.error(
-          res,
-          'Có sản phẩm với số lượng không hợp lệ',
-          400
-        )
+        return responseHelper.error(res, 'Có sản phẩm với số lượng không hợp lệ', 400)
       }
       if (!item.fromWarehouse || !item.toWarehouse) {
-        return responseHelper.error(
-          res,
-          'Có sản phẩm thiếu thông tin kho xuất hoặc kho nhận',
-          400
-        )
+        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin kho xuất hoặc kho nhận', 400)
       }
     }
 
@@ -824,9 +755,7 @@ export const lockStockTransfer = async (req, res) => {
         totalQuantity: itemsSummary.reduce((sum, i) => sum + i.quantity, 0),
         items: itemsSummary,
         reason: 'Stock transfer locked',
-        note: transfer.note
-          ? `${transfer.note} (Locked)`
-          : 'Stock transfer locked',
+        note: transfer.note ? `${transfer.note} (Locked)` : 'Stock transfer locked',
         transactionDate: transfer.date || new Date(),
         createdBy: req.user._id,
         updatedBy: null,
@@ -846,15 +775,8 @@ export const lockStockTransfer = async (req, res) => {
       .populate('items.fromWarehouse', 'name code')
       .populate('items.toWarehouse', 'name code')
 
-    responseHelper.success(
-      res,
-      finalTransfer,
-      'Đã khóa phiếu chuyển kho thành công'
-    )
+    responseHelper.success(res, finalTransfer, 'Đã khóa phiếu chuyển kho thành công')
   } catch (err) {
-    responseHelper.error(
-      res,
-      err.message || 'Có lỗi xảy ra khi khóa phiếu chuyển kho'
-    )
+    responseHelper.error(res, err.message || 'Có lỗi xảy ra khi khóa phiếu chuyển kho')
   }
 }

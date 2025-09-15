@@ -36,8 +36,5 @@ ingredientCateSchema.index(
   }
 )
 
-const IngredientCategory = mongoose.model(
-  'IngredientCategory',
-  ingredientCateSchema
-)
+const IngredientCategory = mongoose.model('IngredientCategory', ingredientCateSchema)
 export default IngredientCategory

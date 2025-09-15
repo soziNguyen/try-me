@@ -5,8 +5,7 @@ import { getCurrentOrg } from '../../helpers/orgHelper.js'
 export const getActiveTaxes = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const taxes = await Tax.find({
       isActive: true,
@@ -29,8 +28,7 @@ export const getTaxes = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const filter = { organization: organizationId }
     if (searchValue) {
@@ -54,11 +52,7 @@ export const getTaxes = async (req, res) => {
     const sortObj = {}
     sortObj[sortField] = sortDir
 
-    const data = await Tax.find(filter)
-      .sort(sortObj)
-      .skip(start)
-      .limit(length)
-      .lean()
+    const data = await Tax.find(filter).sort(sortObj).skip(start).limit(length).lean()
 
     return res.json({
       draw,
@@ -80,8 +74,7 @@ export const getTaxes = async (req, res) => {
 export const createTax = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const data = {
       ...req.body,
@@ -101,11 +94,9 @@ export const updateTax = async (req, res) => {
     const { id } = req.params
     const { name, rate, description, isActive } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    if (!id)
-      return responseHelper.error(res, 'Thông tin thuế không hợp lệ', 400)
+    if (!id) return responseHelper.error(res, 'Thông tin thuế không hợp lệ', 400)
 
     const tax = await Tax.findOne({
       _id: id,
@@ -119,14 +110,9 @@ export const updateTax = async (req, res) => {
 
     if (rate !== undefined) {
       const numRate = Number(rate)
-      if (isNaN(numRate))
-        return responseHelper.error(res, 'Tỉ lệ phải là một số', 400)
+      if (isNaN(numRate)) return responseHelper.error(res, 'Tỉ lệ phải là một số', 400)
       if (numRate < 0 || numRate > 100)
-        return responseHelper.error(
-          res,
-          'Tỉ lệ phải nằm trong khoảng 1-100',
-          400
-        )
+        return responseHelper.error(res, 'Tỉ lệ phải nằm trong khoảng 1-100', 400)
     }
 
     if (name !== undefined) {
@@ -163,15 +149,10 @@ export const deleteTaxes = async (req, res) => {
     const { ids } = req.body
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có bản ghi nào được chọn để xóa',
-        400
-      )
+      return responseHelper.error(res, 'Không có bản ghi nào được chọn để xóa', 400)
     }
 
     const result = await Tax.deleteMany({

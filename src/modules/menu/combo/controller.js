@@ -7,8 +7,7 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 export const getActiveCombos = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const combo = await Combo.find({
       isActive: true,
@@ -31,8 +30,7 @@ export const getCombos = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // base pipeline
     let pipeline = [
@@ -88,9 +86,7 @@ export const getCombos = async (req, res) => {
     })
 
     // tổng số record sau filter
-    const countFiltered = await Combo.aggregate(
-      pipeline.concat([{ $count: 'count' }])
-    )
+    const countFiltered = await Combo.aggregate(pipeline.concat([{ $count: 'count' }]))
     const recordsFiltered = countFiltered[0]?.count || 0
 
     // sort + skip + limit
@@ -116,23 +112,17 @@ export const getCombos = async (req, res) => {
 export const createCombo = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const { sku, name, image, items, price, note } = req.body
-    if (!name || !price)
-      return responseHelper.error(res, 'Tên combo và giá bán là bắt buộc', 400)
+    if (!name || !price) return responseHelper.error(res, 'Tên combo và giá bán là bắt buộc', 400)
 
     if (!Array.isArray(items) || items.length === 0)
       return responseHelper.error(res, 'Combo phải có ít nhất 1 món ăn', 400)
 
     for (const it of items) {
       if (!it.menuItem || typeof it.quantity !== 'number' || it.quantity <= 0) {
-        return responseHelper.error(
-          res,
-          'Vui lòng điền đầy đủ thông tin và số lượng > 0',
-          400
-        )
+        return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin và số lượng > 0', 400)
       }
     }
 
@@ -140,8 +130,7 @@ export const createCombo = async (req, res) => {
       organization: organizationId,
       $or: [{ name }, { sku }]
     })
-    if (existing)
-      return responseHelper.error(res, 'SKU hoặc name đã tồn tại', 400)
+    if (existing) return responseHelper.error(res, 'SKU hoặc name đã tồn tại', 400)
 
     const combo = new Combo({
       sku,
@@ -168,8 +157,7 @@ export const updateCombo = async (req, res) => {
     const { id } = req.params
     const { sku, name, image, items, price, note } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!id) return responseHelper.error(res, 'Thiếu ID công thức', 400)
 
@@ -179,8 +167,7 @@ export const updateCombo = async (req, res) => {
       $or: [{ name }, { sku }]
     })
 
-    if (existing)
-      return responseHelper.error(res, 'SKU hoặc name đã tồn tại', 400)
+    if (existing) return responseHelper.error(res, 'SKU hoặc name đã tồn tại', 400)
 
     if (!Array.isArray(items) || items.length === 0) {
       return responseHelper.error(res, 'Combo phải có ít nhất 1 món ăn', 400)
@@ -200,8 +187,7 @@ export const updateCombo = async (req, res) => {
       _id: id,
       organization: organizationId
     })
-    if (!combo)
-      return responseHelper.error(res, 'Không tìm thấy công thức', 404)
+    if (!combo) return responseHelper.error(res, 'Không tìm thấy công thức', 404)
 
     // Xóa file cũ nếu có và khác file mới
     if (combo.image && combo.image !== image) {
@@ -229,15 +215,10 @@ export const deleteCombos = async (req, res) => {
     const { ids } = req.body
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có combo nào được chọn để xóa',
-        400
-      )
+      return responseHelper.error(res, 'Không có combo nào được chọn để xóa', 400)
     }
 
     const result = await Combo.deleteMany({

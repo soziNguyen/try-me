@@ -12,16 +12,8 @@ router.get('/tables', isAuthenticated, tablePage)
 router.get('/api/tables', isAuthenticated, tableController.getTables)
 router.get('/api/tables/:id', isAuthenticated, tableController.getTableById)
 router.post('/api/tables/create', isAuthenticated, tableController.createTable)
-router.post(
-  '/api/tables/update/:id',
-  isAuthenticated,
-  tableController.updateTable
-)
-router.get(
-  '/api/tables-total',
-  isAuthenticated,
-  tableController.getTablesWithTotal
-)
+router.post('/api/tables/update/:id', isAuthenticated, tableController.updateTable)
+router.get('/api/tables-total', isAuthenticated, tableController.getTablesWithTotal)
 router.post('/api/tables/delete', isAuthenticated, tableController.deleteTables)
 
 export default router

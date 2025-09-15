@@ -23,14 +23,10 @@ const IMAGE_CONFIG = {
 // Hàm nén ảnh từ buffer
 const compressImageFromBuffer = async (buffer, outputPath, mimetype) => {
   try {
-    let pipeline = sharp(buffer).resize(
-      IMAGE_CONFIG.maxWidth,
-      IMAGE_CONFIG.maxHeight,
-      {
-        fit: 'inside',
-        withoutEnlargement: true
-      }
-    )
+    let pipeline = sharp(buffer).resize(IMAGE_CONFIG.maxWidth, IMAGE_CONFIG.maxHeight, {
+      fit: 'inside',
+      withoutEnlargement: true
+    })
 
     // Áp dụng cấu hình nén theo loại file
     if (mimetype.includes('jpeg') || mimetype.includes('jpg')) {

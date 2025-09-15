@@ -6,8 +6,7 @@ import { getCurrentOrg } from '../../helpers/orgHelper.js'
 export const tablePage = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const tables = await Table.find({
       organization: organizationId
@@ -24,8 +23,7 @@ export const createTable = async (req, res) => {
   try {
     const { name, status, capacity, area } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     const exist = await Table.findOne({
       name,
       organization: organizationId
@@ -91,8 +89,7 @@ export const getTableById = async (req, res) => {
   try {
     const { id } = req.params
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const table = await Table.findOne({
       _id: id,
@@ -113,8 +110,7 @@ export const updateTable = async (req, res) => {
     const { name, status, capacity, area, checkInTime } = req.body
     const { id } = req.params
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // Kiểm tra bàn có tồn tại & thuộc tổ chức không
     const tableExist = await Table.findOne({
@@ -170,8 +166,7 @@ export const deleteTables = async (req, res) => {
   try {
     const { tableIds } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!tableIds || tableIds.length === 0) {
       return responseHelper.error(res, 'Không có bàn nào được chọn.', 400)
@@ -206,9 +201,7 @@ export const getTablesWithTotal = async (req, res) => {
       organization: organizationId
     }).lean()
     const tablesWithTotal = tables.map((table) => {
-      const order = orders.find(
-        (o) => o.tableId.toString() === table._id.toString()
-      )
+      const order = orders.find((o) => o.tableId.toString() === table._id.toString())
       return {
         ...table,
         totalAmount: order ? order.totalAmount || 0 : 0
