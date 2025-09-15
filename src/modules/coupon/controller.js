@@ -5,8 +5,7 @@ import { getCurrentOrg } from '../../helpers/orgHelper.js'
 export const getActiveCoupons = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const coupons = await Coupon.find({
       isActive: true,
@@ -30,16 +29,10 @@ export const getCoupons = async (req, res) => {
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
-    const fieldToSearch = [
-      'code',
-      'discountType',
-      'discountValue',
-      'description'
-    ]
+    const fieldToSearch = ['code', 'discountType', 'discountValue', 'description']
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const pipeline = [{ $match: { organization: organizationId } }]
 
@@ -96,16 +89,14 @@ export const getCouponById = async (req, res) => {
   try {
     const { id } = req.params
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const coupon = await Coupon.findOne({
       organization: organizationId,
       _id: id
     })
 
-    if (!coupon)
-      return responseHelper.error(res, 'Mã giảm giá không tồn tại', 404)
+    if (!coupon) return responseHelper.error(res, 'Mã giảm giá không tồn tại', 404)
     responseHelper.success(res, coupon)
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -115,8 +106,7 @@ export const getCouponById = async (req, res) => {
 export const createCoupon = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const data = {
       ...req.body,
@@ -146,20 +136,14 @@ export const updateCoupon = async (req, res) => {
       isActive
     } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const coupon = await Coupon.findOne({
       _id: id,
       organization: organizationId
     })
 
-    if (!coupon)
-      return responseHelper.error(
-        res,
-        'Mã giảm giá không hợp lệ hoặc đã hết hạn.',
-        400
-      )
+    if (!coupon) return responseHelper.error(res, 'Mã giảm giá không hợp lệ hoặc đã hết hạn.', 400)
 
     let normalizedDiscountValue = discountValue
     if (discountValue === '') {
@@ -174,12 +158,9 @@ export const updateCoupon = async (req, res) => {
       return responseHelper.error(res, 'Giá trị giảm giá phải là số', 400)
     }
 
-    const finalDiscountType =
-      discountType !== undefined ? discountType : coupon.discountType
+    const finalDiscountType = discountType !== undefined ? discountType : coupon.discountType
     const finalDiscountValue =
-      normalizedDiscountValue !== undefined
-        ? normalizedDiscountValue
-        : coupon.discountValue
+      normalizedDiscountValue !== undefined ? normalizedDiscountValue : coupon.discountValue
 
     if (
       finalDiscountValue !== null &&
@@ -193,19 +174,11 @@ export const updateCoupon = async (req, res) => {
       }
 
       if (finalDiscountType === 'percent' && (value <= 0 || value > 100)) {
-        return responseHelper.error(
-          res,
-          'Giá trị phần trăm phải nằm trong khoảng 1-100',
-          400
-        )
+        return responseHelper.error(res, 'Giá trị phần trăm phải nằm trong khoảng 1-100', 400)
       }
 
       if (finalDiscountType === 'amount' && value <= 0) {
-        return responseHelper.error(
-          res,
-          'Giá trị giảm cố định phải lớn hơn 0',
-          400
-        )
+        return responseHelper.error(res, 'Giá trị giảm cố định phải lớn hơn 0', 400)
       }
     }
 
@@ -226,27 +199,15 @@ export const updateCoupon = async (req, res) => {
     })()
 
     if (startDate !== undefined && isNaN(finalStartDate.getTime())) {
-      return responseHelper.error(
-        res,
-        'Định dạng ngày bắt đầu không hợp lệ',
-        400
-      )
+      return responseHelper.error(res, 'Định dạng ngày bắt đầu không hợp lệ', 400)
     }
 
     if (endDate !== undefined && isNaN(finalEndDate.getTime())) {
-      return responseHelper.error(
-        res,
-        'Định dạng ngày kết thúc không hợp lệ',
-        400
-      )
+      return responseHelper.error(res, 'Định dạng ngày kết thúc không hợp lệ', 400)
     }
 
     if (finalStartDate > finalEndDate) {
-      return responseHelper.error(
-        res,
-        'Ngày bắt đầu không được sau ngày kết thúc',
-        400
-      )
+      return responseHelper.error(res, 'Ngày bắt đầu không được sau ngày kết thúc', 400)
     }
 
     if (usageLimit !== undefined && isNaN(Number(usageLimit))) {
@@ -265,10 +226,8 @@ export const updateCoupon = async (req, res) => {
       return responseHelper.error(res, 'Số lượt đã sử dụng không thể âm', 400)
     }
 
-    const finalUsageLimit =
-      usageLimit !== undefined ? usageLimit : coupon.usageLimit
-    const finalUsedCount =
-      usedCount !== undefined ? usedCount : coupon.usedCount
+    const finalUsageLimit = usageLimit !== undefined ? usageLimit : coupon.usageLimit
+    const finalUsedCount = usedCount !== undefined ? usedCount : coupon.usedCount
 
     if (finalUsageLimit !== null && finalUsedCount > finalUsageLimit) {
       return responseHelper.error(
@@ -293,18 +252,12 @@ export const updateCoupon = async (req, res) => {
     const dataUpdate = {}
     if (code !== undefined) dataUpdate.code = code
     if (discountType !== undefined) dataUpdate.discountType = discountType
-    if (normalizedDiscountValue !== undefined)
-      dataUpdate.discountValue = normalizedDiscountValue
+    if (normalizedDiscountValue !== undefined) dataUpdate.discountValue = normalizedDiscountValue
     if (description !== undefined) dataUpdate.description = description
     if (startDate !== undefined) {
       const sd = new Date(startDate)
       const now = new Date()
-      sd.setHours(
-        now.getHours(),
-        now.getMinutes(),
-        now.getSeconds(),
-        now.getMilliseconds()
-      )
+      sd.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds())
       dataUpdate.startDate = sd
     }
     if (endDate !== undefined) dataUpdate.endDate = finalEndDate
@@ -329,8 +282,7 @@ export const deleteCoupons = async (req, res) => {
     const { ids } = req.body
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return responseHelper.error(res, 'Không có mã nào được chọn để xóa', 400)
@@ -350,14 +302,11 @@ export const deleteCoupons = async (req, res) => {
 export const applyCoupon = async (req, res) => {
   try {
     const { code, totalAmount } = req.body
-    if (!code)
-      return responseHelper.error(res, 'Vui lòng nhập mã giảm giá', 400)
-    if (totalAmount === null)
-      return responseHelper.error(res, 'Thiếu tổng tiền để áp dụng', 400)
+    if (!code) return responseHelper.error(res, 'Vui lòng nhập mã giảm giá', 400)
+    if (totalAmount === null) return responseHelper.error(res, 'Thiếu tổng tiền để áp dụng', 400)
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const now = new Date()
     const coupon = await Coupon.findOne({
@@ -367,19 +316,11 @@ export const applyCoupon = async (req, res) => {
       endDate: { $gte: now },
       organization: organizationId,
       $expr: {
-        $or: [
-          { $eq: ['$usageLimit', null] },
-          { $lt: ['$usedCount', '$usageLimit'] }
-        ]
+        $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
       }
     })
 
-    if (!coupon)
-      return responseHelper.error(
-        res,
-        'Mã giảm giá không hợp lệ hoặc đã hết hạn',
-        400
-      )
+    if (!coupon) return responseHelper.error(res, 'Mã giảm giá không hợp lệ hoặc đã hết hạn', 400)
 
     let discount = 0
     if (coupon.discountType === 'percent') {
@@ -410,8 +351,7 @@ export const confirmCouponUsage = async (req, res) => {
     if (!couponId) return responseHelper.error(res, 'Thiếu mã giảm giá', 400)
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const now = new Date()
 
@@ -423,10 +363,7 @@ export const confirmCouponUsage = async (req, res) => {
         endDate: { $gte: now },
         organization: organizationId,
         $expr: {
-          $or: [
-            { $eq: ['$usageLimit', null] },
-            { $lt: ['$usedCount', '$usageLimit'] }
-          ]
+          $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
         }
       },
       { $inc: { usedCount: 1 } },
@@ -441,11 +378,7 @@ export const confirmCouponUsage = async (req, res) => {
       )
     }
 
-    responseHelper.success(
-      res,
-      coupon,
-      'Xác nhận sử dụng mã giảm giá thành công'
-    )
+    responseHelper.success(res, coupon, 'Xác nhận sử dụng mã giảm giá thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }

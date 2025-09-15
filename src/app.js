@@ -68,9 +68,7 @@ const sessionStore = MongoStore.create({
   }
 })
 sessionStore.on('connected', () => console.log('MongoStore is connected'))
-sessionStore.on('error', (error) =>
-  console.error('MongoStore connection error:', error)
-)
+sessionStore.on('error', (error) => console.error('MongoStore connection error:', error))
 
 app.use(
   session({
@@ -90,7 +88,7 @@ app.use(passport.session())
 
 app.use(
   lusca({
-    csrf: true,  // CSRF protection
+    csrf: true, // CSRF protection
     xframe: 'SAMEORIGIN',
     xssProtection: true
   })

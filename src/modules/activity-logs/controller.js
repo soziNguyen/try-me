@@ -14,8 +14,7 @@ export const getActivityLogs = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return res.status(400).json({ message: 'Thiếu thông tin tổ chức' })
+    if (!organizationId) return res.status(400).json({ message: 'Thiếu thông tin tổ chức' })
 
     // Base pipeline
     const pipeline = [

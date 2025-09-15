@@ -13,8 +13,7 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 export const getAllStockEntries = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const entries = await StockEntry.aggregate([
       { $match: { organization: organizationId } },
@@ -43,8 +42,7 @@ export const getStockEntries = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const basePipeline = [
       { $match: { organization: organizationId } },
@@ -163,12 +161,7 @@ export const getStockEntries = async (req, res) => {
     }
 
     // Final pipeline with sort + pagination
-    const dataPipeline = [
-      ...basePipeline,
-      { $sort: sortObj },
-      { $skip: start },
-      { $limit: length }
-    ]
+    const dataPipeline = [...basePipeline, { $sort: sortObj }, { $skip: start }, { $limit: length }]
 
     const data = await StockEntry.aggregate(dataPipeline)
     const recordsTotal = await StockEntry.countDocuments({
@@ -191,8 +184,7 @@ export const getStockEntryById = async (req, res) => {
   try {
     const { id } = req.params
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!mongoose.isValidObjectId(id)) {
       return responseHelper.error(res, 'ID không hợp lệ', 400)
@@ -214,11 +206,7 @@ export const getStockEntryById = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
     }
 
-    responseHelper.success(
-      res,
-      { stockEntry, units },
-      'Lấy thông tin phiếu nhập thành công'
-    )
+    responseHelper.success(res, { stockEntry, units }, 'Lấy thông tin phiếu nhập thành công')
   } catch (err) {
     responseHelper.error(res, err.message)
   }
@@ -228,8 +216,7 @@ export const getStockEntryById = async (req, res) => {
 export const createStockEntry = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const entry = await withTransaction(async (session) => {
       const code = await generateDocumentCode(StockEntry, 'SE')
@@ -257,8 +244,7 @@ export const createStockEntry = async (req, res) => {
 export const updateStockEntryFromForm = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const updatedDoc = await withTransaction(async (session) => {
       const { id } = req.params
@@ -273,8 +259,7 @@ export const updateStockEntryFromForm = async (req, res) => {
       }).session(session)
 
       if (!oldEntry) throw new Error('Phiếu nhập không tồn tại')
-      if (oldEntry.isLocked)
-        throw new Error('Phiếu nhập đã bị khóa, không thể chỉnh sửa')
+      if (oldEntry.isLocked) throw new Error('Phiếu nhập đã bị khóa, không thể chỉnh sửa')
 
       // Trừ tồn kho cũ khỏi IngredientStock (sử dụng warehouse từ phiếu nhập)
       if (oldEntry.warehouse) {
@@ -363,9 +348,7 @@ export const updateStockEntryFromForm = async (req, res) => {
       }
 
       // Cập nhật lại tổng tồn kho trong Ingredient
-      const updatedIngredientIds = [
-        ...new Set(newEntry.items.map((i) => i.ingredient.toString()))
-      ]
+      const updatedIngredientIds = [...new Set(newEntry.items.map((i) => i.ingredient.toString()))]
 
       for (const ingId of updatedIngredientIds) {
         const totalStockAgg = await IngredientStock.aggregate([
@@ -414,8 +397,7 @@ export const deleteStockEntries = async (req, res) => {
       }
 
       const organizationId = getCurrentOrg(req)
-      if (!organizationId)
-        return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+      if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
       // Lấy các phiếu nhập
       const entries = await StockEntry.find({
@@ -475,8 +457,7 @@ export const lockStockEntry = async (req, res) => {
     }
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const entry = await StockEntry.findOne({
       _id: id,
@@ -497,19 +478,11 @@ export const lockStockEntry = async (req, res) => {
     // Validate items (với cast an toàn)
     for (const item of entry.items) {
       if (!item.ingredient) {
-        return responseHelper.error(
-          res,
-          'Có sản phẩm thiếu thông tin ingredient',
-          400
-        )
+        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin ingredient', 400)
       }
       const qty = Number(item.quantity)
       if (!Number.isFinite(qty) || qty <= 0) {
-        return responseHelper.error(
-          res,
-          'Có sản phẩm với số lượng không hợp lệ',
-          400
-        )
+        return responseHelper.error(res, 'Có sản phẩm với số lượng không hợp lệ', 400)
       }
     }
 
@@ -581,9 +554,6 @@ export const lockStockEntry = async (req, res) => {
 
     responseHelper.success(res, finalEntry, 'Đã khóa phiếu nhập thành công')
   } catch (err) {
-    responseHelper.error(
-      res,
-      err.message || 'Có lỗi xảy ra khi khóa phiếu nhập'
-    )
+    responseHelper.error(res, err.message || 'Có lỗi xảy ra khi khóa phiếu nhập')
   }
 }

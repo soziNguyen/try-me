@@ -6,8 +6,7 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 export const getActiveRecipes = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const recipes = await Recipe.find({
       organization: organizationId,
@@ -33,8 +32,7 @@ export const getRecipes = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const totalRecords = await Recipe.countDocuments({
       organization: organizationId
@@ -85,10 +83,7 @@ export const getRecipes = async (req, res) => {
       }
     )
 
-    const countFiltered = await Recipe.aggregate([
-      ...pipeline,
-      { $count: 'count' }
-    ])
+    const countFiltered = await Recipe.aggregate([...pipeline, { $count: 'count' }])
     const recordsFiltered = countFiltered[0]?.count || 0
 
     pipeline.push({ $sort: { [sortField]: sortDir } })
@@ -113,8 +108,7 @@ export const getRecipeById = async (req, res) => {
   try {
     const { id } = req.params
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!id) {
       return responseHelper.error(res, 'ID không hợp lệ', 400)
@@ -127,14 +121,9 @@ export const getRecipeById = async (req, res) => {
       .populate('menuItem', '_id name')
       .populate('items.ingredient', '_id name')
 
-    if (!recipe)
-      return responseHelper.error(res, 'Không tìm thấy công thức', 404)
+    if (!recipe) return responseHelper.error(res, 'Không tìm thấy công thức', 404)
 
-    responseHelper.success(
-      res,
-      { recipe, units },
-      'Lấy thông tin công thức thành công'
-    )
+    responseHelper.success(res, { recipe, units }, 'Lấy thông tin công thức thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -143,8 +132,7 @@ export const getRecipeById = async (req, res) => {
 export const createRecipe = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const { menuItem, items, note } = req.body
 
@@ -167,17 +155,12 @@ export const updateRecipe = async (req, res) => {
     const { id } = req.params
     const { menuItem, items, note } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!id) return responseHelper.error(res, 'Thiếu ID công thức', 400)
     if (!menuItem) return responseHelper.error(res, 'Thiếu món ăn', 400)
     if (!Array.isArray(items) || items.length === 0) {
-      return responseHelper.error(
-        res,
-        'Công thức phải có ít nhất 1 nguyên liệu',
-        400
-      )
+      return responseHelper.error(res, 'Công thức phải có ít nhất 1 nguyên liệu', 400)
     }
 
     for (const it of items) {
@@ -211,15 +194,10 @@ export const deleteRecipes = async (req, res) => {
   try {
     const { ids } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có công thức nào được chọn để xóa',
-        400
-      )
+      return responseHelper.error(res, 'Không có công thức nào được chọn để xóa', 400)
     }
 
     const result = await Recipe.deleteMany({

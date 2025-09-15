@@ -5,8 +5,7 @@ import responseHelper from '../../helpers/responseHelper.js'
 export const getActivePaymentMethods = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const coupons = await PaymentMethod.find({
       isActive: true,
@@ -93,11 +92,7 @@ export const updatePaymentMethod = async (req, res) => {
       organization: organizationId
     })
     if (!paymentMethod)
-      return responseHelper.error(
-        res,
-        'Phương thức thanh toán không tồn tại',
-        404
-      )
+      return responseHelper.error(res, 'Phương thức thanh toán không tồn tại', 404)
 
     // Check trùng tên
     const existing = await PaymentMethod.findOne({
@@ -105,8 +100,7 @@ export const updatePaymentMethod = async (req, res) => {
       organization: organizationId,
       name
     })
-    if (existing)
-      return responseHelper.error(res, 'Tên phương thức đã tồn tại', 400)
+    if (existing) return responseHelper.error(res, 'Tên phương thức đã tồn tại', 400)
 
     const dataUpdate = {}
     if (name !== undefined) dataUpdate.name = name
@@ -129,8 +123,7 @@ export const deletePaymentMethod = async (req, res) => {
   try {
     const { ids } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return responseHelper.error(res, 'Không có bản ghi nào để xóa', 400)
     }

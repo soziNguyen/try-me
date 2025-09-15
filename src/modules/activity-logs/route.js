@@ -5,11 +5,6 @@ import { getActivityLogs } from './controller.js'
 
 const router = express.Router()
 
-router.get(
-  '/api/activity-logs',
-  isPermit('Admin', 'Org'),
-  isAuthenticated,
-  getActivityLogs
-)
+router.get('/api/activity-logs', isPermit('Admin', 'Org'), isAuthenticated, getActivityLogs)
 
 export default router

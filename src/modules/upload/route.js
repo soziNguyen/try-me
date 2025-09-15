@@ -1,11 +1,6 @@
 import express from 'express'
 import multer from 'multer'
-import {
-  uploadFile,
-  uploadMultipleFiles,
-  upload,
-  processImages
-} from './controller.js'
+import { uploadFile, uploadMultipleFiles, upload, processImages } from './controller.js'
 
 const router = express.Router()
 

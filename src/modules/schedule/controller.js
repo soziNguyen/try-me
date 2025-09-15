@@ -14,8 +14,7 @@ export const getSchedules = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // Base pipeline
     const pipeline = [
@@ -114,8 +113,7 @@ export const getSchedules = async (req, res) => {
 export const createSchedule = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const data = {
       organization: organizationId,
@@ -137,8 +135,7 @@ export const updateSchedule = async (req, res) => {
     const { user, shift, date, status, note } = req.body
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const schedule = await Schedule.findOne({
       _id: id,
@@ -151,10 +148,7 @@ export const updateSchedule = async (req, res) => {
     if (user !== undefined) dataUpdate.user = user || null
     if (shift !== undefined) dataUpdate.shift = shift || null
     if (date !== undefined) dataUpdate.date = date ? new Date(date) : null
-    if (
-      status !== undefined &&
-      ['scheduled', 'confirmed', 'cancelled'].includes(status)
-    )
+    if (status !== undefined && ['scheduled', 'confirmed', 'cancelled'].includes(status))
       dataUpdate.status = status
     if (note !== undefined) dataUpdate.note = note
 
@@ -177,15 +171,10 @@ export const deleteSchedule = async (req, res) => {
   try {
     const { ids } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có lịch nào được chọn để xóa',
-        400
-      )
+      return responseHelper.error(res, 'Không có lịch nào được chọn để xóa', 400)
     }
 
     const result = await Schedule.deleteMany({
@@ -210,8 +199,7 @@ export const getMySchedules = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     if (!req.user || !req.user._id)
       return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
 
@@ -254,11 +242,7 @@ export const getMySchedules = async (req, res) => {
     const actualSortField = sortFieldMapping[sortField] || sortField
 
     // Sort + Pagination
-    pipeline.push(
-      { $sort: { [actualSortField]: sortDir } },
-      { $skip: start },
-      { $limit: length }
-    )
+    pipeline.push({ $sort: { [actualSortField]: sortDir } }, { $skip: start }, { $limit: length })
 
     // Projection
     pipeline.push({

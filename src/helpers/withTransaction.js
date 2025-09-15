@@ -3,8 +3,7 @@ import mongoose from 'mongoose'
 export default async function withTransaction(fn) {
   let session
 
-  const topologyType =
-    mongoose.connection?.client?.topology?.description?.type || ''
+  const topologyType = mongoose.connection?.client?.topology?.description?.type || ''
   const isReplicaSet = topologyType.includes('ReplicaSet')
 
   if (isReplicaSet) {

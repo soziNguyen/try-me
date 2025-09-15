@@ -14,8 +14,7 @@ export const getIngredientStockList = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // Khởi tạo pipeline với lookup
     const pipeline = [

@@ -4,7 +4,6 @@ import { MenuItem } from '../menu/menu-item/model.js'
 import { Combo } from '../menu/combo/model.js'
 import Customer from '../customer/model.js'
 import PaymentMethod from '../payment/model.js'
-import ReceivingAccount from '../receiving-account/model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import withTransaction from '../../helpers/withTransaction.js'
@@ -368,7 +367,7 @@ export const checkoutOrder = async (req, res) => {
 
       const paymentMethod = await PaymentMethod.findById(paymentMethodId).session(session)
       if (!paymentMethod) throw new Error('Phương thức thanh toán không hợp lệ')
-      const { type: paymentType, receivingAccountId } = paymentMethod
+      const { type: paymentType } = paymentMethod
 
       // === CUSTOMER POINTS VALIDATION ===
       let customer = null

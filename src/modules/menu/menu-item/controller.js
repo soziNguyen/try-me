@@ -7,8 +7,7 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 export const getActiveMenus = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const pipeline = [
       ...lookupRef('category', 'MenuCategories', { as: 'category' }),
@@ -48,8 +47,7 @@ export const getMenus = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // Base pipeline
     const pipeline = [
@@ -167,8 +165,7 @@ export const getMenus = async (req, res) => {
 export const createMenu = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!req.user || !req.user._id) {
       return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
@@ -199,8 +196,7 @@ export const updateMenu = async (req, res) => {
     const { image, name, category, price, description, isActive } = req.body
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const menu = await MenuItem.findOne({
       _id: id,
@@ -259,15 +255,10 @@ export const deleteMenus = async (req, res) => {
     const { ids } = req.body
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có thực đơn nào được chọn để xóa',
-        400
-      )
+      return responseHelper.error(res, 'Không có thực đơn nào được chọn để xóa', 400)
     }
 
     const result = await MenuItem.deleteMany({

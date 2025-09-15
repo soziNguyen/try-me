@@ -1,7 +1,13 @@
 import express from 'express'
 import isAuthenticated from '../../helpers/isAuthenticated.js'
 // import { isPermit } from '../helpers/isPermit.js'
-import { getActivePaymentMethods, getPaymentMethods, createPaymentMethod, updatePaymentMethod, deletePaymentMethod } from './controller.js'
+import {
+  getActivePaymentMethods,
+  getPaymentMethods,
+  createPaymentMethod,
+  updatePaymentMethod,
+  deletePaymentMethod
+} from './controller.js'
 
 const router = express.Router()
 

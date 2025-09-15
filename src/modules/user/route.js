@@ -20,12 +20,7 @@ router.get('/', isAuthenticated, dashboard)
 
 // =====================user routes==================================
 router.get('/users', isAuthenticated, isPermit('Admin', 'Org'), userPage) // render view
-router.get(
-  '/api/users',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  userController.getUsers
-) // get data json
+router.get('/api/users', isAuthenticated, isPermit('Admin', 'Org'), userController.getUsers) // get data json
 router.get('/api/users/:id', isAuthenticated, userController.getUserById) // get data json
 router.post(
   '/api/users/create',

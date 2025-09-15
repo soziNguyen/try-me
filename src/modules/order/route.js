@@ -10,16 +10,8 @@ router.get('/orders', isAuthenticated, ordersPage)
 
 // --- Đặt món và quản lý đơn hàng ---
 router.post('/api/orders', isAuthenticated, orderController.createOrder)
-router.get(
-  '/api/orders/:orderId',
-  isAuthenticated,
-  orderController.getOrderById
-)
-router.post(
-  '/api/orders/:orderId/items',
-  isAuthenticated,
-  orderController.addItemToOrder
-)
+router.get('/api/orders/:orderId', isAuthenticated, orderController.getOrderById)
+router.post('/api/orders/:orderId/items', isAuthenticated, orderController.addItemToOrder)
 router.post(
   '/api/orders/:orderId/items/:itemId',
   isAuthenticated,
@@ -30,14 +22,6 @@ router.delete(
   isAuthenticated,
   orderController.removeItemFromOrder
 )
-router.post(
-  '/api/orders/:orderId/checkout',
-  isAuthenticated,
-  orderController.checkoutOrder
-)
-router.get(
-  '/orders/print/:orderId',
-  isAuthenticated,
-  orderController.printInvoice
-)
+router.post('/api/orders/:orderId/checkout', isAuthenticated, orderController.checkoutOrder)
+router.get('/orders/print/:orderId', isAuthenticated, orderController.printInvoice)
 export default router

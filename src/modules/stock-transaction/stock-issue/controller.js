@@ -22,8 +22,7 @@ export const getStockIssues = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const pipeline = [
       { $match: { organization: organizationId } },
@@ -172,8 +171,7 @@ export const getStockIssueById = async (req, res) => {
     }
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const stockIssue = await StockIssue.findOne({
       _id: id,
@@ -189,11 +187,7 @@ export const getStockIssueById = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy phiếu xuất', 404)
     }
 
-    responseHelper.success(
-      res,
-      { stockIssue, units },
-      'Lấy thông tin phiếu xuất thành công'
-    )
+    responseHelper.success(res, { stockIssue, units }, 'Lấy thông tin phiếu xuất thành công')
   } catch (err) {
     responseHelper.error(res, err.message)
   }
@@ -203,8 +197,7 @@ export const getStockIssueById = async (req, res) => {
 export const createStockIssue = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const issue = await withTransaction(async (session) => {
       const code = await generateDocumentCode(StockIssue, 'SI')
@@ -232,8 +225,7 @@ export const createStockIssue = async (req, res) => {
 export const updateStockIssue = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const updatedDoc = await withTransaction(async (session) => {
       const { id } = req.params
@@ -247,8 +239,7 @@ export const updateStockIssue = async (req, res) => {
       }).session(session)
 
       if (!oldIssue) throw new Error('Phiếu xuất không tồn tại')
-      if (oldIssue.isLocked)
-        throw new Error('Phiếu xuất đã bị khóa, không thể chỉnh sửa')
+      if (oldIssue.isLocked) throw new Error('Phiếu xuất đã bị khóa, không thể chỉnh sửa')
 
       const { warehouse, reason, note, items: rawItems = [] } = req.body
 
@@ -267,8 +258,7 @@ export const updateStockIssue = async (req, res) => {
         }))
         .filter((item) => item.ingredient && item.quantity > 0)
 
-      if (newItems.length === 0)
-        throw new Error('Không có sản phẩm hợp lệ để xuất')
+      if (newItems.length === 0) throw new Error('Không có sản phẩm hợp lệ để xuất')
 
       // Tính toán thay đổi tồn kho
       const stockChanges = new Map() // key: ingredient_warehouse, value: {ingredient, warehouse, change}
@@ -369,17 +359,9 @@ export const updateStockIssue = async (req, res) => {
 
       // Cập nhật tổng stock trong Ingredient
       const allAffectedIngredients = [
-        ...new Set([
-          ...Array.from(stockChanges.values()).map((sc) =>
-            sc.ingredient.toString()
-          )
-        ])
+        ...new Set([...Array.from(stockChanges.values()).map((sc) => sc.ingredient.toString())])
       ]
-      await updateIngredientTotalStock(
-        allAffectedIngredients,
-        organizationId,
-        session
-      )
+      await updateIngredientTotalStock(allAffectedIngredients, organizationId, session)
 
       // Populate để trả về client
       await updatedIssue.populate([
@@ -402,8 +384,7 @@ export const updateStockIssue = async (req, res) => {
 export const deleteStockIssues = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     await withTransaction(async (session) => {
       const { ids } = req.body
       if (!Array.isArray(ids) || ids.length === 0) {
@@ -421,9 +402,7 @@ export const deleteStockIssues = async (req, res) => {
       // Kiểm tra khóa và hoàn trả kho
       for (const issue of issues) {
         if (issue.isLocked) {
-          throw new Error(
-            `Phiếu xuất "${issue.code}" đã bị khóa, không thể xóa`
-          )
+          throw new Error(`Phiếu xuất "${issue.code}" đã bị khóa, không thể xóa`)
         }
 
         // Hoàn trả tồn kho nếu phiếu có warehouse và items
@@ -458,19 +437,11 @@ export const deleteStockIssues = async (req, res) => {
 
       // Cập nhật tổng stock cho tất cả ingredients bị ảnh hưởng
       if (allAffectedIngredients.size > 0) {
-        await updateIngredientTotalStock(
-          [...allAffectedIngredients],
-          organizationId,
-          session
-        )
+        await updateIngredientTotalStock([...allAffectedIngredients], organizationId, session)
       }
     })
 
-    responseHelper.success(
-      res,
-      null,
-      'Xóa phiếu xuất thành công và hoàn trả tồn kho'
-    )
+    responseHelper.success(res, null, 'Xóa phiếu xuất thành công và hoàn trả tồn kho')
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -486,8 +457,7 @@ export const lockStockIssue = async (req, res) => {
     }
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const issue = await StockIssue.findOne({
       _id: id,
@@ -503,29 +473,17 @@ export const lockStockIssue = async (req, res) => {
     }
 
     if (!issue.warehouse || !issue.items || issue.items.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không thể khóa phiếu xuất chưa hoàn thành',
-        400
-      )
+      return responseHelper.error(res, 'Không thể khóa phiếu xuất chưa hoàn thành', 400)
     }
 
     // Validate items
     for (const item of issue.items) {
       if (!item.ingredient) {
-        return responseHelper.error(
-          res,
-          'Có sản phẩm thiếu thông tin ingredient',
-          400
-        )
+        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin ingredient', 400)
       }
       const qty = Number(item.quantity)
       if (!Number.isFinite(qty) || qty <= 0) {
-        return responseHelper.error(
-          res,
-          'Có sản phẩm với số lượng không hợp lệ',
-          400
-        )
+        return responseHelper.error(res, 'Có sản phẩm với số lượng không hợp lệ', 400)
       }
     }
 
@@ -577,9 +535,7 @@ export const lockStockIssue = async (req, res) => {
         totalQuantity,
         items: itemsSummary,
         reason: 'Stock issue locked',
-        note: finalIssue.note
-          ? `${finalIssue.note} (Locked)`
-          : 'Stock issue locked',
+        note: finalIssue.note ? `${finalIssue.note} (Locked)` : 'Stock issue locked',
         transactionDate: finalIssue.date || new Date(),
         createdBy: req.user._id,
         updatedBy: null,
@@ -591,18 +547,11 @@ export const lockStockIssue = async (req, res) => {
 
     responseHelper.success(res, finalIssue, 'Đã khóa phiếu xuất thành công')
   } catch (err) {
-    responseHelper.error(
-      res,
-      err.message || 'Có lỗi xảy ra khi khóa phiếu xuất'
-    )
+    responseHelper.error(res, err.message || 'Có lỗi xảy ra khi khóa phiếu xuất')
   }
 }
 
-async function updateIngredientTotalStock(
-  ingredientIds,
-  organizationId,
-  session
-) {
+async function updateIngredientTotalStock(ingredientIds, organizationId, session) {
   if (!Array.isArray(ingredientIds) || ingredientIds.length === 0) return
 
   for (const ingId of ingredientIds) {

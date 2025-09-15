@@ -5,13 +5,9 @@ import { getCurrentOrg } from '../../helpers/orgHelper.js'
 export const getShiftOptions = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const shifts = await Shift.find(
-      { organization: organizationId },
-      { _id: 1, name: 1 }
-    )
+    const shifts = await Shift.find({ organization: organizationId }, { _id: 1, name: 1 })
 
     responseHelper.success(res, shifts)
   } catch (error) {
@@ -30,8 +26,7 @@ export const getShifts = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const filter = { organization: organizationId }
     if (searchValue) {
@@ -85,11 +80,7 @@ export const getShifts = async (req, res) => {
     const sortObj = {}
     sortObj[sortField] = sortDir
 
-    const data = await Shift.find(filter)
-      .sort(sortObj)
-      .skip(start)
-      .limit(length)
-      .lean()
+    const data = await Shift.find(filter).sort(sortObj).skip(start).limit(length).lean()
 
     return res.json({
       draw,
@@ -111,8 +102,7 @@ export const getShifts = async (req, res) => {
 export const createShift = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const data = {
       ...req.body,
@@ -134,8 +124,7 @@ export const updateShift = async (req, res) => {
     const { name, type, startTime, endTime, note } = req.body
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const shift = await Shift.findOne({
       _id: id,
@@ -184,8 +173,7 @@ export const deleteShift = async (req, res) => {
   try {
     const { ids } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return responseHelper.error(res, 'Không có ca nào được chọn để xóa', 400)

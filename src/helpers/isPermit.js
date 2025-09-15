@@ -5,8 +5,6 @@ export const isPermit = (...allowedRoles) => {
       return next()
     }
 
-    return res
-      .status(403)
-      .render('errors/permission', { title: 'Permission Denied' })
+    return res.status(403).render('errors/permission', { title: 'Permission Denied' })
   }
 }

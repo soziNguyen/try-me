@@ -2,11 +2,7 @@ import User from '../user/model.js'
 import bcrypt from 'bcryptjs'
 import validator from 'validator'
 import responseHelper from '../../helpers/responseHelper.js'
-import {
-  isValidUsername,
-  isValidPassword,
-  isPasswordMatch
-} from '../../helpers/validator.js'
+import { isValidUsername, isValidPassword, isPasswordMatch } from '../../helpers/validator.js'
 import { lookupRef } from '../../helpers/lookupHelper.js'
 import ActivityLog from '../activity-logs/model.js'
 import dayjs from 'dayjs'
@@ -105,15 +101,13 @@ export const getUserById = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { username, email, organization, password, confirmPassword } =
-      req.body
+    const { username, email, organization, password, confirmPassword } = req.body
 
     if (!username || !email || !password || !organization) {
       return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin', 400)
     }
 
-    if (!validator.isEmail(email))
-      return responseHelper.error(res, 'Email không hợp lệ', 400)
+    if (!validator.isEmail(email)) return responseHelper.error(res, 'Email không hợp lệ', 400)
 
     const usernameError = isValidUsername(username)
     if (usernameError) {
@@ -135,11 +129,7 @@ export const createUser = async (req, res) => {
     })
 
     if (existingUser) {
-      return responseHelper.error(
-        res,
-        'Tên đăng nhập hoặc email đã tồn tại',
-        400
-      )
+      return responseHelper.error(res, 'Tên đăng nhập hoặc email đã tồn tại', 400)
     }
 
     const newUser = new User({ username, email, password, organization })
@@ -156,8 +146,7 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params
-    const { username, email, organization, role, password, confirmPassword } =
-      req.body
+    const { username, email, organization, role, password, confirmPassword } = req.body
 
     if (!id) return responseHelper.error(res, 'Id người dùng không hợp lệ', 400)
     if (!validator.isEmail(email)) {
@@ -174,12 +163,7 @@ export const updateUser = async (req, res) => {
       _id: { $ne: id }
     })
 
-    if (existingUser)
-      return responseHelper.error(
-        res,
-        'Tên hoặc email người dùng đã tồn tại',
-        400
-      )
+    if (existingUser) return responseHelper.error(res, 'Tên hoặc email người dùng đã tồn tại', 400)
 
     const dataUpdates = {
       username,
@@ -218,10 +202,7 @@ export const deleteUsers = async (req, res) => {
   try {
     const { ids } = req.body
     if (!Array.isArray(ids) || ids.length === 0) {
-      return responseHelper.error(
-        res,
-        'Không có người dùng nào được chọn để xóa'
-      )
+      return responseHelper.error(res, 'Không có người dùng nào được chọn để xóa')
     }
     const result = await User.deleteMany({ _id: { $in: ids } })
     if (result.deletedCount === 0) {
@@ -305,19 +286,13 @@ export const getAllAuditLogs = async (req, res) => {
     const countResult = await ActivityLog.aggregate(countPipeline)
     const recordsFiltered = countResult[0]?.count || 0
 
-    const allowedSort = [
-      'userName',
-      'description',
-      'createdAt',
-      'organizationName'
-    ]
+    const allowedSort = ['userName', 'description', 'createdAt', 'organizationName']
     const sortObj = {}
 
     if (sortField === 'organizationName') {
       sortObj['organizationInfo.name'] = sortDir
     } else {
-      sortObj[allowedSort.includes(sortField) ? sortField : 'createdAt'] =
-        sortDir
+      sortObj[allowedSort.includes(sortField) ? sortField : 'createdAt'] = sortDir
     }
 
     // Sort, phân trang, projection

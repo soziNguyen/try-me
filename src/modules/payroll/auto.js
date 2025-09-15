@@ -7,11 +7,7 @@ cron.schedule('0 0 * * *', async () => {
   try {
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
-    const start = new Date(
-      yesterday.getFullYear(),
-      yesterday.getMonth(),
-      yesterday.getDate()
-    )
+    const start = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
     const end = new Date(
       yesterday.getFullYear(),
       yesterday.getMonth(),
@@ -28,8 +24,7 @@ cron.schedule('0 0 * * *', async () => {
     const userOrgMap = {}
     attendances.forEach((a) => {
       const key = `${a.organization}_${a.user}`
-      if (!userOrgMap[key])
-        userOrgMap[key] = { org: a.organization, user: a.user }
+      if (!userOrgMap[key]) userOrgMap[key] = { org: a.organization, user: a.user }
     })
 
     for (const key in userOrgMap) {

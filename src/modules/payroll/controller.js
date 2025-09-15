@@ -15,8 +15,7 @@ export const getPayrolls = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const filterYear = req.query.year ? +req.query.year : null
     const filterMonth = req.query.month ? +req.query.month : null
@@ -151,24 +150,14 @@ export const createPayroll = async (req, res) => {
       hourlyRate
     })
 
-    const payroll = await generatePayroll(
-      organizationId,
-      user,
-      year,
-      month,
-      hourlyRate
-    )
+    const payroll = await generatePayroll(organizationId, user, year, month, hourlyRate)
     if (!payroll || (Array.isArray(payroll) && payroll.length === 0)) {
-      return res
-        .status(404)
-        .json({ message: 'Không tìm thấy Attendance trong tháng' })
+      return res.status(404).json({ message: 'Không tìm thấy Attendance trong tháng' })
     }
 
     return res.json({ message: 'Chốt lương thành công', data: payroll })
   } catch (error) {
     console.error('createPayroll error:', error)
-    return res
-      .status(500)
-      .json({ message: 'Lỗi khi tạo Payroll', error: error.message })
+    return res.status(500).json({ message: 'Lỗi khi tạo Payroll', error: error.message })
   }
 }

@@ -14,8 +14,7 @@ export const getAttendances = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId)
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const basePipeline = [
       { $match: { organization: organizationId } },
@@ -42,12 +41,10 @@ export const getAttendances = async (req, res) => {
             { 'sessions.shift.name': { $regex: searchValue, $options: 'i' } },
             // numeric totals (exact match)
             {
-              totalDuration:
-                Number(searchValue) >= 0 ? Number(searchValue) : undefined
+              totalDuration: Number(searchValue) >= 0 ? Number(searchValue) : undefined
             },
             {
-              totalRegular:
-                Number(searchValue) >= 0 ? Number(searchValue) : undefined
+              totalRegular: Number(searchValue) >= 0 ? Number(searchValue) : undefined
             },
             // date formatted dd/mm/YYYY
             {
@@ -185,8 +182,7 @@ export const getAttendanceById = async (req, res) => {
       .populate('sessions.shift', 'name startTime endTime')
       .lean()
 
-    if (!attendance)
-      return responseHelper.error(res, 'Không tìm thấy chấm công')
+    if (!attendance) return responseHelper.error(res, 'Không tìm thấy chấm công')
 
     responseHelper.success(res, attendance)
   } catch (err) {

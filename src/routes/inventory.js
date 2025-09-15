@@ -6,48 +6,18 @@ import { isPermit } from '../helpers/isPermit.js'
 const router = express.Router()
 
 // Inventory Render Page
-router.get(
-  '/inventory/ingredients',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.ingredientPage
-)
-router.get(
-  '/inventory/categories',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.categoryPage
-)
+router.get('/inventory/ingredients', isAuthenticated, isPermit('Admin', 'Org'), page.ingredientPage)
+router.get('/inventory/categories', isAuthenticated, isPermit('Admin', 'Org'), page.categoryPage)
 router.get(
   '/inventory/inventory-stock',
   isAuthenticated,
   isPermit('Admin', 'Org'),
   page.ingredientStockPage
 )
-router.get(
-  '/inventory/suppliers',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.supplierPage
-)
-router.get(
-  '/inventory/warehouses',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.warehousePage
-)
-router.get(
-  '/inventory/stock-entries',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.importPage
-)
-router.get(
-  '/inventory/stock-issues',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.exportPage
-)
+router.get('/inventory/suppliers', isAuthenticated, isPermit('Admin', 'Org'), page.supplierPage)
+router.get('/inventory/warehouses', isAuthenticated, isPermit('Admin', 'Org'), page.warehousePage)
+router.get('/inventory/stock-entries', isAuthenticated, isPermit('Admin', 'Org'), page.importPage)
+router.get('/inventory/stock-issues', isAuthenticated, isPermit('Admin', 'Org'), page.exportPage)
 router.get(
   '/inventory/stock-transfers',
   isAuthenticated,
