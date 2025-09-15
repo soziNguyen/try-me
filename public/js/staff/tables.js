@@ -205,7 +205,7 @@ function getBgClassByStatus(status) {
     case 'available':
       return 'my-orange text-white'
     case 'occupied':
-      return 'bg-secondary'
+      return 'green-light-bg'
     case 'maintenance':
       return 'bg-dark text-white'
     default:
@@ -221,8 +221,6 @@ function renderTableList(tables = []) {
     tableGrid.innerHTML = `<div class="col-12 text-center">Không có bàn nào.</div>`
     return
   }
-
-  console.log(tables)
 
   tableGrid.innerHTML = tables
     .map((table) => {
@@ -264,7 +262,7 @@ function renderTableList(tables = []) {
           <button class="btnOrderFood btn btn-success btn-sm fw-bold shadow-sm" data-order-id="${table.currentOrderId?._id}">
             <i class="bi bi-clipboard-check me-1"></i> Thêm món
           </button>
-          <button class="btnCheckout btn btn-primary btn-sm fw-bold shadow-sm" ">
+          <button class="btnCheckout btn btn-primary btn-sm fw-bold shadow-sm">
             <i class="bi bi-credit-card me-1"></i> Thanh toán
           </button>
         </div>

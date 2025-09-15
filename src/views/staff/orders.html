@@ -19,151 +19,164 @@
             <div id="orderWarning"></div>
             <h3>🍽️ Danh sách thực đơn</h3>
             <div id="categoryList" class="mb-4 d-flex gap-2 flex-wrap"></div>
-            <div id="foodMenu" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+            <div id="foodMenu" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xxl-4 g-3">
               <!-- Món ăn sẽ được render ở đây -->
             </div>
           </div>
 
           <div class="col-lg-4 mt-4 d-none" id="orderSection">
-            <h3 id="orderTitle">🧾 Hóa đơn</h3>
-            <div id="orderSummary" class="card p-3 shadow-sm table-responsive">
-              <table class="table table-bordered table-sm">
-                <thead class="table-light">
-                  <tr>
-                    <th class="text">Món</th>
-                    <th class="number">Số Lượng</th>
-                    <th class="number">Đơn giá (đ)</th>
-                    <th class="number">Thành tiền</th>
-                    <th class="text-center"><i class="bi bi-pencil-square"></i></th>
-                  </tr>
-                </thead>
-                <tbody id="orderItems"></tbody>
-              </table>
-              <hr />
-              <div class="text-end fw-bold">
-                Tổng cộng: <span id="totalAmount">0đ</span>
+            <div class="accordion" id="accordionOrder">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOrder">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseOrder" aria-expanded="false" aria-controls="collapseOrder">
+                    Hóa đơn
+                  </button>
+                </h2>
+                <div id="collapseOrder" class="accordion-collapse collapse" aria-labelledby="headingOrder"
+                  data-bs-parent="#accordionOrder">
+                  <div class="accordion-body p-0">
+                    <div id="orderSummary" class="card p-3 shadow-sm table-responsive m-0">
+                      <table class="table table-bordered table-sm mb-0">
+                        <thead class="table-light">
+                          <tr>
+                            <th class="text">Món</th>
+                            <th class="number">Số Lượng</th>
+                            <th class="number">Đơn giá (đ)</th>
+                            <th class="number">Thành tiền</th>
+                            <th class="text-center"><i class="bi bi-pencil-square"></i></th>
+                          </tr>
+                        </thead>
+                        <tbody id="orderItems"></tbody>
+                      </table>
+                      <hr />
+                      <div class="text-end fw-bold">
+                        Tổng cộng: <span id="totalAmount">0đ</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Chi tiết thanh toán (ẩn mặc định) -->
-            <div id="checkoutDetail" class="card p-3 shadow-sm mt-3 d-none">
-              <div class="d-flex justify-content-between">
-                <h5 class="mb-3">Chi tiết thanh toán</h5>
-                <button id="cancelCheckoutDetail" class="btn btn-close"></button>
-              </div>
-
-              <div class="mb-2">
-                <label for="discountCodeInput">Mã giảm giá:</label>
-                <div class="input-group">
-                  <input type="text" id="discountCodeInput" class="form-control" placeholder="Nhập mã giảm giá" />
-                  <button id="applyDiscountBtn" class="btn btn-primary">
-                    Áp dụng
+            <!-- Accordion Chi tiết thanh toán -->
+            <div class="accordion mt-3" id="accordionCheckout">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingCheckout">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseCheckout" aria-expanded="false" aria-controls="collapseCheckout">
+                    Chi tiết thanh toán
                   </button>
+                </h2>
+                <div id="collapseCheckout" class="accordion-collapse collapse" aria-labelledby="headingCheckout"
+                  data-bs-parent="#accordionCheckout">
+                  <div class="accordion-body p-0">
+                    <!-- Chi tiết thanh toán -->
+                    <div id="checkoutDetail" class="p-2">
+                      <form id="applyCouponForm">
+                        <div class="my-2">
+                          <label for="discountCodeInput">Mã giảm giá:</label>
+                          <div class="input-group">
+                            <input type="text" id="discountCodeInput" class="form-control"
+                              placeholder="Nhập mã giảm giá" />
+                            <button type="submit" id="applyDiscountBtn" class="btn btn-primary">Áp dụng</button>
+                          </div>
+                          <small id="discountMessage" class="text-success d-block mt-1"></small>
+                        </div>
+                      </form>
+
+                      <div class="mb-2">
+                        <label>Giảm theo mã (đ):</label>
+                        <input type="number" id="discountInput" class="form-control" placeholder="0" min="0" readonly />
+                      </div>
+
+                      <div>
+                        <label>Điểm tích lũy:</label>
+                        <input type="number" id="pointsInput" class="form-control" placeholder="0" min="0" />
+                      </div>
+
+                      <div>
+                        <label>Giảm theo điểm (1 điểm = 500đ):</label>
+                        <input type="number" id="pointsDiscountInput" class="form-control" placeholder="0" min="0"
+                          readonly />
+                      </div>
+
+                      <div class="mb-2">
+                        <label>Phí dịch vụ (đ):</label>
+                        <input type="number" id="serviceChargeInput" class="form-control" placeholder="0" min="0" />
+                      </div>
+
+                      <div class="mb-2">
+                        <label><strong>Tổng tiền trước thuế (đ):</strong></label>
+                        <input type="text" id="totalPayable" class="form-control text-danger fw-bold" value="0"
+                          readonly />
+                      </div>
+
+                      <div class="mb-2">
+                        <label>VAT (%) </label>
+                        <select id="vatInput" class="form-select"></select>
+                      </div>
+
+                      <div class="mb-2">
+                        <label><strong>Tổng tiền phải trả (đ):</strong></label>
+                        <input type="text" id="total" class="form-control text-danger fw-bold" value="0" readonly />
+                      </div>
+
+                      <div class="mb-2">
+                        <label>Số tiền khách đã trả (đ):</label>
+                        <input type="text" id="customerPaidInput" class="form-control" placeholder="0" min="0" />
+                        <div class="price-suggestion mt-2 d-flex flex-wrap justify-content-center gap-2">
+                          <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                            data-value="1000">1.000</button>
+                          <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                            data-value="2000">2.000</button>
+                          <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                            data-value="5000">5.000</button>
+                          <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                            data-value="10000">10.000</button>
+                          <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                            data-value="20000">20.000</button>
+                          <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                            data-value="50000">50.000</button>
+                          <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                            data-value="100000">100.000</button>
+                          <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                            data-value="200000">200.000</button>
+                          <button type="button" class="btn btn-outline-info btn-sm cash-suggestion"
+                            data-value="500000">500.000</button>
+                        </div>
+                        <div id="dynamicSuggestions" class="mt-2 d-flex flex-wrap justify-content-center gap-2"></div>
+                      </div>
+
+                      <div class="mb-2">
+                        <label>Tiền thừa:</label>
+                        <input type="text" id="changeAmount" class="form-control" readonly />
+                      </div>
+
+                      <div class="mb-2">
+                        <label>Phương thức thanh toán:</label>
+                        <div id="paymentMethod" class="d-flex gap-2 mt-2"></div>
+                        <input type="hidden" id="paymentMethodValue" name="paymentMethod" value="" />
+                      </div>
+
+                      <div class="mb-3">
+                        <label><strong>In hóa đơn:</strong></label>
+                        <div>
+                          <input type="radio" id="printYes" name="printInvoice" value="yes" checked />
+                          <label for="printYes">Có</label>
+                          <input type="radio" id="printNo" name="printInvoice" value="no" class="ms-3" />
+                          <label for="printNo">Không</label>
+                        </div>
+                      </div>
+
+                      <div class="d-flex justify-content-between">
+                        <button id="btn-check-print" type="button" class="btn btn-outline-info me-2">IN HÓA ĐƠN</button>
+                        <button type="button" class="btn btn-outline-success" id="confirmCheckoutBtn">THANH
+                          TOÁN</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <small id="discountMessage" class="text-success d-block mt-1"></small>
-              </div>
-
-              <div class="mb-2">
-                <label>Giảm theo mã (đ):</label>
-                <input type="number" id="discountInput" class="form-control" placeholder="0" min="0" readonly />
-              </div>
-
-              <div>
-                <label>Điểm tích lũy:</label>
-                <input type="number" id="pointsInput" class="form-control" placeholder="0" min="0" />
-              </div>
-
-              <div>
-                <label>Giảm theo điểm (1 điểm = 500đ):</label>
-                <input type="number" id="pointsDiscountInput" class="form-control" placeholder="0" min="0" readonly />
-              </div>
-
-              <div class="mb-2">
-                <label>Phí dịch vụ (đ):</label>
-                <input type="number" id="serviceChargeInput" class="form-control" placeholder="0" min="0" />
-              </div>
-
-              <div class="mb-2">
-                <label><strong>Tổng tiền trước thuế (đ):</strong></label>
-                <input type="text" id="totalPayable" class="form-control text-danger fw-bold" value="0" readonly />
-              </div>
-
-              <div class="mb-2">
-                <label>VAT (%) </label>
-                <select id="vatInput" class="form-select"></select>
-              </div>
-
-              <div class="mb-2">
-                <label><strong>Tổng tiền phải trả (đ):</strong></label>
-                <input type="text" id="total" class="form-control text-danger fw-bold" value="0" readonly />
-              </div>
-
-              <div class="mb-2">
-                <label>Số tiền khách đã trả (đ):</label>
-                <input type="text" id="customerPaidInput" class="form-control" placeholder="0" min="0" />
-                <div class="price-suggestion mt-2 d-flex flex-wrap justify-content-center gap-2">
-                  <!-- button gợi ý mệnh giá -->
-                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="1000">
-                    1.000
-                  </button>
-                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="2000">
-                    2.000
-                  </button>
-                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="5000">
-                    5.000
-                  </button>
-                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="10000">
-                    10.000
-                  </button>
-                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="20000">
-                    20.000
-                  </button>
-                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="50000">
-                    50.000
-                  </button>
-                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="100000">
-                    100.000
-                  </button>
-                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="200000">
-                    200.000
-                  </button>
-                  <button type="button" class="btn btn-outline-info btn-sm cash-suggestion" data-value="500000">
-                    500.000
-                  </button>
-                </div>
-                <!-- Gợi ý mệnh giá khi nhập  -->
-                <div id="dynamicSuggestions" class="mt-2 d-flex flex-wrap justify-content-center gap-2"></div>
-              </div>
-
-              <div class="mb-2">
-                <label>Tiền thừa:</label>
-                <input type="text" id="changeAmount" class="form-control" readonly />
-              </div>
-
-              <div class="mb-2">
-                <label>Phương thức thanh toán:</label>
-                <div id="paymentMethod" class="d-flex gap-2 mt-2"></div>
-                <input type="hidden" id="paymentMethodValue" name="paymentMethod" value="" />
-              </div>
-
-              <div class="mb-3">
-                <label><strong>In hóa đơn:</strong></label>
-                <div>
-                  <input type="radio" id="printYes" name="printInvoice" value="yes" checked />
-                  <label for="printYes">Có</label>
-
-                  <input type="radio" id="printNo" name="printInvoice" value="no" class="ms-3" />
-                  <label for="printNo">Không</label>
-                </div>
-              </div>
-
-              <div class="d-flex justify-content-between">
-                <button id="btn-print" type="button" class="btn btn-outline-info me-2">
-                  IN HÓA ĐƠN
-                </button>
-                <button type="button" class="btn btn-outline-success" id="confirmCheckoutBtn">
-                  THANH TOÁN
-                </button>
               </div>
             </div>
           </div>
