@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     ])
 
     if (!Array.isArray(foods)) {
-      console.error('foods không phải là mảng:', foods)
       return
     }
 
@@ -43,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const warningDiv = document.getElementById('orderWarning')
       if (warningDiv) {
         warningDiv.innerHTML = `
-          <div class="alert alert-warning mt-3">
+          <div class="alert alert-warning">
             ⚠️ Vui lòng chọn bàn trước khi thao tác gọi món.
           </div>
         `
@@ -148,7 +147,6 @@ async function getTables() {
     const res = await ajax('/api/tables', {}, 'GET')
     if (Array.isArray(res?.tables)) {
       renderTableList(res.tables)
-      console.log(res.tables)
     } else {
       document.getElementById('tableGrid').innerHTML = `<div>Không có bàn nào.</div>`
     }
@@ -167,7 +165,7 @@ function renderTableList(tables = []) {
 
   // Nút "Mang Về"
   let html = `
-    <button class="btn btn-warning m-1 table-button" style="min-width:110px;height:60px;font-weight:600;" data-mang-ve="true">
+    <button class="btn btn-warning m-1 table-button" data-mang-ve="true">
       <i class="bi bi-bag"></i> Mang Về
     </button>
   `
@@ -181,7 +179,7 @@ function renderTableList(tables = []) {
       const orderId = table.currentOrderId ? table.currentOrderId._id.toString() : ''
 
       return `
-      <button class="btn ${btnClass} m-1 table-button" style="min-width:110px;height:60px;font-weight:600;" 
+      <button class="btn ${btnClass} m-1 table-button" 
         data-table-id="${table._id}" data-order-id="${orderId}" data-status="${table.status}">
         ${table.name}
       </button>
@@ -250,7 +248,6 @@ function mergeMenus(foods, combos) {
 function renderMenu(items) {
   const menuDiv = document.getElementById('foodMenu')
   if (!menuDiv) {
-    console.error('Không tìm thấy phần tử #foodMenu trong HTML')
     return
   }
 
@@ -276,7 +273,7 @@ function renderMenu(items) {
       return `
       <div class="col">
         <div class="card shadow-sm h-100 rounded-3">
-          <img src="${imgSrc}" alt="${name}" class="card-img-top" style="object-fit: cover; height: 180px;">
+          <img src="${imgSrc}" alt="${name}" class="card-img-top">
           <div class="card-body d-flex flex-column">
             <h5 class="card-title fw-semibold">${name}</h5>
             ${item.isCombo ? `<p class="card-text text-secondary">Gồm: ${comboItemsList}</p>` : ''}
@@ -352,15 +349,18 @@ async function fetchCombos() {
 function updateOrderUI(order) {
   const tbody = document.getElementById('orderItems')
   const totalAmountEl = document.getElementById('totalAmount')
-  const titleEl = document.getElementById('orderTitle')
 
   // Tiêu đề hóa đơn
-  if (order.isTakeaway) {
-    titleEl.textContent = '🧾 Hóa đơn mang về'
-  } else if (order.tableId && order.tableId.name) {
-    titleEl.textContent = `🧾 Hóa đơn bàn ${order.tableId.name} (${order.tableId.area})`
-  } else {
-    titleEl.textContent = '🧾 Hóa đơn'
+  const titleEl = document.getElementById('orderTitle')
+  if (titleEl) {
+    // update title
+    if (order.isTakeaway) {
+      titleEl.textContent = '🧾 Hóa đơn mang về'
+    } else if (order.tableId && order.tableId.name) {
+      titleEl.textContent = `🧾 Hóa đơn bàn ${order.tableId.name} (${order.tableId.area})`
+    } else {
+      titleEl.textContent = '🧾 Hóa đơn'
+    }
   }
 
   // Danh sách món
@@ -402,21 +402,6 @@ function updateOrderUI(order) {
   // Tổng tiền
   const total = calculateTotalAmount(order.items)
   totalAmountEl.textContent = `${total.toLocaleString()}đ`
-
-  // Thêm nút thanh toán nếu chưa có
-  if (!document.getElementById('checkoutBtn')) {
-    const orderSummary = document.getElementById('orderSummary')
-    orderSummary.insertAdjacentHTML(
-      'beforeend',
-      `
-      <div class="text-end mt-3">
-        <button class="btn btn-outline-success" id="checkoutBtn">
-          <i class="bi bi-credit-card"></i> CHI TIẾT HÓA ĐƠN
-        </button>
-      </div>
-    `
-    )
-  }
 
   syncCheckoutDetailTotal()
   updateOrderSectionVisibility()

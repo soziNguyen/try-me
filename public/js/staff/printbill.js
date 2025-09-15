@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       img.src = order.qrCode
     } else {
-      console.log('No QR Code found in order')
+      // console.log('No QR Code found in order')
       qrContainer.innerHTML = '' // Clear container nếu không có QR
     }
 
@@ -111,6 +111,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 500)
   } catch (error) {
     console.error('Lỗi lấy dữ liệu đơn hàng:', error)
-    alert(`Lỗi khi tải hóa đơn: ${error.message}`)
   }
 })
