@@ -21,28 +21,34 @@ export const createOrder = async (req, res) => {
     // 1. Xử lý khách hàng theo organization + phone
     let customer = null
     if (customerPhone) {
-      customer = await Customer.findOneAndUpdate(
-        { organization: organizationId, phone: customerPhone },
-        {
-          $setOnInsert: {
-            organization: organizationId,
-            name: customerName?.trim() || 'Khách lẻ',
-            phone: customerPhone,
-            totalOrders: 0,
-            lastOrderDate: null
-          }
-        },
-        { upsert: true, new: true }
-      )
-    } else if (customerName) {
-      // Chỉ có name -> luôn tạo mới
-      customer = await Customer.create({
-        organization: organizationId,
-        name: customerName.trim(),
-        phone: null,
-        totalOrders: 0,
-        lastOrderDate: null
-      })
+      const nameToUpdate = customerName?.trim()
+      const query = { organization: organizationId, phone: customerPhone }
+
+      // Tìm customer trước
+      customer = await Customer.findOne(query)
+
+      if (customer) {
+        // Customer đã tồn tại - chỉ update name nếu cần
+        if (nameToUpdate && nameToUpdate !== customer.name) {
+          customer = await Customer.findOneAndUpdate(
+            query,
+            {
+              $set: {
+                name: nameToUpdate,
+                updatedAt: new Date()
+              }
+            },
+            { new: true }
+          )
+        }
+      } else {
+        // Customer chưa tồn tại - tạo mới
+        customer = await Customer.create({
+          organization: organizationId,
+          phone: customerPhone,
+          name: nameToUpdate || 'Khách lẻ'
+        })
+      }
     }
 
     // 2. Đơn mang đi
@@ -68,13 +74,6 @@ export const createOrder = async (req, res) => {
         organization: organizationId,
         customerId: customer?._id || null
       })
-
-      if (customer) {
-        await Customer.findByIdAndUpdate(customer._id, {
-          $inc: { totalOrders: 1 },
-          lastOrderDate: new Date()
-        })
-      }
 
       return responseHelper.success(res, {
         orderId: newOrder._id,
@@ -106,14 +105,6 @@ export const createOrder = async (req, res) => {
     table.currentOrderId = newOrder._id
     table.customerName = customerName?.trim() || 'Khách lẻ'
     await table.save()
-
-    // Cập nhật lịch sử mua hàng của khách
-    if (customer) {
-      await Customer.findByIdAndUpdate(customer._id, {
-        $inc: { totalOrders: 1 },
-        lastOrderDate: new Date()
-      })
-    }
 
     responseHelper.success(res, { orderId: newOrder._id, tableId: table._id })
   } catch (error) {
@@ -434,20 +425,28 @@ export const checkoutOrder = async (req, res) => {
       // === UPDATE CUSTOMER ===
       if (order.customerId) {
         if (!customer) customer = await Customer.findById(order.customerId).session(session)
+
         if (customer) {
           const pointsEarned = Math.floor(total / 10000)
-          await Customer.findByIdAndUpdate(
-            order.customerId,
-            {
-              $inc: { totalOrders: 1, totalSpent: total },
-              $set: {
-                totalPoints: customer.totalPoints - parsedPointsUsed + pointsEarned,
-                lastOrderDate: new Date(),
-                updatedAt: new Date()
-              }
-            },
-            { session }
-          )
+
+          // Chỉ cộng điểm nếu khách có phone
+          if (customer.phone) {
+            await Customer.findByIdAndUpdate(
+              order.customerId,
+              {
+                $inc: { totalOrders: 1, totalSpent: total },
+                $set: {
+                  totalPoints: customer.totalPoints - parsedPointsUsed + pointsEarned,
+                  lastOrderDate: new Date(),
+                  updatedAt: new Date()
+                }
+              },
+              { session }
+            )
+          } else {
+            order.customerId = null
+            await order.save({ session })
+          }
         }
       }
 

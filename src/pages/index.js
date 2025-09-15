@@ -519,3 +519,13 @@ export const receivingAccountPage = async (req, res) => {
     })
   )
 }
+
+export const customerPage = async (req, res) => {
+  res.render(
+    'admin/customer',
+    getPageData(req, 'Quản lý khách hàng', 'Customer', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ KHÁCH HÀNG'
+    })
+  )
+}

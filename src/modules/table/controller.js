@@ -6,26 +6,17 @@ import { getCurrentOrg } from '../../helpers/orgHelper.js'
 // [CREATE] / table
 export const createTable = async (req, res) => {
   try {
-    const { name, status, capacity, area } = req.body
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-    const exist = await Table.findOne({
-      name,
-      organization: organizationId
-    })
 
-    if (exist) {
-      return responseHelper.error(res, 'Tên bàn đã tồn tại.', 400)
+    const data = {
+      ...req.body,
+      organization: organizationId
     }
-    const newTable = await Table.create({
-      name,
-      status,
-      capacity: capacity || undefined,
-      area: area || undefined,
-      organization: organizationId
-    })
 
-    responseHelper.success(res, newTable)
+    const newTable = new Table(data)
+    await newTable.save()
+    responseHelper.success(res, newTable, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -66,6 +57,100 @@ export const getTables = async (req, res) => {
     })
 
     responseHelper.success(res, { tables })
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
+export const getDataTables = async (req, res) => {
+  try {
+    const draw = +req.query.draw || 0
+    const start = +req.query.start || 0
+    const length = +req.query.length || 10
+    const searchValue = (req.query['search[value]'] || '').trim()
+    const colIdx = req.query['order[0][column]']
+    const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
+    const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
+    const organizationId = getCurrentOrg(req)
+
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const pipeline = [
+      { $match: { organization: organizationId } },
+      // Tạo virtual field để search
+      {
+        $addFields: {
+          statusSearchText: {
+            $switch: {
+              branches: [
+                {
+                  case: { $eq: ['$status', 'available'] },
+                  then: 'available còn trống con trong trống free'
+                },
+                {
+                  case: { $eq: ['$status', 'occupied'] },
+                  then: 'occupied đang sử dụng dang su dung busy taken'
+                }
+              ],
+              default: '$status'
+            }
+          }
+        }
+      }
+    ]
+
+    if (searchValue) {
+      const orConditions = []
+      const searchableFields = [
+        'name',
+        'statusSearchText', // Sử dụng virtual field thay vì 'status'
+        'area'
+      ]
+
+      searchableFields.forEach((field) => {
+        orConditions.push({ [field]: { $regex: searchValue, $options: 'i' } })
+      })
+
+      // Xử lý riêng cho capacity (số)
+      if (!isNaN(searchValue)) {
+        orConditions.push({ capacity: +searchValue })
+      }
+
+      pipeline.push({ $match: { $or: orConditions } })
+    }
+
+    const countPipeline = [...pipeline, { $count: 'count' }]
+    const countResult = await Table.aggregate(countPipeline)
+    const recordsFiltered = countResult[0]?.count || 0
+    const recordsTotal = await Table.countDocuments({
+      organization: organizationId
+    })
+
+    pipeline.push(
+      { $sort: { [sortField === 'statusSearchText' ? 'status' : sortField]: sortDir } },
+      { $skip: start },
+      { $limit: length },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          status: 1, // Trả về status gốc
+          capacity: 1,
+          area: 1,
+          createdAt: 1
+          // Không trả về statusSearchText
+        }
+      }
+    )
+
+    const tables = await Table.aggregate(pipeline)
+
+    return res.json({
+      draw,
+      recordsTotal,
+      recordsFiltered,
+      data: tables
+    })
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -140,7 +225,7 @@ export const updateTable = async (req, res) => {
       { new: true }
     )
 
-    responseHelper.success(res, updatedTable)
+    responseHelper.success(res, updatedTable, 'Cập nhật thành công')
   } catch (error) {
     console.error('Lỗi khi cập nhật bàn:', error)
     responseHelper.error(res, error.message || 'Lỗi máy chủ.')
@@ -150,16 +235,16 @@ export const updateTable = async (req, res) => {
 // DELETE TABLE
 export const deleteTables = async (req, res) => {
   try {
-    const { tableIds } = req.body
+    const { ids } = req.body
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    if (!tableIds || tableIds.length === 0) {
+    if (!Array.isArray(ids) || ids.length === 0) {
       return responseHelper.error(res, 'Không có bàn nào được chọn.', 400)
     }
 
     const result = await Table.deleteMany({
-      _id: { $in: tableIds },
+      _id: { $in: ids },
       organization: organizationId
     })
 
@@ -167,7 +252,7 @@ export const deleteTables = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy bàn nào để xóa.', 404)
     }
 
-    responseHelper.success(res, 'Xóa bàn thành công')
+    responseHelper.success(res, `Đã xóa ${result.deletedCount} bản ghi`, 'Xóa thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }

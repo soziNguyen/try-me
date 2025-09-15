@@ -4,7 +4,7 @@ const Schema = mongoose.Schema
 
 const TableSchema = new Schema(
   {
-    name: { type: String, required: true },
+    name: { type: String, default: '' },
     status: {
       type: String,
       enum: ['available', 'occupied'],
@@ -19,7 +19,7 @@ const TableSchema = new Schema(
       default: null
     },
     organization: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'Organization',
       required: true
     }
@@ -27,6 +27,14 @@ const TableSchema = new Schema(
   {
     collection: 'Tables',
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
+  }
+)
+
+TableSchema.index(
+  { organization: 1, name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { name: { $ne: '' } }
   }
 )
 

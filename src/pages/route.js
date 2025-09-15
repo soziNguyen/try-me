@@ -15,5 +15,6 @@ router.get(
   isPermit('Admin', 'Org'),
   page.receivingAccountPage
 )
+router.get('/customers', isAuthenticated, isPermit('Admin', 'Org'), page.customerPage)
 
 export default router
