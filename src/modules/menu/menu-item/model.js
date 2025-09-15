@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 
 const menuItemSchema = new mongoose.Schema(
   {
+    sku: { type: String, default: '' },
     name: { type: String, default: '' },
     image: { type: String, default: '' },
     description: { type: String, default: '' },
@@ -31,6 +32,14 @@ const menuItemSchema = new mongoose.Schema(
   {
     collection: 'MenuItems',
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
+  }
+)
+
+menuItemSchema.index(
+  { organization: 1, sku: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { sku: { $exists: true, $ne: '' } }
   }
 )
 

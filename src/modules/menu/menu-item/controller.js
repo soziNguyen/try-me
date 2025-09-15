@@ -16,6 +16,7 @@ export const getActiveMenus = async (req, res) => {
       {
         $project: {
           _id: 1,
+          sku: 1,
           name: 1,
           image: 1,
           price: 1,
@@ -121,6 +122,7 @@ export const getMenus = async (req, res) => {
       {
         $project: {
           _id: 1,
+          sku: 1,
           name: 1,
           image: 1,
           price: 1,
@@ -193,7 +195,7 @@ export const createMenu = async (req, res) => {
 export const updateMenu = async (req, res) => {
   try {
     const { id } = req.params
-    const { image, name, category, price, description, isActive } = req.body
+    const { sku, image, name, category, price, description, isActive } = req.body
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -215,6 +217,7 @@ export const updateMenu = async (req, res) => {
     const dataUpdate = { updatedBy: req.user._id }
 
     const oldImage = menu.image
+    if (sku !== undefined) dataUpdate.sku = sku
     if (image !== undefined) dataUpdate.image = image
     if (name !== undefined) dataUpdate.name = name
     if (category !== undefined) dataUpdate.category = category

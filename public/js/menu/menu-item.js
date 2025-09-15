@@ -63,6 +63,15 @@ $(function () {
             `<input type="checkbox" class="menuCheckbox" data-id="${row._id}">`
         },
         {
+          data: 'sku',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="sku" value="${data ?? ''}">`
+            }
+            return data
+          }
+        },
+        {
           data: 'image',
           orderable: false,
           className: 'image-cell',

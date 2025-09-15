@@ -336,8 +336,8 @@ table tbody td input.number {
 }
 
 .image-square {
-  width: 100px;
-  height: 100px;
+  width: 150px;
+  height: auto;
   -o-object-fit: cover;
      object-fit: cover;
   border-radius: 4px;

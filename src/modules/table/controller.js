@@ -3,21 +3,6 @@ import responseHelper from '../../helpers/responseHelper.js'
 import Order from '../order/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
-export const tablePage = async (req, res) => {
-  try {
-    const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-
-    const tables = await Table.find({
-      organization: organizationId
-    })
-    responseHelper.success(res, tables)
-  } catch (err) {
-    console.error(err)
-    responseHelper.error(res, err.message)
-  }
-}
-
 // [CREATE] / table
 export const createTable = async (req, res) => {
   try {

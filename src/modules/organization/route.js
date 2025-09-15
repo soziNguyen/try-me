@@ -3,13 +3,12 @@ import { orgManagementPage } from '../../pages/index.js'
 import * as org from './controller.js'
 import isAuthenticated from '../../helpers/isAuthenticated.js'
 import isAdmin from '../../helpers/isAdmin.js'
-import { isPermit } from '../../helpers/isPermit.js'
 
 const router = express.Router()
 
-router.get('/org/:orgId/dashboard', isAuthenticated, org.getOrgDashboard)
+router.get('/org/:orgId/dashboard', isAuthenticated, isAdmin, org.getOrgDashboard)
 router.get('/organizations', isAuthenticated, isAdmin, orgManagementPage) // get Page
-router.get('/api/organizations', isAuthenticated, isPermit('Admin'), org.getActiveOrganizations) // get all organizations
+router.get('/api/organizations', isAuthenticated, isAdmin, org.getActiveOrganizations) // get all organizations
 router.get('/api/organizations/get', isAuthenticated, isAdmin, org.getAllOrganizations) // get all organizations
 router.post('/api/organization/create', isAuthenticated, isAdmin, org.createOrganization) // post
 router.post('/api/admin/organization/create', isAuthenticated, isAdmin, org.createOrg) // post
