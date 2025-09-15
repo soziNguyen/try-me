@@ -140,18 +140,13 @@ function updateDynamicSuggestions(inputValue) {
     }
   } else {
     const standardAmounts = [
-      1000, 2000, 5000, 10000, 15000, 20000, 25000, 30000, 40000, 50000, 100000,
-      150000, 200000, 250000, 300000, 400000, 500000, 1000000, 1500000, 2000000,
-      2500000, 3000000, 4000000, 5000000, 10000000, 15000000, 20000000,
-      25000000, 30000000, 40000000, 50000000
+      1000, 2000, 5000, 10000, 15000, 20000, 25000, 30000, 40000, 50000, 100000, 150000, 200000,
+      250000, 300000, 400000, 500000, 1000000, 1500000, 2000000, 2500000, 3000000, 4000000, 5000000,
+      10000000, 15000000, 20000000, 25000000, 30000000, 40000000, 50000000
     ]
 
     for (let amt of standardAmounts) {
-      if (
-        amt.toString().startsWith(rawValueStr) &&
-        amt >= 1000 &&
-        amt <= maxValue
-      ) {
+      if (amt.toString().startsWith(rawValueStr) && amt >= 1000 && amt <= maxValue) {
         suggestionsSet.add(amt)
       }
     }
@@ -289,15 +284,17 @@ function initPointsInput() {
 
 // Xử lý áp dụng mã giảm giá
 function initDiscountCode() {
+  const applyCouponForm = document.getElementById('applyCouponForm')
   const applyDiscountBtn = document.getElementById('applyDiscountBtn')
   const codeInput = document.getElementById('discountCodeInput')
   const discountInput = document.getElementById('discountInput')
   const discountMessage = document.getElementById('discountMessage')
   const totalAmountEl = document.getElementById('totalAmount')
 
-  if (!applyDiscountBtn) return
+  if (!applyCouponForm) return
 
-  applyDiscountBtn.addEventListener('click', async () => {
+  applyCouponForm.addEventListener('submit', async (e) => {
+    e.preventDefault()
     if (applyDiscountBtn.dataset.state === 'applied') {
       // Xóa mã giảm giá
       window.appliedCouponId = null
@@ -353,6 +350,7 @@ function initDiscountCode() {
       applyDiscountBtn.classList.remove('btn-primary')
       applyDiscountBtn.classList.add('btn-danger')
       applyDiscountBtn.dataset.state = 'applied'
+      discountMessage.className = 'text-danger d-none mt-1'
       calculateTotals()
     } catch (error) {
       discountMessage.textContent = 'Lỗi khi áp dụng mã giảm giá'
@@ -412,9 +410,7 @@ function initCheckoutConfirm() {
     }
 
     // Lấy giá trị radio In hóa đơn
-    const printInvoice =
-      document.querySelector('input[name="printInvoice"]:checked')?.value ||
-      'no'
+    const printInvoice = document.querySelector('input[name="printInvoice"]:checked')?.value || 'no'
     const appliedCouponId = window.appliedCouponId
 
     try {
@@ -475,34 +471,26 @@ function initCheckoutConfirm() {
   })
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  const printBtn = document.getElementById('btn-check-print')
+
+  if (printBtn) {
+    printBtn.addEventListener('click', () => {
+      const orderId = window.currentOrderId
+
+      if (!orderId) {
+        toastr.error('Không xác định được đơn hàng hiện tại!')
+        return
+      }
+
+      // Mở tab mới để in hóa đơn
+      window.open(`/orders/print/${orderId}`, '_blank')
+    })
+  }
+})
+
 // MAIN CLICK EVENT HANDLER
 document.addEventListener('click', (e) => {
-  // Xử lý nút checkout
-  const checkoutBtn = e.target.closest('#checkoutBtn')
-  if (checkoutBtn) {
-    const checkoutDetail = document.getElementById('checkoutDetail')
-    if (!checkoutDetail) return
-
-    const tbody = document.getElementById('orderItems')
-    if (!tbody || tbody.children.length === 0) {
-      toastr.warning('Chưa có món nào trong hóa đơn!')
-      return
-    }
-
-    // Toggle hiển thị checkout detail
-    if (checkoutDetail.classList.contains('d-none')) {
-      checkoutDetail.classList.remove('d-none')
-      checkoutDetail.classList.add('d-block')
-    } else {
-      checkoutDetail.classList.remove('d-block')
-      checkoutDetail.classList.add('d-none')
-    }
-
-    checkoutDetail.scrollIntoView({ behavior: 'smooth' })
-    syncCheckoutDetailTotal()
-    return
-  }
-
   // Xử lý click gợi ý tiền mặt
   if (e.target.classList.contains('cash-suggestion')) {
     const value = parseInt(e.target.dataset.value, 10)
@@ -514,21 +502,10 @@ document.addEventListener('click', (e) => {
     return
   }
 
-  // Xử lý nút hủy checkout
-  if (e.target.id === 'cancelCheckoutDetail') {
-    const checkoutDetail = document.getElementById('checkoutDetail')
-    if (checkoutDetail) {
-      checkoutDetail.classList.add('d-none')
-    }
-    return
-  }
-
   // Xử lý chọn phương thức thanh toán
   const paymentBtn = e.target.closest('#paymentMethod button')
   if (paymentBtn) {
-    document
-      .querySelectorAll('#paymentMethod button')
-      .forEach((b) => b.classList.remove('active'))
+    document.querySelectorAll('#paymentMethod button').forEach((b) => b.classList.remove('active'))
     paymentBtn.classList.add('active')
 
     const paymentMethodValue = document.getElementById('paymentMethodValue')

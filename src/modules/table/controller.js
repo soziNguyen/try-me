@@ -48,6 +48,7 @@ export const getTables = async (req, res) => {
     let tables = await Table.find(filter)
       .populate({
         path: 'currentOrderId',
+        model: 'Order',
         populate: {
           path: 'customerId',
           model: 'Customer',
