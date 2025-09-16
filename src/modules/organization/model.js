@@ -11,6 +11,7 @@ const OrganizationSchema = new Schema(
     commune: { type: String, trim: true, default: '' }, // xã phường
     street: { type: String, trim: true, default: '' }, // địa chỉ cụ thể
     logo: { type: String, trim: true, default: '' },
+    taxCode: { type: String, trim: true, default: '' },
     isActive: { type: Boolean, default: true }
   },
   {

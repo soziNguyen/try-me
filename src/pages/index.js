@@ -48,7 +48,8 @@ export const profilePage = async (req, res) => {
   res.render(
     'account-settings/profile',
     getPageData(req, 'Thông tin hồ sơ', 'Profile', {
-      headerClass: (req.user.role === 'Admin' || req.user.role === 'Org') ? 'admin__header' : 'staff__header',
+      headerClass:
+        req.user.role === 'Admin' || req.user.role === 'Org' ? 'admin__header' : 'staff__header',
       pageTitle: 'THÔNG TIN HỒ SƠ',
       userRole: req.user.role,
       currentOrgId: req.user.organization
@@ -62,7 +63,8 @@ export const changePasswordPage = async (req, res) => {
     getPageData(req, 'Thay đổi mật khẩu', 'Change-password', {
       headerClass: 'staff__header',
       pageTitle: 'THAY ĐỔI MẬT KHẨU',
-      headerClass: (req.user.role === 'Admin' || req.user.role === 'Org') ? 'admin__header' : 'staff__header',
+      headerClass:
+        req.user.role === 'Admin' || req.user.role === 'Org' ? 'admin__header' : 'staff__header',
       userRole: req.user.role
     })
   )

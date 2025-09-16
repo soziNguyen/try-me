@@ -1,94 +1,92 @@
 <%- include('../partials/header.html') %>
 
-  <% if (userRole==="Admin" ) { %>
-    <%- include('../partials/admin_sidebar.html') %>
-      <% } else if (userRole==="Org" ) { %>
-        <%- include('../partials/org_sidebar.html') %>
-          <% } else if (userRole==="Member" ) { %>
-            <%- include('../partials/staff_sidebar.html') %>
-              <% } %>
+<% if (userRole==="Admin" ) { %>
+  <%- include('../partials/admin_sidebar.html') %>
+<% } else if (userRole==="Org" ) { %>
+  <%- include('../partials/org_sidebar.html') %>
+<% } else if (userRole==="Member" ) { %>
+  <%- include('../partials/staff_sidebar.html') %>
+<% } %>
 
-                <!-- Main Content Section -->
-                <div class="admin__content">
-                  <h3 class="fw-bold mb-5">
-                    <%= pageTitle %>
-                  </h3>
+<!-- Main Content Section -->
+<div class="admin__content">
+  <h3 class="fw-bold mb-5"><%= pageTitle %></h3>
 
-                  <div class="org-info">
-                    <h5 class="mb-md-3">Thông tin tổ chức</h5>
-                    <div class="org-logo d-flex align-items-center justify-content-center mb-5">
-                      <div class="org-logo-container">
-                        <img id="orgLogoPreview" src="/assets/images/default.png" alt="Logo"
-                          class="org-logo-img no-image">
-                        <div class="org-logo-overlay no-image">
-                          <button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn"
-                            data-bs-toggle="tooltip" title="Xem ảnh">
-                            <i class="bi bi-eye"></i>
-                          </button>
-                          <button type="button" class="btn btn-outline-secondary btn-sm upload-btn"
-                            data-bs-toggle="tooltip" title="Thêm ảnh">
-                            <i class="bi bi-upload"></i>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="col-md-6 mb-3">
-                        <input type="text" name="taxCode" id="taxCode" class="tax-code form-control"
-                          placeholder="Mã số thuế">
-                      </div>
-                      <div class="col-md-6 mb-3">
-                        <input type="text" name="orgName" id="orgName" class="orgName form-control"
-                          placeholder="Tên tổ chức">
-                      </div>
-                      <div class="col-md-6 mb-3">
-                        <input type="text" name="orgEmail" id="orgEmail" class="orgEmail form-control"
-                          placeholder="Email">
-                      </div>
-                      <div class="col-md-6 mb-3">
-                        <input type="text" name="orgPhone" id="orgPhone" class="orgPhone form-control"
-                          placeholder="Số điện thoại">
-                      </div>
-                      <div class="col-md-6 mb-3">
-                        <select name="orgProvince" id="orgProvince" class="orgProvince form-control"></select>
-                      </div>
-                      <div class="col-md-6 mb-3">
-                        <select name="orgCommune" id="orgCommune" class="orgCommune form-control">
-                        </select>
-                      </div>
-                      <div class="col-md-6 mb-3">
-                        <input type="text" name="orgStreet" id="orgStreet" class="orgStreet form-control"
-                          placeholder="Số nhà/Đường">
-                      </div>
-                    </div>
-                  </div>
-                  <div class="account-info mt-3">
-                    <h5>Thông tin đăng nhập</h5>
-                    <div class="row mt-3">
-                      <div class="col-md-6 mb-3">
-                        <input type="text" name="username" class="username form-control" placeholder="Tên đăng nhập"
-                          disabled>
-                      </div>
-                      <div class="col-md-6 mb-3">
-                        <input type="email" email="email" class="email form-control" placeholder="Email" disabled>
-                      </div>
-                      <div class="col-md-6 mb-3">
-                        <a href="/change-password"><i>Đổi mật khẩu</i></a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                </div>
-                </div>
+  <form id="orgForm" onsubmit="return false;" novalidate>
+    <div class="org-info">
+      <h5 class="mb-md-3">Thông tin tổ chức</h5>
+      <div class="org-logo d-flex align-items-center justify-content-center mb-5">
+        <div class="org-logo-container">
+          <img id="orgLogoPreview" src="/assets/images/default.png" alt="Logo"
+            class="org-logo-img no-image">
+          <div class="org-logo-overlay no-image">
+            <button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn"
+              data-bs-toggle="tooltip" title="Xem ảnh">
+              <i class="bi bi-eye"></i>
+            </button>
+            <button type="button" class="btn btn-outline-light btn-sm upload-btn"
+              data-bs-toggle="tooltip" title="Thêm ảnh">
+              <i class="bi bi-upload"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <input type="text" name="taxCode" id="taxCode" class="tax-code form-control"
+            placeholder="Mã số thuế">
+        </div>
+        <div class="col-md-6 mb-3">
+          <input type="text" name="orgName" id="orgName" class="orgName form-control"
+            placeholder="Tên tổ chức">
+        </div>
+        <div class="col-md-6 mb-3">
+          <input type="text" name="orgEmail" id="orgEmail" class="orgEmail form-control"
+            placeholder="Email">
+        </div>
+        <div class="col-md-6 mb-3">
+          <input type="text" name="orgPhone" id="orgPhone" class="orgPhone form-control"
+            placeholder="Số điện thoại">
+        </div>
+        <div class="col-md-6 mb-3">
+          <select name="orgProvince" id="orgProvince" class="orgProvince form-control"></select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <select name="orgCommune" id="orgCommune" class="orgCommune form-control"></select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <input type="text" name="orgStreet" id="orgStreet" class="orgStreet form-control"
+            placeholder="Số nhà/Đường">
+        </div>
+      </div>
+    </div>
 
-                <%- include('../partials/commonjs.html') %>
-                  <%- include('../partials/cropper_modal.html') %>
-                    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
-                    <input type="hidden" id="currentOrgId" value="<%= currentOrgId %>">
-                    <script src="/js/sidebar-toggle.js"></script>
-                    <script src="/js/data-table.js"></script>
-                    <% if (userRole==="Admin" ) { %>
-                      <script src="/js/admin/admin-org.js"></script>
-                      <% } %>
-                        <script src="/js/admin/org-profile.js"></script>
-                        <%- include('../partials/footer.html') %>
+    <div class="account-info mt-3">
+      <h5>Thông tin đăng nhập</h5>
+      <div class="row mt-3">
+        <div class="col-md-6 mb-3">
+          <input type="text" name="username" class="username form-control"
+            placeholder="Tên đăng nhập" value="<%= user.username %>" disabled>
+        </div>
+        <div class="col-md-6 mb-3">
+          <input type="email" name="email" class="email form-control" placeholder="Email" value="<%= user.email %>" disabled>
+        </div>
+        <div class="col-md-6 mb-3">
+          <a href="/change-password"><i>Đổi mật khẩu</i></a>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/commonjs.html') %>
+<%- include('../partials/cropper_modal.html') %>
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<input type="hidden" id="currentOrgId" value="<%= currentOrgId %>">
+<script src="/js/sidebar-toggle.js"></script>
+<script src="/js/data-table.js"></script>
+<% if (userRole==="Admin" ) { %>
+  <script src="/js/admin/admin-org.js"></script>
+<% } %>
+<script src="/js/admin/org-profile.js"></script>
+<%- include('../partials/footer.html') %>

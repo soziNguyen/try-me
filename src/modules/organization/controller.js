@@ -1,5 +1,6 @@
 import User from '../user/model.js'
 import Organization from './model.js'
+import { deleteFile } from '../upload/helper.js'
 import withTransaction from '../../helpers/withTransaction.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import validator from 'validator'
@@ -106,11 +107,11 @@ export const getActiveOrganizations = async (req, res) => {
 
 export const getOrgById = async (req, res) => {
   try {
-    const { id } = req.params;
-    if (!id) return responseHelper.error(res, 'Id tổ chức không hợp lệ', 400);
+    const { id } = req.params
+    if (!id) return responseHelper.error(res, 'Id tổ chức không hợp lệ', 400)
 
-    const org = await Organization.findById(id);
-    if (!org) return responseHelper.error(res, 'Tổ chức không tồn tại', 404);
+    const org = await Organization.findById(id)
+    if (!org) return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
 
     const responseData = {
       ...org.toObject(),
@@ -120,13 +121,13 @@ export const getOrgById = async (req, res) => {
         raw: org.phone ? `+${org.phone}` : null,
         type: org.phone ? getPhoneType(org.phone) : null
       }
-    };
+    }
 
-    responseHelper.success(res, responseData, 'Lấy thông tin tổ chức thành công');
+    responseHelper.success(res, responseData, 'Lấy thông tin tổ chức thành công')
   } catch (err) {
-    responseHelper.error(res, err.message);
+    responseHelper.error(res, err.message)
   }
-};
+}
 
 export const getAllOrganizations = async (req, res) => {
   try {
@@ -205,7 +206,7 @@ export const createOrg = async (req, res) => {
 export const updateOrg = async (req, res) => {
   try {
     const { id } = req.params
-    const { logo, name, email, phone, province, commune, street, isActive } = req.body
+    const { logo, name, email, phone, province, commune, street, isActive, taxCode } = req.body
 
     if (!id) return responseHelper.error(res, 'Id không hợp lệ', 400)
 
@@ -216,10 +217,7 @@ export const updateOrg = async (req, res) => {
     let processedPhone = phone
     if (phone !== undefined) {
       const phoneError = validatePhoneNumber(phone)
-      if (phoneError) {
-        return responseHelper.error(res, phoneError, 400)
-      }
-      // Format phone để lưu DB
+      if (phoneError) return responseHelper.error(res, phoneError, 400)
       processedPhone = formatPhoneNumber(phone)
     }
 
@@ -228,14 +226,15 @@ export const updateOrg = async (req, res) => {
       return responseHelper.error(res, 'Email không hợp lệ', 400)
     }
 
+    // Check trùng email/phone
     const existing = await Organization.findOne({
       $or: [{ email }, { phone: processedPhone }],
       _id: { $ne: id }
     })
-
     if (existing)
       return responseHelper.error(res, 'Tổ chức với email hoặc số điện thoại đã tồn tại', 400)
 
+    // Chuẩn bị data update
     const data = {}
     if (logo !== undefined) data.logo = logo
     if (name !== undefined) data.name = name
@@ -245,22 +244,35 @@ export const updateOrg = async (req, res) => {
     if (commune !== undefined) data.commune = commune
     if (street !== undefined) data.street = street
     if (isActive !== undefined) data.isActive = isActive
+    if (taxCode !== undefined) data.taxCode = taxCode
+
+    const oldLogo = organization.logo
 
     const updated = await Organization.findByIdAndUpdate(id, data, {
       new: true,
       runValidators: true
     })
 
+    // Xóa file cũ nếu có logo mới
+    if (logo && oldLogo && oldLogo !== logo) {
+      try {
+        await deleteFile(oldLogo)
+      } catch (err) {
+        console.error('Không xóa được logo cũ:', err)
+      }
+    }
+
     const responseData = {
       ...updated.toObject(),
       phoneDisplay: {
-        local: updated.phone ? displayPhoneNumber(updated.phone, false) : null, // 0987 654 321
-        international: updated.phone ? displayPhoneNumber(updated.phone, true) : null, // +84 987 654 321
-        raw: `+${updated.phone}`, // 84987654321
-        type: updated.phone ? getPhoneType(updated.phone) : null // mobile/landline
+        local: updated.phone ? displayPhoneNumber(updated.phone, false) : null,
+        international: updated.phone ? displayPhoneNumber(updated.phone, true) : null,
+        raw: `+${updated.phone}`,
+        type: updated.phone ? getPhoneType(updated.phone) : null
       }
     }
-    responseHelper.success(res, responseData, 'Cập nhật tổ chức thành công')
+
+    responseHelper.success(res, responseData, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }
