@@ -45,5 +45,6 @@ router.get('/login/identify', forgotPasswordPage) // render view
 router.post('/api/users/forgot', userController.forgotPassword) // post
 router.get('/reset-password/:token', resetPasswordPage) // render view
 router.post('/api/users/reset-password/:token', userController.resetPassword) // post
+router.post('/api/users/update-password', isAuthenticated, userController.updatePassword) // post
 
 export default router

@@ -180,7 +180,7 @@ function clearForm(type) {
     })
   }
   if (type === 'update') {
-    ;['new-password', 'new-confirm-password'].forEach((id) => {
+    ;['currentPassword', 'new-password', 'new-confirm-password'].forEach((id) => {
       const el = document.getElementById(id)
       if (el) el.value = ''
     })
@@ -399,4 +399,35 @@ function getBestFormat(hasTransparency = false) {
   return hasTransparency
     ? { mime: 'image/png', ext: 'png' }
     : { mime: 'image/jpeg', ext: 'jpg' }
+}
+
+function listProvinces() {
+  return $.getJSON('/data/full_address.json').then(res => {
+    const $provinceSelect = $('#orgProvince');
+    $provinceSelect.empty().append('<option value="">— Tỉnh/ Thành phố —</option>');
+
+    if (res.error == 0 && res.data) {
+      res.data.forEach(province => {
+        $provinceSelect.append(`<option value="${province.id}">${province.name}</option>`);
+      });
+      initSelect2($provinceSelect, 'Tỉnh/ Thành phố');
+    }
+  });
+}
+
+function listCommunes(provinceId) {
+  return $.getJSON('/data/full_address.json').then(res => {
+    const $communeSelect = $('#orgCommune');
+    $communeSelect.empty().append('<option value="">— Chọn Xã/ Phường —</option>');
+
+    if (res.error == 0 && res.data) {
+      const province = res.data.find(p => p.id === provinceId);
+      if (province && province.data2) {
+        province.data2.forEach(commune => {
+          $communeSelect.append(`<option value="${commune.id}">${commune.full_name}</option>`);
+        });
+      }
+      initSelect2($communeSelect, 'Xã/ Phường');
+    }
+  });
 }

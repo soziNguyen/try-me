@@ -326,6 +326,8 @@ body {
       -ms-flex: 1;
           flex: 1;
   padding: 0 1rem 1rem 1rem;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   overflow-y: auto;
   height: calc(100vh - 60px);
   background: var(--bg);
@@ -550,6 +552,8 @@ body {
       -ms-flex: 1;
           flex: 1;
   padding: 0 1rem 1rem 1rem;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   overflow-y: auto;
   height: calc(100vh - 60px);
   background: var(--bg);

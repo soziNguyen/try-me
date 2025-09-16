@@ -10,6 +10,7 @@ const OrganizationSchema = new Schema(
     province: { type: String, trim: true, default: '' }, // tỉnh thành
     commune: { type: String, trim: true, default: '' }, // xã phường
     street: { type: String, trim: true, default: '' }, // địa chỉ cụ thể
+    logo: { type: String, trim: true, default: '' },
     isActive: { type: Boolean, default: true }
   },
   {

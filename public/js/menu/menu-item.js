@@ -53,7 +53,7 @@ $(function () {
         emptyTable: 'Không có dữ liệu trong bảng'
       },
       pageLength: numRows,
-      columnDefs: [{ width: '70px', target: 1 }],
+      columnDefs: [{ width: '70px', target: 2 }],
       columns: [
         {
           data: null,

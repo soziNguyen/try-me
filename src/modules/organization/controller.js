@@ -104,6 +104,30 @@ export const getActiveOrganizations = async (req, res) => {
   }
 }
 
+export const getOrgById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return responseHelper.error(res, 'Id tổ chức không hợp lệ', 400);
+
+    const org = await Organization.findById(id);
+    if (!org) return responseHelper.error(res, 'Tổ chức không tồn tại', 404);
+
+    const responseData = {
+      ...org.toObject(),
+      phoneDisplay: {
+        local: org.phone ? displayPhoneNumber(org.phone, false) : null,
+        international: org.phone ? displayPhoneNumber(org.phone, true) : null,
+        raw: org.phone ? `+${org.phone}` : null,
+        type: org.phone ? getPhoneType(org.phone) : null
+      }
+    };
+
+    responseHelper.success(res, responseData, 'Lấy thông tin tổ chức thành công');
+  } catch (err) {
+    responseHelper.error(res, err.message);
+  }
+};
+
 export const getAllOrganizations = async (req, res) => {
   try {
     const draw = +req.query.draw || 0
@@ -181,7 +205,7 @@ export const createOrg = async (req, res) => {
 export const updateOrg = async (req, res) => {
   try {
     const { id } = req.params
-    const { name, email, phone, province, commune, street, isActive } = req.body
+    const { logo, name, email, phone, province, commune, street, isActive } = req.body
 
     if (!id) return responseHelper.error(res, 'Id không hợp lệ', 400)
 
@@ -213,6 +237,7 @@ export const updateOrg = async (req, res) => {
       return responseHelper.error(res, 'Tổ chức với email hoặc số điện thoại đã tồn tại', 400)
 
     const data = {}
+    if (logo !== undefined) data.logo = logo
     if (name !== undefined) data.name = name
     if (email !== undefined) data.email = email
     if (phone !== undefined) data.phone = processedPhone
