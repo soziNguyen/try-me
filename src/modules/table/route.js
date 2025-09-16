@@ -10,10 +10,11 @@ router.get('/tables', isAuthenticated, tablePage)
 
 // --- Quản lý bàn ---
 router.get('/api/tables', isAuthenticated, tableController.getTables)
+router.get('/api/tables/get', isAuthenticated, tableController.getDataTables)
 router.get('/api/tables/:id', isAuthenticated, tableController.getTableById)
 router.post('/api/tables/create', isAuthenticated, tableController.createTable)
 router.post('/api/tables/update/:id', isAuthenticated, tableController.updateTable)
 router.get('/api/tables-total', isAuthenticated, tableController.getTablesWithTotal)
-router.post('/api/tables/delete', isAuthenticated, tableController.deleteTables)
+router.post('/api/tables/deletes', isAuthenticated, tableController.deleteTables)
 
 export default router

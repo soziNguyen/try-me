@@ -2,23 +2,6 @@ import Coupon from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
-export const getActiveCoupons = async (req, res) => {
-  try {
-    const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-
-    const coupons = await Coupon.find({
-      isActive: true,
-      organization: organizationId
-    })
-      .select('_id code')
-      .sort({ name: 1 })
-    responseHelper.success(res, coupons)
-  } catch (error) {
-    responseHelper.error(res, error.message)
-  }
-}
-
 export const getCoupons = async (req, res) => {
   try {
     const draw = +req.query.draw || 0
@@ -80,24 +63,6 @@ export const getCoupons = async (req, res) => {
       recordsFiltered,
       data: Coupons
     })
-  } catch (error) {
-    responseHelper.error(res, error.message)
-  }
-}
-
-export const getCouponById = async (req, res) => {
-  try {
-    const { id } = req.params
-    const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-
-    const coupon = await Coupon.findOne({
-      organization: organizationId,
-      _id: id
-    })
-
-    if (!coupon) return responseHelper.error(res, 'Mã giảm giá không tồn tại', 404)
-    responseHelper.success(res, coupon)
   } catch (error) {
     responseHelper.error(res, error.message)
   }

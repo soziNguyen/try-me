@@ -44,6 +44,31 @@ function formatDate(dateString) {
   return `${dd}/${mm}/${yyyy}`
 }
 
+/**
+ * Format a given date string to a time string (HH:mm).
+ * 
+ * @param {string} dateStr - The date string to be formatted.
+ * @returns {string} - The formatted time string (HH:mm).
+ * If the input is invalid or empty, it returns an empty string.
+ */
+function formatTime(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+/**
+ * Convert a duration in minutes to hours with one decimal place.
+ * 
+ * @param {number} min - The duration in minutes.
+ * @returns {string} - The converted duration in hours (as a string with 1 decimal place).
+ * If the input is invalid or 0, it returns an empty string.
+ */
+function formatDuration(min) {
+  if (!min) return ''
+  return (min / 60).toFixed(1) // Convert minutes to hours, rounding to 1 decimal place
+}
+
 // Format phone Num
 function formatToInternational(phone) {
   if (!phone) return phone

@@ -2,17 +2,6 @@ $(function () {
   const pathname = window.location.pathname.split('/')
   const attendanceId = pathname[pathname.length - 1]
 
-  function formatTime(dateStr) {
-    if (!dateStr) return ''
-    const d = new Date(dateStr)
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-
-  function formatDuration(min) {
-    if (!min) return ''
-    return (min / 60).toFixed(1) // phút -> giờ 1 chữ số thập phân
-  }
-
   function fillData(att) {
     if (!att) return
     // Thông tin chung

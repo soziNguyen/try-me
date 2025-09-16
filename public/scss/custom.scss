@@ -315,8 +315,8 @@ table {
 }
 
 .image-square {
-  width: 100px;
-  height: 100px;
+  width: 150px;
+  height: auto;
   object-fit: cover;
   border-radius: 4px;
   border: 1px solid var(--gray-light);

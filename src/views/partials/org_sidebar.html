@@ -163,6 +163,13 @@
                   </a>
                 </li>
 
+                <li class="<%= page === 'Customer' ? 'active' : '' %>">
+                  <a class="w-100" href="/customers">
+                    <i class="bi bi-person me-2 text-info"></i>
+                    <span>Quản lý khách hàng</span>
+                  </a>
+                </li>
+
                 <!-- Reports Section -->
                 <% const inReports=['SalesReport','InventoryReport','StaffReport','TaxReport'].includes(page); %>
                   <li class="reports-accordion">

@@ -47,9 +47,9 @@ function bindEvents() {
       e.stopPropagation()
 
       const card = btnAssign.closest('.table-card')
-      const tableName = card.querySelector('h5').textContent.trim()
-      const capacityText = card.querySelector('div:nth-child(3)').textContent.trim()
-      const areaText = card.querySelector('div:nth-child(4)').textContent.trim()
+      const tableName = card.querySelector('.table-name').textContent.trim()
+      const capacityText = card.querySelector('.table-capacity').textContent.trim()
+      const [areaText, nameText] = tableName.split(' - ')
 
       // Gán thông tin vào modal
       document.getElementById('assign-table-question').textContent =
@@ -274,19 +274,33 @@ function renderTableList(tables = []) {
       // Nếu bàn available thì giữ nguyên giao diện cũ
       return `
       <div class="col">
-        <div class="table-card card h-100 ${bgClass} shadow-sm border rounded-3 p-3 position-relative">
+        <div class="table-card card h-100 ${bgClass} shadow-sm border rounded-3 p-3 position-relative d-flex flex-column justify-content-between">
           <input type="checkbox" 
             class="tableCheckbox form-check-input position-absolute top-0 end-0 m-2 d-none" 
             data-id="${table._id}" 
           />
 
-          <div class="text-center mt-4">
-            <h5 class="mb-3 fw-bold">${table.name}</h5>
-            <div><strong>Trạng thái:</strong> Trống</div>
-            <div><strong>Số người:</strong> ${table.capacity || '-'}</div>
-            <div><strong>Khu vực:</strong> ${table.area || '-'}</div>
-            <button class="btnAssignTable btn btn-warning btn-sm mt-2 fw-bold shadow-sm">
+          <div>
+            <div class="d-flex justify-content-between">
+              <div class="table-name">
+                ${table.area || '-'} - ${table.name}
+              </div>
+
+              <div class="table-capacity">
+                <strong>Số người:</strong> ${table.capacity || '-'}
+              </div>
+            </div>
+
+            <div class="table-status mt-4"><strong>Trạng thái:</strong> Trống</div>
+          </div>
+
+          <div class="d-flex justify-content-between gap-2 mt-4">
+            <button class="btnAssignTable btn btn-warning btn-sm fw-bold shadow-sm">
               <i class="bi bi-clock me-1"></i> Giao bàn
+            </button>
+            
+            <button class="btnOrderFood btn btn-success btn-sm fw-bold shadow-sm" data-order-id="${table.currentOrderId?._id}">
+              <i class="bi bi-clipboard-check me-1"></i> Thêm món
             </button>
           </div>
         </div>
@@ -348,14 +362,11 @@ function updateSeatedTimes() {
     const minutes = Math.floor((diffSeconds % 3600) / 60)
     const seconds = diffSeconds % 60
 
-    let timeStr = ''
-    if (hours > 0) {
-      timeStr = `${hours} giờ ${minutes} phút ${seconds} giây`
-    } else if (minutes > 0) {
-      timeStr = `${minutes} phút ${seconds} giây`
-    } else {
-      timeStr = `${seconds} giây`
-    }
+    // Hàm để thêm số 0 nếu cần (vd: 4 => "04")
+    const pad = (num) => String(num).padStart(2, '0')
+
+    // Gán chuỗi định dạng HH:MM:SS
+    let timeStr = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
 
     el.textContent = timeStr
   })
@@ -384,7 +395,10 @@ async function updateTable(tableId) {
     document.getElementById('update-status').value = table.status || 'available'
     document.getElementById('update-capacity').value = table.capacity || ''
     document.getElementById('update-area').value = table.area || ''
-
+    document.getElementById('update-customer').value =
+      table.currentOrderId && table.currentOrderId.customerId
+        ? table.currentOrderId.customerId.name
+        : ''
     // Hiển thị modal
     const updateTableModal = new bootstrap.Modal(updateTableModalElement)
     updateTableModal.show()
@@ -396,19 +410,18 @@ async function updateTable(tableId) {
 
     // Gán sự kiện nút cập nhật
     newBtn.addEventListener('click', async function () {
-      const name = document.getElementById('update-name').value.trim()
+      const customerName = document.getElementById('update-customer').value.trim()
       const status = document.getElementById('update-status').value
       const capacity = document.getElementById('update-capacity').value
       const area = document.getElementById('update-area').value
 
-      // Kiểm tra đơn giản
-      if (!name) {
-        toastr.warning('Vui lòng nhập tên bàn')
+      if (status === 'occupied' && !customerName) {
+        toastr.warning('Vui lòng nhập tên khách nếu bàn đang có khách')
         return
       }
 
       const dataUpdate = {
-        name,
+        customerName,
         status,
         capacity: capacity ? Number(capacity) : undefined,
         area
