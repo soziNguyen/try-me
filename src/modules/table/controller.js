@@ -265,12 +265,24 @@ export const getTablesWithTotal = async (req, res) => {
       return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     }
 
-    const tables = await Table.find({ organization: organizationId }).lean()
+    const tables = await Table.find({ organization: organizationId }).populate({
+      path: 'currentOrderId',
+      model: 'Order',
+      populate: {
+        path: 'customerId',
+        model: 'Customer',
+        select: 'name phone totalPoints'
+      }
+    }).lean()
+
+
     const orders = await Order.find({
       tableId: { $in: tables.map((t) => t._id) },
       status: 'open',
       organization: organizationId
-    }).lean()
+    })
+
+      .lean()
     const tablesWithTotal = tables.map((table) => {
       const order = orders.find((o) => o.tableId.toString() === table._id.toString())
       return {
