@@ -81,10 +81,7 @@ export const createOrganization = async (req, res) => {
 
     const result = await withTransaction(async (session) => {
       // Build duplicate check conditions
-      const duplicateConditions = [
-        { email: cleanOrgEmail },
-        { phone: processedPhone }
-      ]
+      const duplicateConditions = [{ email: cleanOrgEmail }, { phone: processedPhone }]
       if (cleanTaxCode) {
         duplicateConditions.push({ taxCode: cleanTaxCode })
       }
@@ -172,7 +169,6 @@ export const createOrganization = async (req, res) => {
     }
 
     responseHelper.success(res, responseData, 'Tổ chức và quản trị viên đã được tạo thành công')
-
   } catch (error) {
     console.error('Create organization error:', error)
 
@@ -398,16 +394,17 @@ export const updateOrg = async (req, res) => {
 
     const responseData = {
       ...updated.toObject(),
-      phoneDisplay: updated.phone ? {
-        local: displayPhoneNumber(updated.phone, false),
-        international: displayPhoneNumber(updated.phone, true),
-        raw: `+${updated.phone}`,
-        type: getPhoneType(updated.phone)
-      } : null
+      phoneDisplay: updated.phone
+        ? {
+            local: displayPhoneNumber(updated.phone, false),
+            international: displayPhoneNumber(updated.phone, true),
+            raw: `+${updated.phone}`,
+            type: getPhoneType(updated.phone)
+          }
+        : null
     }
 
     responseHelper.success(res, responseData, 'Cập nhật thành công')
-
   } catch (error) {
     console.error('Update organization error:', error)
 

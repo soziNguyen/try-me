@@ -506,4 +506,3 @@ export const updatePassword = async (req, res) => {
     responseHelper.error(res, error.message)
   }
 }
-
