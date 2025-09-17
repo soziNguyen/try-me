@@ -482,6 +482,96 @@ export const checkoutOrder = async (req, res) => {
   }
 }
 
+export const updateOrderDraft = async (req, res) => {
+  try {
+    const { orderId } = req.params
+    const {
+      discount = 0,
+      pointsUsed = 0,
+      serviceCharge = 0,
+      vatRate = 0,
+      paymentMethodId = null,
+      customerPaid = 0
+    } = req.body
+
+    if (!orderId) return responseHelper.error(res, 'Thiếu orderId', 400)
+
+    const parsedDiscount = Number(discount) || 0
+    const parsedPointsUsed = Number(pointsUsed) || 0
+    const parsedServiceCharge = Number(serviceCharge) || 0
+    const parsedVatRate = Number(vatRate) || 0
+    const parsedCustomerPaid = Number(customerPaid) || 0
+
+    if (
+      parsedDiscount < 0 ||
+      parsedPointsUsed < 0 ||
+      parsedServiceCharge < 0 ||
+      parsedVatRate < 0 ||
+      parsedCustomerPaid < 0
+    )
+      return responseHelper.error(res, 'Các giá trị không được âm', 400)
+
+    const result = await withTransaction(async (session) => {
+      const order = await Order.findById(orderId).session(session)
+      if (!order) throw new Error('Order không tồn tại')
+      const totalAmount = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      if (parsedDiscount > totalAmount) throw new Error('Giảm giá không được vượt quá tổng tiền')
+      if (order.customerId && parsedPointsUsed > 0) {
+        const customer = await Customer.findById(order.customerId).session(session)
+        if (!customer) throw new Error('Khách hàng không tồn tại')
+        if (customer.totalPoints < parsedPointsUsed)
+          throw new Error(
+            `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`
+          )
+      }
+
+      const POINT_VALUE = 500
+      const pointsDiscount = parsedPointsUsed * POINT_VALUE
+
+      const totalPayable = totalAmount - parsedDiscount - pointsDiscount + parsedServiceCharge
+      const total = Math.round(totalPayable + (totalPayable * parsedVatRate) / 100)
+
+      if (parsedCustomerPaid < 0) throw new Error('Số tiền khách trả không hợp lệ')
+
+      const changeAmount = parsedCustomerPaid - total
+
+      order.discount = parsedDiscount
+      order.pointsUsed = parsedPointsUsed
+      order.pointsDiscount = pointsDiscount
+      order.serviceCharge = parsedServiceCharge
+      order.vatRate = parsedVatRate
+      order.totalAmount = totalAmount
+      order.totalPayable = totalPayable
+      order.total = total
+      if (paymentMethodId) order.paymentMethodId = paymentMethodId
+      order.customerPaid = parsedCustomerPaid
+      order.changeAmount = changeAmount
+      order.updatedAt = new Date()
+
+      await order.save({ session })
+
+      return {
+        discount: parsedDiscount,
+        pointsUsed: parsedPointsUsed,
+        pointsDiscount,
+        serviceCharge: parsedServiceCharge,
+        vatRate: parsedVatRate,
+        totalAmount,
+        totalPayable,
+        total,
+        paymentMethodId: order.paymentMethodId,
+        customerPaid: parsedCustomerPaid,
+        changeAmount
+      }
+    })
+
+    return responseHelper.success(res, result, 'Cập nhật đơn hàng thành công')
+  } catch (error) {
+    console.error('Lỗi cập nhật đơn hàng:', error)
+    return responseHelper.error(res, error.message || 'Lỗi server nội bộ', 500)
+  }
+}
+
 export const printInvoice = async (req, res) => {
   try {
     const { orderId } = req.params

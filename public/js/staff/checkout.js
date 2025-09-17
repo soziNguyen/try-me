@@ -254,6 +254,58 @@ function initCustomerPaidInput() {
   const customerPaidInput = document.getElementById('customerPaidInput')
   if (!customerPaidInput) return
 
+  // Lưu giá trị cuối cùng đã lưu để tránh gọi API thừa
+  let lastSavedValue = ''
+
+  // Hàm cập nhật dữ liệu vào DB
+  async function saveCustomerPaid() {
+    let val = customerPaidInput.value.replace(/[^\d]/g, '') || '0'
+
+    // Chỉ gọi API nếu giá trị thay đổi
+    if (val === lastSavedValue) return
+    lastSavedValue = val
+
+    const orderId = window.currentOrderId
+    if (!orderId) {
+      toastr.error('Không xác định được đơn hàng!')
+      return
+    }
+
+    const data = getCurrentOrderFormData()
+
+    try {
+      const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+      if (result) {
+        toastr.success('Cập nhật thành công!')
+      }
+    } catch (error) {
+      console.error('Lỗi khi gọi API:', error)
+      toastr.error('Lỗi mạng hoặc server')
+    }
+  }
+
+  // Khi input được focus vào
+  customerPaidInput.addEventListener('focus', async () => {
+    let currentVal = customerPaidInput.value.replace(/[^\d]/g, '')
+    if (currentVal && parseInt(currentVal) > 0) {
+      return // Nếu đã có giá trị thì không làm gì
+    }
+
+    const totalEl = document.getElementById('total')
+    if (!totalEl) return
+
+    let totalValue = totalEl.value || '0'
+    totalValue = totalValue.replace(/[^\d]/g, '')
+
+    if (totalValue && parseInt(totalValue) > 0) {
+      customerPaidInput.value = Number(totalValue).toLocaleString('vi-VN')
+      updateChangeAmount()
+
+      await saveCustomerPaid()
+    }
+  })
+
+  // Khi người dùng nhập liệu
   customerPaidInput.addEventListener('input', () => {
     let val = customerPaidInput.value.replace(/[^\d]/g, '')
     if (val === '') val = '0'
@@ -270,6 +322,22 @@ function initCustomerPaidInput() {
 
     updateChangeAmount()
   })
+
+  customerPaidInput.addEventListener('change', saveCustomerPaid)
+}
+
+function getCurrentOrderFormData() {
+  return {
+    discount: Number(document.getElementById('discountInput')?.value.replace(/[^\d]/g, '') || 0),
+    pointsUsed: Number(document.getElementById('pointsInput')?.value.replace(/[^\d]/g, '') || 0),
+    serviceCharge: Number(
+      document.getElementById('serviceChargeInput')?.value.replace(/[^\d]/g, '') || 0
+    ),
+    vatRate: Number(document.getElementById('vatInput')?.value || 0),
+    customerPaid: Number(
+      document.getElementById('customerPaidInput')?.value.replace(/[^\d]/g, '') || 0
+    )
+  }
 }
 
 // Xử lý thay đổi số điểm sử dụng
@@ -277,8 +345,26 @@ function initPointsInput() {
   const pointsInput = document.getElementById('pointsInput')
   if (!pointsInput) return
 
-  pointsInput.addEventListener('input', () => {
-    calculateTotals() // Tính lại khi số điểm thay đổi
+  pointsInput.addEventListener('change', async () => {
+    calculateTotals()
+
+    const orderId = window.currentOrderId
+    if (!orderId) {
+      toastr.error('Không xác định được đơn hàng!')
+      return
+    }
+
+    const data = getCurrentOrderFormData()
+
+    try {
+      const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+      if (result) {
+        toastr.success('Cập nhật điểm sử dụng thành công!')
+      }
+    } catch (error) {
+      console.error('Lỗi khi gọi API:', error)
+      toastr.error('Lỗi mạng hoặc server')
+    }
   })
 }
 
@@ -342,8 +428,15 @@ function initDiscountCode() {
       }
 
       const discountAmount = data.data.discountAmount || 0
+      const couponId = data.data.couponId || null
       discountInput.value = discountAmount
       window.appliedCouponId = data.data.couponId
+
+      await ajax(
+        `/api/orders/${orderId}/update-draft`,
+        { discount: discountAmount, couponId },
+        'POST'
+      )
 
       // Đổi nút sang trạng thái "Xóa"
       applyDiscountBtn.textContent = 'X'
@@ -491,13 +584,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // MAIN CLICK EVENT HANDLER
 document.addEventListener('click', (e) => {
-  // Xử lý click gợi ý tiền mặt
+  // Xử lý click gợi ý tiền mặt (bao gồm cả dynamic suggestions)
   if (e.target.classList.contains('cash-suggestion')) {
     const value = parseInt(e.target.dataset.value, 10)
     const input = document.getElementById('customerPaidInput')
     if (input) {
       input.value = value.toLocaleString()
       input.dispatchEvent(new Event('input'))
+
+      calculateTotals()
+
+      const orderId = window.currentOrderId
+      if (!orderId) {
+        toastr.error('Không xác định được đơn hàng!')
+        return
+      }
+
+      const data = getCurrentOrderFormData()
+
+      ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+        .then((result) => {
+          if (result) {
+            toastr.success('Cập nhật số tiền khách trả thành công!')
+          }
+        })
+        .catch((error) => {
+          console.error('Lỗi khi gọi API:', error)
+          toastr.error('Lỗi mạng hoặc server')
+        })
     }
     return
   }
@@ -512,6 +626,26 @@ document.addEventListener('click', (e) => {
     if (paymentMethodValue) {
       paymentMethodValue.value = paymentBtn.getAttribute('data-value')
     }
+
+    const orderId = window.currentOrderId
+    if (!orderId) {
+      toastr.error('Không xác định được đơn hàng!')
+      return
+    }
+
+    const data = getCurrentOrderFormData()
+
+    ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+      .then((result) => {
+        if (result) {
+          toastr.success('Cập nhật phương thức thanh toán thành công!')
+        }
+      })
+      .catch((error) => {
+        console.error('Lỗi khi gọi API:', error)
+        toastr.error('Lỗi mạng hoặc server')
+      })
+
     return
   }
 })
@@ -547,7 +681,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     serviceChargeInput.addEventListener('input', calculateTotals)
   }
 
+  serviceChargeInput.addEventListener('change', async () => {
+    let val = serviceChargeInput.value.replace(/[^\d]/g, '')
+    if (val === '') val = '0'
+
+    const orderId = window.currentOrderId
+    if (!orderId) {
+      toastr.error('Không xác định được đơn hàng!')
+      return
+    }
+
+    const data = getCurrentOrderFormData()
+
+    try {
+      const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+      if (result) {
+        toastr.success('Cập nhật phí dịch vụ thành công!')
+      }
+    } catch (error) {
+      console.error('Lỗi khi gọi API:', error)
+      toastr.error('Lỗi mạng hoặc server')
+    }
+  })
+
   if (vatInput) {
-    vatInput.addEventListener('change', calculateTotals)
+    vatInput.addEventListener('change', async () => {
+      calculateTotals()
+
+      const orderId = window.currentOrderId
+      if (!orderId) {
+        toastr.error('Không xác định được đơn hàng!')
+        return
+      }
+
+      const data = getCurrentOrderFormData()
+
+      try {
+        const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+        if (result) {
+          toastr.success('Cập nhật VAT thành công!')
+        }
+      } catch (error) {
+        console.error('Lỗi khi gọi API:', error)
+        toastr.error('Lỗi mạng hoặc server')
+      }
+    })
   }
 })
