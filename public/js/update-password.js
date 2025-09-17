@@ -13,27 +13,32 @@ if (updatePasswordForm) {
     const confirmPassword = confirmPasswordElement.value.trim()
 
     if (currentPassword.length === 0) {
+      toastr.remove()
       toastr.warning('Trường này là bắt buộc.')
       currentPasswordElement.focus()
       return
     }
     if (newPassword.length === 0) {
+      toastr.remove()
       toastr.warning('Trường này là bắt buộc.')
       newPasswordElement.focus()
       return
     }
     if (confirmPassword.length === 0) {
+      toastr.remove()
       toastr.warning('Trường này là bắt buộc.')
       confirmPasswordElement.focus()
       return
     }
     if (!isValidPassword(newPassword)) {
+      toastr.remove()
       toastr.warning(
         'Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm ký tự hoa, thường, số và ký tự đặc biệt.'
       )
       return
     }
     if (!isValidPassword(newPassword, confirmPassword)) {
+      toastr.remove()
       toastr.warning('Mật khẩu không khớp.')
       return
     }

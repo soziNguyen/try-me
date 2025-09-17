@@ -28,6 +28,16 @@ OrganizationSchema.index(
     }
   }
 )
+
+OrganizationSchema.index(
+  { taxCode: 1 },
+  {
+    partialFilterExpression: {
+      taxCode: { $exists: true, $ne: '' }
+    }
+  }
+)
+
 OrganizationSchema.index(
   { email: 1 },
   {

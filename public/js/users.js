@@ -77,6 +77,7 @@ if (logInForm) {
     // Lấy data từ form organization + admin
     const formData = new FormData(signUpForm)
     const data = {
+      taxCode: formData.get('taxCode'),
       orgName: formData.get('orgName'),
       orgEmail: formData.get('orgEmail'),
       orgPhone: formData.get('orgPhone'),
@@ -96,13 +97,27 @@ if (logInForm) {
       return
     }
 
-    if (!data || Object.values(data).some((value) => !value)) {
+    const requiredFields = {
+      orgName: data.orgName,
+      orgEmail: data.orgEmail,
+      orgPhone: data.orgPhone,
+      orgProvince: data.orgProvince,
+      orgCommune: data.orgCommune,
+      orgStreet: data.orgStreet,
+      adminUsername: data.adminUsername,
+      adminEmail: data.adminEmail,
+      adminPassword: data.adminPassword
+    }
+
+    if (Object.values(requiredFields).some((value) => !value)) {
       toastr.warning('Vui lòng điền đầy đủ thông tin.')
       return
     }
 
     try {
       const result = await ajax('/api/organization/create', data)
+      console.log(result);
+
       if (result) {
         toastr.success(
           'Tổ chức và quản trị viên đã được tạo thành công. Đang chuyển hướng đến trang đăng nhập...'

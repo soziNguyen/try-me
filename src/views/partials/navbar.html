@@ -23,23 +23,30 @@
           <i class="bi bi-moon me-2"></i> Giao diện
         </button>
       </li>
-      <li id="change-password">
-        <a href="change-password" class="w-100 dropdown-item">
-          <i class="bi bi-shield-lock me-2"></i> Đổi mật khẩu
-        </a>
-      </li>
-      <li id="logOut">
-        <a class="dropdown-item w-100" id="logOutDropdown">
-          <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
-        </a>
-      </li>
-      <% if(user.role==='Admin' && session.currentOrg) { %>
-        <li id="back-to-admin">
-          <button type="button" class="dropdown-item w-100" id="exitOrgBtn">
-            <i class="bi bi-arrow-left-circle me-2"></i> Quay lại Admin
-          </button>
-          <% } %>
+      <% if (user.role==='Admin' || user.role==='Org' ) { %>
+        <li>
+          <a href="/profile" class="w-100 dropdown-item">
+            <i class="bi bi-person me-2"></i> Hồ sơ
+          </a>
         </li>
+        <% } %>
+          <li id="change-password">
+            <a href="change-password" class="w-100 dropdown-item">
+              <i class="bi bi-shield-lock me-2"></i> Đổi mật khẩu
+            </a>
+          </li>
+          <li id="logOut">
+            <a class="dropdown-item w-100" id="logOutDropdown">
+              <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+            </a>
+          </li>
+          <% if(user.role==='Admin' && session.currentOrg) { %>
+            <li id="back-to-admin">
+              <button type="button" class="dropdown-item w-100" id="exitOrgBtn">
+                <i class="bi bi-arrow-left-circle me-2"></i> Quay lại Admin
+              </button>
+              <% } %>
+            </li>
     </ul>
   </div>
 </div>

@@ -15,7 +15,7 @@ async function fetchOrgDetail() {
       $('#taxCode').val(org.taxCode || '')
       $('#orgName').val(org.name || '')
       $('#orgEmail').val(org.email || '')
-      $('#orgPhone').val(org.phoneDisplay?.local || '')
+      $('#orgPhone').val(org.phoneDisplay?.international || '')
       $('#orgStreet').val(org.street || '')
       $('#orgLogoPreview').attr('src', org.logo || '/assets/images/default.png')
 
@@ -71,8 +71,8 @@ async function updateOrgField(field, value) {
     const data = await res.json()
     if (data.success) {
       toastr.success(data.message)
-      if (field === 'phone' && data.data?.phoneDisplay?.local) {
-        $('#orgPhone').val(data.data.phoneDisplay.local)
+      if (field === 'phone' && data.data?.phoneDisplay?.international) {
+        $('#orgPhone').val(data.data.phoneDisplay.international)
       }
     } else {
       toastr.error(data.message || `Lỗi cập nhật ${field}`)

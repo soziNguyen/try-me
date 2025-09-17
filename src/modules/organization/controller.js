@@ -5,16 +5,20 @@ import withTransaction from '../../helpers/withTransaction.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import validator from 'validator'
 import {
+  isValidUsername,
+  isValidPassword,
   formatPhoneNumber,
   validatePhoneNumber,
   displayPhoneNumber,
-  getPhoneType
+  getPhoneType,
+  validateTaxCode
 } from '../../helpers/validator.js'
 import { getPageData } from '../../helpers/pageDataHelper.js'
 
 export const createOrganization = async (req, res) => {
   try {
     const {
+      taxCode,
       orgName,
       orgEmail,
       orgPhone,
@@ -26,41 +30,121 @@ export const createOrganization = async (req, res) => {
       adminPassword
     } = req.body
 
+    if (!orgName || !orgEmail || !orgPhone || !adminUsername || !adminEmail || !adminPassword) {
+      return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin bắt buộc', 400)
+    }
+
+    // Validate admin username
+    const usernameError = isValidUsername(adminUsername)
+    if (usernameError) {
+      return responseHelper.error(res, `${usernameError}`, 400)
+    }
+
+    // Validate admin password
+    const passwordError = isValidPassword(adminPassword)
+    if (passwordError) {
+      return responseHelper.error(res, `${passwordError}`, 400)
+    }
+
+    // Validate emails
+    if (!validator.isEmail(orgEmail)) {
+      return responseHelper.error(res, 'Email tổ chức không hợp lệ', 400)
+    }
+    if (!validator.isEmail(adminEmail)) {
+      return responseHelper.error(res, 'Email quản trị viên không hợp lệ', 400)
+    }
+
+    // Validate phone number
+    const phoneError = validatePhoneNumber(orgPhone)
+    if (phoneError) {
+      return responseHelper.error(res, phoneError, 400)
+    }
+
+    // Validate tax code if provided
+    if (taxCode && !validateTaxCode(taxCode)) {
+      return responseHelper.error(res, 'Mã số thuế không hợp lệ (10-13 chữ số)', 400)
+    }
+
+    // Process data
     const cleanOrgEmail = orgEmail.trim().toLowerCase()
     const cleanAdminEmail = adminEmail.trim().toLowerCase()
     const cleanAdminUsername = adminUsername.trim()
     const cleanOrgName = orgName.trim()
+    const cleanTaxCode = taxCode?.trim()
+    const processedPhone = formatPhoneNumber(orgPhone)
+
+    console.log('Phone processing:', {
+      original: orgPhone,
+      processed: processedPhone,
+      type: getPhoneType(processedPhone)
+    })
 
     const result = await withTransaction(async (session) => {
-      // Kiểm tra tổ chức trùng email hoặc phone
+      // Build duplicate check conditions
+      const duplicateConditions = [
+        { email: cleanOrgEmail },
+        { phone: processedPhone }
+      ]
+      if (cleanTaxCode) {
+        duplicateConditions.push({ taxCode: cleanTaxCode })
+      }
+
+      // Check for existing organization
       const existingOrg = await Organization.findOne({
-        $or: [{ email: cleanOrgEmail }, { phone: orgPhone }]
+        $or: duplicateConditions
       }).session(session)
 
-      if (existingOrg) throw new Error('Tổ chức với email hoặc số điện thoại này đã tồn tại.')
+      if (existingOrg) {
+        if (existingOrg.email === cleanOrgEmail) {
+          throw new Error('Email tổ chức đã tồn tại')
+        }
+        if (existingOrg.phone === processedPhone) {
+          throw new Error('Số điện thoại đã tồn tại')
+        }
+        if (existingOrg.taxCode === cleanTaxCode) {
+          throw new Error('Mã số thuế đã tồn tại')
+        }
+      }
 
+      // Check admin email
       const existingUserEmail = await User.findOne({
         email: cleanAdminEmail
       }).session(session)
 
-      if (existingUserEmail) throw new Error('Email quản trị viên đã tồn tại trong hệ thống.')
+      if (existingUserEmail) {
+        throw new Error('Email quản trị viên đã tồn tại trong hệ thống')
+      }
 
-      // Tạo organization
-      const organization = new Organization({
+      // Check admin username (globally unique)
+      const existingUsername = await User.findOne({
+        username: cleanAdminUsername
+      }).session(session)
+
+      if (existingUsername) {
+        throw new Error('Tên đăng nhập quản trị viên đã tồn tại')
+      }
+
+      // Create organization
+      const orgData = {
         name: cleanOrgName,
         email: cleanOrgEmail,
-        phone: orgPhone,
+        phone: processedPhone, // Always 84xxxxxxxx format
         province: orgProvince,
         commune: orgCommune,
         street: orgStreet
-      })
+      }
+      if (cleanTaxCode) {
+        orgData.taxCode = cleanTaxCode
+      }
+
+      const organization = new Organization(orgData)
       await organization.save({ session })
 
-      // Lần đầu tạo user quản trị
+      // Create admin user
       const adminUser = new User({
         username: cleanAdminUsername,
         email: cleanAdminEmail,
-        password: adminPassword,
+        password: adminPassword, // Will be hashed by pre-save hook
         role: 'Org',
         organization: organization._id
       })
@@ -70,7 +154,15 @@ export const createOrganization = async (req, res) => {
     })
 
     const responseData = {
-      organization: result.organization,
+      organization: {
+        ...result.organization.toObject(),
+        phoneDisplay: {
+          local: displayPhoneNumber(result.organization.phone, false),
+          international: displayPhoneNumber(result.organization.phone, true),
+          raw: `+${result.organization.phone}`,
+          type: getPhoneType(result.organization.phone)
+        }
+      },
       admin: {
         id: result.admin._id,
         username: result.admin.username,
@@ -80,16 +172,26 @@ export const createOrganization = async (req, res) => {
     }
 
     responseHelper.success(res, responseData, 'Tổ chức và quản trị viên đã được tạo thành công')
+
   } catch (error) {
+    console.error('Create organization error:', error)
+
     if (error.code === 11000) {
       if (error.keyPattern?.email) {
         return responseHelper.error(res, 'Email đã tồn tại', 400)
       }
       if (error.keyPattern?.username) {
-        return responseHelper.error(res, 'Tên đăng nhập đã tồn tại trong tổ chức', 400)
+        return responseHelper.error(res, 'Tên đăng nhập đã tồn tại', 400)
+      }
+      if (error.keyPattern?.phone) {
+        return responseHelper.error(res, 'Số điện thoại đã tồn tại', 400)
+      }
+      if (error.keyPattern?.taxCode) {
+        return responseHelper.error(res, 'Mã số thuế đã tồn tại', 400)
       }
     }
-    responseHelper.error(res, error.message)
+
+    responseHelper.error(res, error.message, 400)
   }
 }
 
@@ -215,36 +317,64 @@ export const updateOrg = async (req, res) => {
 
     // VALIDATE PHONE
     let processedPhone = phone
-    if (phone !== undefined) {
+    if (phone !== undefined && phone.trim()) {
       const phoneError = validatePhoneNumber(phone)
       if (phoneError) return responseHelper.error(res, phoneError, 400)
-      processedPhone = formatPhoneNumber(phone)
+      processedPhone = formatPhoneNumber(phone) // Always 84xxxxxxxx
     }
 
     // Validate email
-    if (email && !validator.isEmail(email)) {
+    if (email !== undefined && email.trim() && !validator.isEmail(email.trim())) {
       return responseHelper.error(res, 'Email không hợp lệ', 400)
     }
 
-    // Check trùng email/phone
-    const existing = await Organization.findOne({
-      $or: [{ email }, { phone: processedPhone }],
-      _id: { $ne: id }
-    })
-    if (existing)
-      return responseHelper.error(res, 'Tổ chức với email hoặc số điện thoại đã tồn tại', 400)
+    // Validate tax code
+    if (taxCode !== undefined && taxCode.trim() && !validateTaxCode(taxCode.trim())) {
+      return responseHelper.error(res, 'Mã số thuế không hợp lệ (10-13 chữ số)', 400)
+    }
+
+    // Check trùng email/phone/taxCode
+    const conditions = []
+    if (email !== undefined && email.trim()) {
+      conditions.push({ email: email.trim().toLowerCase() })
+    }
+    if (processedPhone) {
+      conditions.push({ phone: processedPhone })
+    }
+    if (taxCode !== undefined && taxCode.trim()) {
+      conditions.push({ taxCode: taxCode.trim() })
+    }
+
+    if (conditions.length > 0) {
+      const existing = await Organization.findOne({
+        $or: conditions,
+        _id: { $ne: id }
+      })
+
+      if (existing) {
+        if (existing.email === email?.trim().toLowerCase()) {
+          return responseHelper.error(res, 'Email đã tồn tại trong tổ chức khác', 400)
+        }
+        if (existing.phone === processedPhone) {
+          return responseHelper.error(res, 'Số điện thoại đã tồn tại trong tổ chức khác', 400)
+        }
+        if (existing.taxCode === taxCode?.trim()) {
+          return responseHelper.error(res, 'Mã số thuế đã tồn tại trong tổ chức khác', 400)
+        }
+      }
+    }
 
     // Chuẩn bị data update
     const data = {}
     if (logo !== undefined) data.logo = logo
-    if (name !== undefined) data.name = name
-    if (email !== undefined) data.email = email
+    if (name !== undefined && name.trim()) data.name = name.trim()
+    if (email !== undefined && email.trim()) data.email = email.trim().toLowerCase()
     if (phone !== undefined) data.phone = processedPhone
     if (province !== undefined) data.province = province
     if (commune !== undefined) data.commune = commune
     if (street !== undefined) data.street = street
     if (isActive !== undefined) data.isActive = isActive
-    if (taxCode !== undefined) data.taxCode = taxCode
+    if (taxCode !== undefined) data.taxCode = taxCode?.trim() || null
 
     const oldLogo = organization.logo
 
@@ -252,6 +382,10 @@ export const updateOrg = async (req, res) => {
       new: true,
       runValidators: true
     })
+
+    if (!updated) {
+      return responseHelper.error(res, 'Không thể cập nhật tổ chức', 400)
+    }
 
     // Xóa file cũ nếu có logo mới
     if (logo && oldLogo && oldLogo !== logo) {
@@ -264,17 +398,32 @@ export const updateOrg = async (req, res) => {
 
     const responseData = {
       ...updated.toObject(),
-      phoneDisplay: {
-        local: updated.phone ? displayPhoneNumber(updated.phone, false) : null,
-        international: updated.phone ? displayPhoneNumber(updated.phone, true) : null,
+      phoneDisplay: updated.phone ? {
+        local: displayPhoneNumber(updated.phone, false),
+        international: displayPhoneNumber(updated.phone, true),
         raw: `+${updated.phone}`,
-        type: updated.phone ? getPhoneType(updated.phone) : null
-      }
+        type: getPhoneType(updated.phone)
+      } : null
     }
 
     responseHelper.success(res, responseData, 'Cập nhật thành công')
+
   } catch (error) {
-    responseHelper.error(res, error.message)
+    console.error('Update organization error:', error)
+
+    if (error.code === 11000) {
+      if (error.keyPattern?.email) {
+        return responseHelper.error(res, 'Email đã tồn tại', 400)
+      }
+      if (error.keyPattern?.phone) {
+        return responseHelper.error(res, 'Số điện thoại đã tồn tại', 400)
+      }
+      if (error.keyPattern?.taxCode) {
+        return responseHelper.error(res, 'Mã số thuế đã tồn tại', 400)
+      }
+    }
+
+    responseHelper.error(res, error.message, 400)
   }
 }
 
