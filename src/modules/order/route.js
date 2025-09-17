@@ -22,6 +22,7 @@ router.delete(
   isAuthenticated,
   orderController.removeItemFromOrder
 )
+router.post('/api/orders/:orderId/update-draft', isAuthenticated, orderController.updateOrderDraft)
 router.post('/api/orders/:orderId/checkout', isAuthenticated, orderController.checkoutOrder)
 router.get('/orders/print/:orderId', isAuthenticated, orderController.printInvoice)
 export default router

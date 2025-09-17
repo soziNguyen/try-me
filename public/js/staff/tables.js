@@ -265,7 +265,7 @@ function renderTableList(tables = []) {
           <button class="btnCheckout btn btn-primary btn-sm fw-bold shadow-sm">
             <i class="bi bi-credit-card me-1"></i> Thanh toán
           </button>
-        </div>
+        </div>             
       </div>
     </div>
   `
