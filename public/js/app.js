@@ -31,6 +31,27 @@ async function ajax(url, data = {}, method = 'POST') {
   return result.data
 }
 
+/**
+ * Format a given date string to "dd/MM/yyyy - HH:mm".
+ *
+ * @param {string} dateStr - The date string to be formatted.
+ * @returns {string} - The formatted date-time string (dd/MM/yyyy - HH:mm).
+ * If the input is invalid or empty, it returns an empty string.
+ */
+function formatDateTime(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return ''
+
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  const hh = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+
+  return `${dd}/${mm}/${yyyy} - ${hh}:${min}`
+}
+
 // format date
 function formatDate(dateString) {
   const date = dateString ? new Date(dateString) : new Date()
@@ -430,4 +451,63 @@ function listCommunes(provinceId) {
       initSelect2($communeSelect, 'Xã/ Phường');
     }
   });
+}
+
+function numberToVietnameseWords(num) {
+  if (!num || num === 0) return 'Không đồng';
+
+  const ones = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+  const tens = ['', '', 'hai mươi', 'ba mươi', 'bốn mươi', 'năm mươi', 'sáu mươi', 'bảy mươi', 'tám mươi', 'chín mươi'];
+  const scales = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ'];
+
+  if (num < 0) return 'Âm ' + numberToVietnameseWords(-num);
+  num = Math.floor(num);
+
+  const groups = [];
+  while (num > 0) {
+    groups.push(num % 1000);
+    num = Math.floor(num / 1000);
+  }
+
+  function convertGroup(n, full) {
+    if (n === 0) return '';
+
+    let str = '';
+    const hundred = Math.floor(n / 100);
+    const ten = Math.floor((n % 100) / 10);
+    const unit = n % 10;
+
+    if (hundred > 0 || full) {
+      str += (ones[hundred] || 'không') + ' trăm';
+      if (ten === 0 && unit > 0) str += ' lẻ';
+    }
+
+    if (ten > 1) {
+      str += ' ' + tens[ten];
+      if (unit === 1) str += ' mốt';
+      else if (unit === 5) str += ' lăm';
+      else if (unit > 0) str += ' ' + ones[unit];
+    } else if (ten === 1) {
+      str += ' mười';
+      if (unit === 1) str += ' một';
+      else if (unit === 5) str += ' lăm';
+      else if (unit > 0) str += ' ' + ones[unit];
+    } else if (unit > 0 && ten === 0) {
+      str += ' ' + ones[unit];
+    }
+
+    return str.trim();
+  }
+
+  let result = '';
+  for (let i = groups.length - 1; i >= 0; i--) {
+    const isFull = i < groups.length - 1 && groups[i] === 0 ? true : false;
+    const groupStr = convertGroup(groups[i], isFull);
+    if (groupStr) {
+      result += (result ? ' ' : '') + groupStr + (scales[i] ? ' ' + scales[i] : '');
+    }
+  }
+
+  result = result.toLowerCase();
+  return result.charAt(0).toUpperCase() + result.slice(1) + ' đồng';
 }

@@ -7,6 +7,7 @@ $(function () {
     '#stockTransferForm',
     '#btn-save-transfer'
   )
+  const csrfToken = $('#_csrf').val()
 
   // Lấy stockTransferId từ URL
   const urlPath = window.location.pathname
@@ -62,6 +63,7 @@ $(function () {
           $.ajax({
             url: `/api/inventory/stock-transfer/lock/${stockTransferId}`,
             method: 'POST',
+            headers: { 'x-csrf-token': csrfToken },
             beforeSend: function () {
               $('#btn-lock-transfer')
                 .prop('disabled', true)
@@ -271,7 +273,6 @@ $(function () {
 
   function saveStockTransfer(e) {
     e.preventDefault()
-    const csrfToken = $('#_csrf').val()
     const $rows = $('#itemsTableBody tr')
     const partialErrors = []
 

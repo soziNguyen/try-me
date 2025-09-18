@@ -422,6 +422,13 @@ table tbody td input.number {
   border-radius: 50%;
 }
 
+.org-logo-bill {
+  max-width: 100px;
+  max-height: 100px;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+
 textarea {
   resize: none;
   overflow-y: hidden;

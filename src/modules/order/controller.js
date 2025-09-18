@@ -7,6 +7,9 @@ import PaymentMethod from '../payment/model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import withTransaction from '../../helpers/withTransaction.js'
+import { lookupRef } from '../../helpers/lookupHelper.js'
+import ReceivingAccount from '../receiving-account/model.js'
+import { generateDocumentCode } from '../../helpers/common.js'
 import QRCode from 'qrcode'
 
 export const createOrder = async (req, res) => {
@@ -51,6 +54,9 @@ export const createOrder = async (req, res) => {
       }
     }
 
+    // === GENERATE ORDER CODE ===
+    const orderCode = await generateDocumentCode(Order, 'INV')
+
     // 2. Đơn mang đi
     if (isTakeaway) {
       const existingOrder = await Order.findOne({
@@ -62,6 +68,7 @@ export const createOrder = async (req, res) => {
       if (existingOrder) {
         return responseHelper.success(res, {
           orderId: existingOrder._id,
+          orderCode: existingOrder.code, // Return existing code
           tableId: null,
           isNewOrder: false
         })
@@ -72,11 +79,13 @@ export const createOrder = async (req, res) => {
         isTakeaway: true,
         status: 'open',
         organization: organizationId,
-        customerId: customer?._id || null
+        customerId: customer?._id || null,
+        code: orderCode // Thêm mã order
       })
 
       return responseHelper.success(res, {
         orderId: newOrder._id,
+        orderCode: newOrder.code, // Return generated code
         tableId: null,
         isNewOrder: true
       })
@@ -96,7 +105,8 @@ export const createOrder = async (req, res) => {
       isTakeaway: false,
       status: 'open',
       organization: organizationId,
-      customerId: customer?._id || null
+      customerId: customer?._id || null,
+      code: orderCode // Thêm mã order
     })
 
     // Cập nhật trạng thái bàn
@@ -104,10 +114,16 @@ export const createOrder = async (req, res) => {
     table.checkInTime = new Date()
     table.currentOrderId = newOrder._id
     table.customerName = customerName?.trim() || 'Khách lẻ'
+    table.orderCode = orderCode // Lưu mã order vào bàn luôn
     await table.save()
 
-    responseHelper.success(res, { orderId: newOrder._id, tableId: table._id })
+    responseHelper.success(res, {
+      orderId: newOrder._id,
+      orderCode: newOrder.code, // Return generated code
+      tableId: table._id
+    })
   } catch (error) {
+    console.error('Create order error:', error)
     responseHelper.error(res, error.message)
   }
 }
@@ -120,15 +136,26 @@ export const getOrderById = async (req, res) => {
       .populate('items.foodId', 'name price')
       .populate('items.comboId', 'name price')
       .populate('customerId', 'name phone')
+      .populate('organization', 'name phone province commune street logo')
+      .populate({
+        path: 'paymentMethodId',
+        populate: {
+          path: 'receivingAccountId',
+          model: 'ReceivingAccount',
+          select: 'name type accountNumber bankName isActive'
+        }
+      })
       .lean()
 
     if (!order) return res.status(404).json({ message: 'Order không tồn tại' })
+    console.log(order);
 
     res.json(order)
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
 }
+
 
 function calcOrderTotal(items = []) {
   if (!Array.isArray(items)) return 0
@@ -579,7 +606,7 @@ export const printInvoice = async (req, res) => {
     const order = await Order.findById(orderId)
       .populate('items.foodId', 'name price')
       .populate('tableId', 'name')
-      .populate('organization', 'name phone')
+      .populate('organization', 'logo name phone province commune street')
     console.log(order)
 
     if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
@@ -590,11 +617,143 @@ export const printInvoice = async (req, res) => {
       orderId: order._id,
       currentUserId: req.user ? req.user._id : null,
       user: req.user || { username: 'Admin' },
+      logoStore: order.organization?.logo || '/assets/images/default.png',
       storeName: order.organization?.name || 'Tên cửa hàng',
       storePhone: order.organization?.phone
     })
   } catch (error) {
     console.error('Lỗi khi in hóa đơn:', error)
     res.status(500).send('Lỗi máy chủ')
+  }
+}
+
+export const getOrders = async (req, res) => {
+  try {
+    const draw = +req.query.draw || 0
+    const start = +req.query.start || 0
+    const length = +req.query.length || 10
+    const searchValue = (req.query['search[value]'] || '').trim()
+    const colIdx = req.query['order[0][column]']
+    const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
+    const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
+
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    // Base pipeline
+    const pipeline = [
+      { $match: { organization: organizationId } },
+      ...lookupRef('customerId', 'Customers', { as: 'customer' }),
+      ...lookupRef('tableId', 'Tables', { as: 'table' }),
+      { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
+      ...lookupRef('items.foodId', 'MenuItems', { as: 'food' }),
+      ...lookupRef('items.comboId', 'Combos', { as: 'combo' }),
+      {
+        $addFields: {
+          'items.foodName': '$food.name',
+          'items.comboName': '$combo.name'
+        }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          customer: { $first: '$customer' },
+          table: { $first: '$table' },
+          total: { $first: '$total' },
+          items: {
+            $push: {
+              quantity: '$items.quantity',
+              price: '$items.price',
+              foodName: '$items.foodName',
+              comboName: '$items.comboName'
+            }
+          },
+          updatedAt: { $first: '$updatedAt' }
+        }
+      }
+    ]
+
+    // Search conditions
+    if (searchValue) {
+      const maybeNum = Number(searchValue)
+      const orConditions = [
+        { 'customer.name': { $regex: searchValue, $options: 'i' } },
+        { 'table.name': { $regex: searchValue, $options: 'i' } },
+        { 'items.foodName': { $regex: searchValue, $options: 'i' } },
+        { 'items.comboName': { $regex: searchValue, $options: 'i' } },
+        {
+          $expr: {
+            $regexMatch: {
+              input: {
+                $dateToString: {
+                  format: '%d/%m/%Y %H:%M:%S',
+                  date: '$updatedAt',
+                  timezone: '+07:00'
+                }
+              },
+              regex: searchValue,
+              options: 'i'
+            }
+          }
+        }
+      ]
+      if (!isNaN(maybeNum)) {
+        orConditions.push({ total: maybeNum })
+      }
+      pipeline.push({ $match: { $or: orConditions } })
+    }
+
+    // Tổng số records
+    const recordsTotal = await Order.countDocuments({ organization: organizationId })
+
+    // Tổng sau filter
+    const countPipeline = [...pipeline, { $count: 'count' }]
+    const countResult = await Order.aggregate(countPipeline)
+    const recordsFiltered = countResult.length > 0 ? countResult[0].count : 0
+
+    // Sort + limit
+    const sortObj = {}
+    if (['table', 'table.name'].includes(sortField)) {
+      sortObj['table.name'] = sortDir
+    } else if (['customer', 'customer.name'].includes(sortField)) {
+      sortObj['customer.name'] = sortDir
+    } else if (sortField === 'total') {
+      sortObj.total = sortDir
+    } else {
+      sortObj[sortField] = sortDir
+    }
+
+    pipeline.push(
+      { $sort: sortObj },
+      { $skip: start },
+      { $limit: length },
+      {
+        $project: {
+          _id: 1,
+          total: 1,
+          customer: { _id: 1, name: 1 },
+          table: { _id: 1, name: 1 },
+          items: 1,
+          updatedAt: 1
+        }
+      }
+    )
+
+    const data = await Order.aggregate(pipeline)
+
+    return res.json({
+      draw,
+      recordsTotal,
+      recordsFiltered,
+      data
+    })
+  } catch (error) {
+    return res.status(500).json({
+      draw: +req.query.draw || 0,
+      recordsTotal: 0,
+      recordsFiltered: 0,
+      data: [],
+      error: error.message
+    })
   }
 }

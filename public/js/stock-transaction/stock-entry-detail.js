@@ -10,6 +10,7 @@ $(function () {
     '#stockEntryForm',
     '#btn-save-entry'
   )
+  const csrfToken = $('#_csrf').val()
 
   // Lấy stockEntryId từ URL
   const urlPath = window.location.pathname
@@ -97,6 +98,7 @@ $(function () {
           $.ajax({
             url: `/api/inventory/stock-entry/lock/${stockEntryId}`,
             method: 'POST',
+            headers: { 'x-csrf-token': csrfToken },
             beforeSend: function () {
               $('#btn-lock-entry').prop('disabled', true).text('Đang khóa...')
             },
@@ -333,7 +335,6 @@ $(function () {
 
   function saveStockEntry(e) {
     e.preventDefault()
-    const csrfToken = $('#_csrf').val()
 
     const $rows = $('#itemsTableBody tr')
     const partialErrors = []

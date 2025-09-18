@@ -555,3 +555,37 @@ export const customerPage = async (req, res) => {
     })
   )
 }
+
+export const receiptPage = async (req, res) => {
+  res.render(
+    'staff/receipts',
+    getPageData(req, 'Quản lý hóa đơn', 'Receipt', {
+      headerClass: 'staff__header',
+      pageTitle: 'HÓA ĐƠN'
+    })
+  )
+}
+
+import Order from '../modules/order/model.js'
+export const receiptDetailPage = async (req, res) => {
+  const { id } = req.params
+
+  const order = await Order.findById(id)
+    .populate('items.foodId', 'name price')
+    .populate('tableId', 'name')
+    .populate('organization', 'logo name phone province commune street')
+
+  if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
+
+  res.render('staff/printbill', {
+    title: 'Hóa đơn thanh toán',
+    order,
+    orderId: order._id,
+    currentUserId: req.user ? req.user._id : null,
+    user: req.user || { username: 'Admin' },
+    logoStore: order.organization?.logo || '/assets/images/default.png',
+    storeName: order.organization?.name || 'Tên cửa hàng',
+    storePhone: order.organization?.phone,
+    storeAddress: `${order.organization?.street || ''}, ${order.organization?.commune || ''}, ${order.organization?.province || ''}`,
+  })
+}

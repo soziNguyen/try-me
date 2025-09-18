@@ -90,7 +90,14 @@ app.use(
   lusca({
     csrf: true, // CSRF protection
     xframe: 'SAMEORIGIN',
-    xssProtection: true
+    xssProtection: true,
+    csp: {
+      policy: {
+        "default-src": "'self'",
+        "img-src": "'self' data: https://vietqr.co",
+        "style-src": "'self' 'unsafe-inline'"
+      }
+    }
   })
 )
 

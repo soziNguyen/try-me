@@ -70,6 +70,7 @@ async function updateOrgField(field, value) {
     })
     const data = await res.json()
     if (data.success) {
+      toastr.remove()
       toastr.success(data.message)
       if (field === 'phone' && data.data?.phoneDisplay?.international) {
         $('#orgPhone').val(data.data.phoneDisplay.international)
@@ -106,38 +107,31 @@ $(document).ready(function () {
   fetchOrgDetail()
 
   // ------------------- Field change handlers -------------------
-  $('#orgName').on('change', () => {
-    if (!isLoadingOrgData) updateOrgField('name', $('#orgName').val())
-  })
-  $('#orgEmail').on('change', () => {
-    if (!isLoadingOrgData) updateOrgField('email', $('#orgEmail').val())
-  })
-  $('#orgPhone').on('change', () => {
-    if (!isLoadingOrgData) updateOrgField('phone', $('#orgPhone').val())
-  })
-  $('#orgStreet').on('change', () => {
-    if (!isLoadingOrgData) updateOrgField('street', $('#orgStreet').val())
-  })
-  $('#orgProvince').on('change', function () {
-    const provinceId = $(this).val()
-    if (provinceId) listCommunes(provinceId)
-    else {
-      $('#orgCommune')
-        .empty()
-        .append('<option value="">— Chọn Xã/ Phường —</option>')
-        .prop('disabled', true)
-      initSelect2($('#orgCommune'), '— Chọn Xã/ Phường —')
+  $(document).on('change', '.org-update', function () {
+    if (isLoadingOrgData) return
+
+    const field = $(this).data('field')
+    let value = $(this).val()
+
+    // Xử lý riêng cho phone
+    if (field === 'phone') {
+      value = value ? value.replace(/[\s\.\-]/g, '') : ''
     }
-    if (!isLoadingOrgData) updateOrgField('province', provinceId)
-  })
-  $('#orgCommune').on('change', () => {
-    if (!isLoadingOrgData) updateOrgField('commune', $('#orgCommune').val())
-  })
-  $('#orgIsActive').on('change', () => {
-    if (!isLoadingOrgData) updateOrgField('isActive', $('#orgIsActive').is(':checked'))
-  })
-  $('#taxCode').on('change', () => {
-    if (!isLoadingOrgData) updateOrgField('taxCode', $('#taxCode').val())
+
+    // Xử lý riêng cho province
+    if (field === 'province') {
+      const provinceId = value
+      if (provinceId) listCommunes(provinceId)
+      else {
+        $('#orgCommune')
+          .empty()
+          .append('<option value="">— Chọn Xã/ Phường —</option>')
+          .prop('disabled', true)
+        initSelect2($('#orgCommune'), '— Chọn Xã/ Phường —')
+      }
+    }
+
+    updateOrgField(field, value)
   })
 
   // ------------------- Xem ảnh -------------------
