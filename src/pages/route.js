@@ -20,5 +20,6 @@ router.get('/change-password', isAuthenticated, page.changePasswordPage)
 router.get('/profile', isAuthenticated, page.profilePage)
 router.get('/receipts', isAuthenticated, page.receiptPage)
 router.get('/receipt/:id', isAuthenticated, page.receiptDetailPage)
+router.get('/invoice', isAuthenticated, page.invoicePage)
 
 export default router

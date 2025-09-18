@@ -8,6 +8,7 @@ import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import withTransaction from '../../helpers/withTransaction.js'
 import { lookupRef } from '../../helpers/lookupHelper.js'
+import InvoiceOption from '../invoice/model.js'
 import ReceivingAccount from '../receiving-account/model.js'
 import { generateDocumentCode } from '../../helpers/common.js'
 import QRCode from 'qrcode'
@@ -148,14 +149,13 @@ export const getOrderById = async (req, res) => {
       .lean()
 
     if (!order) return res.status(404).json({ message: 'Order không tồn tại' })
-    console.log(order);
+    console.log(order)
 
     res.json(order)
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
 }
-
 
 function calcOrderTotal(items = []) {
   if (!Array.isArray(items)) return 0

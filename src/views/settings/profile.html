@@ -88,9 +88,8 @@
 
                 <%- include('../partials/commonjs.html') %>
                   <%- include('../partials/cropper_modal.html') %>
-                    <input type="hidden" id="currentOrgId" value="<%= session.currentOrg || '' %>">
+                    <input type="hidden" id="currentOrgId" value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
                     <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
-                    <input type="hidden" id="currentOrgId" value="<%= currentOrgId %>">
                     <script src="/js/sidebar-toggle.js"></script>
                     <script src="/js/data-table.js"></script>
                     <% if (userRole==="Admin" ) { %>

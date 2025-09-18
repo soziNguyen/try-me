@@ -263,11 +263,37 @@
                       <span>Mã giảm giá</span>
                     </a>
                   </li>
+
                   <li>
                     <a class="<%= page === 'ActivityLog' ? 'active' : '' %>" href="/activity-logs">
                       <i class="bi bi-activity text-secondary me-2"></i>
                       <span>Nhật ký hoạt động</span>
                     </a>
+                  </li>
+
+                  <li class="settings-accordion">
+                    <div class="accordion" id="accordionReports">
+                      <div class="accordion-item">
+                        <h2 class="accordion-header">
+                          <button
+                            class="accordion-button <%= ['Invoice'].includes(page) ? 'active' : '' %> <%= ['Invoice'].includes(page) ? '' : 'collapsed' %>"
+                            type="button" data-bs-toggle="collapse" data-bs-target="#collapseSettings"
+                            aria-expanded="<%= ['Invoice'].includes(page) ? 'true' : 'false' %>" aria-controls="collapseSettings">
+                            <i class="bi-gear text-danger me-2"></i>
+                            <span>Cài đặt chung</span>
+                          </button>
+                        </h2>
+                        <div id="collapseSettings" class="accordion-collapse collapse <%= ['Invoice'].includes(page) ? 'show' : '' %>"
+                          data-bs-parent="#accordionSettings">
+                          <div class="accordion-body">
+                            <a class="<%= page === 'Invoice' ? 'accordion-active' : '' %>" href="/invoice">
+                              <i class="bi bi-wallet2 text-white-emphasis me-2"></i>
+                              <span>Hóa đơn</span>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </li>
         </ul>
       </div>

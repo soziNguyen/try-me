@@ -1,4 +1,5 @@
 import { getPageData } from '../helpers/pageDataHelper.js'
+import Order from '../modules/order/model.js'
 import { getCurrentOrg } from '../helpers/orgHelper.js'
 
 //=============================================
@@ -46,7 +47,7 @@ export const resetPasswordPage = async (req, res) => {
 
 export const profilePage = async (req, res) => {
   res.render(
-    'account-settings/profile',
+    'settings/profile',
     getPageData(req, 'Thông tin hồ sơ', 'Profile', {
       headerClass:
         req.user.role === 'Admin' || req.user.role === 'Org' ? 'admin__header' : 'staff__header',
@@ -59,7 +60,7 @@ export const profilePage = async (req, res) => {
 
 export const changePasswordPage = async (req, res) => {
   res.render(
-    'account-settings/change_password',
+    'settings/change_password',
     getPageData(req, 'Thay đổi mật khẩu', 'Change-password', {
       headerClass: 'staff__header',
       pageTitle: 'THAY ĐỔI MẬT KHẨU',
@@ -566,7 +567,6 @@ export const receiptPage = async (req, res) => {
   )
 }
 
-import Order from '../modules/order/model.js'
 export const receiptDetailPage = async (req, res) => {
   const { id } = req.params
 
@@ -586,6 +586,16 @@ export const receiptDetailPage = async (req, res) => {
     logoStore: order.organization?.logo || '/assets/images/default.png',
     storeName: order.organization?.name || 'Tên cửa hàng',
     storePhone: order.organization?.phone,
-    storeAddress: `${order.organization?.street || ''}, ${order.organization?.commune || ''}, ${order.organization?.province || ''}`,
+    storeAddress: `${order.organization?.street || ''}, ${order.organization?.commune || ''}, ${order.organization?.province || ''}`
   })
+}
+
+export const invoicePage = async (req, res) => {
+  res.render(
+    'settings/invoice',
+    getPageData(req, 'Cài đặt hóa đơn', 'Invoice', {
+      headerClass: 'admin__header',
+      pageTitle: 'CÀI ĐẶT HÓA ĐƠN'
+    })
+  )
 }
