@@ -231,3 +231,46 @@ export const deleteCombos = async (req, res) => {
     return responseHelper.error(res, err.message)
   }
 }
+
+export const searchCombos = async (req, res) => {
+  try {
+    const keyword = (req.query.keyword || '').trim()
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    if (!keyword) {
+      return responseHelper.success(res, [])
+    }
+
+    const combos = await Combo.find({
+      organization: organizationId,
+      $or: [
+        { name: { $regex: keyword, $options: 'i' } },
+        { sku: { $regex: keyword, $options: 'i' } }
+      ]
+    }).populate('items.menuItem', '_id name')
+
+    // ✅ Format lại dữ liệu combo cho đúng định dạng frontend cần
+    const formattedCombos = combos.map((combo) => ({
+      _id: combo._id,
+      sku: combo.sku || '',
+      name: combo.name || 'Combo không rõ tên',
+      image: combo.image || '',
+      price: typeof combo.price === 'number' ? combo.price : 0,
+      isCombo: true,
+      items: Array.isArray(combo.items)
+        ? combo.items.map((i) => ({
+            menuItem: {
+              _id: i.menuItem?._id || '',
+              name: i.menuItem?.name || 'Không rõ món'
+            }
+          }))
+        : []
+    }))
+
+    responseHelper.success(res, formattedCombos)
+  } catch (error) {
+    console.error('Search Combo Error:', error)
+    responseHelper.error(res, 'Tìm combo thất bại')
+  }
+}
