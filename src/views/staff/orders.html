@@ -18,7 +18,12 @@
           <div class="col-lg-8 mt-3" id="foodMenuCol">
             <div id="orderWarning"></div>
             <h3>🍽️ Danh sách thực đơn</h3>
-            <div id="categoryList" class="mb-4 d-flex gap-2 flex-wrap"></div>
+            <div class="d-flex justify-content-between">
+              <div id="categoryList" class="mb-4 d-flex gap-2 flex-wrap"></div>
+              <div class="search-form d-flex align-items-center mb-4" id="search-menu">
+                <input type="text" id="searchMenuInput" class="form-control me-2" placeholder="Search Menu" />
+              </div>
+            </div>
             <div id="foodMenu" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xxl-4 g-3">
               <!-- Món ăn sẽ được render ở đây -->
             </div>
