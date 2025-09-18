@@ -1,6 +1,7 @@
 import Table from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import Order from '../order/model.js'
+import Customer from '../customer/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
 // [CREATE] / table
@@ -46,6 +47,7 @@ export const getTables = async (req, res) => {
           select: 'name phone totalPoints'
         }
       })
+      .sort({ createdAt: 1 })
       .lean()
 
     // Ép ObjectId về string + lấy tên khách
@@ -166,6 +168,16 @@ export const getTableById = async (req, res) => {
       _id: id,
       organization: organizationId
     })
+      .populate({
+        path: 'currentOrderId',
+        model: 'Order',
+        populate: {
+          path: 'customerId',
+          model: 'Customer',
+          select: 'name phone totalPoints'
+        }
+      })
+      .lean()
     if (!table) {
       return responseHelper.error(res, 'Table Not Found', 404)
     }
@@ -178,7 +190,7 @@ export const getTableById = async (req, res) => {
 // UPDATE
 export const updateTable = async (req, res) => {
   try {
-    const { name, status, capacity, area, checkInTime } = req.body
+    const { name, status, capacity, area, checkInTime, customerName } = req.body
     const { id } = req.params
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -187,6 +199,9 @@ export const updateTable = async (req, res) => {
     const tableExist = await Table.findOne({
       _id: id,
       organization: organizationId
+    }).populate({
+      path: 'currentOrderId',
+      populate: { path: 'customerId' }
     })
     if (!tableExist) {
       return responseHelper.error(res, 'Không tìm thấy bàn.', 404)
@@ -224,6 +239,15 @@ export const updateTable = async (req, res) => {
       updatedFields,
       { new: true }
     )
+
+    if (customerName && tableExist.currentOrderId && tableExist.currentOrderId.customerId) {
+      const customerId = tableExist.currentOrderId.customerId
+      const customer = await Customer.findById(customerId)
+      if (customer) {
+        customer.name = customerName
+        await customer.save()
+      }
+    }
 
     responseHelper.success(res, updatedTable, 'Cập nhật thành công')
   } catch (error) {
