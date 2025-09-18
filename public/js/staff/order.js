@@ -310,6 +310,48 @@ function renderMenu(items) {
   })
 }
 
+const searchInput = document.getElementById('searchMenuInput')
+
+if (searchInput) {
+  let searchTimeout = null
+
+  searchInput.addEventListener('input', () => {
+    const keyword = searchInput.value.trim()
+
+    if (!keyword) {
+      if (searchTimeout) clearTimeout(searchTimeout)
+      renderMenu(allItems)
+      return
+    }
+
+    if (searchTimeout) clearTimeout(searchTimeout)
+
+    searchTimeout = setTimeout(async () => {
+      try {
+        const [menuRes, comboRes] = await Promise.all([
+          fetch(`/api/menu/search?keyword=${encodeURIComponent(keyword)}`),
+          fetch(`/api/menu/combo/search?keyword=${encodeURIComponent(keyword)}`)
+        ])
+
+        const menuData = menuRes.ok ? await menuRes.json() : { data: [] }
+        const comboData = comboRes.ok ? await comboRes.json() : { data: [] }
+
+        // Gộp 2 mảng data
+        const combinedData = [...(menuData.data || []), ...(comboData.data || [])]
+        if (combinedData.length === 0) {
+          toastr.info('Không tìm thấy sản phẩm')
+        }
+
+        renderMenu(combinedData)
+        searchInput.value = ''
+      } catch (err) {
+        console.error('Lỗi tìm kiếm:', err)
+        renderMenu([])
+      }
+    }, 300)
+  })
+}
+
 // ======== Hiển thị/Ẩn hóa đơn ========
 
 function updateOrderSectionVisibility() {

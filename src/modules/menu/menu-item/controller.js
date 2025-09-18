@@ -274,3 +274,47 @@ export const deleteMenus = async (req, res) => {
     return responseHelper.error(res, err.message)
   }
 }
+
+export const searchMenus = async (req, res) => {
+  try {
+    const keyword = (req.query.keyword || '').trim()
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const searchRegex = new RegExp(keyword, 'i')
+
+    const pipeline = [
+      ...lookupRef('category', 'MenuCategories', { as: 'category' }),
+      {
+        $match: {
+          isActive: true,
+          organization: organizationId,
+          $or: [{ name: { $regex: searchRegex } }, { sku: { $regex: searchRegex } }]
+        }
+      },
+      { $sort: { name: 1 } },
+      {
+        $project: {
+          _id: 1,
+          sku: 1,
+          name: 1,
+          image: 1,
+          price: 1,
+          description: 1,
+          isActive: 1,
+          category: {
+            _id: '$category._id',
+            name: '$category.name'
+          }
+        }
+      }
+    ]
+
+    const results = await MenuItem.aggregate(pipeline)
+
+    responseHelper.success(res, results)
+  } catch (err) {
+    console.error('Search Menu Error:', err)
+    responseHelper.error(res, 'Tìm kiếm thất bại')
+  }
+}
