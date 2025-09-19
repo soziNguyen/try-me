@@ -1,0 +1,99 @@
+<%- include('../partials/header.html') %>
+
+  <% if (userRole==="Org" || userRole==="Admin" ) { %>
+    <%- include('../partials/org_sidebar.html') %>
+      <% } else if (userRole==="Member" ) { %>
+        <%- include('../partials/staff_sidebar.html') %>
+          <% } %>
+
+            <!-- Main Content Section -->
+            <% if (userRole==="Admin" || userRole==="Org" ) { %>
+
+              <div class="admin__content">
+                <h3 class="fw-bold mb-5">
+                  <%= pageTitle %>
+                </h3>
+
+                <form id="orgForm" onsubmit="return false;" novalidate>
+                  <div class="org-info">
+                    <h5 class="mb-md-3">Thông tin tổ chức</h5>
+                    <div class="org-logo d-flex align-items-center justify-content-center mb-5">
+                      <div class="org-logo-container">
+                        <img id="orgLogoPreview" src="/assets/images/default.png" alt="Logo"
+                          class="org-logo-img no-image">
+                        <div class="org-logo-overlay no-image">
+                          <button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn"
+                            data-bs-toggle="tooltip" title="Xem ảnh">
+                            <i class="bi bi-eye"></i>
+                          </button>
+                          <button type="button" class="btn btn-outline-light btn-sm upload-btn" data-bs-toggle="tooltip"
+                            title="Thêm ảnh">
+                            <i class="bi bi-upload"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <input type="text" id="taxCode" class="form-control org-update" data-field="taxCode"
+                          placeholder="Mã số thuế">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <input type="text" id="orgName" class="form-control org-update" data-field="name"
+                          placeholder="Tên tổ chức">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <input type="text" id="orgEmail" class="form-control org-update" data-field="email"
+                          placeholder="Email">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <input type="text" id="orgPhone" class="form-control org-update" data-field="phone"
+                          placeholder="Số điện thoại">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <select id="orgProvince" class="form-control org-update" data-field="province"></select>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <select id="orgCommune" class="form-control org-update" data-field="commune"></select>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <input type="text" id="orgStreet" class="form-control org-update" data-field="street"
+                          placeholder="Số nhà/Đường">
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <div class="account-info mt-3">
+                    <h5>Thông tin đăng nhập</h5>
+                    <div class="row mt-3">
+                      <div class="col-md-6 mb-3">
+                        <input type="text" name="username" class="username form-control" placeholder="Tên đăng nhập"
+                          value="<%= user.username %>" disabled>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <input type="email" name="email" class="email form-control" placeholder="Email"
+                          value="<%= user.email %>" disabled>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <a href="/change-password"><i>Đổi mật khẩu</i></a>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <% } %>
+
+                <%- include('../partials/commonjs.html') %>
+                  <%- include('../partials/cropper_modal.html') %>
+                    <input type="hidden" id="currentOrgId" value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
+                    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+                    <script src="/js/sidebar-toggle.js"></script>
+                    <script src="/js/data-table.js"></script>
+                    <% if (userRole==="Admin" ) { %>
+                      <script src="/js/admin/admin-org.js"></script>
+                      <% } %>
+                        <script src="/js/admin/org-profile.js"></script>
+                        <%- include('../partials/footer.html') %>

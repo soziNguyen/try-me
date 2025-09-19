@@ -158,3 +158,12 @@ export function displayPhoneNumber(phone, includeCountryCode = false) {
     }
   }
 }
+
+// Validate Tax Code (MST) Việt Nam
+export const validateTaxCode = (taxCode) => {
+  // Loại bỏ tất cả ký tự không phải số
+  const cleanTaxCode = taxCode.replace(/[^0-9]/g, '')
+
+  // Kiểm tra độ dài: hợp lệ nếu từ 10 đến 13 chữ số
+  return cleanTaxCode.length >= 10 && cleanTaxCode.length <= 13
+}

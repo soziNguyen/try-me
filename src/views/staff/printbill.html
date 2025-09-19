@@ -1,77 +1,98 @@
 <%- include('../partials/header.html') %>
 
-<div class="invoice container container-xxl">
-  <div class="btn-back position-relative">
-    <a href="/tables" class="position-absolute top-50"
-      ><i class="bi bi-arrow-left text-dark"></i
-    ></a>
-  </div>
-  <!-- Header -->
-  <div class="header text-center mb-4 mt-3">
-    <div id="storeName">Tên cửa hàng: <strong><%= storeName %></strong></div>
-    <div>Số điện thoại: <%= storePhone %></div>
-    <div><strong>HÓA ĐƠN BÁN HÀNG</strong></div>
-    <div>Mã HD: <span id="orderId"></span></div>
-    <div>Thời Gian: <span id="orderDate"></span></div>
-  </div>
+  <div class="invoice container container-xl container-xxl">
+    <div class="btn-back position-relative">
+      <a href="/tables" class="position-absolute top-50"><i class="bi bi-arrow-left text-dark"></i></a>
+    </div>
+    <!-- Header -->
+    <div class="header text-center mb-4 mt-3">
+      <div class="logo mb-2">
+        <img src="<%= logoStore %>" class="org-logo-bill" alt="logo">
+      </div>
+      <div id="storeName"><strong>
+          <%= storeName %>
+        </strong>
+      </div>
+      <div class="org-address">
+      </div>
+      <hr class="my-1" />
+      <div><strong>HÓA ĐƠN BÁN HÀNG</strong></div>
+      <div>Mã HD: <span id="orderId"></span></div>
+      <div><span id="orderDate"></span></div>
+    </div>
 
-  <div class="info mb-2">
-    <p class="mb-0"><strong>Khách hàng:</strong> <span id="customerInfo"></span></p>
-    
-    <div class="d-flex justify-content-between">
-      <p class="mb-0">
-        <strong>Thu ngân:</strong>
-        <span id="cashier"> <%= user.username %> </span>
+    <div class="info mb-2">
+      <p class="mb-0"><strong>Khách hàng:</strong> <span id="customerInfo"></span></p>
+
+      <div class="d-flex justify-content-between">
+        <p class="mb-0">
+          <strong>Thu ngân:</strong>
+          <span id="cashier">
+            <%= user.username %>
+          </span>
+        </p>
+        <p class="mb-0"><strong>Loại hóa đơn:</strong> <span id="orderType">--</span></p>
+      </div>
+    </div>
+
+    <table class="invoice-table fw-bold">
+      <thead>
+        <tr>
+          <th class="stt">STT</th>
+          <th class="name">Tên hàng</th>
+          <th class="price">Đ.giá</th>
+          <th class="qty">SL</th>
+          <th class="total text-end">Tổng tiền</th>
+        </tr>
+      </thead>
+      <tbody id="orderItems">
+        <!-- Các món ăn sẽ được render ở đây -->
+      </tbody>
+    </table>
+
+    <!-- Tổng kết -->
+    <div class="summary fw-bold mt-3">
+      <p><span>Tổng tiền</span><span id="totalAmount"></span></p>
+      <p><span>Giảm giá mã</span><span id="discount"></span></p>
+      <p><span>Giảm giá điểm</span><span id="pointsDiscount"></span></p>
+      <p><span>Tổng giảm</span><span id="totalDiscount"></span></p>
+      <p><span>Phụ thu dịch vụ</span><span id="serviceCharge"></span></p>
+      <p><span>VAT</span><span id="vatAmount"></span></p>
+      <hr class="my-3" />
+      <p><span>Thành tiền</span><span id="total"></span></p>
+      <p><span>Tiền khách trả</span><span id="customerPaid"></span></p>
+      <p><span>Tiền thừa</span><span id="changeAmount"></span></p>
+    </div>
+    <hr class="my-3" />
+
+    <p><em id="totalInWords"></em></p>
+
+    <div id="receivingAccountInfo" class="mt-3 text-center">
+      <!-- JS sẽ render thông tin tài khoản nhận -->
+    </div>
+
+    <div id="qrCodeContainer" class="text-center mt-3">
+      <!-- JS sẽ thêm <img src="data:image/png;base64,..." /> nếu có QR -->
+    </div>
+
+    <!-- Đường kẻ phân cách -->
+    <hr class="my-3" />
+
+    <!-- Footer -->
+    <div class="footer text-center">
+      <p>Xin cảm ơn, hẹn gặp lại quý khách</p>
+      <p>Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ. Xin vui lòng liên hệ với chúng
+        tôi qua hotline: <i class="fw-bold">
+          +<%= storePhone %>
+        </i>
+        để gửi phản hồi hoặc yêu cầu hỗ trợ.
       </p>
-      <p class="mb-0"><strong>Loại hóa đơn:</strong> <span id="orderType">--</span></p>
     </div>
   </div>
 
-  <table class="invoice-table fw-bold">
-    <thead>
-      <tr>
-        <th class="stt">STT</th>
-        <th class="name">Tên hàng</th>
-        <th class="price">Đ.giá</th>
-        <th class="qty">SL</th>
-        <th class="total text-end">Tổng tiền</th>
-      </tr>
-    </thead>
-    <tbody id="orderItems">
-      <!-- Các món ăn sẽ được render ở đây -->
-    </tbody>
-  </table>
+  <input type="hidden" id="orderIdInput" value="<%= orderId %>" />
+  <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
 
-  <!-- Tổng kết -->
-  <div class="summary fw-bold mt-3">
-  <p><span>Tổng tiền</span><span id="totalAmount"></span></p>
-  <p><span>Giảm giá mã</span><span id="discount"></span></p>
-  <p><span>Giảm giá điểm</span><span id="pointsDiscount"></span></p>
-  <p><span>Tổng giảm</span><span id="totalDiscount"></span></p>
-  <p><span>Phụ thu dịch vụ</span><span id="serviceCharge"></span></p>
-  <p><span>VAT</span><span id="vatAmount"></span></p>
-  <hr class="my-3" />
-  <p><span>Thành tiền</span><span id="total"></span></p>
-  <p><span>Tiền khách trả</span><span id="customerPaid"></span></p>
-  <p><span>Tiền thừa</span><span id="changeAmount"></span></p>
-</div>
-
-  <div id="qrCodeContainer" class="text-center mt-3">
-    <!-- JS sẽ thêm <img src="data:image/png;base64,..." /> nếu có QR -->
-  </div>
-
-  <!-- Đường kẻ phân cách -->
-  <hr class="my-3" />
-
-  <!-- Footer -->
-  <div class="footer text-center">
-    <p>Xin cảm ơn, hẹn gặp lại quý khách</p>
-  </div>
-</div>
-
-<input type="hidden" id="orderIdInput" value="<%= orderId %>" />
-<input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
-
-<%- include('../partials/commonjs.html') %>
-<script src="/js/staff/printbill.js"></script>
-<%- include('../partials/footer.html') %>
+  <%- include('../partials/commonjs.html') %>
+    <script src="/js/staff/printbill.js"></script>
+    <%- include('../partials/footer.html') %>

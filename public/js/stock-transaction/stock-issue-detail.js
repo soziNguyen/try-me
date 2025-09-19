@@ -9,6 +9,7 @@ $(function () {
     '#stockIssueForm',
     '#btn-save-issue'
   )
+  const csrfToken = $('#_csrf').val()
 
   // Lấy stockIssueId từ URL
   const urlPath = window.location.pathname.split('/').pop()
@@ -83,6 +84,7 @@ $(function () {
           $.ajax({
             url: `/api/inventory/stock-issue/lock/${stockIssueId}`,
             method: 'POST',
+            headers: { 'x-csrf-token': csrfToken },
             beforeSend: function () {
               $('#btn-lock-issue').prop('disabled', true).text('Đang khóa...')
             },

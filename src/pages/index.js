@@ -1,4 +1,5 @@
 import { getPageData } from '../helpers/pageDataHelper.js'
+import Order from '../modules/order/model.js'
 import { getCurrentOrg } from '../helpers/orgHelper.js'
 
 //=============================================
@@ -41,6 +42,32 @@ export const resetPasswordPage = async (req, res) => {
   res.render(
     'users/reset_password',
     getPageData(req, 'Reset Password', { headerClass: 'staff__header' })
+  )
+}
+
+export const profilePage = async (req, res) => {
+  res.render(
+    'settings/profile',
+    getPageData(req, 'Thông tin hồ sơ', 'Profile', {
+      headerClass:
+        req.user.role === 'Admin' || req.user.role === 'Org' ? 'admin__header' : 'staff__header',
+      pageTitle: 'THÔNG TIN HỒ SƠ',
+      userRole: req.user.role,
+      currentOrgId: req.user.organization
+    })
+  )
+}
+
+export const changePasswordPage = async (req, res) => {
+  res.render(
+    'settings/change_password',
+    getPageData(req, 'Thay đổi mật khẩu', 'Change-password', {
+      headerClass: 'staff__header',
+      pageTitle: 'THAY ĐỔI MẬT KHẨU',
+      headerClass:
+        req.user.role === 'Admin' || req.user.role === 'Org' ? 'admin__header' : 'staff__header',
+      userRole: req.user.role
+    })
   )
 }
 
@@ -526,6 +553,49 @@ export const customerPage = async (req, res) => {
     getPageData(req, 'Quản lý khách hàng', 'Customer', {
       headerClass: 'admin__header',
       pageTitle: 'QUẢN LÝ KHÁCH HÀNG'
+    })
+  )
+}
+
+export const receiptPage = async (req, res) => {
+  res.render(
+    'staff/receipts',
+    getPageData(req, 'Quản lý hóa đơn', 'Receipt', {
+      headerClass: 'staff__header',
+      pageTitle: 'HÓA ĐƠN'
+    })
+  )
+}
+
+export const receiptDetailPage = async (req, res) => {
+  const { id } = req.params
+
+  const order = await Order.findById(id)
+    .populate('items.foodId', 'name price')
+    .populate('tableId', 'name')
+    .populate('organization', 'logo name phone province commune street')
+
+  if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
+
+  res.render('staff/printbill', {
+    title: 'Hóa đơn thanh toán',
+    order,
+    orderId: order._id,
+    currentUserId: req.user ? req.user._id : null,
+    user: req.user || { username: 'Admin' },
+    logoStore: order.organization?.logo || '/assets/images/default.png',
+    storeName: order.organization?.name || 'Tên cửa hàng',
+    storePhone: order.organization?.phone,
+    storeAddress: `${order.organization?.street || ''}, ${order.organization?.commune || ''}, ${order.organization?.province || ''}`
+  })
+}
+
+export const invoicePage = async (req, res) => {
+  res.render(
+    'settings/invoice',
+    getPageData(req, 'Cài đặt hóa đơn', 'Invoice', {
+      headerClass: 'admin__header',
+      pageTitle: 'CÀI ĐẶT HÓA ĐƠN'
     })
   )
 }

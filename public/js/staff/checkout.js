@@ -376,16 +376,29 @@ function initDiscountCode() {
   const discountInput = document.getElementById('discountInput')
   const discountMessage = document.getElementById('discountMessage')
   const totalAmountEl = document.getElementById('totalAmount')
+  const storedCouponId = localStorage.getItem(`appliedCouponId_${orderId}`)
+  const storedCouponCode = localStorage.getItem(`appliedCouponCode_${orderId}`)
 
   if (!applyCouponForm) return
+  if (storedCouponId && storedCouponCode) {
+    codeInput.value = storedCouponCode
+    codeInput.disabled = true
+    applyDiscountBtn.textContent = 'X'
+    applyDiscountBtn.classList.remove('btn-primary')
+    applyDiscountBtn.classList.add('btn-danger')
+    applyDiscountBtn.dataset.state = 'applied'
+  }
 
   applyCouponForm.addEventListener('submit', async (e) => {
     e.preventDefault()
     if (applyDiscountBtn.dataset.state === 'applied') {
-      // Xóa mã giảm giá
+      // Xóa mã giảm giáa
       window.appliedCouponId = null
+      localStorage.removeItem(`appliedCouponId_${orderId}`)
+      localStorage.removeItem(`appliedCouponCode_${orderId}`)
       discountInput.value = 0
       codeInput.value = ''
+      codeInput.disabled = false
       applyDiscountBtn.textContent = 'Áp dụng'
       applyDiscountBtn.classList.add('btn-primary')
       applyDiscountBtn.classList.remove('btn-danger')
@@ -431,7 +444,8 @@ function initDiscountCode() {
       const couponId = data.data.couponId || null
       discountInput.value = discountAmount
       window.appliedCouponId = data.data.couponId
-
+      localStorage.setItem(`appliedCouponId_${orderId}`, window.appliedCouponId)
+      localStorage.setItem(`appliedCouponCode_${orderId}`, code)
       await ajax(
         `/api/orders/${orderId}/update-draft`,
         { discount: discountAmount, couponId },
@@ -443,6 +457,7 @@ function initDiscountCode() {
       applyDiscountBtn.classList.remove('btn-primary')
       applyDiscountBtn.classList.add('btn-danger')
       applyDiscountBtn.dataset.state = 'applied'
+      codeInput.disabled = true
       discountMessage.className = 'text-danger d-none mt-1'
       calculateTotals()
     } catch (error) {
@@ -650,6 +665,46 @@ document.addEventListener('click', (e) => {
   }
 })
 
+async function loadOrderData(orderId) {
+  try {
+    const response = await fetch(`/api/orders/${orderId}`)
+    if (!response.ok) throw new Error('Failed to fetch order data')
+    const data = await response.json()
+
+    document.getElementById('discountInput').value = data.discount.toLocaleString('vi-VN') || '0'
+    document.getElementById('pointsInput').value = data.pointsUsed || '0'
+    document.getElementById('serviceChargeInput').value =
+      data.serviceCharge.toLocaleString('vi-VN') || '0'
+    document.getElementById('vatInput').value = data.vatRate || '0'
+    document.getElementById('customerPaidInput').value =
+      data.customerPaid.toLocaleString('vi-VN') || '0'
+    document.getElementById('paymentMethodValue').value = data.paymentMethodId || ''
+
+    if (data.paymentMethodId) {
+      const buttons = document.querySelectorAll('#paymentMethod button')
+      buttons.forEach((btn) => {
+        if (btn.getAttribute('data-value') === data.paymentMethodId) {
+          btn.classList.add('active')
+        } else {
+          btn.classList.remove('active')
+        }
+      })
+    }
+
+    window.appliedCouponId = data.couponId || localStorage.getItem('appliedCouponId') || null
+
+    if (window.appliedCouponId) {
+      localStorage.setItem('appliedCouponId', window.appliedCouponId)
+    } else {
+      localStorage.removeItem('appliedCouponId')
+    }
+
+    calculateTotals()
+  } catch (error) {
+    console.error('Lỗi khi load dữ liệu đơn hàng:', error)
+  }
+}
+
 // INITIALIZATION
 document.addEventListener('DOMContentLoaded', async () => {
   // Load dữ liệu từ API
@@ -658,6 +713,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Render UI
   renderTaxOptions()
+
+  // Load dữ liệu đơn hàng nếu có orderId
+  if (window.currentOrderId) {
+    await loadOrderData(window.currentOrderId)
+  } else {
+    calculateTotals()
+  }
 
   // Tính toán ban đầu
   calculateTotals()

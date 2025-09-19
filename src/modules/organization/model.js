@@ -10,6 +10,8 @@ const OrganizationSchema = new Schema(
     province: { type: String, trim: true, default: '' }, // tỉnh thành
     commune: { type: String, trim: true, default: '' }, // xã phường
     street: { type: String, trim: true, default: '' }, // địa chỉ cụ thể
+    logo: { type: String, trim: true, default: '' },
+    taxCode: { type: String, trim: true, default: '' },
     isActive: { type: Boolean, default: true }
   },
   {
@@ -26,6 +28,16 @@ OrganizationSchema.index(
     }
   }
 )
+
+OrganizationSchema.index(
+  { taxCode: 1 },
+  {
+    partialFilterExpression: {
+      taxCode: { $exists: true, $ne: '' }
+    }
+  }
+)
+
 OrganizationSchema.index(
   { email: 1 },
   {

@@ -77,6 +77,7 @@ if (logInForm) {
     // Lấy data từ form organization + admin
     const formData = new FormData(signUpForm)
     const data = {
+      taxCode: formData.get('taxCode'),
       orgName: formData.get('orgName'),
       orgEmail: formData.get('orgEmail'),
       orgPhone: formData.get('orgPhone'),
@@ -96,13 +97,27 @@ if (logInForm) {
       return
     }
 
-    if (!data || Object.values(data).some((value) => !value)) {
+    const requiredFields = {
+      orgName: data.orgName,
+      orgEmail: data.orgEmail,
+      orgPhone: data.orgPhone,
+      orgProvince: data.orgProvince,
+      orgCommune: data.orgCommune,
+      orgStreet: data.orgStreet,
+      adminUsername: data.adminUsername,
+      adminEmail: data.adminEmail,
+      adminPassword: data.adminPassword
+    }
+
+    if (Object.values(requiredFields).some((value) => !value)) {
       toastr.warning('Vui lòng điền đầy đủ thông tin.')
       return
     }
 
     try {
       const result = await ajax('/api/organization/create', data)
+      console.log(result);
+
       if (result) {
         toastr.success(
           'Tổ chức và quản trị viên đã được tạo thành công. Đang chuyển hướng đến trang đăng nhập...'
@@ -467,73 +482,22 @@ function renderTable(users = []) {
     .map(
       (user) =>
         `<tr>
-            <td class="text-center"><input type="checkbox" class="userCheckbox" data-id="${
-              user._id
-            }"></td>
+            <td class="text-center"><input type="checkbox" class="userCheckbox" data-id="${user._id
+        }"></td>
             <td><span class="form-control border-0 w-100">${user.username}</span></td>
             <td><span class="form-control border-0 w-100">${user.email}</span></td>
             <td><span class="form-control border-0 w-100">${user.role}</span></td>
             <td><span class="form-control border-0 w-100">${formatDate(user.createdAt)}</span></td>
             <td><span class="form-control border-0 w-100">${formatDate(user.updatedAt)}</span></td>
             <td>
-                <button class="updateUserBtn btn btn-outline-info" data-id="${
-                  user._id
-                }">
+                <button class="updateUserBtn btn btn-outline-info" data-id="${user._id
+        }">
                     <i class="bi bi-pencil-square"></i>
                 </button>
             </td>
         </tr>`
     )
     .join('')
-}
-
-function listProvinces() {
-  $.getJSON('/data/full_address.json', function (res) {
-    if (res.error == 0 && res.data) {
-      const $provinceSelect = $('#orgProvince')
-      $provinceSelect
-        .empty()
-        .append('<option value="">— Tỉnh/ Thành phố —</option>')
-
-      $.each(res.data, function (key, province) {
-        $provinceSelect.append(
-          `<option value="${province.id}">${province.name}</option>`
-        )
-      })
-
-      initSelect2($provinceSelect, 'Tỉnh/ Thành phố')
-    }
-  }).fail(function () {
-    toastr.error('Không thể tải danh sách tỉnh thành.')
-  })
-}
-
-function listCommunes(provinceId) {
-  $.getJSON('/data/full_address.json', function (res) {
-    const $communeSelect = $('#orgCommune')
-    $communeSelect
-      .empty()
-      .append('<option value="">— Chọn Xã/ Phường —</option>')
-
-    if (res.error === 0 && res.data) {
-      // Tìm đúng tỉnh theo id
-      const province = res.data.find((p) => p.id === provinceId)
-      if (province && province.data2) {
-        province.data2.forEach((commune) => {
-          $communeSelect.append(
-            `<option value="${commune.id}">${commune.full_name}</option>`
-          )
-        })
-      }
-
-      $communeSelect.prop('disabled', $communeSelect.children().length <= 1)
-      initSelect2($communeSelect, 'Xã/ Phường')
-    } else {
-      $communeSelect.prop('disabled', true)
-    }
-  }).fail(function () {
-    toastr.error('Không thể tải danh sách xã/phường.')
-  })
 }
 
 $(document).ready(function () {

@@ -467,3 +467,42 @@ export const resetPassword = async (req, res) => {
     responseHelper.error(res, error.message)
   }
 }
+
+/**
+ * [CHANGE] / Password
+ */
+export const updatePassword = async (req, res) => {
+  try {
+    const id = req.user._id
+    const { currentPassword, newPassword, confirmPassword } = req.body
+
+    const user = await User.findById(id).select('+password')
+    if (!user) {
+      return responseHelper.error(res, 'Người dùng không tồn tại', 404)
+    }
+
+    // Kiểm tra mật khẩu hiện tại
+    const isMatch = await bcrypt.compare(currentPassword, user.password)
+    if (!isMatch) {
+      return responseHelper.error(res, 'Mật khẩu hiện tại không đúng', 400)
+    }
+
+    // Kiểm tra mật khẩu mới và confirm
+    if (newPassword !== confirmPassword) {
+      return responseHelper.error(res, 'Mật khẩu không khớp', 400)
+    }
+
+    // Validate password
+    const passwordValidation = isValidPassword(newPassword)
+    if (passwordValidation) {
+      return responseHelper.error(res, passwordValidation, 400)
+    }
+
+    user.password = newPassword
+    await user.save()
+
+    responseHelper.success(res, 'Đổi mật khẩu thành công')
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}

@@ -4,6 +4,7 @@ const Schema = mongoose.Schema
 
 const OrderSchema = new Schema(
   {
+    code: { type: String, required: true, unique: true }, // Mã đơn hàng
     tableId: { type: Schema.Types.ObjectId, ref: 'Table', required: false },
     isTakeaway: { type: Boolean, default: false },
     customerId: {

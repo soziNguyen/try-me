@@ -287,7 +287,7 @@ function renderTableList(tables = []) {
               </div>
 
               <div class="table-capacity">
-                <strong>Số người:</strong> ${table.capacity || '-'}
+                <i class="bi bi-people-fill me-1"></i> ${table.capacity || '-'}
               </div>
             </div>
 
@@ -295,13 +295,14 @@ function renderTableList(tables = []) {
           </div>
 
           <div class="d-flex justify-content-between gap-2 mt-4">
-            <button class="btnAssignTable btn btn-warning btn-sm fw-bold shadow-sm">
-              <i class="bi bi-clock me-1"></i> Giao bàn
-            </button>
+          <button class="btnOrderFood btn btn-success btn-sm fw-bold shadow-sm" data-order-id="${table.currentOrderId?._id}">
+            <i class="bi bi-clipboard-check me-1"></i> Thêm món
+          </button>
+
+          <button class="btnAssignTable btn btn-warning btn-sm fw-bold shadow-sm">
+            <i class="bi bi-clock me-1"></i> Giao bàn
+          </button>
             
-            <button class="btnOrderFood btn btn-success btn-sm fw-bold shadow-sm" data-order-id="${table.currentOrderId?._id}">
-              <i class="bi bi-clipboard-check me-1"></i> Thêm món
-            </button>
           </div>
         </div>
       </div>
