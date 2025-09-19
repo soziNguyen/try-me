@@ -30,6 +30,39 @@
           </div>
 
           <div class="col-lg-4 mt-4 d-none" id="orderSection">
+            <!-- Accordion thông tin khách hàng -->
+            <div class="accordion mb-3" id="accordionClent">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingClent">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseClent" aria-expanded="false" aria-controls="collapseClent">
+                    Thông tin khách hàng
+                  </button>
+                </h2>
+                <div id="collapseClent" class="accordion-collapse collapse" aria-labelledby="headingClent"
+                  data-bs-parent="#accordionClent">
+                  <div class="accordion-body">
+                    <form id="customerForm">
+                      <div class="mb-3">
+                        <label for="customerName" class="form-label">Tên khách hàng</label>
+                        <input type="text" class="form-control" id="customerName" placeholder="Nhập tên khách hàng">
+                      </div>
+                      <div class="mb-3">
+                        <label for="customerPhone" class="form-label">Số điện thoại</label>
+                        <input type="tel" class="form-control" id="customerPhone" placeholder="Nhập số điện thoại">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Điểm tích lũy (hiện có)</label>
+                        <div id="loyaltyPoints" class="fw-bold text-primary">0 điểm</div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+            <!-- Accordion Hóa đơn order -->
             <div class="accordion" id="accordionOrder">
               <div class="accordion-item">
                 <h2 class="accordion-header" id="headingOrder">
