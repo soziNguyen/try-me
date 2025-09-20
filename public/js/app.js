@@ -67,7 +67,7 @@ function formatDate(dateString) {
 
 /**
  * Format a given date string to a time string (HH:mm).
- * 
+ *
  * @param {string} dateStr - The date string to be formatted.
  * @returns {string} - The formatted time string (HH:mm).
  * If the input is invalid or empty, it returns an empty string.
@@ -80,7 +80,7 @@ function formatTime(dateStr) {
 
 /**
  * Convert a duration in minutes to hours with one decimal place.
- * 
+ *
  * @param {number} min - The duration in minutes.
  * @returns {string} - The converted duration in hours (as a string with 1 decimal place).
  * If the input is invalid or 0, it returns an empty string.
@@ -141,9 +141,7 @@ function renderPagination(pagination, searchParam = '') {
     const classes = ['page-item', active && 'active', disabled && 'disabled']
       .filter(Boolean)
       .join(' ')
-    const href = disabled
-      ? 'javascript:void(0)'
-      : `?page=${page}&limit=${perPage}${searchParam}`
+    const href = disabled ? 'javascript:void(0)' : `?page=${page}&limit=${perPage}${searchParam}`
     return `<li class="${classes}"><a class="page-link" href="${href}">${label}</a></li>`
   }
 
@@ -151,9 +149,7 @@ function renderPagination(pagination, searchParam = '') {
   items.push(li(1, '1', currentPage === 1))
 
   if (currentPage > 4) {
-    items.push(
-      `<li class="page-item disabled"><span class="page-link">...</span></li>`
-    )
+    items.push(`<li class="page-item disabled"><span class="page-link">...</span></li>`)
   }
 
   const start = Math.max(2, currentPage - 2)
@@ -163,9 +159,7 @@ function renderPagination(pagination, searchParam = '') {
   }
 
   if (currentPage < totalPages - 3) {
-    items.push(
-      `<li class="page-item disabled"><span class="page-link">...</span></li>`
-    )
+    items.push(`<li class="page-item disabled"><span class="page-link">...</span></li>`)
   }
 
   if (totalPages > 1) {
@@ -296,10 +290,7 @@ function initSelect2($select, placeholder = '— Chọn mục —') {
 
   const $form = $select.closest('form')
   if ($form.length) {
-    $select
-      .next('.select2-container')
-      .find('.select2-selection')
-      .addClass('form-control')
+    $select.next('.select2-container').find('.select2-selection').addClass('form-control')
   }
 }
 
@@ -338,9 +329,7 @@ function setCheckbox(tableSelector, checkboxClass) {
   const table = document.querySelector(tableSelector)
   if (!table) return
 
-  const selectAll = table.querySelector(
-    'thead th:first-child input[type=checkbox]'
-  )
+  const selectAll = table.querySelector('thead th:first-child input[type=checkbox]')
 
   // Click vào tr để toggle checkbox
   table.querySelector('tbody').addEventListener('click', (e) => {
@@ -410,104 +399,110 @@ function setCheckbox(tableSelector, checkboxClass) {
  */
 function getBestFormat(hasTransparency = false) {
   const webpSupported =
-    document
-      .createElement('canvas')
-      .toDataURL('image/webp')
-      .indexOf('data:image/webp') === 0
+    document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0
 
   if (webpSupported) return { mime: 'image/webp', ext: 'webp' }
 
-  return hasTransparency
-    ? { mime: 'image/png', ext: 'png' }
-    : { mime: 'image/jpeg', ext: 'jpg' }
+  return hasTransparency ? { mime: 'image/png', ext: 'png' } : { mime: 'image/jpeg', ext: 'jpg' }
 }
 
 function listProvinces() {
-  return $.getJSON('/data/full_address.json').then(res => {
-    const $provinceSelect = $('#orgProvince');
-    $provinceSelect.empty().append('<option value="">— Tỉnh/ Thành phố —</option>');
+  return $.getJSON('/data/full_address.json').then((res) => {
+    const $provinceSelect = $('#orgProvince')
+    $provinceSelect.empty().append('<option value="">— Tỉnh/ Thành phố —</option>')
 
     if (res.error == 0 && res.data) {
-      res.data.forEach(province => {
-        $provinceSelect.append(`<option value="${province.id}">${province.name}</option>`);
-      });
-      initSelect2($provinceSelect, 'Tỉnh/ Thành phố');
+      res.data.forEach((province) => {
+        $provinceSelect.append(`<option value="${province.id}">${province.name}</option>`)
+      })
+      initSelect2($provinceSelect, 'Tỉnh/ Thành phố')
     }
-  });
+  })
 }
 
 function listCommunes(provinceId) {
-  return $.getJSON('/data/full_address.json').then(res => {
-    const $communeSelect = $('#orgCommune');
-    $communeSelect.empty().append('<option value="">— Chọn Xã/ Phường —</option>');
+  return $.getJSON('/data/full_address.json').then((res) => {
+    const $communeSelect = $('#orgCommune')
+    $communeSelect.empty().append('<option value="">— Chọn Xã/ Phường —</option>')
 
     if (res.error == 0 && res.data) {
-      const province = res.data.find(p => p.id === provinceId);
+      const province = res.data.find((p) => p.id === provinceId)
       if (province && province.data2) {
-        province.data2.forEach(commune => {
-          $communeSelect.append(`<option value="${commune.id}">${commune.full_name}</option>`);
-        });
+        province.data2.forEach((commune) => {
+          $communeSelect.append(`<option value="${commune.id}">${commune.full_name}</option>`)
+        })
       }
-      initSelect2($communeSelect, 'Xã/ Phường');
+      initSelect2($communeSelect, 'Xã/ Phường')
     }
-  });
+  })
 }
 
 function numberToVietnameseWords(num) {
-  if (!num || num === 0) return 'Không đồng';
+  if (!num || num === 0) return 'Không đồng'
 
-  const ones = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
-  const tens = ['', '', 'hai mươi', 'ba mươi', 'bốn mươi', 'năm mươi', 'sáu mươi', 'bảy mươi', 'tám mươi', 'chín mươi'];
-  const scales = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ'];
+  const ones = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín']
+  const tens = [
+    '',
+    '',
+    'hai mươi',
+    'ba mươi',
+    'bốn mươi',
+    'năm mươi',
+    'sáu mươi',
+    'bảy mươi',
+    'tám mươi',
+    'chín mươi'
+  ]
+  const scales = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ']
 
-  if (num < 0) return 'Âm ' + numberToVietnameseWords(-num);
-  num = Math.floor(num);
+  if (num < 0) return 'Âm ' + numberToVietnameseWords(-num)
+  num = Math.floor(num)
 
-  const groups = [];
+  const groups = []
   while (num > 0) {
-    groups.push(num % 1000);
-    num = Math.floor(num / 1000);
+    groups.push(num % 1000)
+    num = Math.floor(num / 1000)
   }
 
   function convertGroup(n, full) {
-    if (n === 0) return '';
+    if (n === 0) return ''
 
-    let str = '';
-    const hundred = Math.floor(n / 100);
-    const ten = Math.floor((n % 100) / 10);
-    const unit = n % 10;
+    let str = ''
+    const hundred = Math.floor(n / 100)
+    const ten = Math.floor((n % 100) / 10)
+    const unit = n % 10
 
     if (hundred > 0 || full) {
-      str += (ones[hundred] || 'không') + ' trăm';
-      if (ten === 0 && unit > 0) str += ' lẻ';
+      str += (ones[hundred] || 'không') + ' trăm'
+      if (ten === 0 && unit > 0) str += ' lẻ'
     }
 
     if (ten > 1) {
-      str += ' ' + tens[ten];
-      if (unit === 1) str += ' mốt';
-      else if (unit === 5) str += ' lăm';
-      else if (unit > 0) str += ' ' + ones[unit];
+      str += ' ' + tens[ten]
+      if (unit === 1) str += ' mốt'
+      else if (unit === 5) str += ' lăm'
+      else if (unit > 0) str += ' ' + ones[unit]
     } else if (ten === 1) {
-      str += ' mười';
-      if (unit === 1) str += ' một';
-      else if (unit === 5) str += ' lăm';
-      else if (unit > 0) str += ' ' + ones[unit];
+      str += ' mười'
+      if (unit === 1) str += ' một'
+      else if (unit === 5) str += ' lăm'
+      else if (unit > 0) str += ' ' + ones[unit]
     } else if (unit > 0 && ten === 0) {
-      str += ' ' + ones[unit];
+      str += ' ' + ones[unit]
     }
 
-    return str.trim();
+    return str.trim()
   }
 
-  let result = '';
+  let result = ''
   for (let i = groups.length - 1; i >= 0; i--) {
-    const isFull = i < groups.length - 1 && groups[i] === 0 ? true : false;
-    const groupStr = convertGroup(groups[i], isFull);
+    const isFull = i < groups.length - 1 && groups[i] === 0 ? true : false
+    const groupStr = convertGroup(groups[i], isFull)
     if (groupStr) {
-      result += (result ? ' ' : '') + groupStr + (scales[i] ? ' ' + scales[i] : '');
+      result += (result ? ' ' : '') + groupStr + (scales[i] ? ' ' + scales[i] : '')
     }
   }
 
-  result = result.toLowerCase();
-  return result.charAt(0).toUpperCase() + result.slice(1) + ' đồng';
+  result = result.toLowerCase()
+  return result.charAt(0).toUpperCase() + result.slice(1) + ' đồng'
 }

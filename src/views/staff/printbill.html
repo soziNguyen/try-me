@@ -15,8 +15,11 @@
       </div>
       <div class="org-address">
       </div>
+      <div class="org-contact">
+        <%= storePhone %>
+      </div>
       <hr class="my-1" />
-      <div><strong>HÓA ĐƠN BÁN HÀNG</strong></div>
+      <div><strong><%= invoiceTitle %></strong></div>
       <div>Mã HD: <span id="orderId"></span></div>
       <div><span id="orderDate"></span></div>
     </div>
@@ -80,13 +83,8 @@
 
     <!-- Footer -->
     <div class="footer text-center">
-      <p>Xin cảm ơn, hẹn gặp lại quý khách</p>
-      <p>Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ. Xin vui lòng liên hệ với chúng
-        tôi qua hotline: <i class="fw-bold">
-          +<%= storePhone %>
-        </i>
-        để gửi phản hồi hoặc yêu cầu hỗ trợ.
-      </p>
+      <p><%= footerLine1 %></p>
+      <p><%= footerLine2 %></p>
     </div>
   </div>
 

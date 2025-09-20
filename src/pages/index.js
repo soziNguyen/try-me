@@ -1,6 +1,7 @@
 import { getPageData } from '../helpers/pageDataHelper.js'
-import Order from '../modules/order/model.js'
 import { getCurrentOrg } from '../helpers/orgHelper.js'
+import Order from '../modules/order/model.js'
+import InvoiceOption from '../modules/invoice/model.js'
 
 //=============================================
 //================= USER ======================
@@ -568,26 +569,85 @@ export const receiptPage = async (req, res) => {
 }
 
 export const receiptDetailPage = async (req, res) => {
-  const { id } = req.params
+  try {
+    const { id } = req.params
 
-  const order = await Order.findById(id)
-    .populate('items.foodId', 'name price')
-    .populate('tableId', 'name')
-    .populate('organization', 'logo name phone province commune street')
+    const order = await Order.findById(id)
+      .populate('items.foodId', 'name price')
+      .populate('tableId', 'name')
+      .populate('organization', 'logo name phone province commune street')
 
-  if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
+    if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
 
-  res.render('staff/printbill', {
-    title: 'Hóa đơn thanh toán',
-    order,
-    orderId: order._id,
-    currentUserId: req.user ? req.user._id : null,
-    user: req.user || { username: 'Admin' },
-    logoStore: order.organization?.logo || '/assets/images/default.png',
-    storeName: order.organization?.name || 'Tên cửa hàng',
-    storePhone: order.organization?.phone,
-    storeAddress: `${order.organization?.street || ''}, ${order.organization?.commune || ''}, ${order.organization?.province || ''}`
-  })
+    const orgId = order.organization ? order.organization._id : null
+    let invoiceOptions = null
+    if (orgId) {
+      invoiceOptions = await InvoiceOption.findOne({ organizationId: orgId }).lean()
+    }
+
+    const has = (v) => v !== undefined && v !== null && String(v).trim() !== ''
+
+    // Ưu tiên invoiceOptions -> organization -> default
+    const logoStore = has(invoiceOptions?.logo)
+      ? invoiceOptions.logo
+      : order.organization?.logo || '/assets/images/default.png'
+
+    const storeName = has(invoiceOptions?.storeName)
+      ? invoiceOptions.storeName
+      : order.organization?.name || 'Tên cửa hàng'
+
+    const invoiceTitle = has(invoiceOptions?.invoiceTitle)
+      ? invoiceOptions.invoiceTitle
+      : 'HÓA ĐƠN BÁN HÀNG'
+
+    const prefix = has(invoiceOptions?.prefix) ? invoiceOptions.prefix : 'HD'
+
+    // Lấy từng phần địa chỉ ưu tiên từ invoiceOptions → organization
+    const street = has(invoiceOptions?.street)
+      ? invoiceOptions.street
+      : order.organization?.street || ''
+    const commune = has(invoiceOptions?.commune)
+      ? invoiceOptions.commune
+      : order.organization?.commune || ''
+    const province = has(invoiceOptions?.province)
+      ? invoiceOptions.province
+      : order.organization?.province || ''
+
+    // Ghép thành 1 chuỗi địa chỉ
+    const storeAddress = [street, commune, province].filter(has).join(', ')
+
+    const storePhone = has(invoiceOptions?.hotline)
+      ? invoiceOptions.hotline
+      : order.organization?.phone || ''
+
+    const footerLine1 = has(invoiceOptions?.footerLine1)
+      ? invoiceOptions.footerLine1
+      : 'Xin cảm ơn, hẹn gặp lại quý khách'
+
+    const footerLine2 = has(invoiceOptions?.footerLine2)
+      ? invoiceOptions.footerLine2
+      : 'Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ.'
+
+    const orderDate = order.createdAt ? order.createdAt.toISOString() : ''
+
+    res.render('staff/printbill', {
+      title: 'Hóa đơn thanh toán',
+      order,
+      orderId: order._id,
+      currentUserId: req.user ? req.user._id : null,
+      user: req.user || { username: 'Admin' },
+      invoiceOptions,
+      logoStore,
+      storeName,
+      invoiceTitle,
+      prefix,
+      storeAddress, // render sẵn 1 chuỗi đầy đủ
+      storePhone,
+      footerLine1,
+      footerLine2,
+      orderDate
+    })
+  } catch (error) {}
 }
 
 export const invoicePage = async (req, res) => {
@@ -595,7 +655,9 @@ export const invoicePage = async (req, res) => {
     'settings/invoice',
     getPageData(req, 'Cài đặt hóa đơn', 'Invoice', {
       headerClass: 'admin__header',
-      pageTitle: 'CÀI ĐẶT HÓA ĐƠN'
+      pageTitle: 'CÀI ĐẶT HÓA ĐƠN',
+      userRole: req.user.role,
+      currentOrgId: req.user.organization
     })
   )
 }

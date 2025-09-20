@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let provinceLists = []
   let communeLists = []
+  let invoiceOptions = {}
 
   // === Load full_address.json ===
   async function loadAddressData() {
@@ -11,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const data = await res.json()
       if (data.error === 0 && data.data) {
         provinceLists = data.data
-        communeLists = provinceLists.flatMap(p => p.data2 || [])
+        communeLists = provinceLists.flatMap((p) => p.data2 || [])
       }
     } catch (err) {
       console.error('Lỗi load full_address.json:', err)
@@ -20,8 +21,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // === Map code → tên tỉnh/xã ===
   function getAddressName(street, communeCode, provinceCode) {
-    const province = provinceLists.find(p => String(p.id) === String(provinceCode))
-    const commune = communeLists.find(c => String(c.id) === String(communeCode))
+    const province = provinceLists.find((p) => String(p.id) === String(provinceCode))
+    const commune = communeLists.find((c) => String(c.id) === String(communeCode))
 
     const provinceName = province?.name || ''
     const communeName = commune?.name || ''
@@ -44,41 +45,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1)
       .toString()
       .padStart(2, '0')}/${d.getFullYear()} ${d.getHours().toString().padStart(2, '0')}:${d
-        .getMinutes()
-        .toString()
-        .padStart(2, '0')}`
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}`
   }
 
   try {
-    // Bắt buộc load địa chỉ trước
+    // 1. Load địa chỉ + invoiceOptions trước
     await loadAddressData()
 
-    // Lấy dữ liệu order
+    const invoiceRes = await fetch('/api/invoice/options')
+    const invoiceData = await invoiceRes.json()
+    if (invoiceData.success) invoiceOptions = invoiceData.data || {}
+
+    // 2. Lấy dữ liệu order
     const response = await fetch(`/api/orders/${orderId}`)
     if (!response.ok) throw new Error(`HTTP ${response.status}: Không tìm thấy đơn hàng`)
 
     const result = await response.json()
     const order = result.data || result
 
-    // === HEADER ===
+    // 3. HEADER
     document.getElementById('orderId').textContent = order.code
     document.getElementById('orderDate').textContent = formatDateTime(order.createdAt)
 
-    // Địa chỉ cửa hàng
-    const storeAddress = getAddressName(
-      order.organization?.street,
-      order.organization?.commune,
-      order.organization?.province
-    )
+    // === Lấy địa chỉ ưu tiên invoiceOptions trước ===
+    const street = invoiceOptions.street || order.organization?.street
+    const commune = invoiceOptions.commune || order.organization?.commune
+    const province = invoiceOptions.province || order.organization?.province
+
+    const storeAddress = getAddressName(street, commune, province)
     document.querySelector('.org-address').textContent = storeAddress
 
-    // Khách hàng
+    // 4. Khách hàng
     const customerInfo = order.customerId
       ? `${order.customerId.name?.trim()}${order.customerId.phone ? ' - ' + order.customerId.phone?.trim() : ''}`
       : 'Khách lẻ'
     document.getElementById('customerInfo').textContent = customerInfo
 
-    // Loại hóa đơn
+    // 5. Loại hóa đơn
     const orderTypeEl = document.getElementById('orderType')
     if (order.isTakeaway) {
       orderTypeEl.textContent = 'Mang về'
@@ -88,7 +93,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       orderTypeEl.textContent = 'Không xác định'
     }
 
-    // === DANH SÁCH MÓN ĂN ===
+    // 6. DANH SÁCH MÓN ĂN
     const itemsContainer = document.getElementById('orderItems')
     itemsContainer.innerHTML = ''
     if (order.items?.length) {
@@ -105,7 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       })
     }
 
-    // === TỔNG HỢP ===
+    // 7. Tổng hợp tiền
     const totalDiscount = (order.discount || 0) + (order.pointsDiscount || 0)
 
     document.getElementById('totalAmount').textContent = formatCurrency(order.totalAmount)
@@ -116,17 +121,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const vatAmount = Math.round(
       (order.totalAmount - totalDiscount + (order.serviceCharge || 0)) *
-      ((order.vatRate || 0) / 100)
+        ((order.vatRate || 0) / 100)
     )
     const vatRateText = order.vatRate ? `${order.vatRate}%` : '0%'
-    document.getElementById('vatAmount').textContent = `${vatRateText} (${formatCurrency(vatAmount)})`
+    document.getElementById('vatAmount').textContent =
+      `${vatRateText} (${formatCurrency(vatAmount)})`
 
     document.getElementById('total').textContent = formatCurrency(order.total)
     document.getElementById('customerPaid').textContent = formatCurrency(order.customerPaid)
     document.getElementById('changeAmount').textContent = formatCurrency(order.changeAmount)
     document.getElementById('totalInWords').textContent = numberToVietnameseWords(order.total)
 
-    // === TÀI KHOẢN NHẬN ===
+    // 8. Tài khoản nhận
     const receivingAccountEl = document.getElementById('receivingAccountInfo')
     const receivingAccount = order.paymentMethodId?.receivingAccountId
     if (receivingAccount) {
@@ -139,7 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       receivingAccountEl.innerHTML = ''
     }
 
-    // === QR CODE ===
+    // 9. QR CODE
     const qrContainer = document.getElementById('qrCodeContainer')
     if (order.qrCode?.trim()) {
       const img = new Image()
@@ -154,11 +160,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       qrContainer.innerHTML = ''
     }
 
-    // In sau khi render xong
+    // 10. In sau khi render xong
     if (window.location.href.includes('print')) {
       setTimeout(() => window.print(), 500)
     }
-
   } catch (error) {
     console.error('Lỗi lấy dữ liệu đơn hàng:', error)
   }

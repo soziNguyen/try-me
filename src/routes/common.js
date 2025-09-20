@@ -30,6 +30,7 @@ import taxRoutes from '../modules/tax/route.js'
 import activityRoutes from '../modules/activity-logs/route.js'
 import paymentRoutes from '../modules/payment/route.js'
 import receivingAccountRoutes from '../modules/receiving-account/route.js'
+import invoiceRoutes from '../modules/invoice/route.js'
 import customerRoutes from '../modules/customer/route.js'
 import uploadRouter from '../modules/upload/route.js'
 import pageRoute from '../pages/route.js'
@@ -91,7 +92,8 @@ const routes = [
   paymentRoutes,
   pageRoute,
   receivingAccountRoutes,
-  customerRoutes
+  customerRoutes,
+  invoiceRoutes
 ]
 
 routes.forEach((route) => router.use('/', route))

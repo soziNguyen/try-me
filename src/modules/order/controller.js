@@ -8,123 +8,214 @@ import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import withTransaction from '../../helpers/withTransaction.js'
 import { lookupRef } from '../../helpers/lookupHelper.js'
+import { has } from '../../helpers/common.js'
 import InvoiceOption from '../invoice/model.js'
 import ReceivingAccount from '../receiving-account/model.js'
-import { generateDocumentCode } from '../../helpers/common.js'
 import QRCode from 'qrcode'
 
 export const createOrder = async (req, res) => {
   try {
-    const organizationId = getCurrentOrg(req)
-    if (!organizationId) {
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-    }
+    const result = await withTransaction(async (session) => {
+      const organizationId = getCurrentOrg(req)
+      if (!organizationId) {
+        throw new Error('Thiếu thông tin tổ chức')
+      }
 
-    const { tableId, isTakeaway, customerName, customerPhone } = req.body
+      const { tableId, isTakeaway, customerName, customerPhone } = req.body
+      let prefix = 'INV'
 
-    // 1. Xử lý khách hàng theo organization + phone
-    let customer = null
-    if (customerPhone) {
-      const nameToUpdate = customerName?.trim()
-      const query = { organization: organizationId, phone: customerPhone }
+      const invoiceOptions = await InvoiceOption.findOne({ organizationId }).lean()
+      if (invoiceOptions?.prefix?.trim()) {
+        prefix = invoiceOptions.prefix.trim()
+      }
 
-      // Tìm customer trước
-      customer = await Customer.findOne(query)
+      // 1. Xử lý khách hàng theo organization + phone
+      let customer = null
+      if (customerPhone) {
+        const nameToUpdate = customerName?.trim()
+        const query = { organization: organizationId, phone: customerPhone }
 
-      if (customer) {
-        // Customer đã tồn tại - chỉ update name nếu cần
-        if (nameToUpdate && nameToUpdate !== customer.name) {
-          customer = await Customer.findOneAndUpdate(
-            query,
-            {
-              $set: {
-                name: nameToUpdate,
-                updatedAt: new Date()
-              }
-            },
-            { new: true }
-          )
+        // Tìm customer trước (chỉ thêm session nếu có)
+        customer = await Customer.findOne(query)[session ? 'session' : 'exec'](session || undefined)
+
+        if (customer) {
+          // Customer đã tồn tại - chỉ update name nếu cần
+          if (nameToUpdate && nameToUpdate !== customer.name) {
+            const updateOptions = { new: true }
+            if (session) updateOptions.session = session
+
+            customer = await Customer.findOneAndUpdate(
+              query,
+              {
+                $set: {
+                  name: nameToUpdate,
+                  updatedAt: new Date()
+                }
+              },
+              updateOptions
+            )
+          }
+        } else {
+          // Customer chưa tồn tại - tạo mới
+          if (session) {
+            const [newCustomer] = await Customer.create(
+              [
+                {
+                  organization: organizationId,
+                  phone: customerPhone,
+                  name: nameToUpdate || 'Khách lẻ'
+                }
+              ],
+              { session }
+            )
+            customer = newCustomer
+          } else {
+            customer = await Customer.create({
+              organization: organizationId,
+              phone: customerPhone,
+              name: nameToUpdate || 'Khách lẻ'
+            })
+          }
         }
-      } else {
-        // Customer chưa tồn tại - tạo mới
-        customer = await Customer.create({
-          organization: organizationId,
-          phone: customerPhone,
-          name: nameToUpdate || 'Khách lẻ'
-        })
       }
-    }
 
-    // === GENERATE ORDER CODE ===
-    const orderCode = await generateDocumentCode(Order, 'INV')
+      // Generate order code
+      const orderCode = await generateInvoiceCode(Order, prefix)
 
-    // 2. Đơn mang đi
-    if (isTakeaway) {
-      const existingOrder = await Order.findOne({
-        isTakeaway: true,
-        status: 'open',
-        organization: organizationId
-      })
+      // 2. Đơn mang đi
+      if (isTakeaway) {
+        const existingOrder = await Order.findOne({
+          isTakeaway: true,
+          status: 'open',
+          organization: organizationId
+        })[session ? 'session' : 'exec'](session || undefined)
 
-      if (existingOrder) {
-        return responseHelper.success(res, {
-          orderId: existingOrder._id,
-          orderCode: existingOrder.code, // Return existing code
+        if (existingOrder) {
+          return {
+            orderId: existingOrder._id,
+            orderCode: existingOrder.code,
+            tableId: null,
+            isNewOrder: false
+          }
+        }
+
+        let newOrder
+        if (session) {
+          const [createdOrder] = await Order.create(
+            [
+              {
+                tableId: null,
+                isTakeaway: true,
+                status: 'open',
+                organization: organizationId,
+                customerId: customer?._id || null,
+                code: orderCode
+              }
+            ],
+            { session }
+          )
+          newOrder = createdOrder
+        } else {
+          newOrder = await Order.create({
+            tableId: null,
+            isTakeaway: true,
+            status: 'open',
+            organization: organizationId,
+            customerId: customer?._id || null,
+            code: orderCode
+          })
+        }
+
+        return {
+          orderId: newOrder._id,
+          orderCode: newOrder.code,
           tableId: null,
-          isNewOrder: false
+          isNewOrder: true
+        }
+      }
+
+      // 3. Đơn tại bàn
+      if (!tableId) {
+        throw new Error('Thiếu thông tin bàn')
+      }
+
+      const table = await Table.findById(tableId)[session ? 'session' : 'exec'](
+        session || undefined
+      )
+      if (!table) throw new Error('Bàn không tồn tại')
+      if (table.status === 'occupied') throw new Error('Bàn đã có khách')
+
+      // Tạo order mới
+      let newOrder
+      if (session) {
+        const [createdOrder] = await Order.create(
+          [
+            {
+              tableId,
+              isTakeaway: false,
+              status: 'open',
+              organization: organizationId,
+              customerId: customer?._id || null,
+              code: orderCode
+            }
+          ],
+          { session }
+        )
+        newOrder = createdOrder
+      } else {
+        newOrder = await Order.create({
+          tableId,
+          isTakeaway: false,
+          status: 'open',
+          organization: organizationId,
+          customerId: customer?._id || null,
+          code: orderCode
         })
       }
 
-      const newOrder = await Order.create({
-        tableId: null,
-        isTakeaway: true,
-        status: 'open',
-        organization: organizationId,
-        customerId: customer?._id || null,
-        code: orderCode // Thêm mã order
-      })
+      // Cập nhật trạng thái bàn
+      const updateOptions = {}
+      if (session) updateOptions.session = session
 
-      return responseHelper.success(res, {
+      await Table.findByIdAndUpdate(
+        tableId,
+        {
+          $set: {
+            status: 'occupied',
+            checkInTime: new Date(),
+            currentOrderId: newOrder._id,
+            customerName: customerName?.trim() || 'Khách lẻ',
+            orderCode: orderCode
+          }
+        },
+        updateOptions
+      )
+
+      return {
         orderId: newOrder._id,
-        orderCode: newOrder.code, // Return generated code
-        tableId: null,
-        isNewOrder: true
-      })
-    }
-
-    // 3. Đơn tại bàn
-    if (!tableId) {
-      return responseHelper.error(res, 'Thiếu thông tin bàn', 400)
-    }
-
-    const table = await Table.findById(tableId)
-    if (!table) return responseHelper.error(res, 'Bàn không tồn tại', 404)
-    if (table.status === 'occupied') return responseHelper.error(res, 'Bàn đã có khách', 400)
-
-    const newOrder = await Order.create({
-      tableId,
-      isTakeaway: false,
-      status: 'open',
-      organization: organizationId,
-      customerId: customer?._id || null,
-      code: orderCode // Thêm mã order
+        orderCode: newOrder.code,
+        tableId: table._id
+      }
     })
 
-    // Cập nhật trạng thái bàn
-    table.status = 'occupied'
-    table.checkInTime = new Date()
-    table.currentOrderId = newOrder._id
-    table.customerName = customerName?.trim() || 'Khách lẻ'
-    table.orderCode = orderCode // Lưu mã order vào bàn luôn
-    await table.save()
-
-    responseHelper.success(res, {
-      orderId: newOrder._id,
-      orderCode: newOrder.code, // Return generated code
-      tableId: table._id
-    })
+    responseHelper.success(res, result)
   } catch (error) {
     console.error('Create order error:', error)
+
+    // Handle specific error messages
+    if (error.message === 'Thiếu thông tin tổ chức') {
+      return responseHelper.error(res, error.message, 400)
+    }
+    if (error.message === 'Thiếu thông tin bàn') {
+      return responseHelper.error(res, error.message, 400)
+    }
+    if (error.message === 'Bàn không tồn tại') {
+      return responseHelper.error(res, error.message, 404)
+    }
+    if (error.message === 'Bàn đã có khách') {
+      return responseHelper.error(res, error.message, 400)
+    }
+
     responseHelper.error(res, error.message)
   }
 }
@@ -149,7 +240,6 @@ export const getOrderById = async (req, res) => {
       .lean()
 
     if (!order) return res.status(404).json({ message: 'Order không tồn tại' })
-    console.log(order)
 
     res.json(order)
   } catch (error) {
@@ -607,9 +697,58 @@ export const printInvoice = async (req, res) => {
       .populate('items.foodId', 'name price')
       .populate('tableId', 'name')
       .populate('organization', 'logo name phone province commune street')
-    console.log(order)
 
     if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
+
+    // Lấy invoiceOptions
+    const orgId = order.organization ? order.organization._id : null
+    let invoiceOptions = null
+    if (orgId) {
+      invoiceOptions = await InvoiceOption.findOne({ organizationId: orgId }).lean()
+    }
+
+    // Ưu tiên invoiceOptions -> organization -> default
+    const logoStore = has(invoiceOptions?.logo)
+      ? invoiceOptions.logo
+      : order.organization?.logo || '/assets/images/default.png'
+
+    const storeName = has(invoiceOptions?.storeName)
+      ? invoiceOptions.storeName
+      : order.organization?.name || 'Tên cửa hàng'
+
+    const invoiceTitle = has(invoiceOptions?.invoiceTitle)
+      ? invoiceOptions.invoiceTitle
+      : 'HÓA ĐƠN BÁN HÀNG'
+
+    const prefix = has(invoiceOptions?.prefix) ? invoiceOptions.prefix : 'HD'
+
+    // Lấy từng phần địa chỉ ưu tiên từ invoiceOptions → organization
+    const street = has(invoiceOptions?.street)
+      ? invoiceOptions.street
+      : order.organization?.street || ''
+    const commune = has(invoiceOptions?.commune)
+      ? invoiceOptions.commune
+      : order.organization?.commune || ''
+    const province = has(invoiceOptions?.province)
+      ? invoiceOptions.province
+      : order.organization?.province || ''
+
+    // Ghép thành 1 chuỗi địa chỉ
+    const storeAddress = [street, commune, province].filter(has).join(', ')
+
+    const storePhone = has(invoiceOptions?.hotline)
+      ? invoiceOptions.hotline
+      : order.organization?.phone || ''
+
+    const footerLine1 = has(invoiceOptions?.footerLine1)
+      ? invoiceOptions.footerLine1
+      : 'Xin cảm ơn, hẹn gặp lại quý khách'
+
+    const footerLine2 = has(invoiceOptions?.footerLine2)
+      ? invoiceOptions.footerLine2
+      : 'Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ.'
+
+    const orderDate = order.createdAt ? order.createdAt.toISOString() : ''
 
     res.render('staff/printbill', {
       title: 'Hóa đơn thanh toán',
@@ -617,13 +756,20 @@ export const printInvoice = async (req, res) => {
       orderId: order._id,
       currentUserId: req.user ? req.user._id : null,
       user: req.user || { username: 'Admin' },
-      logoStore: order.organization?.logo || '/assets/images/default.png',
-      storeName: order.organization?.name || 'Tên cửa hàng',
-      storePhone: order.organization?.phone
+      invoiceOptions,
+      logoStore,
+      storeName,
+      invoiceTitle,
+      prefix,
+      storeAddress, // render sẵn 1 chuỗi đầy đủ
+      storePhone,
+      footerLine1,
+      footerLine2,
+      orderDate
     })
   } catch (error) {
     console.error('Lỗi khi in hóa đơn:', error)
-    res.status(500).send('Lỗi máy chủ')
+    responseHelper.error(res, error.message)
   }
 }
 
@@ -756,4 +902,23 @@ export const getOrders = async (req, res) => {
       error: error.message
     })
   }
+}
+
+export const generateInvoiceCode = async (Model, prefix = 'INV') => {
+  // Tìm document mới nhất với prefix, sort theo code
+  const lastDoc = await Model.findOne({ code: new RegExp(`^${prefix}\\d+$`) })
+    .sort({ code: -1 }) // code lớn nhất trước
+    .lean()
+
+  let lastNumber = 0
+  if (lastDoc?.code) {
+    const match = lastDoc.code.match(new RegExp(`^${prefix}(\\d+)$`))
+    if (match) {
+      lastNumber = parseInt(match[1], 10)
+    }
+  }
+
+  const nextNumber = lastNumber + 1
+  const numberPart = String(nextNumber).padStart(12, '0')
+  return `${prefix}${numberPart}`
 }

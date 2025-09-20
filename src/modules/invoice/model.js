@@ -9,18 +9,15 @@ const InvoiceOptionsSchema = new Schema(
     // Header
     logo: { type: String, default: '' },
     storeName: { type: String, default: '' },
-    storeAddress: { type: String, default: '' },
-    invoiceTitle: { type: String, default: 'HÓA ĐƠN BÁN HÀNG' },
-    prefix: { type: String, default: 'HD' },
+    province: { type: String, trim: true, default: '' },
+    commune: { type: String, trim: true, default: '' },
+    street: { type: String, trim: true, default: '' },
+    invoiceTitle: { type: String, default: '' },
+    prefix: { type: String, default: '' },
 
-    // Footer với 2 đoạn
-    footerLine1: { type: String, default: 'Xin cảm ơn, hẹn gặp lại quý khách' },
-    footerLine2: {
-      type: String,
-      default:
-        'Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ. Xin vui lòng liên hệ với chúng tôi qua hotline:'
-    },
-
+    // Footer
+    footerLine1: { type: String, default: '' },
+    footerLine2: { type: String, default: '' },
     hotline: { type: String, default: '' }
   },
   {

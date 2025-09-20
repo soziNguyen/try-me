@@ -217,3 +217,5 @@ export const generateDocumentCode = async (model, prefix = 'DOC') => {
     return `${prefix}-${year}${month}${day}-${randomNum}`
   }
 }
+
+export const has = (v) => v !== undefined && v !== null && String(v).trim() !== ''
