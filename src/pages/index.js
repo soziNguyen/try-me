@@ -2,6 +2,7 @@ import { getPageData } from '../helpers/pageDataHelper.js'
 import { getCurrentOrg } from '../helpers/orgHelper.js'
 import Order from '../modules/order/model.js'
 import InvoiceOption from '../modules/invoice/model.js'
+import { formatPhone } from '../helpers/common.js'
 
 //=============================================
 //================= USER ======================
@@ -576,6 +577,13 @@ export const receiptDetailPage = async (req, res) => {
       .populate('items.foodId', 'name price')
       .populate('tableId', 'name')
       .populate('organization', 'logo name phone province commune street')
+      .populate({
+        path: 'paymentMethodId',
+        populate: {
+          path: 'receivingAccountId',
+          model: 'ReceivingAccount'
+        }
+      })
 
     if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
 
@@ -616,9 +624,8 @@ export const receiptDetailPage = async (req, res) => {
     // Ghép thành 1 chuỗi địa chỉ
     const storeAddress = [street, commune, province].filter(has).join(', ')
 
-    const storePhone = has(invoiceOptions?.hotline)
-      ? invoiceOptions.hotline
-      : order.organization?.phone || ''
+    const storePhone =
+      formatPhone(invoiceOptions?.hotline) || formatPhone(order.organization?.phone) || ''
 
     const footerLine1 = has(invoiceOptions?.footerLine1)
       ? invoiceOptions.footerLine1
@@ -629,6 +636,16 @@ export const receiptDetailPage = async (req, res) => {
       : 'Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ.'
 
     const orderDate = order.createdAt ? order.createdAt.toISOString() : ''
+
+    let paymentAccountInfo = null
+    if (order.paymentMethodId && order.paymentMethodId.receivingAccountId) {
+      const acc = order.paymentMethodId.receivingAccountId
+      paymentAccountInfo = {
+        accountName: acc.name || '',
+        accountNumber: acc.accountNumber || '',
+        bankName: acc.bankName || acc.bankCode || ''
+      }
+    }
 
     res.render('staff/printbill', {
       title: 'Hóa đơn thanh toán',
@@ -645,6 +662,7 @@ export const receiptDetailPage = async (req, res) => {
       storePhone,
       footerLine1,
       footerLine2,
+      paymentAccountInfo,
       orderDate
     })
   } catch (error) {}

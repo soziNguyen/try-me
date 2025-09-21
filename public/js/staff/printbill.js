@@ -132,20 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('changeAmount').textContent = formatCurrency(order.changeAmount)
     document.getElementById('totalInWords').textContent = numberToVietnameseWords(order.total)
 
-    // 8. Tài khoản nhận
-    const receivingAccountEl = document.getElementById('receivingAccountInfo')
-    const receivingAccount = order.paymentMethodId?.receivingAccountId
-    if (receivingAccount) {
-      receivingAccountEl.innerHTML = `
-        <p><strong>Ngân hàng:</strong> ${receivingAccount.bankName || '--'}</p>
-        <p><strong>Số tài khoản:</strong> ${receivingAccount.accountNumber || '--'}</p>
-        <p><strong>Chủ tài khoản:</strong> ${receivingAccount.name || '--'}</p>
-      `
-    } else {
-      receivingAccountEl.innerHTML = ''
-    }
-
-    // 9. QR CODE
+    // 8. QR CODE
     const qrContainer = document.getElementById('qrCodeContainer')
     if (order.qrCode?.trim()) {
       const img = new Image()
@@ -160,9 +147,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       qrContainer.innerHTML = ''
     }
 
-    // 10. In sau khi render xong
+    // 9. In sau khi render xong
     if (window.location.href.includes('print')) {
       setTimeout(() => window.print(), 500)
+    }
+
+    // 10. Back button
+    const aElement = document.querySelector('.btn-back a')
+
+    if (aElement) {
+      aElement.addEventListener('click', function (e) {
+        e.preventDefault() // chặn nhảy về "#"
+
+        if (window.location.href.includes('receipt')) {
+          window.location.href = '/receipts'
+        } else {
+          window.location.href = '/tables'
+        }
+      })
     }
   } catch (error) {
     console.error('Lỗi lấy dữ liệu đơn hàng:', error)

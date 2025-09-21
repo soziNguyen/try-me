@@ -15,7 +15,7 @@ const PaymentMethodSchema = new Schema(
     config: { type: Object, default: {} }, // Lưu config nếu là cổng thanh toán online
     organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
 
-    receivingAccountId: { type: Schema.Types.ObjectId, ref: 'ReceivingAccount' }, // nếu là bank/e-wallet
+    receivingAccountId: { type: Schema.Types.ObjectId, ref: 'ReceivingAccount', default: null }, // nếu là bank/e-wallet
     isDefault: { type: Boolean, default: false } // phương thức mặc định
   },
   {

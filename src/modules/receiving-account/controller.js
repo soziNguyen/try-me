@@ -66,7 +66,7 @@ export const getAccounts = async (req, res) => {
       .sort({ [sortField]: sortDir })
       .skip(start)
       .limit(length)
-      .select('name type accountNumber bankName isActive createdAt')
+      .select('name type accountNumber bankName bankCode isActive createdAt')
 
     return res.json({
       draw,
@@ -86,7 +86,7 @@ export const updateAccount = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu tổ chức', 400)
 
-    const { name, type, accountNumber, bankName, isActive } = req.body
+    const { name, type, accountNumber, bankName, bankCode, isActive } = req.body
 
     const account = await ReceivingAccount.findOne({ _id: id, organization: organizationId })
     if (!account) return responseHelper.error(res, 'Tài khoản không tồn tại', 404)
@@ -96,6 +96,7 @@ export const updateAccount = async (req, res) => {
     if (type !== undefined) dataUpdate.type = type
     if (accountNumber !== undefined) dataUpdate.accountNumber = accountNumber
     if (bankName !== undefined) dataUpdate.bankName = bankName
+    if (bankCode !== undefined) dataUpdate.bankCode = bankCode
     if (isActive !== undefined) dataUpdate.isActive = isActive
 
     const updated = await ReceivingAccount.findOneAndUpdate(

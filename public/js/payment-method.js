@@ -1,5 +1,11 @@
 $(function () {
   let showList = [10, 25, 50, 100]
+  let receivingAccounts = []
+  Promise.all([fetchData('receiving-account/active')])
+    .then(([acc]) => {
+      receivingAccounts = acc
+    })
+    .catch((err) => {})
   const numRows = Math.floor(
     ($(window).height() - $('#paymentMethodTableBody').offset().top - 100) / 45
   )
@@ -71,7 +77,6 @@ $(function () {
 
             let selectHtml = `<select class="dataInput border-0 w-100 form-control" data-field="type">`
             for (const key in options) {
-
               const selected = data === key ? 'selected' : ''
               selectHtml += `<option value="${key}" ${selected}>${options[key]}</option>`
             }
@@ -90,6 +95,26 @@ $(function () {
             return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="description" value="${data ?? ''}">`
           }
           return data
+        }
+      },
+      {
+        data: 'receivingAccountId',
+        title: 'Tài khoản nhận',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            if (['bank', 'e-wallet'].includes(row.type)) {
+              // Build dropdown với receivingAccounts
+              let options = '<option value="">-- Chọn tài khoản --</option>'
+              receivingAccounts.forEach((acc) => {
+                const selected = data?._id === acc._id ? 'selected' : ''
+                options += `<option value="${acc._id}" ${selected}>${acc.name} - ${acc.bankName || acc.bankCode}</option>`
+              })
+              return `<select class="dataInput border-0 w-100 form-control" data-field="receivingAccountId">${options}</select>`
+            } else {
+              return '<span class="text-muted form-control">Không áp dụng</span>'
+            }
+          }
+          return data?.name || ''
         }
       },
       {

@@ -13,6 +13,7 @@ import InvoiceOption from '../invoice/model.js'
 import ReceivingAccount from '../receiving-account/model.js'
 import BusinessError from '../error/BusinessError.js'
 import { constants } from '../../configs/constants.js'
+import { formatPhone } from '../../helpers/common.js'
 import QRCode from 'qrcode'
 
 const { POINT_VALUE, POINTS_EARN_RATE } = constants
@@ -489,10 +490,23 @@ export const checkoutOrder = async (req, res) => {
       if (order.status !== 'open')
         throw new BusinessError('Order đã được thanh toán hoặc đã đóng', 400)
 
-      // 2. Validate payment method
-      const paymentMethod = await PaymentMethod.findById(paymentMethodId).session(session)
+      // 2. Validate payment method and get receiving account
+      const paymentMethod = await PaymentMethod.findById(paymentMethodId)
+        .populate('receivingAccountId')
+        .session(session)
       if (!paymentMethod) throw new BusinessError('Phương thức thanh toán không hợp lệ', 400)
+
       const { type: paymentType } = paymentMethod
+      let { receivingAccountId } = paymentMethod
+
+      // Auto-find receiving account if not linked (fallback)
+      if (['bank', 'e-wallet'].includes(paymentType) && !receivingAccountId) {
+        receivingAccountId = await ReceivingAccount.findOne({
+          organization: order.organization,
+          type: paymentType,
+          isActive: true
+        }).session(session)
+      }
 
       // 3. Calculate amounts first (before any updates)
       const totalAmount = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -559,12 +573,29 @@ export const checkoutOrder = async (req, res) => {
         throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
       }
 
-      // 5. QR
-      let qrCodeDataUrl = null
-      if (['bank', 'e-wallet'].includes(paymentType)) {
-        const qrText = JSON.stringify({ orderId, amount: total, method: paymentType })
-        const qrBase64 = Buffer.from(qrText).toString('base64')
-        qrCodeDataUrl = await QRCode.toDataURL(qrBase64)
+      // 5. Generate VietQR URL
+      let qrCodeUrl = null
+      if (['bank', 'e-wallet'].includes(paymentType) && receivingAccountId) {
+        const receivingAccount = receivingAccountId
+
+        const bankCode = receivingAccount.bankCode || 'MB' // Default to MB
+        const accountNumber = receivingAccount.accountNumber
+
+        if (accountNumber && bankCode) {
+          // Use order code directly as description
+          const description = order.code
+
+          // Generate VietQR URL with hardcoded "VIETQR.CO"
+          const baseUrl = 'https://vietqr.co/api/generate'
+          const params = new URLSearchParams({
+            style: '2',
+            logo: '1',
+            isMask: '0',
+            bg: '7'
+          })
+
+          qrCodeUrl = `${baseUrl}/${bankCode}/${accountNumber}/VIETQR.CO/${total}/${description}?${params.toString()}`
+        }
       }
 
       // 6. UPDATE ORDER
@@ -581,7 +612,7 @@ export const checkoutOrder = async (req, res) => {
       order.changeAmount = parsedCustomerPaid - total
       order.status = 'completed'
       order.updatedAt = new Date()
-      if (qrCodeDataUrl) order.qrCode = qrCodeDataUrl
+      if (qrCodeUrl) order.qrCode = qrCodeUrl
 
       await order.save({ session })
 
@@ -605,7 +636,7 @@ export const checkoutOrder = async (req, res) => {
         totalPayable,
         total,
         changeAmount: parsedCustomerPaid - total,
-        qrCodeDataUrl
+        qrCodeUrl
       }
     })
 
@@ -749,6 +780,13 @@ export const printInvoice = async (req, res) => {
       .populate('items.foodId', 'name price')
       .populate('tableId', 'name')
       .populate('organization', 'logo name phone province commune street')
+      .populate({
+        path: 'paymentMethodId',
+        populate: {
+          path: 'receivingAccountId',
+          model: 'ReceivingAccount'
+        }
+      })
 
     if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
 
@@ -789,8 +827,8 @@ export const printInvoice = async (req, res) => {
     const storeAddress = [street, commune, province].filter(has).join(', ')
 
     const storePhone = has(invoiceOptions?.hotline)
-      ? invoiceOptions.hotline
-      : order.organization?.phone || ''
+      ? formatPhone(invoiceOptions?.hotline)
+      : formatPhone(order.organization?.phone) || ''
 
     const footerLine1 = has(invoiceOptions?.footerLine1)
       ? invoiceOptions.footerLine1
@@ -801,6 +839,16 @@ export const printInvoice = async (req, res) => {
       : 'Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ.'
 
     const orderDate = order.createdAt ? order.createdAt.toISOString() : ''
+
+    let paymentAccountInfo = null
+    if (order.paymentMethodId && order.paymentMethodId.receivingAccountId) {
+      const acc = order.paymentMethodId.receivingAccountId
+      paymentAccountInfo = {
+        accountName: acc.name || '',
+        accountNumber: acc.accountNumber || '',
+        bankName: acc.bankName || acc.bankCode || ''
+      }
+    }
 
     res.render('staff/printbill', {
       title: 'Hóa đơn thanh toán',
@@ -817,6 +865,7 @@ export const printInvoice = async (req, res) => {
       storePhone,
       footerLine1,
       footerLine2,
+      paymentAccountInfo,
       orderDate
     })
   } catch (error) {

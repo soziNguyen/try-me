@@ -2,7 +2,7 @@
 
   <div class="invoice container container-xl container-xxl">
     <div class="btn-back position-relative">
-      <a href="/tables" class="position-absolute top-50"><i class="bi bi-arrow-left text-dark"></i></a>
+      <a href="#" class="position-absolute top-50"><i class="bi bi-arrow-left text-dark"></i></a>
     </div>
     <!-- Header -->
     <div class="header text-center mb-4 mt-3">
@@ -71,7 +71,9 @@
     <p><em id="totalInWords"></em></p>
 
     <div id="receivingAccountInfo" class="mt-3 text-center">
-      <!-- JS sẽ render thông tin tài khoản nhận -->
+      <p><strong>Ngân hàng:</strong> <%= paymentAccountInfo.bankName %></p>
+      <p><strong>Số tài khoản:</strong> <%= paymentAccountInfo.accountNumber %></p>
+      <p><strong>Chủ tài khoản:</strong> <%= paymentAccountInfo.accountName %></p>
     </div>
 
     <div id="qrCodeContainer" class="text-center mt-3">
