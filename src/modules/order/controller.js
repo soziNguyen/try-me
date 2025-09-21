@@ -11,7 +11,11 @@ import { lookupRef } from '../../helpers/lookupHelper.js'
 import { has } from '../../helpers/common.js'
 import InvoiceOption from '../invoice/model.js'
 import ReceivingAccount from '../receiving-account/model.js'
+import BusinessError from '../error/BusinessError.js'
+import { constants } from '../../configs/constants.js'
 import QRCode from 'qrcode'
+
+const { POINT_VALUE, POINTS_EARN_RATE } = constants
 
 export const createOrder = async (req, res) => {
   try {
@@ -467,33 +471,33 @@ export const checkoutOrder = async (req, res) => {
     if (parsedCustomerPaid <= 0)
       return responseHelper.error(res, 'Số tiền khách trả không hợp lệ', 400)
 
+    if (parsedPointsUsed > 0) {
+      const orderCheck = await Order.findById(orderId).select('customerId').lean()
+      if (!orderCheck) {
+        return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
+      }
+      if (!orderCheck.customerId) {
+        return responseHelper.error(res, 'Khách lẻ không thể sử dụng điểm giảm giá', 400)
+      }
+    }
+
     // === TRANSACTION ===
     const result = await withTransaction(async (session) => {
+      // 1. Fetch and validate order
       const order = await Order.findById(orderId).session(session)
-      if (!order) throw new Error('Order không tồn tại')
-      if (order.status !== 'open') throw new Error('Order đã được thanh toán hoặc đã đóng')
+      if (!order) throw new BusinessError('Order không tồn tại', 404)
+      if (order.status !== 'open')
+        throw new BusinessError('Order đã được thanh toán hoặc đã đóng', 400)
 
+      // 2. Validate payment method
       const paymentMethod = await PaymentMethod.findById(paymentMethodId).session(session)
-      if (!paymentMethod) throw new Error('Phương thức thanh toán không hợp lệ')
+      if (!paymentMethod) throw new BusinessError('Phương thức thanh toán không hợp lệ', 400)
       const { type: paymentType } = paymentMethod
 
-      // === CUSTOMER POINTS VALIDATION ===
-      let customer = null
-      if (order.customerId && parsedPointsUsed > 0) {
-        customer = await Customer.findById(order.customerId).session(session)
-        if (!customer) throw new Error('Khách hàng không tồn tại')
-
-        if (customer.totalPoints < parsedPointsUsed)
-          throw new Error(
-            `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`
-          )
-      }
-
-      // === CALCULATE AMOUNTS ===
-      const POINT_VALUE = 500
+      // 3. Calculate amounts first (before any updates)
       const totalAmount = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-
-      if (parsedDiscount > totalAmount) throw new Error('Giảm giá không được vượt quá tổng tiền')
+      if (parsedDiscount > totalAmount)
+        throw new BusinessError('Giảm giá không được vượt quá tổng tiền', 400)
 
       const calculatedPointsDiscount = parsedPointsUsed * POINT_VALUE
       const totalPayable =
@@ -501,10 +505,61 @@ export const checkoutOrder = async (req, res) => {
       const total = Math.round(totalPayable + (totalPayable * parsedVatRate) / 100)
 
       if (parsedCustomerPaid < total)
-        throw new Error(
-          `Số tiền khách trả chưa đủ. Cần: ${total.toLocaleString()}, có: ${parsedCustomerPaid.toLocaleString()}`
+        throw new BusinessError(
+          `Số tiền khách trả chưa đủ. Cần: ${total.toLocaleString()}, có: ${parsedCustomerPaid.toLocaleString()}`,
+          400
         )
 
+      // 4. Handle customer points and updates
+      let customer = null
+      let pointsEarned = 0
+
+      if (order.customerId) {
+        customer = await Customer.findById(order.customerId).session(session)
+        if (!customer) throw new BusinessError('Khách hàng không tồn tại', 404)
+
+        // Points validation (if using points)
+        if (parsedPointsUsed > 0) {
+          if (customer.totalPoints < parsedPointsUsed) {
+            throw new BusinessError(
+              `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`,
+              400
+            )
+          }
+        }
+
+        // Calculate points earned
+        pointsEarned = Math.floor(total / POINTS_EARN_RATE)
+
+        // Atomic customer update
+        const customerUpdateResult = await Customer.findOneAndUpdate(
+          {
+            _id: order.customerId,
+            totalPoints: { $gte: parsedPointsUsed }
+          },
+          {
+            $inc: {
+              totalOrders: 1,
+              totalSpent: total,
+              totalPoints: pointsEarned - parsedPointsUsed
+            },
+            $set: {
+              lastOrderDate: new Date(),
+              updatedAt: new Date()
+            }
+          },
+          { new: true, session, runValidators: true }
+        )
+
+        if (!customerUpdateResult) {
+          throw new BusinessError('Điểm khách hàng đã thay đổi, vui lòng thử lại', 409)
+        }
+      } else if (parsedPointsUsed > 0) {
+        // Double check (though early validation should catch this)
+        throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
+      }
+
+      // 5. QR
       let qrCodeDataUrl = null
       if (['bank', 'e-wallet'].includes(paymentType)) {
         const qrText = JSON.stringify({ orderId, amount: total, method: paymentType })
@@ -512,7 +567,7 @@ export const checkoutOrder = async (req, res) => {
         qrCodeDataUrl = await QRCode.toDataURL(qrBase64)
       }
 
-      // === UPDATE ORDER ===
+      // 6. UPDATE ORDER
       order.discount = parsedDiscount
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = calculatedPointsDiscount
@@ -530,7 +585,7 @@ export const checkoutOrder = async (req, res) => {
 
       await order.save({ session })
 
-      // === RELEASE TABLE ===
+      // 7. RELEASE TABLE
       if (order.tableId) {
         await Table.findByIdAndUpdate(
           order.tableId,
@@ -539,39 +594,12 @@ export const checkoutOrder = async (req, res) => {
         )
       }
 
-      // === UPDATE CUSTOMER ===
-      if (order.customerId) {
-        if (!customer) customer = await Customer.findById(order.customerId).session(session)
-
-        if (customer) {
-          const pointsEarned = Math.floor(total / 10000)
-
-          // Chỉ cộng điểm nếu khách có phone
-          if (customer.phone) {
-            await Customer.findByIdAndUpdate(
-              order.customerId,
-              {
-                $inc: { totalOrders: 1, totalSpent: total },
-                $set: {
-                  totalPoints: customer.totalPoints - parsedPointsUsed + pointsEarned,
-                  lastOrderDate: new Date(),
-                  updatedAt: new Date()
-                }
-              },
-              { session }
-            )
-          } else {
-            order.customerId = null
-            await order.save({ session })
-          }
-        }
-      }
-
       return {
         totalAmount,
         discount: parsedDiscount,
         pointsUsed: parsedPointsUsed,
         pointsDiscount: calculatedPointsDiscount,
+        pointsEarned,
         serviceCharge: parsedServiceCharge,
         vatRate: parsedVatRate,
         totalPayable,
@@ -583,19 +611,15 @@ export const checkoutOrder = async (req, res) => {
 
     return responseHelper.success(res, result, 'Thanh toán thành công')
   } catch (error) {
-    console.error('Lỗi thanh toán:', error)
-
-    if (
-      error.message.includes('không tồn tại') ||
-      error.message.includes('đã được thanh toán') ||
-      error.message.includes('Không đủ điểm') ||
-      error.message.includes('không được vượt quá') ||
-      error.message.includes('chưa đủ')
-    ) {
-      return responseHelper.error(res, error.message, 400)
+    // Clean error handling with BusinessError
+    if (error instanceof BusinessError) {
+      // Expected business errors - no logging to reduce terminal noise
+      return responseHelper.error(res, error.message, error.statusCode)
+    } else {
+      // Unexpected system errors - log with full details
+      console.error('Lỗi hệ thống thanh toán:', error)
+      return responseHelper.error(res, 'Lỗi server nội bộ', 500)
     }
-
-    return responseHelper.error(res, 'Lỗi server nội bộ', 500)
   }
 }
 
@@ -628,30 +652,51 @@ export const updateOrderDraft = async (req, res) => {
     )
       return responseHelper.error(res, 'Các giá trị không được âm', 400)
 
+    // Early validation for points usage
+    if (parsedPointsUsed > 0) {
+      const orderCheck = await Order.findById(orderId).select('customerId').lean()
+      if (!orderCheck) {
+        return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
+      }
+      if (!orderCheck.customerId) {
+        return responseHelper.error(res, 'Khách lẻ không thể sử dụng điểm giảm giá', 400)
+      }
+    }
+
     const result = await withTransaction(async (session) => {
       const order = await Order.findById(orderId).session(session)
-      if (!order) throw new Error('Order không tồn tại')
+      if (!order) throw new BusinessError('Order không tồn tại', 404)
+
       const totalAmount = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-      if (parsedDiscount > totalAmount) throw new Error('Giảm giá không được vượt quá tổng tiền')
+      if (parsedDiscount > totalAmount)
+        throw new BusinessError('Giảm giá không được vượt quá tổng tiền', 400)
+
+      // Handle customer points validation
       if (order.customerId && parsedPointsUsed > 0) {
         const customer = await Customer.findById(order.customerId).session(session)
-        if (!customer) throw new Error('Khách hàng không tồn tại')
-        if (customer.totalPoints < parsedPointsUsed)
-          throw new Error(
-            `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`
+        if (!customer) throw new BusinessError('Khách hàng không tồn tại', 404)
+
+        if (customer.totalPoints < parsedPointsUsed) {
+          throw new BusinessError(
+            `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`,
+            400
           )
+        }
+      } else if (parsedPointsUsed > 0) {
+        // Double check for guest orders
+        throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
       }
 
-      const POINT_VALUE = 500
       const pointsDiscount = parsedPointsUsed * POINT_VALUE
 
       const totalPayable = totalAmount - parsedDiscount - pointsDiscount + parsedServiceCharge
       const total = Math.round(totalPayable + (totalPayable * parsedVatRate) / 100)
 
-      if (parsedCustomerPaid < 0) throw new Error('Số tiền khách trả không hợp lệ')
+      if (parsedCustomerPaid < 0) throw new BusinessError('Số tiền khách trả không hợp lệ', 400)
 
       const changeAmount = parsedCustomerPaid - total
 
+      // Update order
       order.discount = parsedDiscount
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = pointsDiscount
@@ -684,8 +729,15 @@ export const updateOrderDraft = async (req, res) => {
 
     return responseHelper.success(res, result, 'Cập nhật đơn hàng thành công')
   } catch (error) {
-    console.error('Lỗi cập nhật đơn hàng:', error)
-    return responseHelper.error(res, error.message || 'Lỗi server nội bộ', 500)
+    // Clean error handling with BusinessError
+    if (error instanceof BusinessError) {
+      // Expected business errors - no logging to reduce terminal noise
+      return responseHelper.error(res, error.message, error.statusCode)
+    } else {
+      // Unexpected system errors - log with full details
+      console.error('Lỗi hệ thống cập nhật đơn hàng:', error)
+      return responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    }
   }
 }
 
