@@ -135,7 +135,7 @@ function initTableCheckboxEvents(tableSelector, checkboxClass) {
   $table.on('click', 'tbody tr', function (e) {
     if (
       $(e.target).is(`
-      input[type=checkbox], img, input[type=text], input[type=number], select, button, span, .dataInput, i, td:nth-child(n+2)
+      input[type=checkbox], img, input[type=text], input[type=number], select, button, span, .dataInput, .select2-search__field, i, td:nth-child(n+2)
       `) ||
       $(e.target).closest('.image-cell').length
     )
@@ -288,9 +288,7 @@ function showConfirmModal(options) {
   const $okBtn = $('#confirmModalOk')
   $okBtn.off('click').on('click', function () {
     if (typeof settings.onConfirm === 'function') settings.onConfirm()
-    const modal = bootstrap.Modal.getInstance(
-      document.getElementById('confirmModal')
-    )
+    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'))
     modal.hide()
   })
 
@@ -354,18 +352,14 @@ function setupSaveButtonWatcher(formSelector, saveBtnSelector) {
   // - Disable nút Lưu
   // - Đổi text thành "Đã lưu"
   function disableSave() {
-    $saveBtn
-      .prop('disabled', true)
-      .html('<i class="bi bi-check-circle me-2"></i>Đã lưu')
+    $saveBtn.prop('disabled', true).html('<i class="bi bi-check-circle me-2"></i>Đã lưu')
   }
 
   // Hàm enableSave: dùng khi có thay đổi dữ liệu
   // - Bật lại nút Lưu
   // - Đổi text về "Lưu phiếu"
   function enableSave() {
-    $saveBtn
-      .prop('disabled', false)
-      .html('<i class="bi bi-check-circle me-2"></i>Lưu phiếu')
+    $saveBtn.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Lưu phiếu')
   }
 
   // Lắng nghe sự kiện thay đổi dữ liệu trong form

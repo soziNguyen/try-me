@@ -8,123 +8,219 @@ import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import withTransaction from '../../helpers/withTransaction.js'
 import { lookupRef } from '../../helpers/lookupHelper.js'
+import { has } from '../../helpers/common.js'
 import InvoiceOption from '../invoice/model.js'
 import ReceivingAccount from '../receiving-account/model.js'
-import { generateDocumentCode } from '../../helpers/common.js'
+import BusinessError from '../error/BusinessError.js'
+import { constants } from '../../configs/constants.js'
+import { formatPhone } from '../../helpers/common.js'
 import QRCode from 'qrcode'
+
+const { POINT_VALUE, POINTS_EARN_RATE } = constants
 
 export const createOrder = async (req, res) => {
   try {
-    const organizationId = getCurrentOrg(req)
-    if (!organizationId) {
-      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-    }
+    const result = await withTransaction(async (session) => {
+      const organizationId = getCurrentOrg(req)
+      if (!organizationId) {
+        throw new Error('Thiếu thông tin tổ chức')
+      }
 
-    const { tableId, isTakeaway, customerName, customerPhone } = req.body
+      const { tableId, isTakeaway, customerName, customerPhone } = req.body
+      let prefix = 'INV'
 
-    // 1. Xử lý khách hàng theo organization + phone
-    let customer = null
-    if (customerPhone) {
-      const nameToUpdate = customerName?.trim()
-      const query = { organization: organizationId, phone: customerPhone }
+      const invoiceOptions = await InvoiceOption.findOne({ organizationId }).lean()
+      if (invoiceOptions?.prefix?.trim()) {
+        prefix = invoiceOptions.prefix.trim()
+      }
 
-      // Tìm customer trước
-      customer = await Customer.findOne(query)
+      // 1. Xử lý khách hàng theo organization + phone
+      let customer = null
+      if (customerPhone) {
+        const nameToUpdate = customerName?.trim()
+        const query = { organization: organizationId, phone: customerPhone }
 
-      if (customer) {
-        // Customer đã tồn tại - chỉ update name nếu cần
-        if (nameToUpdate && nameToUpdate !== customer.name) {
-          customer = await Customer.findOneAndUpdate(
-            query,
-            {
-              $set: {
-                name: nameToUpdate,
-                updatedAt: new Date()
-              }
-            },
-            { new: true }
-          )
+        // Tìm customer trước (chỉ thêm session nếu có)
+        customer = await Customer.findOne(query)[session ? 'session' : 'exec'](session || undefined)
+
+        if (customer) {
+          // Customer đã tồn tại - chỉ update name nếu cần
+          if (nameToUpdate && nameToUpdate !== customer.name) {
+            const updateOptions = { new: true }
+            if (session) updateOptions.session = session
+
+            customer = await Customer.findOneAndUpdate(
+              query,
+              {
+                $set: {
+                  name: nameToUpdate,
+                  updatedAt: new Date()
+                }
+              },
+              updateOptions
+            )
+          }
+        } else {
+          // Customer chưa tồn tại - tạo mới
+          if (session) {
+            const [newCustomer] = await Customer.create(
+              [
+                {
+                  organization: organizationId,
+                  phone: customerPhone,
+                  name: nameToUpdate || 'Khách lẻ'
+                }
+              ],
+              { session }
+            )
+            customer = newCustomer
+          } else {
+            customer = await Customer.create({
+              organization: organizationId,
+              phone: customerPhone,
+              name: nameToUpdate || 'Khách lẻ'
+            })
+          }
         }
-      } else {
-        // Customer chưa tồn tại - tạo mới
-        customer = await Customer.create({
-          organization: organizationId,
-          phone: customerPhone,
-          name: nameToUpdate || 'Khách lẻ'
-        })
       }
-    }
 
-    // === GENERATE ORDER CODE ===
-    const orderCode = await generateDocumentCode(Order, 'INV')
+      // Generate order code
+      const orderCode = await generateInvoiceCode(Order, prefix)
 
-    // 2. Đơn mang đi
-    if (isTakeaway) {
-      const existingOrder = await Order.findOne({
-        isTakeaway: true,
-        status: 'open',
-        organization: organizationId
-      })
+      // 2. Đơn mang đi
+      if (isTakeaway) {
+        const existingOrder = await Order.findOne({
+          isTakeaway: true,
+          status: 'open',
+          organization: organizationId
+        })[session ? 'session' : 'exec'](session || undefined)
 
-      if (existingOrder) {
-        return responseHelper.success(res, {
-          orderId: existingOrder._id,
-          orderCode: existingOrder.code, // Return existing code
+        if (existingOrder) {
+          return {
+            orderId: existingOrder._id,
+            orderCode: existingOrder.code,
+            tableId: null,
+            isNewOrder: false
+          }
+        }
+
+        let newOrder
+        if (session) {
+          const [createdOrder] = await Order.create(
+            [
+              {
+                tableId: null,
+                isTakeaway: true,
+                status: 'open',
+                organization: organizationId,
+                customerId: customer?._id || null,
+                code: orderCode
+              }
+            ],
+            { session }
+          )
+          newOrder = createdOrder
+        } else {
+          newOrder = await Order.create({
+            tableId: null,
+            isTakeaway: true,
+            status: 'open',
+            organization: organizationId,
+            customerId: customer?._id || null,
+            code: orderCode
+          })
+        }
+
+        return {
+          orderId: newOrder._id,
+          orderCode: newOrder.code,
           tableId: null,
-          isNewOrder: false
+          isNewOrder: true
+        }
+      }
+
+      // 3. Đơn tại bàn
+      if (!tableId) {
+        throw new Error('Thiếu thông tin bàn')
+      }
+
+      const table = await Table.findById(tableId)[session ? 'session' : 'exec'](
+        session || undefined
+      )
+      if (!table) throw new Error('Bàn không tồn tại')
+      if (table.status === 'occupied') throw new Error('Bàn đã có khách')
+
+      // Tạo order mới
+      let newOrder
+      if (session) {
+        const [createdOrder] = await Order.create(
+          [
+            {
+              tableId,
+              isTakeaway: false,
+              status: 'open',
+              organization: organizationId,
+              customerId: customer?._id || null,
+              code: orderCode
+            }
+          ],
+          { session }
+        )
+        newOrder = createdOrder
+      } else {
+        newOrder = await Order.create({
+          tableId,
+          isTakeaway: false,
+          status: 'open',
+          organization: organizationId,
+          customerId: customer?._id || null,
+          code: orderCode
         })
       }
 
-      const newOrder = await Order.create({
-        tableId: null,
-        isTakeaway: true,
-        status: 'open',
-        organization: organizationId,
-        customerId: customer?._id || null,
-        code: orderCode // Thêm mã order
-      })
+      // Cập nhật trạng thái bàn
+      const updateOptions = {}
+      if (session) updateOptions.session = session
 
-      return responseHelper.success(res, {
+      await Table.findByIdAndUpdate(
+        tableId,
+        {
+          $set: {
+            status: 'occupied',
+            checkInTime: new Date(),
+            currentOrderId: newOrder._id,
+            customerName: customerName?.trim() || 'Khách lẻ',
+            orderCode: orderCode
+          }
+        },
+        updateOptions
+      )
+
+      return {
         orderId: newOrder._id,
-        orderCode: newOrder.code, // Return generated code
-        tableId: null,
-        isNewOrder: true
-      })
-    }
-
-    // 3. Đơn tại bàn
-    if (!tableId) {
-      return responseHelper.error(res, 'Thiếu thông tin bàn', 400)
-    }
-
-    const table = await Table.findById(tableId)
-    if (!table) return responseHelper.error(res, 'Bàn không tồn tại', 404)
-    if (table.status === 'occupied') return responseHelper.error(res, 'Bàn đã có khách', 400)
-
-    const newOrder = await Order.create({
-      tableId,
-      isTakeaway: false,
-      status: 'open',
-      organization: organizationId,
-      customerId: customer?._id || null,
-      code: orderCode // Thêm mã order
+        orderCode: newOrder.code,
+        tableId: table._id
+      }
     })
 
-    // Cập nhật trạng thái bàn
-    table.status = 'occupied'
-    table.checkInTime = new Date()
-    table.currentOrderId = newOrder._id
-    table.customerName = customerName?.trim() || 'Khách lẻ'
-    table.orderCode = orderCode // Lưu mã order vào bàn luôn
-    await table.save()
-
-    responseHelper.success(res, {
-      orderId: newOrder._id,
-      orderCode: newOrder.code, // Return generated code
-      tableId: table._id
-    })
+    responseHelper.success(res, result)
   } catch (error) {
     console.error('Create order error:', error)
+
+    // Handle specific error messages
+    if (error.message === 'Thiếu thông tin tổ chức') {
+      return responseHelper.error(res, error.message, 400)
+    }
+    if (error.message === 'Thiếu thông tin bàn') {
+      return responseHelper.error(res, error.message, 400)
+    }
+    if (error.message === 'Bàn không tồn tại') {
+      return responseHelper.error(res, error.message, 404)
+    }
+    if (error.message === 'Bàn đã có khách') {
+      return responseHelper.error(res, error.message, 400)
+    }
+
     responseHelper.error(res, error.message)
   }
 }
@@ -149,7 +245,6 @@ export const getOrderById = async (req, res) => {
       .lean()
 
     if (!order) return res.status(404).json({ message: 'Order không tồn tại' })
-    console.log(order)
 
     res.json(order)
   } catch (error) {
@@ -377,33 +472,46 @@ export const checkoutOrder = async (req, res) => {
     if (parsedCustomerPaid <= 0)
       return responseHelper.error(res, 'Số tiền khách trả không hợp lệ', 400)
 
+    if (parsedPointsUsed > 0) {
+      const orderCheck = await Order.findById(orderId).select('customerId').lean()
+      if (!orderCheck) {
+        return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
+      }
+      if (!orderCheck.customerId) {
+        return responseHelper.error(res, 'Khách lẻ không thể sử dụng điểm giảm giá', 400)
+      }
+    }
+
     // === TRANSACTION ===
     const result = await withTransaction(async (session) => {
+      // 1. Fetch and validate order
       const order = await Order.findById(orderId).session(session)
-      if (!order) throw new Error('Order không tồn tại')
-      if (order.status !== 'open') throw new Error('Order đã được thanh toán hoặc đã đóng')
+      if (!order) throw new BusinessError('Order không tồn tại', 404)
+      if (order.status !== 'open')
+        throw new BusinessError('Order đã được thanh toán hoặc đã đóng', 400)
 
-      const paymentMethod = await PaymentMethod.findById(paymentMethodId).session(session)
-      if (!paymentMethod) throw new Error('Phương thức thanh toán không hợp lệ')
+      // 2. Validate payment method and get receiving account
+      const paymentMethod = await PaymentMethod.findById(paymentMethodId)
+        .populate('receivingAccountId')
+        .session(session)
+      if (!paymentMethod) throw new BusinessError('Phương thức thanh toán không hợp lệ', 400)
+
       const { type: paymentType } = paymentMethod
+      let { receivingAccountId } = paymentMethod
 
-      // === CUSTOMER POINTS VALIDATION ===
-      let customer = null
-      if (order.customerId && parsedPointsUsed > 0) {
-        customer = await Customer.findById(order.customerId).session(session)
-        if (!customer) throw new Error('Khách hàng không tồn tại')
-
-        if (customer.totalPoints < parsedPointsUsed)
-          throw new Error(
-            `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`
-          )
+      // Auto-find receiving account if not linked (fallback)
+      if (['bank', 'e-wallet'].includes(paymentType) && !receivingAccountId) {
+        receivingAccountId = await ReceivingAccount.findOne({
+          organization: order.organization,
+          type: paymentType,
+          isActive: true
+        }).session(session)
       }
 
-      // === CALCULATE AMOUNTS ===
-      const POINT_VALUE = 500
+      // 3. Calculate amounts first (before any updates)
       const totalAmount = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-
-      if (parsedDiscount > totalAmount) throw new Error('Giảm giá không được vượt quá tổng tiền')
+      if (parsedDiscount > totalAmount)
+        throw new BusinessError('Giảm giá không được vượt quá tổng tiền', 400)
 
       const calculatedPointsDiscount = parsedPointsUsed * POINT_VALUE
       const totalPayable =
@@ -411,18 +519,86 @@ export const checkoutOrder = async (req, res) => {
       const total = Math.round(totalPayable + (totalPayable * parsedVatRate) / 100)
 
       if (parsedCustomerPaid < total)
-        throw new Error(
-          `Số tiền khách trả chưa đủ. Cần: ${total.toLocaleString()}, có: ${parsedCustomerPaid.toLocaleString()}`
+        throw new BusinessError(
+          `Số tiền khách trả chưa đủ. Cần: ${total.toLocaleString()}, có: ${parsedCustomerPaid.toLocaleString()}`,
+          400
         )
 
-      let qrCodeDataUrl = null
-      if (['bank', 'e-wallet'].includes(paymentType)) {
-        const qrText = JSON.stringify({ orderId, amount: total, method: paymentType })
-        const qrBase64 = Buffer.from(qrText).toString('base64')
-        qrCodeDataUrl = await QRCode.toDataURL(qrBase64)
+      // 4. Handle customer points and updates
+      let customer = null
+      let pointsEarned = 0
+
+      if (order.customerId) {
+        customer = await Customer.findById(order.customerId).session(session)
+        if (!customer) throw new BusinessError('Khách hàng không tồn tại', 404)
+
+        // Points validation (if using points)
+        if (parsedPointsUsed > 0) {
+          if (customer.totalPoints < parsedPointsUsed) {
+            throw new BusinessError(
+              `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`,
+              400
+            )
+          }
+        }
+
+        // Calculate points earned
+        pointsEarned = Math.floor(total / POINTS_EARN_RATE)
+
+        // Atomic customer update
+        const customerUpdateResult = await Customer.findOneAndUpdate(
+          {
+            _id: order.customerId,
+            totalPoints: { $gte: parsedPointsUsed }
+          },
+          {
+            $inc: {
+              totalOrders: 1,
+              totalSpent: total,
+              totalPoints: pointsEarned - parsedPointsUsed
+            },
+            $set: {
+              lastOrderDate: new Date(),
+              updatedAt: new Date()
+            }
+          },
+          { new: true, session, runValidators: true }
+        )
+
+        if (!customerUpdateResult) {
+          throw new BusinessError('Điểm khách hàng đã thay đổi, vui lòng thử lại', 409)
+        }
+      } else if (parsedPointsUsed > 0) {
+        // Double check (though early validation should catch this)
+        throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
       }
 
-      // === UPDATE ORDER ===
+      // 5. Generate VietQR URL
+      let qrCodeUrl = null
+      if (['bank', 'e-wallet'].includes(paymentType) && receivingAccountId) {
+        const receivingAccount = receivingAccountId
+
+        const bankCode = receivingAccount.bankCode || 'MB' // Default to MB
+        const accountNumber = receivingAccount.accountNumber
+
+        if (accountNumber && bankCode) {
+          // Use order code directly as description
+          const description = order.code
+
+          // Generate VietQR URL with hardcoded "VIETQR.CO"
+          const baseUrl = 'https://vietqr.co/api/generate'
+          const params = new URLSearchParams({
+            style: '2',
+            logo: '1',
+            isMask: '0',
+            bg: '7'
+          })
+
+          qrCodeUrl = `${baseUrl}/${bankCode}/${accountNumber}/VIETQR.CO/${total}/${description}?${params.toString()}`
+        }
+      }
+
+      // 6. UPDATE ORDER
       order.discount = parsedDiscount
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = calculatedPointsDiscount
@@ -436,11 +612,11 @@ export const checkoutOrder = async (req, res) => {
       order.changeAmount = parsedCustomerPaid - total
       order.status = 'completed'
       order.updatedAt = new Date()
-      if (qrCodeDataUrl) order.qrCode = qrCodeDataUrl
+      if (qrCodeUrl) order.qrCode = qrCodeUrl
 
       await order.save({ session })
 
-      // === RELEASE TABLE ===
+      // 7. RELEASE TABLE
       if (order.tableId) {
         await Table.findByIdAndUpdate(
           order.tableId,
@@ -449,63 +625,32 @@ export const checkoutOrder = async (req, res) => {
         )
       }
 
-      // === UPDATE CUSTOMER ===
-      if (order.customerId) {
-        if (!customer) customer = await Customer.findById(order.customerId).session(session)
-
-        if (customer) {
-          const pointsEarned = Math.floor(total / 10000)
-
-          // Chỉ cộng điểm nếu khách có phone
-          if (customer.phone) {
-            await Customer.findByIdAndUpdate(
-              order.customerId,
-              {
-                $inc: { totalOrders: 1, totalSpent: total },
-                $set: {
-                  totalPoints: customer.totalPoints - parsedPointsUsed + pointsEarned,
-                  lastOrderDate: new Date(),
-                  updatedAt: new Date()
-                }
-              },
-              { session }
-            )
-          } else {
-            order.customerId = null
-            await order.save({ session })
-          }
-        }
-      }
-
       return {
         totalAmount,
         discount: parsedDiscount,
         pointsUsed: parsedPointsUsed,
         pointsDiscount: calculatedPointsDiscount,
+        pointsEarned,
         serviceCharge: parsedServiceCharge,
         vatRate: parsedVatRate,
         totalPayable,
         total,
         changeAmount: parsedCustomerPaid - total,
-        qrCodeDataUrl
+        qrCodeUrl
       }
     })
 
     return responseHelper.success(res, result, 'Thanh toán thành công')
   } catch (error) {
-    console.error('Lỗi thanh toán:', error)
-
-    if (
-      error.message.includes('không tồn tại') ||
-      error.message.includes('đã được thanh toán') ||
-      error.message.includes('Không đủ điểm') ||
-      error.message.includes('không được vượt quá') ||
-      error.message.includes('chưa đủ')
-    ) {
-      return responseHelper.error(res, error.message, 400)
+    // Clean error handling with BusinessError
+    if (error instanceof BusinessError) {
+      // Expected business errors - no logging to reduce terminal noise
+      return responseHelper.error(res, error.message, error.statusCode)
+    } else {
+      // Unexpected system errors - log with full details
+      console.error('Lỗi hệ thống thanh toán:', error)
+      return responseHelper.error(res, 'Lỗi server nội bộ', 500)
     }
-
-    return responseHelper.error(res, 'Lỗi server nội bộ', 500)
   }
 }
 
@@ -538,30 +683,51 @@ export const updateOrderDraft = async (req, res) => {
     )
       return responseHelper.error(res, 'Các giá trị không được âm', 400)
 
+    // Early validation for points usage
+    if (parsedPointsUsed > 0) {
+      const orderCheck = await Order.findById(orderId).select('customerId').lean()
+      if (!orderCheck) {
+        return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
+      }
+      if (!orderCheck.customerId) {
+        return responseHelper.error(res, 'Khách lẻ không thể sử dụng điểm giảm giá', 400)
+      }
+    }
+
     const result = await withTransaction(async (session) => {
       const order = await Order.findById(orderId).session(session)
-      if (!order) throw new Error('Order không tồn tại')
+      if (!order) throw new BusinessError('Order không tồn tại', 404)
+
       const totalAmount = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-      if (parsedDiscount > totalAmount) throw new Error('Giảm giá không được vượt quá tổng tiền')
+      if (parsedDiscount > totalAmount)
+        throw new BusinessError('Giảm giá không được vượt quá tổng tiền', 400)
+
+      // Handle customer points validation
       if (order.customerId && parsedPointsUsed > 0) {
         const customer = await Customer.findById(order.customerId).session(session)
-        if (!customer) throw new Error('Khách hàng không tồn tại')
-        if (customer.totalPoints < parsedPointsUsed)
-          throw new Error(
-            `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`
+        if (!customer) throw new BusinessError('Khách hàng không tồn tại', 404)
+
+        if (customer.totalPoints < parsedPointsUsed) {
+          throw new BusinessError(
+            `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`,
+            400
           )
+        }
+      } else if (parsedPointsUsed > 0) {
+        // Double check for guest orders
+        throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
       }
 
-      const POINT_VALUE = 500
       const pointsDiscount = parsedPointsUsed * POINT_VALUE
 
       const totalPayable = totalAmount - parsedDiscount - pointsDiscount + parsedServiceCharge
       const total = Math.round(totalPayable + (totalPayable * parsedVatRate) / 100)
 
-      if (parsedCustomerPaid < 0) throw new Error('Số tiền khách trả không hợp lệ')
+      if (parsedCustomerPaid < 0) throw new BusinessError('Số tiền khách trả không hợp lệ', 400)
 
       const changeAmount = parsedCustomerPaid - total
 
+      // Update order
       order.discount = parsedDiscount
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = pointsDiscount
@@ -594,8 +760,15 @@ export const updateOrderDraft = async (req, res) => {
 
     return responseHelper.success(res, result, 'Cập nhật đơn hàng thành công')
   } catch (error) {
-    console.error('Lỗi cập nhật đơn hàng:', error)
-    return responseHelper.error(res, error.message || 'Lỗi server nội bộ', 500)
+    // Clean error handling with BusinessError
+    if (error instanceof BusinessError) {
+      // Expected business errors - no logging to reduce terminal noise
+      return responseHelper.error(res, error.message, error.statusCode)
+    } else {
+      // Unexpected system errors - log with full details
+      console.error('Lỗi hệ thống cập nhật đơn hàng:', error)
+      return responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    }
   }
 }
 
@@ -607,9 +780,75 @@ export const printInvoice = async (req, res) => {
       .populate('items.foodId', 'name price')
       .populate('tableId', 'name')
       .populate('organization', 'logo name phone province commune street')
-    console.log(order)
+      .populate({
+        path: 'paymentMethodId',
+        populate: {
+          path: 'receivingAccountId',
+          model: 'ReceivingAccount'
+        }
+      })
 
     if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
+
+    // Lấy invoiceOptions
+    const orgId = order.organization ? order.organization._id : null
+    let invoiceOptions = null
+    if (orgId) {
+      invoiceOptions = await InvoiceOption.findOne({ organizationId: orgId }).lean()
+    }
+
+    // Ưu tiên invoiceOptions -> organization -> default
+    const logoStore = has(invoiceOptions?.logo)
+      ? invoiceOptions.logo
+      : order.organization?.logo || '/assets/images/default.png'
+
+    const storeName = has(invoiceOptions?.storeName)
+      ? invoiceOptions.storeName
+      : order.organization?.name || 'Tên cửa hàng'
+
+    const invoiceTitle = has(invoiceOptions?.invoiceTitle)
+      ? invoiceOptions.invoiceTitle
+      : 'HÓA ĐƠN BÁN HÀNG'
+
+    const prefix = has(invoiceOptions?.prefix) ? invoiceOptions.prefix : 'HD'
+
+    // Lấy từng phần địa chỉ ưu tiên từ invoiceOptions → organization
+    const street = has(invoiceOptions?.street)
+      ? invoiceOptions.street
+      : order.organization?.street || ''
+    const commune = has(invoiceOptions?.commune)
+      ? invoiceOptions.commune
+      : order.organization?.commune || ''
+    const province = has(invoiceOptions?.province)
+      ? invoiceOptions.province
+      : order.organization?.province || ''
+
+    // Ghép thành 1 chuỗi địa chỉ
+    const storeAddress = [street, commune, province].filter(has).join(', ')
+
+    const storePhone = has(invoiceOptions?.hotline)
+      ? formatPhone(invoiceOptions?.hotline)
+      : formatPhone(order.organization?.phone) || ''
+
+    const footerLine1 = has(invoiceOptions?.footerLine1)
+      ? invoiceOptions.footerLine1
+      : 'Xin cảm ơn, hẹn gặp lại quý khách'
+
+    const footerLine2 = has(invoiceOptions?.footerLine2)
+      ? invoiceOptions.footerLine2
+      : 'Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ.'
+
+    const orderDate = order.createdAt ? order.createdAt.toISOString() : ''
+
+    let paymentAccountInfo = null
+    if (order.paymentMethodId && order.paymentMethodId.receivingAccountId) {
+      const acc = order.paymentMethodId.receivingAccountId
+      paymentAccountInfo = {
+        accountName: acc.name || '',
+        accountNumber: acc.accountNumber || '',
+        bankName: acc.bankName || acc.bankCode || ''
+      }
+    }
 
     res.render('staff/printbill', {
       title: 'Hóa đơn thanh toán',
@@ -617,13 +856,21 @@ export const printInvoice = async (req, res) => {
       orderId: order._id,
       currentUserId: req.user ? req.user._id : null,
       user: req.user || { username: 'Admin' },
-      logoStore: order.organization?.logo || '/assets/images/default.png',
-      storeName: order.organization?.name || 'Tên cửa hàng',
-      storePhone: order.organization?.phone
+      invoiceOptions,
+      logoStore,
+      storeName,
+      invoiceTitle,
+      prefix,
+      storeAddress, // render sẵn 1 chuỗi đầy đủ
+      storePhone,
+      footerLine1,
+      footerLine2,
+      paymentAccountInfo,
+      orderDate
     })
   } catch (error) {
     console.error('Lỗi khi in hóa đơn:', error)
-    res.status(500).send('Lỗi máy chủ')
+    responseHelper.error(res, error.message)
   }
 }
 
@@ -756,4 +1003,23 @@ export const getOrders = async (req, res) => {
       error: error.message
     })
   }
+}
+
+export const generateInvoiceCode = async (Model, prefix = 'INV') => {
+  // Tìm document mới nhất với prefix, sort theo code
+  const lastDoc = await Model.findOne({ code: new RegExp(`^${prefix}\\d+$`) })
+    .sort({ code: -1 }) // code lớn nhất trước
+    .lean()
+
+  let lastNumber = 0
+  if (lastDoc?.code) {
+    const match = lastDoc.code.match(new RegExp(`^${prefix}(\\d+)$`))
+    if (match) {
+      lastNumber = parseInt(match[1], 10)
+    }
+  }
+
+  const nextNumber = lastNumber + 1
+  const numberPart = String(nextNumber).padStart(12, '0')
+  return `${prefix}${numberPart}`
 }

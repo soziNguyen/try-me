@@ -19,14 +19,16 @@ export const updateInvoiceOptions = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const { headerText, footerText, hotline, logo, prefix } = req.body
-
-    const data = { headerText, footerText, hotline, logo, prefix }
-
-    const options = await InvoiceOptions.findOneAndUpdate({ organizationId }, data, {
-      upsert: true,
-      new: true
+    const updateData = {}
+    Object.keys(req.body).forEach((key) => {
+      if (req.body[key] !== undefined) updateData[key] = req.body[key]
     })
+
+    const options = await InvoiceOptions.findOneAndUpdate(
+      { organizationId },
+      { $set: updateData },
+      { upsert: true, new: true }
+    )
 
     responseHelper.success(res, options, 'Cập nhật thành công')
   } catch (error) {

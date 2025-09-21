@@ -98,6 +98,16 @@ $(function () {
         }
       },
       {
+        data: 'bankCode',
+        title: 'Mã ngân hàng',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="bankCode" value="${data ?? ''}">`
+          }
+          return data
+        }
+      },
+      {
         data: 'isActive',
         title: 'Trạng thái',
         className: 'text-center',

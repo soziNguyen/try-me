@@ -1,4 +1,5 @@
 import PaymentMethod from '../payment/model.js'
+import ReceivingAccount from '../receiving-account/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import responseHelper from '../../helpers/responseHelper.js'
 
@@ -60,12 +61,13 @@ export const getPaymentMethods = async (req, res) => {
     })
     const recordsFiltered = await PaymentMethod.countDocuments(query)
 
-    // Query chính
+    // Query chính với populate receivingAccountId
     const paymentMethods = await PaymentMethod.find(query)
+      .populate('receivingAccountId', 'name accountNumber bankName bankCode')
       .sort({ [sortField]: sortDir })
       .skip(start)
       .limit(length)
-      .select('name type description isActive createdAt')
+      .select('name type description isActive receivingAccountId createdAt')
 
     // Trả về DataTables format
     return res.json({
@@ -85,7 +87,7 @@ export const updatePaymentMethod = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu tổ chức', 400)
 
-    const { name, type, description, isActive } = req.body
+    const { name, type, description, isActive, receivingAccountId } = req.body
 
     const paymentMethod = await PaymentMethod.findOne({
       _id: id,
@@ -94,25 +96,43 @@ export const updatePaymentMethod = async (req, res) => {
     if (!paymentMethod)
       return responseHelper.error(res, 'Phương thức thanh toán không tồn tại', 404)
 
-    // Check trùng tên
-    const existing = await PaymentMethod.findOne({
-      _id: { $ne: id },
-      organization: organizationId,
-      name
-    })
-    if (existing) return responseHelper.error(res, 'Tên phương thức đã tồn tại', 400)
+    // Validate receivingAccountId if provided
+    if (receivingAccountId && receivingAccountId !== '') {
+      const receivingAccount = await ReceivingAccount.findOne({
+        _id: receivingAccountId,
+        organization: organizationId,
+        isActive: true
+      })
+      if (!receivingAccount) {
+        return responseHelper.error(res, 'Tài khoản nhận không hợp lệ', 400)
+      }
+    }
+
+    // Check trùng tên (chỉ khi có name)
+    if (name) {
+      const existing = await PaymentMethod.findOne({
+        _id: { $ne: id },
+        organization: organizationId,
+        name
+      })
+      if (existing) return responseHelper.error(res, 'Tên phương thức đã tồn tại', 400)
+    }
 
     const dataUpdate = {}
     if (name !== undefined) dataUpdate.name = name
     if (type !== undefined) dataUpdate.type = type
     if (description !== undefined) dataUpdate.description = description
     if (isActive !== undefined) dataUpdate.isActive = isActive
+    if (receivingAccountId !== undefined) {
+      dataUpdate.receivingAccountId = receivingAccountId || null // Allow clearing
+    }
 
     const updated = await PaymentMethod.findOneAndUpdate(
       { _id: id, organization: organizationId },
       { $set: dataUpdate },
       { new: true }
-    )
+    ).populate('receivingAccountId', 'name accountNumber bankName bankCode')
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)

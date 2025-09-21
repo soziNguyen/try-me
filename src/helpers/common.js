@@ -5,6 +5,11 @@ export function isDate(str) {
   return !isNaN(d)
 }
 
+export const formatPhone = (phone) => {
+  if (!phone) return ''
+  return phone.startsWith('84') ? `+${phone}` : phone
+}
+
 export function getDateFromString(str) {
   const date = new Date(str)
   if (isNaN(date)) return null
@@ -217,3 +222,5 @@ export const generateDocumentCode = async (model, prefix = 'DOC') => {
     return `${prefix}-${year}${month}${day}-${randomNum}`
   }
 }
+
+export const has = (v) => v !== undefined && v !== null && String(v).trim() !== ''
