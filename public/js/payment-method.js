@@ -5,7 +5,7 @@ $(function () {
     .then(([acc]) => {
       receivingAccounts = acc
     })
-    .catch((err) => {})
+    .catch((err) => { })
   const numRows = Math.floor(
     ($(window).height() - $('#paymentMethodTableBody').offset().top - 100) / 45
   )
@@ -104,7 +104,7 @@ $(function () {
           if (type === 'display') {
             if (['bank', 'e-wallet'].includes(row.type)) {
               // Build dropdown với receivingAccounts
-              let options = '<option value="">-- Chọn tài khoản --</option>'
+              let options = '<option value="">— Chọn tài khoản —</option>'
               receivingAccounts.forEach((acc) => {
                 const selected = data?._id === acc._id ? 'selected' : ''
                 options += `<option value="${acc._id}" ${selected}>${acc.name} - ${acc.bankName || acc.bankCode}</option>`
