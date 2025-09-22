@@ -60,7 +60,6 @@
       <p><span>Tổng tiền</span><span id="totalAmount"></span></p>
       <p><span>Giảm giá mã</span><span id="discount"></span></p>
       <p><span>Giảm giá điểm</span><span id="pointsDiscount"></span></p>
-      <p><span>Tổng giảm</span><span id="totalDiscount"></span></p>
       <p><span>Phụ thu dịch vụ</span><span id="serviceCharge"></span></p>
       <p><span>VAT</span><span id="vatAmount"></span></p>
       <hr class="my-3" />
@@ -78,18 +77,18 @@
           <p><strong>Ngân hàng:</strong>
             <%= paymentAccountInfo.bankName %>
           </p>
-        <% } %>
-        <% if (paymentAccountInfo.accountNumber) { %>
-          <p><strong>Số tài khoản:</strong>
-            <%= paymentAccountInfo.accountNumber %>
-          </p>
-        <% } %>
-        <% if (paymentAccountInfo.accountName) { %>
-          <p><strong>Chủ tài khoản:</strong>
-            <%= paymentAccountInfo.accountName %>
-          </p>
-        <% } %>
-      <% } %>
+          <% } %>
+            <% if (paymentAccountInfo.accountNumber) { %>
+              <p><strong>Số tài khoản:</strong>
+                <%= paymentAccountInfo.accountNumber %>
+              </p>
+              <% } %>
+                <% if (paymentAccountInfo.accountName) { %>
+                  <p><strong>Chủ tài khoản:</strong>
+                    <%= paymentAccountInfo.accountName %>
+                  </p>
+                  <% } %>
+                    <% } %>
     </div>
 
     <div id="qrCodeContainer" class="text-center mt-3">
