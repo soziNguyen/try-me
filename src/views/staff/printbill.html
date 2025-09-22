@@ -1,116 +1,101 @@
 <%- include('../partials/header.html') %>
 
-  <div class="invoice container container-xl container-xxl">
-    <div class="btn-back position-relative">
-      <a href="#" class="position-absolute top-50"><i class="bi bi-arrow-left text-dark"></i></a>
+<div class="invoice container container-xl container-xxl">
+  <div class="btn-back position-relative">
+    <a href="#" class="position-absolute top-50"><i class="bi bi-arrow-left text-dark"></i></a>
+  </div>
+  <!-- Header -->
+  <div class="text-center mb-4 mt-3">
+    <% if (logoStore) { %>
+    <div class="logo mb-2">
+      <img src="<%= logoStore %>" class="org-logo-bill" alt="logo" />
     </div>
-    <!-- Header -->
-    <div class="header text-center mb-4 mt-3">
-      <div class="logo mb-2">
-        <img src="<%= logoStore %>" class="org-logo-bill" alt="logo">
-      </div>
-      <div id="storeName"><strong>
-          <%= storeName %>
-        </strong>
-      </div>
-      <div class="org-address">
-      </div>
-      <div class="org-contact">
-        <%= storePhone %>
-      </div>
-      <hr class="my-1" />
-      <div><strong>
-          <%= invoiceTitle %>
-        </strong></div>
-      <div>Mã HD: <span id="orderId"></span></div>
-      <div><span id="orderDate"></span></div>
+    <% } %>
+    <div class="header">
+      <% if (invoiceHeader) { %> <%- invoiceHeader %> <% } else { %>
+      <span id="headerFallback"></span>
+      <% } %>
     </div>
+    <hr class="my-1" />
+    <div><strong> <%= invoiceTitle %> </strong></div>
+    <div>Mã HD: <span id="orderId"></span></div>
+    <div><span id="orderDate"></span></div>
+  </div>
 
-    <div class="info mb-2">
-      <p class="mb-0"><strong>Khách hàng:</strong> <span id="customerInfo"></span></p>
+  <div class="info mb-2">
+    <p class="mb-0"><strong>Khách hàng:</strong> <span id="customerInfo"></span></p>
 
-      <div class="d-flex justify-content-between">
-        <p class="mb-0">
-          <strong>Thu ngân:</strong>
-          <span id="cashier">
-            <%= user.username %>
-          </span>
-        </p>
-        <p class="mb-0"><strong>Loại hóa đơn:</strong> <span id="orderType">--</span></p>
-      </div>
-    </div>
-
-    <table class="invoice-table fw-bold">
-      <thead>
-        <tr>
-          <th class="stt">STT</th>
-          <th class="name">Tên hàng</th>
-          <th class="price">Đ.giá</th>
-          <th class="qty">SL</th>
-          <th class="total text-end">Tổng tiền</th>
-        </tr>
-      </thead>
-      <tbody id="orderItems">
-        <!-- Các món ăn sẽ được render ở đây -->
-      </tbody>
-    </table>
-
-    <!-- Tổng kết -->
-    <div class="summary fw-bold mt-3">
-      <p><span>Tổng tiền</span><span id="totalAmount"></span></p>
-      <p><span>Giảm giá mã</span><span id="discount"></span></p>
-      <p><span>Giảm giá điểm</span><span id="pointsDiscount"></span></p>
-      <p><span>Phụ thu dịch vụ</span><span id="serviceCharge"></span></p>
-      <p><span>VAT</span><span id="vatAmount"></span></p>
-      <hr class="my-3" />
-      <p><span>Thành tiền</span><span id="total"></span></p>
-      <p><span>Tiền khách trả</span><span id="customerPaid"></span></p>
-      <p><span>Tiền thừa</span><span id="changeAmount"></span></p>
-    </div>
-    <hr class="my-3" />
-
-    <p><em id="totalInWords"></em></p>
-
-    <div id="receivingAccountInfo" class="mt-3 text-center">
-      <% if (paymentAccountInfo) { %>
-        <% if (paymentAccountInfo.bankName) { %>
-          <p><strong>Ngân hàng:</strong>
-            <%= paymentAccountInfo.bankName %>
-          </p>
-          <% } %>
-            <% if (paymentAccountInfo.accountNumber) { %>
-              <p><strong>Số tài khoản:</strong>
-                <%= paymentAccountInfo.accountNumber %>
-              </p>
-              <% } %>
-                <% if (paymentAccountInfo.accountName) { %>
-                  <p><strong>Chủ tài khoản:</strong>
-                    <%= paymentAccountInfo.accountName %>
-                  </p>
-                  <% } %>
-                    <% } %>
-    </div>
-
-    <div id="qrCodeContainer" class="text-center mt-3">
-    </div>
-
-    <!-- Đường kẻ phân cách -->
-    <hr class="my-3" />
-
-    <!-- Footer -->
-    <div class="footer text-center">
-      <p>
-        <%= footerLine1 %>
+    <div class="d-flex justify-content-between">
+      <p class="mb-0">
+        <strong>Thu ngân:</strong>
+        <span id="cashier"> <%= user.username %> </span>
       </p>
-      <p>
-        <%= footerLine2 %>
-      </p>
+      <p class="mb-0"><strong>Loại hóa đơn:</strong> <span id="orderType">--</span></p>
     </div>
   </div>
 
-  <input type="hidden" id="orderIdInput" value="<%= orderId %>" />
-  <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
+  <table class="invoice-table fw-bold">
+    <thead>
+      <tr>
+        <th class="stt">STT</th>
+        <th class="name">Tên hàng</th>
+        <th class="price">Đ.giá</th>
+        <th class="qty">SL</th>
+        <th class="total text-end">Tổng tiền</th>
+      </tr>
+    </thead>
+    <tbody id="orderItems">
+      <!-- Các món ăn sẽ được render ở đây -->
+    </tbody>
+  </table>
 
-  <%- include('../partials/commonjs.html') %>
-    <script src="/js/staff/printbill.js"></script>
-    <%- include('../partials/footer.html') %>
+  <!-- Tổng kết -->
+  <div class="summary fw-bold mt-3">
+    <p><span>Tổng tiền</span><span id="totalAmount"></span></p>
+    <p><span>Giảm giá mã</span><span id="discount"></span></p>
+    <p><span>Giảm giá điểm</span><span id="pointsDiscount"></span></p>
+    <p><span>Phụ thu dịch vụ</span><span id="serviceCharge"></span></p>
+    <p><span>VAT</span><span id="vatAmount"></span></p>
+    <hr class="my-3" />
+    <p><span>Thành tiền</span><span id="total"></span></p>
+    <p><span>Tiền khách trả</span><span id="customerPaid"></span></p>
+    <p><span>Tiền thừa</span><span id="changeAmount"></span></p>
+  </div>
+  <hr class="my-3" />
+
+  <p><em id="totalInWords"></em></p>
+
+  <div id="receivingAccountInfo" class="mt-3 text-center">
+    <% if (paymentAccountInfo) { %> <% if (paymentAccountInfo.bankName) { %>
+    <p>
+      <strong>Ngân hàng:</strong>
+      <%= paymentAccountInfo.bankName %>
+    </p>
+    <% } %> <% if (paymentAccountInfo.accountNumber) { %>
+    <p>
+      <strong>Số tài khoản:</strong>
+      <%= paymentAccountInfo.accountNumber %>
+    </p>
+    <% } %> <% if (paymentAccountInfo.accountName) { %>
+    <p>
+      <strong>Chủ tài khoản:</strong>
+      <%= paymentAccountInfo.accountName %>
+    </p>
+    <% } %> <% } %>
+  </div>
+
+  <div id="qrCodeContainer" class="text-center mt-3"></div>
+
+  <!-- Đường kẻ phân cách -->
+  <hr class="my-3" />
+
+  <!-- Footer -->
+  <div class="footer"><%- invoiceFooter %></div>
+</div>
+
+<input type="hidden" id="orderIdInput" value="<%= orderId %>" />
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
+
+<%- include('../partials/commonjs.html') %>
+<script src="/js/staff/printbill.js"></script>
+<%- include('../partials/footer.html') %>

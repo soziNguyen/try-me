@@ -66,7 +66,7 @@ function calculateTotals() {
   const vatRate = Number(vatInput.value) || 0
 
   // Cập nhật hiển thị pointsDiscount
-  pointsDiscountInput.value = pointsDiscount.toLocaleString('vi-VN')
+  pointsDiscountInput.value = pointsDiscount
 
   const totalPayable = totalAmount - discount - pointsDiscount + serviceCharge
   const totalWithVAT = Math.round(totalPayable + (totalPayable * vatRate) / 100)

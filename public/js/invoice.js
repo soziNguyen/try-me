@@ -1,45 +1,16 @@
 $(document).ready(function () {
   const csrfToken = $('#_csrf').val()
-  let isLoadingData = false // Cờ để tránh gọi API khi đang load dữ liệu
+  let isLoadingData = false
+  let currentLogo = ''
+  let headerContent = ''
+  let footerContent = ''
 
-  // Load dữ liệu ban đầu
-  async function loadInvoiceOptions() {
-    try {
-      isLoadingData = true
-      const res = await fetch('/api/invoice/options')
-      const result = await res.json()
-
-      if (result.success && result.data) {
-        const data = result.data
-
-        $('[name="storeName"]').val(data.storeName || '')
-        $('[name="invoiceTitle"]').val(data.invoiceTitle || '')
-        $('[name="prefixInvoice"]').val(data.prefix || '')
-        $('[name="footerLine1"]').val(data.footerLine1 || '')
-        $('[name="footerLine2"]').val(data.footerLine2 || '')
-        $('[name="hotline"]').val(data.hotline || '')
-        $('#orgStreet').val(data.street || '')
-        if (data.logo) $('#logoPreview').attr('src', data.logo) // optional preview
-
-        const provinceId = data.province || ''
-        const communeId = data.commune || ''
-
-        await listProvinces()
-        $('#orgProvince').val(provinceId).trigger('change')
-
-        await listCommunes(provinceId)
-        $('#orgCommune').val(communeId).trigger('change')
-      } else {
-        await listProvinces()
-      }
-    } catch (error) {
-      console.error('Load invoice options error:', error)
-    } finally {
-      isLoadingData = false
-    }
+  // Toggle nút preview / xóa logo
+  function toggleLogoButtons(hasLogo) {
+    $('#previewLogoBtn, #removeLogoBtn').prop('disabled', !hasLogo)
   }
 
-  // Update 1 field bất kỳ
+  // Gọi API update
   async function updateField(field, value) {
     if (isLoadingData) return
     try {
@@ -52,18 +23,18 @@ $(document).ready(function () {
       if (!data.success) {
         toastr.error(data.message || `Lỗi cập nhật ${field}`)
       } else {
-        toastr.success(data.message)
+        toastr.remove() // Xóa thông báo cũ
+        toastr.success('Đã lưu thay đổi')
       }
-    } catch (error) {
-      console.error('Update error:', error)
+    } catch (err) {
+      console.error('Update error:', err)
     }
   }
 
-  // Upload logo → trả về URL
+  // Upload logo
   async function uploadLogo(file) {
     const formData = new FormData()
     formData.append('file', file)
-
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -75,68 +46,117 @@ $(document).ready(function () {
         toastr.error(data.message || 'Lỗi upload logo')
         return null
       }
-      // Trả về URL file
       return '/' + data.file.path.replace(/\\/g, '/')
-    } catch (error) {
-      console.error('Upload logo error:', error)
+    } catch (err) {
+      console.error('Upload logo error:', err)
       return null
     }
   }
 
-  // On change field
+  // Load dữ liệu ban đầu
+  async function loadInvoiceOptions() {
+    try {
+      isLoadingData = true
+      const res = await fetch('/api/invoice/options')
+      const result = await res.json()
+
+      if (result.success && result.data) {
+        const data = result.data
+        $('[name="invoiceTitle"]').val(data.invoiceTitle || '')
+        $('[name="prefix"]').val(data.prefix || '')
+
+        headerContent = data.header || ''
+        footerContent = data.footer || ''
+
+        currentLogo = data.logo || ''
+        toggleLogoButtons(!!currentLogo)
+
+        initEditor('#headerEditor', 'header', headerContent)
+        initEditor('#footerEditor', 'footer', footerContent)
+      }
+    } catch (err) {
+      console.error('Load invoice options error:', err)
+    } finally {
+      isLoadingData = false
+    }
+  }
+
+  // TinyMCE cho header/footer
+  function initEditor(el, field, content) {
+    tinymce.init({
+      selector: el,
+      license_key: 'gpl',
+      extended_valid_elements: '*[*]', // giữ tất cả attribute và style
+      valid_elements: '*[*]', // cho phép nhiều thẻ với style
+      verify_html: false,
+      entity_encoding: 'raw',
+      plugins: 'lists image table code help',
+      toolbar:
+        'undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | image table | code | help',
+      setup: (editor) => {
+        let initialContent = content || ''
+        editor.on('change', () => {
+          const currentContent = editor.getContent()
+          if (currentContent === initialContent) return // không thay đổi gì => bỏ qua
+          updateField(field, currentContent)
+          initialContent = currentContent // cập nhật content mới
+        })
+      },
+      init_instance_callback: (editor) => {
+        if (content) editor.setContent(content)
+      }
+    })
+  }
+
+  // Thay đổi field input text
   $(document).on('change', '.invoice-field', async function () {
     if (isLoadingData) return
-
     const name = $(this).attr('name')
-
     if (name === 'logo') {
       const file = this.files[0]
       if (!file) return
       const url = await uploadLogo(file)
       if (url) {
-        $('#logoPreview').attr('src', url) // optional: cập nhật preview
+        currentLogo = url
+        toggleLogoButtons(true)
         await updateField('logo', url)
       }
     } else {
-      const value = $(this).val()
-      if (name === 'orgProvince') {
-        listCommunes(value)
-        updateField('province', value)
-      } else if (name === 'orgCommune') {
-        updateField('commune', value)
-      } else {
-        const map = {
-          storeName: 'storeName',
-          invoiceTitle: 'invoiceTitle',
-          prefixInvoice: 'prefix',
-          footerLine1: 'footerLine1',
-          footerLine2: 'footerLine2',
-          hotline: 'hotline',
-          orgStreet: 'street'
-        }
-        updateField(map[name] || name, value)
-      }
+      await updateField(name, $(this).val())
     }
   })
 
-  // Không submit form mặc định
-  $('#invoiceOptionsForm').on('submit', function (e) {
-    e.preventDefault()
+  // Preview logo
+  $('#previewLogoBtn').on('click', function () {
+    if (!currentLogo) return toastr.warning('Chưa có logo')
+    $('#logoPreviewImg').attr('src', currentLogo)
+    $('#logoPreviewModal').modal('show')
   })
 
-  // Reset province button
-  function toggleResetProvince() {
-    const $province = $('#orgProvince')
-    const $resetBtn = $('#resetProvince')
-    $resetBtn.prop('disabled', !$province.val())
-  }
-  $('#orgProvince').on('change', toggleResetProvince)
-  toggleResetProvince()
-  $('#resetProvince').on('click', function () {
-    $('#orgProvince').val('').trigger('change')
-    $('#orgStreet').val() ? $('#orgStreet').val('').trigger('change') : ''
+  // Xóa logo
+  $('#removeLogoBtn').on('click', function () {
+    showConfirmModal({
+      title: 'Xóa logo',
+      message: 'Bạn muốn xóa logo?',
+      confirmed: 'Xóa',
+      onConfirm: async function () {
+        const res = await fetch('/api/invoice/options', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
+          body: JSON.stringify({ logo: '' })
+        })
+        const data = await res.json()
+        if (data.success) {
+          currentLogo = ''
+          toggleLogoButtons(false)
+          toastr.success('Logo đã được xóa')
+        } else {
+          toastr.error(data.message || 'Lỗi xóa logo')
+        }
+      }
+    })
   })
 
-  // Load ban đầu
+  // Sau đó load dữ liệu
   loadInvoiceOptions()
 })

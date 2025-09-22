@@ -665,7 +665,7 @@ export const receiptDetailPage = async (req, res) => {
       paymentAccountInfo,
       orderDate
     })
-  } catch (error) {}
+  } catch (error) { }
 }
 
 export const invoicePage = async (req, res) => {

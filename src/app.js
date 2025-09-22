@@ -42,6 +42,7 @@ app.use(compression()) // Compress responses
 app.use(helmet()) // Security middleware
 app.use(cors()) // Allow API requests from different origins (CORS)
 app.use(express.json()) // Parse incoming JSON requests (req.body)
+app.use(express.urlencoded({ extended: true })); // cần extended: true
 app.use(cookieParser()) // Read & parse cookie from req.cookies
 
 // ==== Middleware chống XSS ====
@@ -53,7 +54,9 @@ app.use((req, res, next) => {
       else if (typeof obj[key] === 'object') sanitize(obj[key])
     }
   }
-  sanitize(req.body)
+  if (!req.path.startsWith('/api/invoice/options')) { // bỏ qua route cập nhật invoice options
+    sanitize(req.body)
+  }
   sanitize(req.query)
   sanitize(req.params)
   next()

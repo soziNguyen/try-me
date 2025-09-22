@@ -798,46 +798,19 @@ export const printInvoice = async (req, res) => {
     }
 
     // Ưu tiên invoiceOptions -> organization -> default
-    const logoStore = has(invoiceOptions?.logo)
-      ? invoiceOptions.logo
-      : order.organization?.logo || '/assets/images/default.png'
+    const logoStore = has(invoiceOptions?.logo) ? invoiceOptions.logo : ''
 
-    const storeName = has(invoiceOptions?.storeName)
-      ? invoiceOptions.storeName
-      : order.organization?.name || 'Tên cửa hàng'
+    const invoiceHeader = has(invoiceOptions?.header) ? invoiceOptions.header : ''
+    const invoiceFooter = has(invoiceOptions?.footer)
+      ? invoiceOptions.footer
+      : `<p class="text-center">Xin cảm ơn, hẹn gặp lại quý khách<br>       
+     Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ.</p>`
 
     const invoiceTitle = has(invoiceOptions?.invoiceTitle)
       ? invoiceOptions.invoiceTitle
       : 'HÓA ĐƠN BÁN HÀNG'
 
     const prefix = has(invoiceOptions?.prefix) ? invoiceOptions.prefix : 'HD'
-
-    // Lấy từng phần địa chỉ ưu tiên từ invoiceOptions → organization
-    const street = has(invoiceOptions?.street)
-      ? invoiceOptions.street
-      : order.organization?.street || ''
-    const commune = has(invoiceOptions?.commune)
-      ? invoiceOptions.commune
-      : order.organization?.commune || ''
-    const province = has(invoiceOptions?.province)
-      ? invoiceOptions.province
-      : order.organization?.province || ''
-
-    // Ghép thành 1 chuỗi địa chỉ
-    const storeAddress = [street, commune, province].filter(has).join(', ')
-
-    const storePhone = has(invoiceOptions?.hotline)
-      ? formatPhone(invoiceOptions?.hotline)
-      : formatPhone(order.organization?.phone) || ''
-
-    const footerLine1 = has(invoiceOptions?.footerLine1)
-      ? invoiceOptions.footerLine1
-      : 'Xin cảm ơn, hẹn gặp lại quý khách'
-
-    const footerLine2 = has(invoiceOptions?.footerLine2)
-      ? invoiceOptions.footerLine2
-      : 'Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ.'
-
     const orderDate = order.createdAt ? order.createdAt.toISOString() : ''
 
     let paymentAccountInfo = null
@@ -858,13 +831,10 @@ export const printInvoice = async (req, res) => {
       user: req.user || { username: 'Admin' },
       invoiceOptions,
       logoStore,
-      storeName,
-      invoiceTitle,
       prefix,
-      storeAddress, // render sẵn 1 chuỗi đầy đủ
-      storePhone,
-      footerLine1,
-      footerLine2,
+      invoiceTitle,
+      invoiceHeader,
+      invoiceFooter,
       paymentAccountInfo,
       orderDate
     })
