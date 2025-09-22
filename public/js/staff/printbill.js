@@ -110,14 +110,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       })
     }
 
+    function formatCurrencyWithSign(amount, sign) {
+      const formatted = formatCurrency(Math.abs(amount))
+      return `${sign} ${formatted}`
+    }
+
     // 7. Tổng hợp tiền
     const totalDiscount = (order.discount || 0) + (order.pointsDiscount || 0)
 
     document.getElementById('totalAmount').textContent = formatCurrency(order.totalAmount)
-    document.getElementById('discount').textContent = formatCurrency(order.discount)
-    document.getElementById('pointsDiscount').textContent = formatCurrency(order.pointsDiscount)
-    document.getElementById('totalDiscount').textContent = formatCurrency(totalDiscount)
-    document.getElementById('serviceCharge').textContent = formatCurrency(order.serviceCharge)
+    document.getElementById('discount').textContent = formatCurrencyWithSign(
+      order.discount || 0,
+      '-'
+    )
+    document.getElementById('pointsDiscount').textContent = formatCurrencyWithSign(
+      order.pointsDiscount || 0,
+      '-'
+    )
+    document.getElementById('serviceCharge').textContent = formatCurrencyWithSign(
+      order.serviceCharge || 0,
+      '+'
+    )
 
     const vatAmount = Math.round(
       (order.totalAmount - totalDiscount + (order.serviceCharge || 0)) *
@@ -125,7 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     )
     const vatRateText = order.vatRate ? `${order.vatRate}%` : '0%'
     document.getElementById('vatAmount').textContent =
-      `${vatRateText} (${formatCurrency(vatAmount)})`
+      `${vatRateText} (${formatCurrencyWithSign(vatAmount, '+')})`
 
     document.getElementById('total').textContent = formatCurrency(order.total)
     document.getElementById('customerPaid').textContent = formatCurrency(order.customerPaid)
