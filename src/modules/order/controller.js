@@ -13,8 +13,6 @@ import InvoiceOption from '../invoice/model.js'
 import ReceivingAccount from '../receiving-account/model.js'
 import BusinessError from '../error/BusinessError.js'
 import { constants } from '../../configs/constants.js'
-import { formatPhone } from '../../helpers/common.js'
-import QRCode from 'qrcode'
 
 const { POINT_VALUE, POINTS_EARN_RATE } = constants
 
@@ -803,7 +801,7 @@ export const printInvoice = async (req, res) => {
     const invoiceHeader = has(invoiceOptions?.header) ? invoiceOptions.header : ''
     const invoiceFooter = has(invoiceOptions?.footer)
       ? invoiceOptions.footer
-      : `<p class="text-center">Xin cảm ơn, hẹn gặp lại quý khách<br>       
+      : `<p class="text-center">Xin cảm ơn, hẹn gặp lại quý khách<br>
      Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ.</p>`
 
     const invoiceTitle = has(invoiceOptions?.invoiceTitle)
@@ -885,6 +883,7 @@ export const getOrders = async (req, res) => {
               comboName: '$items.comboName'
             }
           },
+          createdAt: { $first: '$createdAt' },
           updatedAt: { $first: '$updatedAt' }
         }
       }
@@ -928,16 +927,18 @@ export const getOrders = async (req, res) => {
     const countResult = await Order.aggregate(countPipeline)
     const recordsFiltered = countResult.length > 0 ? countResult[0].count : 0
 
-    // Sort + limit
-    const sortObj = {}
-    if (['table', 'table.name'].includes(sortField)) {
-      sortObj['table.name'] = sortDir
-    } else if (['customer', 'customer.name'].includes(sortField)) {
-      sortObj['customer.name'] = sortDir
-    } else if (sortField === 'total') {
-      sortObj.total = sortDir
-    } else {
-      sortObj[sortField] = sortDir
+    // Sort với trường phụ để đảm bảo tính nhất quán
+    const sortFieldMap = {
+      table: 'table.name',
+      'table.name': 'table.name',
+      customer: 'customer.name',
+      'customer.name': 'customer.name'
+    }
+
+    const actualSortField = sortFieldMap[sortField] || sortField
+    const sortObj = {
+      [actualSortField]: sortDir,
+      _id: 1
     }
 
     pipeline.push(

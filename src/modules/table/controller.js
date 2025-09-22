@@ -47,7 +47,6 @@ export const getTables = async (req, res) => {
           select: 'name phone totalPoints'
         }
       })
-      .sort({ createdAt: 1 })
       .lean()
 
     // Ép ObjectId về string + lấy tên khách
@@ -129,7 +128,7 @@ export const getDataTables = async (req, res) => {
     })
 
     pipeline.push(
-      { $sort: { [sortField === 'statusSearchText' ? 'status' : sortField]: sortDir } },
+      { $sort: { [sortField]: sortDir } },
       { $skip: start },
       { $limit: length },
       {
