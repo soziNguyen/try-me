@@ -47,6 +47,16 @@ $(function () {
           `<input type="checkbox" class="receivingAccountCheckbox" data-id="${row._id}">`
       },
       {
+        data: 'bankCode',
+        title: 'Mã ngân hàng',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="bankCode" value="${data ?? ''}">`
+          }
+          return data
+        }
+      },
+      {
         data: 'name',
         title: 'Tên tài khoản',
         render: (data, type, row) => {
@@ -93,16 +103,6 @@ $(function () {
         render: (data, type, row) => {
           if (type === 'display') {
             return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="bankName" value="${data ?? ''}">`
-          }
-          return data
-        }
-      },
-      {
-        data: 'bankCode',
-        title: 'Mã ngân hàng',
-        render: (data, type, row) => {
-          if (type === 'display') {
-            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="bankCode" value="${data ?? ''}">`
           }
           return data
         }

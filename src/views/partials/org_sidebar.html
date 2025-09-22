@@ -218,20 +218,22 @@
                           <button
                             class="accordion-button <%= ['Payment Method', 'Receiving'].includes(page) ? 'active' : '' %> <%= ['Payment Method', 'Receiving'].includes(page) ? '' : 'collapsed' %>"
                             type="button" data-bs-toggle="collapse" data-bs-target="#collapseMethods"
-                            aria-expanded="<%= ['Payment Method', 'Receiving'].includes(page) ? 'true' : 'false' %>" aria-controls="collapseMethods">
+                            aria-expanded="<%= ['Payment Method', 'Receiving'].includes(page) ? 'true' : 'false' %>"
+                            aria-controls="collapseMethods">
                             <i class="las la-university text-danger me-2"></i>
                             <span>Thông tin thanh toán</span>
                           </button>
                         </h2>
-                        <div id="collapseMethods" class="accordion-collapse collapse <%= ['Payment Method', 'Receiving'].includes(page) ? 'show' : '' %>"
+                        <div id="collapseMethods"
+                          class="accordion-collapse collapse <%= ['Payment Method', 'Receiving'].includes(page) ? 'show' : '' %>"
                           data-bs-parent="#accordionMethods">
                           <div class="accordion-body">
-                            <a class="<%= page === 'Payment Method' ? 'accordion-active' : '' %>" href="/payment-methods">
+                            <a class="<%= page === 'Payment Method' ? 'accordion-active' : '' %>"
+                              href="/payment-methods">
                               <i class="bi bi-wallet2 text-white-emphasis me-2"></i>
                               <span>Phương thức thanh toán</span>
                             </a>
-                            <a class="<%= page === 'Receiving' ? 'accordion-active' : '' %>"
-                              href="/receiving-accounts">
+                            <a class="<%= page === 'Receiving' ? 'accordion-active' : '' %>" href="/receiving-accounts">
                               <i class="bi bi-bank text-info me-2"></i>
                               <span>Ngân hàng</span>
                             </a>
@@ -278,16 +280,18 @@
                           <button
                             class="accordion-button <%= ['Invoice'].includes(page) ? 'active' : '' %> <%= ['Invoice'].includes(page) ? '' : 'collapsed' %>"
                             type="button" data-bs-toggle="collapse" data-bs-target="#collapseSettings"
-                            aria-expanded="<%= ['Invoice'].includes(page) ? 'true' : 'false' %>" aria-controls="collapseSettings">
+                            aria-expanded="<%= ['Invoice'].includes(page) ? 'true' : 'false' %>"
+                            aria-controls="collapseSettings">
                             <i class="bi-gear text-danger me-2"></i>
                             <span>Cài đặt chung</span>
                           </button>
                         </h2>
-                        <div id="collapseSettings" class="accordion-collapse collapse <%= ['Invoice'].includes(page) ? 'show' : '' %>"
+                        <div id="collapseSettings"
+                          class="accordion-collapse collapse <%= ['Invoice'].includes(page) ? 'show' : '' %>"
                           data-bs-parent="#accordionSettings">
                           <div class="accordion-body">
                             <a class="<%= page === 'Invoice' ? 'accordion-active' : '' %>" href="/invoice">
-                              <i class="bi bi-wallet2 text-white-emphasis me-2"></i>
+                              <i class="bi bi-receipt-cutoff text-white-emphasis me-2"></i>
                               <span>Hóa đơn</span>
                             </a>
                           </div>
