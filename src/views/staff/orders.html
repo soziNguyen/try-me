@@ -43,13 +43,12 @@
                   data-bs-parent="#accordionClent">
                   <div class="accordion-body">
                     <form id="customerForm">
-                      <div class="mb-3">
-                        <label for="customerName" class="form-label">Tên khách hàng</label>
-                        <input type="text" class="form-control" id="customerName" placeholder="Nhập tên khách hàng">
-                      </div>
-                      <div class="mb-3">
-                        <label for="customerPhone" class="form-label">Số điện thoại</label>
-                        <input type="tel" class="form-control" id="customerPhone" placeholder="Nhập số điện thoại">
+                      <div class="mb-3 position-relative">
+                        <label for="customerName" class="form-label">Nhập thông tin</label>
+                        <input type="text" class="form-control" id="customerName" placeholder="Nhập tên hoặc SDT"
+                          autocomplete="off">
+                        <ul id="customerSuggestions" class="list-group position-absolute w-100 shadow"
+                          style="display:none; max-height:150px; overflow-y:auto; z-index:1000;"></ul>
                       </div>
                       <div class="mb-3">
                         <label class="form-label">Điểm tích lũy (hiện có)</label>
@@ -207,7 +206,7 @@
                         </div>
                       </div>
 
-                      <div class="d-flex justify-content-between">
+                      <div id="checkoutActions" class="d-flex justify-content-between">
                         <button id="btn-check-print" type="button" class="btn btn-outline-info me-2">IN HÓA ĐƠN</button>
                         <button type="button" class="btn btn-outline-success" id="confirmCheckoutBtn">THANH
                           TOÁN</button>

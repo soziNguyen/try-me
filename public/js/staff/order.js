@@ -386,6 +386,22 @@ async function fetchCombos() {
   }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.location.hash === '#checkoutActions') {
+    setTimeout(() => {
+      const element = document.querySelector('#checkoutActions')
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+
+      const checkoutBtn = document.querySelector('#confirmCheckoutBtn')
+      if (checkoutBtn) {
+        checkoutBtn.focus()
+      }
+    }, 300)
+  }
+})
+
 // ======== Cập nhật UI Hóa đơn ========
 
 function updateOrderUI(order) {
@@ -559,3 +575,69 @@ async function removeItemFromOrder(itemId, type) {
     toastr.error('Lỗi kết nối server')
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('customerName')
+  const suggestions = document.getElementById('customerSuggestions')
+  const loyaltyPoints = document.getElementById('loyaltyPoints')
+
+  let timeoutId = null
+
+  function renderSuggestions(customers, query) {
+    if (customers.length === 0) {
+      suggestions.innerHTML = `
+      <li class="list-group-item list-group-item-action text-primary add-new-customer">
+        + Thêm khách hàng mới: <strong>${query}</strong>
+      </li>
+    `
+    } else {
+      suggestions.innerHTML = customers
+        .map(
+          (c) => `
+        <li class="list-group-item list-group-item-action" data-id="${c._id}" data-points="${c.totalPoints}">
+          ${c.name} - ${c.phone}
+        </li>
+      `
+        )
+        .join('')
+    }
+    suggestions.style.display = 'block'
+  }
+
+  // Xử lý khi chọn 1 item trong gợi ý
+  suggestions.addEventListener('click', (e) => {
+    const li = e.target.closest('li')
+    if (!li) return
+    input.value = li.textContent
+    loyaltyPoints.textContent = li.dataset.points + ' điểm'
+    suggestions.style.display = 'none'
+  })
+
+  // Ẩn danh sách gợi ý khi click ra ngoài
+  document.addEventListener('click', (e) => {
+    if (!suggestions.contains(e.target) && e.target !== input) {
+      suggestions.style.display = 'none'
+    }
+  })
+
+  // Hàm gọi API search
+  async function search(query) {
+    if (!query.trim()) {
+      suggestions.style.display = 'none'
+      loyaltyPoints.textContent = '0 điểm'
+      return
+    }
+    const data = await ajax('/api/customers/search', { query }, 'GET')
+    if (data) {
+      renderSuggestions(data, query)
+      loyaltyPoints.textContent = '0 điểm'
+    }
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => {
+      search(input.value)
+    }, 300)
+  })
+})
