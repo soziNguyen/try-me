@@ -122,11 +122,22 @@ function bindEvents() {
   document.addEventListener('click', (e) => {
     const btnOrder = e.target.closest('.btnOrderFood')
     if (btnOrder) {
-      const orderId = btnOrder.getAttribute('data-order-id')
+      const orderId = btnOrder.dataset.orderId
       if (orderId) {
         window.location.href = `/orders?orderId=${orderId}`
       } else {
         toastr.warning('Bàn chưa có hóa đơn, vui lòng giao bàn trước khi gọi món.')
+      }
+      return
+    }
+
+    const btnCheckout = e.target.closest('.btnCheckout')
+    if (btnCheckout) {
+      const orderId = btnCheckout.dataset.orderId
+      if (orderId) {
+        window.location.href = `/orders?orderId=${orderId}#checkoutActions`
+      } else {
+        toastr.warning('Bàn chưa có hóa đơn, vui lòng giao bàn trước khi thanh toán.')
       }
     }
   })
@@ -238,14 +249,17 @@ function renderTableList(tables = []) {
           data-id="${table._id}" 
         />
 
-        <div class="d-flex justify-content-between">
-          <div><strong>${table.area || 'KV?'} - ${table.name}</strong></div>
-          <div>${new Date(table.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        <div class="d-flex justify-content-between fw-bold">
+          <div>${table.area || 'KV?'} - ${table.name}</div>
+            <div class="table-capacity">
+                <i class="bi bi-people-fill me-1"></i> ${table.capacity || '-'}
+            </div>
         </div>
 
-        <div class="d-flex justify-content-between mt-1">
+        <div class="d-flex justify-content-between fw-bold">
           <div>Khách: ${table.currentOrderId?.customerId?.name || 'Khách lẻ'}</div>
           <div>
+          <i class="bi bi-clock me-1"></i>
             <span class="seated-time" 
               data-checkin="${table.checkInTime}" 
               data-id="${table._id}">
@@ -254,15 +268,16 @@ function renderTableList(tables = []) {
           </div>
         </div>
 
-        <div class="mt-1 fw-bold">
+        <div class="d-flex justify-content-between fw-bold">
           Số tiền: ${formattedTotal}
+          <div><i class="bi bi-clock me-1"></i>${new Date(table.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
         </div>
 
         <div class="d-flex justify-content-between gap-2 mt-4">
           <button class="btnOrderFood btn btn-success btn-sm fw-bold shadow-sm" data-order-id="${table.currentOrderId?._id}">
             <i class="bi bi-clipboard-check me-1"></i> Thêm món
           </button>
-          <button class="btnCheckout btn btn-primary btn-sm fw-bold shadow-sm">
+          <button class="btnCheckout btn btn-primary btn-sm fw-bold shadow-sm" data-order-id="${table.currentOrderId?._id}">
             <i class="bi bi-credit-card me-1"></i> Thanh toán
           </button>
         </div>             
@@ -281,7 +296,7 @@ function renderTableList(tables = []) {
           />
 
           <div>
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between fw-bold">
               <div class="table-name">
                 ${table.area || '-'} - ${table.name}
               </div>
@@ -290,8 +305,10 @@ function renderTableList(tables = []) {
                 <i class="bi bi-people-fill me-1"></i> ${table.capacity || '-'}
               </div>
             </div>
-
-            <div class="table-status mt-4"><strong>Trạng thái:</strong> Trống</div>
+            <div class="d-flex justify-content-between fw-bold">  
+              <div class="table-status">Trạng thái: Trống</div>
+              <div class="time"><i class="bi bi-clock me-1"></i>00:00:00</div>
+            </div>
           </div>
 
           <div class="d-flex justify-content-between gap-2 mt-4">

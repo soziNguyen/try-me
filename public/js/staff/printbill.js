@@ -129,15 +129,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('totalAmount').textContent = formatCurrency(order.totalAmount)
     document.getElementById('discount').textContent = formatCurrencyWithSign(
       order.discount || 0,
-      '-'
+      order.discount > 0 ? '-' : ''
     )
     document.getElementById('pointsDiscount').textContent = formatCurrencyWithSign(
       order.pointsDiscount || 0,
-      '-'
+      order.pointsDiscount > 0 ? '-' : ''
     )
     document.getElementById('serviceCharge').textContent = formatCurrencyWithSign(
       order.serviceCharge || 0,
-      '+'
+      order.serviceCharge > 0 ? '+' : ''
     )
 
     const vatAmount = Math.round(
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     )
     const vatRateText = order.vatRate ? `${order.vatRate}%` : '0%'
     document.getElementById('vatAmount').textContent =
-      `${vatRateText} (${formatCurrencyWithSign(vatAmount, '+')})`
+      `${vatRateText} (${formatCurrencyWithSign(vatAmount, order.serviceCharge > 0 ? '+' : '')})`
 
     document.getElementById('total').textContent = formatCurrency(order.total)
     document.getElementById('customerPaid').textContent = formatCurrency(order.customerPaid)
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.location.href.includes('receipt')) {
           window.location.href = '/receipts'
         } else {
-          window.location.href = '/tables'
+          window.location.href = '/orders'
         }
       })
     }
