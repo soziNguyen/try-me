@@ -12,9 +12,7 @@ if (logInForm) {
 
     const savedLogin = localStorage.getItem('savedLogin') || ''
     const savedRemember = localStorage.getItem('savedRemember') === 'true'
-    const savedPassword = savedRemember
-      ? localStorage.getItem('savedPassword') || ''
-      : ''
+    const savedPassword = savedRemember ? localStorage.getItem('savedPassword') || '' : ''
 
     loginField.value = savedLogin
     rememberCheckbox.checked = savedRemember
@@ -116,7 +114,7 @@ if (logInForm) {
 
     try {
       const result = await ajax('/api/organization/create', data)
-      console.log(result);
+      console.log(result)
 
       if (result) {
         toastr.success(
@@ -215,23 +213,18 @@ if (logInForm) {
     await addUser()
   })
 
-  document
-    .getElementById('userTableBody')
-    .addEventListener('click', async (event) => {
-      const btn = event.target.closest('.updateUserBtn')
-      if (btn) {
-        const userId = btn.getAttribute('data-id')
-        if (userId) {
-          await updateUser(userId)
-        }
+  document.getElementById('userTableBody').addEventListener('click', async (event) => {
+    const btn = event.target.closest('.updateUserBtn')
+    if (btn) {
+      const userId = btn.getAttribute('data-id')
+      if (userId) {
+        await updateUser(userId)
       }
-    })
+    }
+  })
 
   async function addUser() {
-    const newUserModalElement = document.getElementById('newUserModal')
-    const newUserModal = newUserModalElement
-      ? new bootstrap.Modal(newUserModalElement)
-      : null
+    const newUserModal = showModal('newUserModal') || null
     const newUser = document.querySelector('#newUser')
     const form = document.getElementById('newUserForm')
 
@@ -246,12 +239,7 @@ if (logInForm) {
         event.preventDefault()
 
         const { username, email, password, confirmPassword } = getFormData()
-        const checkInPut = validateUserInput(
-          username,
-          email,
-          password,
-          confirmPassword
-        )
+        const checkInPut = validateUserInput(username, email, password, confirmPassword)
 
         if (checkInPut) {
           toastr.warning(checkInPut)
@@ -292,42 +280,34 @@ if (logInForm) {
   }
   window.getUsers = getUsers
 
-  document
-    .getElementById('searchUserInput')
-    .addEventListener('input', function () {
-      const query = this.value.trim().toLowerCase()
-      const filtered = userData.filter((u) => {
-        const username = removeAccents(u.username).toLowerCase()
-        const email = removeAccents(u.email).toLowerCase()
-        const createdAt = formatDate(u.createdAt)
-        const updatedAt = formatDate(u.updatedAt)
-        return (
-          username.includes(query) ||
-          email.includes(query) ||
-          createdAt.includes(query) ||
-          updatedAt.includes(query)
-        )
-      })
-      if (filtered.length === 0) {
-        userTableBody.innerHTML = `
+  document.getElementById('searchUserInput').addEventListener('input', function () {
+    const query = this.value.trim().toLowerCase()
+    const filtered = userData.filter((u) => {
+      const username = removeAccents(u.username).toLowerCase()
+      const email = removeAccents(u.email).toLowerCase()
+      const createdAt = formatDate(u.createdAt)
+      const updatedAt = formatDate(u.updatedAt)
+      return (
+        username.includes(query) ||
+        email.includes(query) ||
+        createdAt.includes(query) ||
+        updatedAt.includes(query)
+      )
+    })
+    if (filtered.length === 0) {
+      userTableBody.innerHTML = `
         <tr>
           <td colspan="7" class="text-center">Không có bản ghi nào</td>
         </tr>
       `
-      } else {
-        renderTable(filtered)
-      }
-    })
+    } else {
+      renderTable(filtered)
+    }
+  })
 
   // update event handler
   async function updateUser(userId) {
     try {
-      const modalEl = document.getElementById('updateUserModal')
-      if (!modalEl) {
-        toastr.error('Không tìm thấy modal.')
-        return
-      }
-
       // Lấy thông tin user
       const user = await ajax(`/api/users/${userId}`, {}, 'GET')
 
@@ -350,7 +330,7 @@ if (logInForm) {
       document.getElementById('new-confirm-password').value = ''
 
       // Hiển thị modal
-      const modal = new bootstrap.Modal(modalEl)
+      const modal = showModal('updateUserModal')
       modal.show()
 
       // Xử lý submit chỉ một lần
@@ -362,9 +342,7 @@ if (logInForm) {
         const username = document.getElementById('new-username').value.trim()
         const email = document.getElementById('new-email').value.trim()
         const password = document.getElementById('new-password').value.trim()
-        const confirmPassword = document
-          .getElementById('new-confirm-password')
-          .value.trim()
+        const confirmPassword = document.getElementById('new-confirm-password').value.trim()
         const role = document.getElementById('new-role').value
         const dataUpdate = { username, email, role }
 
@@ -397,11 +375,7 @@ if (logInForm) {
         }
 
         try {
-          const result = await ajax(
-            `/api/users/update/${userId}`,
-            dataUpdate,
-            'PUT'
-          )
+          const result = await ajax(`/api/users/update/${userId}`, dataUpdate, 'PUT')
           if (result) {
             toastr.success('Cập nhật thành công')
             modal.hide()
@@ -425,15 +399,13 @@ if (logInForm) {
   setCheckbox('#userTable', 'userCheckbox')
 
   // delete users handling
-  document
-    .getElementById('deleteManyBtn')
-    ?.addEventListener('click', deleteUsers)
+  document.getElementById('deleteManyBtn')?.addEventListener('click', deleteUsers)
   const currentUserId = document.getElementById('currentUserId')?.value
 
   async function deleteUsers() {
-    const selectedUsers = [
-      ...document.querySelectorAll('.userCheckbox:checked')
-    ].map((cb) => cb.dataset.id)
+    const selectedUsers = [...document.querySelectorAll('.userCheckbox:checked')].map(
+      (cb) => cb.dataset.id
+    )
 
     if (selectedUsers.length === 0) {
       toastr.warning('Vui lòng chọn ít nhất một người dùng để xóa')
@@ -482,16 +454,16 @@ function renderTable(users = []) {
     .map(
       (user) =>
         `<tr>
-            <td class="text-center"><input type="checkbox" class="userCheckbox" data-id="${user._id
-        }"></td>
+            <td class="text-center"><input type="checkbox" class="userCheckbox" data-id="${
+              user._id
+            }"></td>
             <td><span class="form-control border-0 w-100">${user.username}</span></td>
             <td><span class="form-control border-0 w-100">${user.email}</span></td>
             <td><span class="form-control border-0 w-100">${user.role}</span></td>
             <td><span class="form-control border-0 w-100">${formatDate(user.createdAt)}</span></td>
             <td><span class="form-control border-0 w-100">${formatDate(user.updatedAt)}</span></td>
             <td>
-                <button class="updateUserBtn btn btn-outline-info" data-id="${user._id
-        }">
+                <button class="updateUserBtn btn btn-outline-info" data-id="${user._id}">
                     <i class="bi bi-pencil-square"></i>
                 </button>
             </td>

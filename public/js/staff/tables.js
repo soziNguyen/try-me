@@ -22,15 +22,6 @@ function getBgClassByStatus(status) {
   }
 }
 
-function showModal(modalId) {
-  return new bootstrap.Modal(document.getElementById(modalId))
-}
-
-function hideModal(modalId) {
-  const modal = bootstrap.Modal.getInstance(document.getElementById(modalId))
-  modal?.hide()
-}
-
 // ========== API FUNCTIONS ==========
 async function getTables(area = '') {
   try {
@@ -278,6 +269,7 @@ async function handleOrderButton(btnOrder) {
   showConfirmModal({
     title: 'Tạo order mới',
     message: 'Bạn có muốn tạo order cho bàn này không?',
+    okBtnColor: 'success',
     confirmed: 'Tạo',
     onConfirm: async () => {
       try {

@@ -410,6 +410,12 @@ function getBestFormat(hasTransparency = false) {
   return hasTransparency ? { mime: 'image/png', ext: 'png' } : { mime: 'image/jpeg', ext: 'jpg' }
 }
 
+/**
+ * Load danh sách Tỉnh/Thành phố từ file JSON và gắn vào select #orgProvince.
+ * Nếu dữ liệu hợp lệ (res.error == 0), danh sách sẽ được render và initSelect2 được gọi để làm đẹp dropdown.
+ * @returns {Promise} Promise trả về khi load xong dữ liệu.
+ */
+
 function listProvinces() {
   return $.getJSON('/data/full_address.json').then((res) => {
     const $provinceSelect = $('#orgProvince')
@@ -423,6 +429,13 @@ function listProvinces() {
     }
   })
 }
+
+/**
+ * Load danh sách Xã/Phường dựa trên provinceId từ file JSON và gắn vào select #orgCommune.
+ * Nếu tỉnh tồn tại và có data2 (danh sách xã/phường), dữ liệu sẽ được render và initSelect2 được gọi.
+ * @param {string|number} provinceId - ID của tỉnh đã chọn.
+ * @returns {Promise} Promise trả về khi load xong dữ liệu.
+ */
 
 function listCommunes(provinceId) {
   return $.getJSON('/data/full_address.json').then((res) => {
@@ -537,16 +550,22 @@ function showConfirmModal(options) {
       title: 'Xác nhận',
       message: '',
       confirmed: '',
-      onConfirm: null
+      onConfirm: null,
+      okBtnColor: 'primary' // Mặc định là primary
     },
     options
   )
 
   $('#confirmModalTitle').text(settings.title)
-  $('#confirmModalOk').text(settings.confirmed || 'Xóa')
   $('#confirmModalBody').html(settings.message)
 
   const $okBtn = $('#confirmModalOk')
+  // Reset class và thêm màu mới
+  $okBtn
+    .removeClass()
+    .addClass(`btn btn-${settings.okBtnColor} rounded-pill px-4`)
+    .text(settings.confirmed || 'Xóa')
+
   $okBtn.off('click').on('click', function () {
     if (typeof settings.onConfirm === 'function') settings.onConfirm()
     const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'))
@@ -555,4 +574,23 @@ function showConfirmModal(options) {
 
   const modal = new bootstrap.Modal(document.getElementById('confirmModal'))
   modal.show()
+}
+
+/**
+ * Tạo và trả về instance của Bootstrap Modal.
+ * Không tự động hiển thị modal, cho phép linh hoạt gọi .show() khi cần.
+ * @param {string} modalId - ID của modal trong DOM.
+ * @returns {bootstrap.Modal} Instance của modal.
+ */
+function showModal(modalId) {
+  return new bootstrap.Modal(document.getElementById(modalId))
+}
+
+/**
+ * Ẩn modal nếu đang hiển thị.
+ * @param {string} modalId - ID của modal trong DOM.
+ */
+function hideModal(modalId) {
+  const modal = bootstrap.Modal.getInstance(document.getElementById(modalId))
+  modal?.hide()
 }
