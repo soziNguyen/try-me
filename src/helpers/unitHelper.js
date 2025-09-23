@@ -16,8 +16,5 @@ export const units = [
   'mm',
   'm²',
   'bao',
-  'két',
-  'tấm',
-  'cuộn',
-  'vỉ'
+  'két'
 ]
