@@ -21,9 +21,7 @@ $(function () {
       const menuOptions = menuItems
         .map((m) => `<option value="${m._id}">${m.name}</option>`)
         .join('')
-      $('#menuItem').html(
-        '<option value="">— Chọn món —</option>' + menuOptions
-      )
+      $('#menuItem').html('<option value="">— Chọn món —</option>' + menuOptions)
       initSelect2($('#menuItem'), '— Chọn món —')
       if (recipeRes) {
         recipe = recipeRes.recipe
@@ -50,10 +48,7 @@ $(function () {
       .join('')
 
     const unitOptions = units
-      .map(
-        (u) =>
-          `<option value="${u}" ${item.unit === u ? 'selected' : ''}>${u}</option>`
-      )
+      .map((u) => `<option value="${u}" ${item.unit === u ? 'selected' : ''}>${u}</option>`)
       .join('')
 
     const row = $(`
@@ -84,6 +79,7 @@ $(function () {
     $('#itemsTableBody').append(row)
     initSelect2(row.find('.select2-ingredient'), '— Chọn nguyên liệu —')
     initSelect2(row.find('.select2-unit'), '— Chọn đơn vị —')
+    $('#recipe-form button[type="submit"]').prop('disabled', false)
   }
 
   function populateForm(recipe) {
@@ -106,37 +102,61 @@ $(function () {
   function saveRecipe(e) {
     e.preventDefault()
     const csrfToken = $('#_csrf').val()
+    const submitBtn = $('#recipe-form button[type="submit"]')
+    submitBtn.prop('disabled', true)
+
     const recipeData = {
       menuItem: $('#menuItem').val(),
       note: $('#note').val(),
       items: []
     }
 
+    let hasError = false
+
     $('#itemsTableBody tr').each(function () {
       const ingredient = $(this).find('select[name*="[ingredient]"]').val()
-      const quantity = parseFloat(
-        $(this).find('input[name*="[quantity]"]').val()
-      )
+      const quantityVal = $(this).find('input[name*="[quantity]"]').val()
       const unit = $(this).find('select[name*="[unit]"]').val()
 
-      if (ingredient && quantity && unit) {
-        recipeData.items.push({ ingredient, quantity, unit })
+      // Kiểm tra trạng thái row
+      const allEmpty = !ingredient && !quantityVal && !unit
+      const anyFilled = ingredient || quantityVal || unit
+
+      // Nếu có data nhưng thiếu bất kỳ ô nào -> báo lỗi
+      if (anyFilled && (!ingredient || !quantityVal || !unit)) {
+        toastr.error('Mỗi dòng có dữ liệu phải nhập đủ nguyên liệu, số lượng và đơn vị')
+        hasError = true
+        return false // thoát each
+      }
+
+      // Nếu có đầy đủ dữ liệu -> push vào items
+      if (!allEmpty) {
+        recipeData.items.push({
+          ingredient,
+          quantity: parseFloat(quantityVal),
+          unit
+        })
       }
     })
 
+    if (hasError) {
+      submitBtn.prop('disabled', false)
+      return
+    }
+
     if (!recipeData.menuItem) {
       toastr.error('Vui lòng chọn món ăn')
+      submitBtn.prop('disabled', false)
       return
     }
 
     if (recipeData.items.length === 0) {
       toastr.error('Công thức phải có ít nhất 1 nguyên liệu')
+      submitBtn.prop('disabled', false)
       return
     }
 
-    const url = recipeId
-      ? `/api/menu/recipe/update/${recipeId}`
-      : '/api/menu/recipe/create'
+    const url = recipeId ? `/api/menu/recipe/update/${recipeId}` : '/api/menu/recipe/create'
 
     $.ajax({
       url,
@@ -146,16 +166,20 @@ $(function () {
       headers: { 'x-csrf-token': csrfToken },
       success(res) {
         if (res.success) {
+          toastr.remove()
           toastr.success(res.message || 'Lưu công thức thành công')
+          submitBtn.prop('disabled', true)
           if (!recipeId && res.data?._id) {
             recipeId = res.data._id
           }
         } else {
           toastr.error(res.message || 'Có lỗi xảy ra')
+          submitBtn.prop('disabled', false)
         }
       },
       error(xhr) {
         toastr.error(xhr.responseJSON?.message || 'Lỗi hệ thống')
+        submitBtn.prop('disabled', false)
       }
     })
   }
@@ -165,4 +189,11 @@ $(function () {
   $(document).on('click', '.remove-item-btn', function () {
     $(this).closest('tr').remove()
   })
+  $(document).on(
+    'input change',
+    '#recipe-form input, #recipe-form select, #recipe-form textarea',
+    function () {
+      $('#recipe-form button[type="submit"]').prop('disabled', false)
+    }
+  )
 })

@@ -70,12 +70,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('orderDate').textContent = formatDateTime(order.createdAt)
 
     // === Lấy địa chỉ ưu tiên invoiceOptions trước ===
-    const street = invoiceOptions.street || order.organization?.street
-    const commune = invoiceOptions.commune || order.organization?.commune
-    const province = invoiceOptions.province || order.organization?.province
+    if (!invoiceOptions.header) {
+      const headerFallbackEl = document.getElementById('headerFallback')
+      const street = order.organization?.street
+      const commune = order.organization?.commune
+      const province = order.organization?.province
+      const storeAddress = getAddressName(street, commune, province)
 
-    const storeAddress = getAddressName(street, commune, province)
-    document.querySelector('.org-address').textContent = storeAddress
+      if (headerFallbackEl) {
+        headerFallbackEl.innerHTML = `
+          <p class="text-center"><strong>${order.organization?.name || 'RESTAURANT'}</strong></p>
+          <p class="text-center"><strong>${storeAddress}</strong></p>
+          <p class="text-center">${formatPhone(order.organization?.phone) || ''}</p>
+        `
+      }
+    }
 
     // 4. Khách hàng
     const customerInfo = order.customerId

@@ -42,6 +42,7 @@ app.use(compression()) // Compress responses
 app.use(helmet()) // Security middleware
 app.use(cors()) // Allow API requests from different origins (CORS)
 app.use(express.json()) // Parse incoming JSON requests (req.body)
+app.use(express.urlencoded({ extended: true })) // Parse URL-encoded form data, supports nested objects
 app.use(cookieParser()) // Read & parse cookie from req.cookies
 
 // ==== Middleware chống XSS ====
@@ -53,7 +54,10 @@ app.use((req, res, next) => {
       else if (typeof obj[key] === 'object') sanitize(obj[key])
     }
   }
-  sanitize(req.body)
+  if (!req.path.startsWith('/api/invoice/options')) {
+    // bỏ qua route cập nhật invoice options
+    sanitize(req.body)
+  }
   sanitize(req.query)
   sanitize(req.params)
   next()
@@ -93,9 +97,9 @@ app.use(
     xssProtection: true,
     csp: {
       policy: {
-        "default-src": "'self'",
-        "img-src": "'self' data: https://vietqr.co",
-        "style-src": "'self' 'unsafe-inline'"
+        'default-src': "'self'",
+        'img-src': "'self' data: https://vietqr.co",
+        'style-src': "'self' 'unsafe-inline'"
       }
     }
   })

@@ -107,6 +107,10 @@ function formatToInternational(phone) {
   return '+84' + phone
 }
 
+const formatPhone = (phone) => {
+  if (!phone) return ''
+  return phone.startsWith('84') ? `+${phone}` : phone
+}
 // remove accents
 function removeAccents(str) {
   return str
@@ -505,4 +509,50 @@ function numberToVietnameseWords(num) {
 
   result = result.toLowerCase()
   return result.charAt(0).toUpperCase() + result.slice(1) + ' đồng'
+}
+
+/**
+ * Hiển thị modal xác nhận (Confirm Modal).
+ *
+ * @param {Object} options - Các tùy chọn cấu hình cho modal.
+ * @param {string} [options.title='Xác nhận'] - Tiêu đề của modal.
+ * @param {string} [options.message=''] - Nội dung hiển thị trong modal.
+ * @param {string} [options.confirmed='Xóa'] - Nội dung nút xác nhận (OK button).
+ * @param {Function|null} [options.onConfirm=null] - Callback sẽ được gọi khi người dùng bấm nút xác nhận.
+ *
+ * @example
+ * showConfirmModal({
+ *   title: 'Xóa bản ghi',
+ *   message: 'Bạn có chắc chắn muốn xóa bản ghi này?',
+ *   confirmed: 'Đồng ý',
+ *   onConfirm: function () {
+ *     // Logic xóa ở đây
+ *   }
+ * })
+ */
+
+function showConfirmModal(options) {
+  const settings = $.extend(
+    {
+      title: 'Xác nhận',
+      message: '',
+      confirmed: '',
+      onConfirm: null
+    },
+    options
+  )
+
+  $('#confirmModalTitle').text(settings.title)
+  $('#confirmModalOk').text(settings.confirmed || 'Xóa')
+  $('#confirmModalBody').html(settings.message)
+
+  const $okBtn = $('#confirmModalOk')
+  $okBtn.off('click').on('click', function () {
+    if (typeof settings.onConfirm === 'function') settings.onConfirm()
+    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'))
+    modal.hide()
+  })
+
+  const modal = new bootstrap.Modal(document.getElementById('confirmModal'))
+  modal.show()
 }

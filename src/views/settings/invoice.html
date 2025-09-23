@@ -6,62 +6,65 @@
       </h2>
       <div class="invoiceOptions">
         <form id="invoiceOptionsForm">
-          <h5>Header</h5>
+          <h5>Logo</h5>
+          <div class="mb-3 col-md-6">
+            <label>Logo</label>
+            <div class="input-group">
+              <input type="file" class="invoice-field form-control" name="logo" id="logoInput">
+              <button class="btn btn-outline-secondary" type="button" id="previewLogoBtn" disabled>
+                <i class="bi bi-eye"></i>
+              </button>
+              <button class="btn btn-outline-danger" type="button" id="removeLogoBtn" disabled>
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+            <img id="logoPreview" src="" class="mt-2 img-fluid d-none border rounded mh-400" alt="Preview Logo">
+          </div>
+
+          <h5>Tiêu đề & Tiền tố</h5>
           <div class="row">
             <div class="mb-3 col-md-6">
-              <label>Logo</label>
-              <input type="file" class="invoice-field form-control" name="logo">
-            </div>
-            <div class="mb-3 col-md-6">
-              <label>Tên cửa hàng</label>
-              <input type="text" class="invoice-field form-control" name="storeName">
-            </div>
-            <div class="mb-3 col-md-6">
-              <label>Tiêu đề</label>
+              <label>Tiêu đề hóa đơn</label>
               <input type="text" class="invoice-field form-control" name="invoiceTitle">
             </div>
             <div class="mb-3 col-md-6">
               <label>Tiền tố hóa đơn</label>
-              <input type="text" class="invoice-field form-control" name="prefixInvoice">
-            </div>
-            <div class="mb-3 col-md-6 position-relative">
-              <label>Tỉnh/ Thành</label>
-              <select class="invoice-field" name="orgProvince" id="orgProvince"></select>
-              <button type="button" class="btn btn-sm btn-outline-secondary position-absolute " id="resetProvince">
-                <i class="bi bi-arrow-counterclockwise"></i>
-              </button>
-            </div>
-            <div class="mb-3 col-md-6">
-              <label>Xã/ Phường</label>
-              <select class="invoice-field form-control" name="orgCommune" id="orgCommune"></select>
-            </div>
-            <div class="mb-3 col-md-6">
-              <label>Số nhà/ Đường</label>
-              <input type="text" class="invoice-field form-control" id="orgStreet" name="orgStreet">
+              <input type="text" class="invoice-field form-control" name="prefix">
             </div>
           </div>
-          <!-- Header -->
-          <hr>
-          <!-- Footer -->
+
+          <h5>Header</h5>
+          <div class="mb-3">
+            <textarea id="headerEditor" name="header" class="invoice-field"></textarea>
+          </div>
+
           <h5>Footer</h5>
           <div class="mb-3">
-            <label>Dòng 1</label>
-            <input type="text" class="invoice-field form-control" name="footerLine1">
-          </div>
-          <div class="mb-3">
-            <label>Dòng 2</label>
-            <textarea class="invoice-field form-control" name="footerLine2"></textarea>
-          </div>
-          <div class="mb-3">
-            <label>Hotline</label>
-            <input type="text" class="invoice-field form-control" name="hotline">
+            <textarea id="footerEditor" name="footer" class="invoice-field"></textarea>
           </div>
         </form>
+
       </div>
 
     </div>
     </div>
-    <input type="hidden" id="currentOrgId" value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
+
+    <div class="modal fade" id="logoPreviewModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Xem logo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center">
+            <img id="logoPreviewImg" src="" class="img-fluid">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <input type="hidden" id="currentOrgId"
+      value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
 
     <%- include('../partials/commonjs.html') %>
