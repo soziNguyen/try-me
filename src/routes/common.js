@@ -16,10 +16,7 @@ import orderRoutes from '../modules/order/route.js'
 import menuCategoryRoutes from '../modules/menu/menu-category/route.js'
 import menuItemRoutes from '../modules/menu/menu-item/route.js'
 import recipeRoutes from '../modules/menu/recipe/route.js'
-import inventoryRoutes from './inventory.js'
-import menuRoutes from './menu.js'
 import staffRoutes from './staff.js'
-import reportRoutes from './report.js'
 import comboRoutes from '../modules/menu/combo/route.js'
 import couponRoutes from '../modules/coupon/route.js'
 import scheduleRoutes from '../modules/schedule/route.js'
@@ -50,7 +47,6 @@ const routes = [
   ingredientStockRoute,
   supplierRoutes,
   warehouseRoutes,
-  inventoryRoutes,
 
   // Stock transactions
   stockEntryRoutes,
@@ -58,8 +54,6 @@ const routes = [
   stockTransferRoutes,
   stockHistoryRoutes,
 
-  // Menu
-  menuRoutes,
   menuCategoryRoutes,
   menuItemRoutes,
   recipeRoutes,
@@ -75,9 +69,6 @@ const routes = [
   scheduleRoutes,
   attendanceRoute,
   payrollRoutes,
-
-  // Report
-  reportRoutes,
 
   // Coupon
   couponRoutes,
