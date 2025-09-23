@@ -21,7 +21,7 @@
             <div class="d-flex justify-content-between">
               <div id="categoryList" class="mb-4 d-flex gap-2 flex-wrap"></div>
               <div class="search-form d-flex align-items-center mb-4" id="search-menu">
-                <input type="text" id="searchMenuInput" class="form-control me-2" placeholder="Search Menu" />
+                <input type="text" id="searchMenuInput" class="form-control me-2" placeholder="Tìm kiếm" />
               </div>
             </div>
             <div id="foodMenu" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xxl-4 g-3">
@@ -41,18 +41,21 @@
                 </h2>
                 <div id="collapseClent" class="accordion-collapse collapse" aria-labelledby="headingClent"
                   data-bs-parent="#accordionClent">
-                  <div class="accordion-body">
+                  <div class="accordion-body ">
                     <form id="customerForm">
-                      <div class="mb-3 position-relative">
-                        <label for="customerName" class="form-label">Nhập thông tin</label>
-                        <input type="text" class="form-control" id="customerName" placeholder="Nhập tên hoặc SDT"
-                          autocomplete="off">
-                        <ul id="customerSuggestions" class="list-group position-absolute w-100 shadow"
-                          style="display:none; max-height:150px; overflow-y:auto; z-index:1000;"></ul>
+                      <div class="mb-3 form-control">
+                        <select id="customerSelect" class=" w-100"></select>
                       </div>
-                      <div class="mb-3">
-                        <label class="form-label">Điểm tích lũy (hiện có)</label>
-                        <div id="loyaltyPoints" class="fw-bold text-primary">0 điểm</div>
+                      <div class="mb-3 ms-2">
+                        <div class="fw-normal">
+                          Điểm tích lũy:
+                          <span id="loyaltyPoints" class="fw-bold text-primary">0 điểm</span>
+                        </div>
+                      </div>
+                      <div>
+                        <button type="button" id="addCustomerBtn" class="btn btn-success mt-2 d-none">
+                          Thêm khách hàng
+                        </button>
                       </div>
                     </form>
                   </div>
@@ -122,17 +125,23 @@
                         </div>
                       </form>
 
-                      <div class="mb-2">
+                      <div class="mb-2 d-none" id="discountInputWrapper">
                         <label>Giảm theo mã (đ):</label>
                         <input type="number" id="discountInput" class="form-control" placeholder="0" min="0" readonly />
                       </div>
 
-                      <div>
-                        <label>Điểm tích lũy:</label>
-                        <input type="number" id="pointsInput" class="form-control" placeholder="0" min="0" />
-                      </div>
+                      <form id="applyPointsForm">
+                        <div class="my-2">
+                          <label for="pointsInput">Sử dụng điểm:</label>
+                          <div class="input-group">
+                            <input type="number" id="pointsInput" class="form-control" placeholder="0" min="0" />
+                            <button type="submit" id="applyPointsBtn" class="btn btn-primary">Áp dụng</button>
+                          </div>
+                          <small id="pointsMessage" class="text-success d-block mt-1"></small>
+                        </div>
+                      </form>
 
-                      <div>
+                      <div class="mb-2 d-none" id="pointsDiscountWrapper">
                         <label>Giảm theo điểm (1 điểm = 500đ):</label>
                         <input type="number" id="pointsDiscountInput" class="form-control" placeholder="0" min="0"
                           readonly />

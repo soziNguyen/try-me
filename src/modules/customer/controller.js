@@ -112,11 +112,11 @@ export const getCustomers = async (req, res) => {
 
 export const searchCustomers = async (req, res) => {
   try {
-    const { query = '' } = req.query
+    const { search = '' } = req.query
     const organizationId = getCurrentOrg(req)
 
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-    const regex = new RegExp(query.trim(), 'i')
+    const regex = new RegExp(search.trim(), 'i')
 
     const customers = await Customer.find({
       organization: organizationId,

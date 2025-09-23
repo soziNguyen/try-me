@@ -343,7 +343,7 @@ if (searchInput) {
         }
 
         renderMenu(combinedData)
-        searchInput.value = ''
+        // searchInput.value = ''
       } catch (err) {
         console.error('Lỗi tìm kiếm:', err)
         renderMenu([])
@@ -576,68 +576,59 @@ async function removeItemFromOrder(itemId, type) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('customerName')
-  const suggestions = document.getElementById('customerSuggestions')
-  const loyaltyPoints = document.getElementById('loyaltyPoints')
+$(document).ready(function () {
+  const $select = $('#customerSelect')
+  const $loyaltyPoints = $('#loyaltyPoints')
+  const $addCustomerBtn = $('#addCustomerBtn')
 
-  let timeoutId = null
+  $select.select2({
+    placeholder: 'Tìm kiếm',
+    ajax: {
+      url: '/api/customers/search',
+      dataType: 'json',
+      delay: 300,
+      data: function (params) {
+        return {
+          search: params.term
+        }
+      },
+      processResults: function (response) {
+        const data = response.data || []
 
-  function renderSuggestions(customers, query) {
-    if (customers.length === 0) {
-      suggestions.innerHTML = `
-      <li class="list-group-item list-group-item-action text-primary add-new-customer">
-        + Thêm khách hàng mới: <strong>${query}</strong>
-      </li>
-    `
-    } else {
-      suggestions.innerHTML = customers
-        .map(
-          (c) => `
-        <li class="list-group-item list-group-item-action" data-id="${c._id}" data-points="${c.totalPoints}">
-          ${c.name} - ${c.phone}
-        </li>
+        if (data.length === 0) {
+          $addCustomerBtn.removeClass('d-none')
+        } else {
+          $addCustomerBtn.addClass('d-none')
+        }
+
+        return {
+          results: data.map((customer) => ({
+            id: customer._id,
+            text: `${customer.name} - ${customer.phone}`,
+            points: customer.totalPoints
+          }))
+        }
+      },
+      cache: true
+    },
+    templateResult: function (customer) {
+      if (customer.loading) return customer.text
+      return `
+        <div>
+          <strong>${customer.text}</strong><br>
+        </div>
       `
-        )
-        .join('')
-    }
-    suggestions.style.display = 'block'
-  }
+    },
+    templateSelection: function (customer) {
+      $loyaltyPoints.text(`${customer.points || 0} điểm`)
 
-  // Xử lý khi chọn 1 item trong gợi ý
-  suggestions.addEventListener('click', (e) => {
-    const li = e.target.closest('li')
-    if (!li) return
-    input.value = li.textContent
-    loyaltyPoints.textContent = li.dataset.points + ' điểm'
-    suggestions.style.display = 'none'
-  })
+      $addCustomerBtn.addClass('d-none')
 
-  // Ẩn danh sách gợi ý khi click ra ngoài
-  document.addEventListener('click', (e) => {
-    if (!suggestions.contains(e.target) && e.target !== input) {
-      suggestions.style.display = 'none'
-    }
-  })
-
-  // Hàm gọi API search
-  async function search(query) {
-    if (!query.trim()) {
-      suggestions.style.display = 'none'
-      loyaltyPoints.textContent = '0 điểm'
-      return
-    }
-    const data = await ajax('/api/customers/search', { query }, 'GET')
-    if (data) {
-      renderSuggestions(data, query)
-      loyaltyPoints.textContent = '0 điểm'
-    }
-  }
-
-  input.addEventListener('input', () => {
-    clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => {
-      search(input.value)
-    }, 300)
+      return customer.text
+    },
+    escapeMarkup: function (markup) {
+      return markup
+    },
+    minimumInputLength: 1
   })
 })
