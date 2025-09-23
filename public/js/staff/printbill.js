@@ -45,9 +45,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1)
       .toString()
       .padStart(2, '0')}/${d.getFullYear()} ${d.getHours().toString().padStart(2, '0')}:${d
-        .getMinutes()
-        .toString()
-        .padStart(2, '0')}`
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}`
   }
 
   try {
@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         headerFallbackEl.innerHTML = `
           <p class="text-center"><strong>${order.organization?.name || 'RESTAURANT'}</strong></p>
           <p class="text-center"><strong>${storeAddress}</strong></p>
+          <p class="text-center">${formatPhone(order.organization?.phone) || ''}</p>
         `
       }
     }
@@ -142,7 +143,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const vatAmount = Math.round(
       (order.totalAmount - totalDiscount + (order.serviceCharge || 0)) *
-      ((order.vatRate || 0) / 100)
+        ((order.vatRate || 0) / 100)
     )
     const vatRateText = order.vatRate ? `${order.vatRate}%` : '0%'
     document.getElementById('vatAmount').textContent =

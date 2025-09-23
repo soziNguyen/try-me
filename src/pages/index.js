@@ -2,7 +2,6 @@ import { getPageData } from '../helpers/pageDataHelper.js'
 import { getCurrentOrg } from '../helpers/orgHelper.js'
 import Order from '../modules/order/model.js'
 import InvoiceOption from '../modules/invoice/model.js'
-import { formatPhone } from '../helpers/common.js'
 
 //=============================================
 //================= USER ======================

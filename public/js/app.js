@@ -107,6 +107,10 @@ function formatToInternational(phone) {
   return '+84' + phone
 }
 
+const formatPhone = (phone) => {
+  if (!phone) return ''
+  return phone.startsWith('84') ? `+${phone}` : phone
+}
 // remove accents
 function removeAccents(str) {
   return str
