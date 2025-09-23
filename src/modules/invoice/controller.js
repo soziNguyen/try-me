@@ -8,7 +8,17 @@ export const getInvoiceOptions = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const options = await InvoiceOptions.findOne({ organizationId })
+    let options = await InvoiceOptions.findOne({ organizationId })
+    if (!options) {
+      options = await InvoiceOptions.create({
+        organizationId,
+        logo: '',
+        invoiceTitle: '',
+        prefix: '',
+        header: '',
+        footer: ''
+      })
+    }
     responseHelper.success(res, options)
   } catch (error) {
     responseHelper.error(res, error.message)
