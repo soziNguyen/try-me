@@ -444,9 +444,9 @@ export const updateStockTransferFromForm = async (req, res) => {
       )
 
       await updatedTransfer.populate([
-        { path: 'createdBy', select: 'name username' },
-        { path: 'updatedBy', select: 'name username' },
-        { path: 'lockedBy', select: 'name username' },
+        { path: 'createdBy', select: 'username' },
+        { path: 'updatedBy', select: 'username' },
+        { path: 'lockedBy', select: 'username' },
         { path: 'items.ingredient', select: 'name unit' },
         { path: 'items.fromWarehouse', select: 'name location' },
         { path: 'items.toWarehouse', select: 'name location' }

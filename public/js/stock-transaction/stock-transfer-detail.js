@@ -65,9 +65,7 @@ $(function () {
             method: 'POST',
             headers: { 'x-csrf-token': csrfToken },
             beforeSend: function () {
-              $('#btn-lock-transfer')
-                .prop('disabled', true)
-                .text('Đang khóa...')
+              $('#btn-lock-transfer').prop('disabled', true).text('Đang khóa...')
             },
             success(res) {
               if (res.success && res.data.isLocked) {
@@ -83,9 +81,7 @@ $(function () {
                   .prop('disabled', true)
               } else {
                 toastr.error(res.message || 'Có lỗi xảy ra')
-                $('#btn-lock-transfer')
-                  .prop('disabled', false)
-                  .text('Khóa phiếu')
+                $('#btn-lock-transfer').prop('disabled', false).text('Khóa phiếu')
               }
             },
             error(xhr) {
@@ -112,12 +108,8 @@ $(function () {
 
   function updateRowDropdowns(rowIndex) {
     const $ingredientSelect = $(`select[name="items[${rowIndex}][ingredient]"]`)
-    const $fromWarehouseSelect = $(
-      `select[name="items[${rowIndex}][fromWarehouse]"]`
-    )
-    const $toWarehouseSelect = $(
-      `select[name="items[${rowIndex}][toWarehouse]"]`
-    )
+    const $fromWarehouseSelect = $(`select[name="items[${rowIndex}][fromWarehouse]"]`)
+    const $toWarehouseSelect = $(`select[name="items[${rowIndex}][toWarehouse]"]`)
 
     // Update ingredient options
     const ingredientOptions = ingredients
@@ -126,32 +118,23 @@ $(function () {
     $ingredientSelect
       .empty()
       .html(
-        '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
-        ingredientOptions
+        '<option value="" class="text-center">— Chọn nguyên liệu —</option>' + ingredientOptions
       )
 
     // Update warehouse options
     const warehouseOptions = warehouses
-      .map(
-        (wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`
-      )
+      .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
       .join('')
 
     const $fSelected = $fromWarehouseSelect
       .empty()
-      .html(
-        '<option value="" class="text-center">— Chọn kho nguồn —</option>' +
-        warehouseOptions
-      )
+      .html('<option value="" class="text-center">— Chọn kho nguồn —</option>' + warehouseOptions)
 
     initSelect2($fSelected, '— Chọn kho nguồn —')
 
     const tSelected = $toWarehouseSelect
       .empty()
-      .html(
-        '<option value="" class="text-center">— Chọn kho đích —</option>' +
-        warehouseOptions
-      )
+      .html('<option value="" class="text-center">— Chọn kho đích —</option>' + warehouseOptions)
     initSelect2(tSelected, '— Chọn kho đích —')
   }
 
@@ -199,9 +182,7 @@ $(function () {
     $('#code').val(stockTransfer.code || '')
     $('#date').val(formatDate(stockTransfer.date) || '')
     $('#createdBy')
-      .val(
-        stockTransfer.createdBy?.name || stockTransfer.createdBy?.username || ''
-      )
+      .val(stockTransfer.createdBy?.username || '')
       .data('id', stockTransfer.createdBy?._id)
     $('#note').val(stockTransfer.note || '')
 
@@ -281,16 +262,12 @@ $(function () {
       const rowIndex = index + 1
 
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
-      const fromWarehouseId = $(this)
-        .find('select[name*="[fromWarehouse]"]')
-        .val()
+      const fromWarehouseId = $(this).find('select[name*="[fromWarehouse]"]').val()
       const toWarehouseId = $(this).find('select[name*="[toWarehouse]"]').val()
       const quantity = $(this).find('input[name*="[quantity]"]').val()
 
-      const hasAnyValue =
-        ingredientId || fromWarehouseId || toWarehouseId || quantity
-      const isComplete =
-        ingredientId && fromWarehouseId && toWarehouseId && quantity
+      const hasAnyValue = ingredientId || fromWarehouseId || toWarehouseId || quantity
+      const isComplete = ingredientId && fromWarehouseId && toWarehouseId && quantity
 
       if (hasAnyValue && !isComplete) {
         const missingFields = []
@@ -303,14 +280,8 @@ $(function () {
       }
 
       // Kiểm tra kho nguồn và kho đích không được giống nhau
-      if (
-        fromWarehouseId &&
-        toWarehouseId &&
-        fromWarehouseId === toWarehouseId
-      ) {
-        partialErrors.push(
-          `Dòng ${rowIndex}: Kho nguồn và kho đích không được giống nhau`
-        )
+      if (fromWarehouseId && toWarehouseId && fromWarehouseId === toWarehouseId) {
+        partialErrors.push(`Dòng ${rowIndex}: Kho nguồn và kho đích không được giống nhau`)
       }
     })
 
@@ -324,12 +295,8 @@ $(function () {
     if ($rows.length > 1) {
       $rows.each(function () {
         const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
-        const fromWarehouseId = $(this)
-          .find('select[name*="[fromWarehouse]"]')
-          .val()
-        const toWarehouseId = $(this)
-          .find('select[name*="[toWarehouse]"]')
-          .val()
+        const fromWarehouseId = $(this).find('select[name*="[fromWarehouse]"]').val()
+        const toWarehouseId = $(this).find('select[name*="[toWarehouse]"]').val()
         const quantity = $(this).find('input[name*="[quantity]"]').val()
 
         if (!ingredientId && !fromWarehouseId && !toWarehouseId && !quantity) {
@@ -348,19 +315,14 @@ $(function () {
     }
 
     if (!stockTransferId) {
-      stockTransferData.createdBy =
-        $('#createdBy').data('id') || '<%= currentUserId %>'
+      stockTransferData.createdBy = $('#createdBy').data('id') || '<%= currentUserId %>'
     }
 
     $('#itemsTableBody tr').each(function () {
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
-      const fromWarehouseId = $(this)
-        .find('select[name*="[fromWarehouse]"]')
-        .val()
+      const fromWarehouseId = $(this).find('select[name*="[fromWarehouse]"]').val()
       const toWarehouseId = $(this).find('select[name*="[toWarehouse]"]').val()
-      const quantity = parseFloat(
-        $(this).find('input[name*="[quantity]"]').val()
-      )
+      const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val())
 
       if (ingredientId && fromWarehouseId && toWarehouseId && quantity) {
         stockTransferData.items.push({
