@@ -1,8 +1,8 @@
 export const units = [
   'kg',
-  'ml',
+  'món',
+  'suất',
   'l',
-  'm³',
   'cái',
   'quả',
   'miếng',
@@ -15,6 +15,7 @@ export const units = [
   'cm',
   'mm',
   'm²',
+  'm³',
   'bao',
   'két'
 ]

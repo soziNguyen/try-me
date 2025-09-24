@@ -17,14 +17,15 @@ const productEntrySchema = new mongoose.Schema(
         product: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'MenuItem',
-          required: true
+          default: null
         },
         quantity: { type: Number, default: 0 },
         unit: { type: String, enum: units, default: 'cái' },
         unitPrice: { type: Number, default: 0 },
-        total: { type: Number, default: 0 }
+        total: { type: Number, default: 0 } // Tổng theo items
       }
     ],
+    total: { type: Number, default: 0 }, // Tổng tiền của phiếu
     note: { type: String, default: '' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
@@ -42,4 +43,4 @@ const productEntrySchema = new mongoose.Schema(
 productEntrySchema.index({ organization: 1, code: 1 }, { unique: true })
 
 const ProductEntry = mongoose.model('ProductEntry', productEntrySchema)
-export { ProductEntry }
+export { ProductEntry, units }

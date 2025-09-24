@@ -101,4 +101,14 @@ router.get(
 router.get('/staff/payroll/:id', isAuthenticated, isPermit('Admin', 'Org'), page.payrollDetailPage)
 router.get('/activity-logs', isAuthenticated, isPermit('Admin', 'Org'), page.activityLog)
 
+// Product
+router.get('/product/entries', isAuthenticated, isPermit('Admin', 'Org'), page.productEntryPage)
+router.get(
+  '/product/entry/:id',
+  isAuthenticated,
+  isPermit('Admin', 'Org'),
+  page.newProductEntryPage
+)
+router.get('/product/stocks', isAuthenticated, isPermit('Admin', 'Org'), page.productStockPage)
+
 export default router

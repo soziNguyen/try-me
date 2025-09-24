@@ -29,6 +29,8 @@ import paymentRoutes from '../modules/payment/route.js'
 import receivingAccountRoutes from '../modules/receiving-account/route.js'
 import invoiceRoutes from '../modules/invoice/route.js'
 import customerRoutes from '../modules/customer/route.js'
+import productEntryRoutes from '../modules/product/entry/route.js'
+import productStockRoutes from '../modules/product/stock/route.js'
 import uploadRouter from '../modules/upload/route.js'
 import pageRoute from '../pages/route.js'
 
@@ -54,6 +56,7 @@ const routes = [
   stockTransferRoutes,
   stockHistoryRoutes,
 
+  // Menu
   menuCategoryRoutes,
   menuItemRoutes,
   recipeRoutes,
@@ -79,12 +82,18 @@ const routes = [
   // Activity
   activityRoutes,
 
+  //Page
+  pageRoute,
+
   // Payment Method
   paymentRoutes,
-  pageRoute,
   receivingAccountRoutes,
   customerRoutes,
-  invoiceRoutes
+  invoiceRoutes,
+
+  // Product
+  productEntryRoutes,
+  productStockRoutes
 ]
 
 routes.forEach((route) => router.use('/', route))

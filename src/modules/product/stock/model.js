@@ -29,4 +29,4 @@ const productStockSchema = new mongoose.Schema(
 productStockSchema.index({ organization: 1, product: 1, warehouse: 1 }, { unique: true })
 
 const ProductStock = mongoose.model('ProductStock', productStockSchema)
-export { ProductStock }
+export default ProductStock
