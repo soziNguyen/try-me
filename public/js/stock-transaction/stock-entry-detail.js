@@ -6,10 +6,7 @@ $(function () {
   let stockEntryId = null
   let itemCounter = 0
   let stockEntry = null
-  const disableStockEntrySave = setupSaveButtonWatcher(
-    '#stockEntryForm',
-    '#btn-save-entry'
-  )
+  const disableStockEntrySave = setupSaveButtonWatcher('#stockEntryForm', '#btn-save-entry')
   const csrfToken = $('#_csrf').val()
 
   // Lấy stockEntryId từ URL
@@ -24,9 +21,7 @@ $(function () {
     fetchData('inventory/supplier/all'),
     fetchData('inventory/ingredient/all'),
     fetchData('inventory/warehouse/all'),
-    stockEntryId
-      ? fetchData(`inventory/stock-entry/${stockEntryId}`)
-      : Promise.resolve(null)
+    stockEntryId ? fetchData(`inventory/stock-entry/${stockEntryId}`) : Promise.resolve(null)
   ])
     .then(([sups, ings, whs, stockEntryRes]) => {
       suppliers = sups || []
@@ -67,20 +62,16 @@ $(function () {
       .map((sup) => `<option value="${sup._id}">${sup.name}</option>`)
       .join('')
     const $supplierSelect = $('#supplier').html(
-      '<option value="" class="text-center">— Chọn nhà cung cấp —</option>' +
-      supplierOptions
+      '<option value="" class="text-center">— Chọn nhà cung cấp —</option>' + supplierOptions
     )
     initSelect2($supplierSelect, '— Chọn nhà cung cấp —')
 
     // Populate warehouses dropdown (main warehouse select)
     const warehouseOptions = warehouses
-      .map(
-        (wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`
-      )
+      .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
       .join('')
     const $warehouseSelected = $('#warehouse').html(
-      '<option value="" class="text-center">— Chọn kho —</option>' +
-      warehouseOptions
+      '<option value="" class="text-center">— Chọn kho —</option>' + warehouseOptions
     )
 
     initSelect2($warehouseSelected, '— Chọn kho —')
@@ -157,21 +148,16 @@ $(function () {
     $select
       .empty()
       .html(
-        '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
-        ingredientOptions
+        '<option value="" class="text-center">— Chọn nguyên liệu —</option>' + ingredientOptions
       )
 
     const $unitSelect = $(`select[name="items[${rowIndex}][unit]"]`)
     if ($unitSelect.length) {
-      const unitOptions = units
-        .map((u) => `<option value="${u}">${u}</option>`)
-        .join('')
+      const unitOptions = units.map((u) => `<option value="${u}">${u}</option>`).join('')
 
       $unitSelect
         .empty()
-        .html(
-          '<option value="" class="text-center">— Chọn —</option>' + unitOptions
-        )
+        .html('<option value="" class="text-center">— Chọn —</option>' + unitOptions)
     }
   }
 
@@ -221,25 +207,19 @@ $(function () {
 
   function calculateRowTotal() {
     const row = $(this).closest('tr')
-    const quantity =
-      parseFloat(row.find('input[name*="[quantity]"]').val()) || 0
-    const unitPrice =
-      parseFloat(row.find('input[name*="[unitPrice]"]').val()) || 0
+    const quantity = parseFloat(row.find('input[name*="[quantity]"]').val()) || 0
+    const unitPrice = parseFloat(row.find('input[name*="[unitPrice]"]').val()) || 0
     const total = quantity * unitPrice
 
-    row
-      .find('input[readonly]')
-      .val(total ? total.toLocaleString('vi-VN') + ' ₫' : '0')
+    row.find('input[readonly]').val(total ? total.toLocaleString('vi-VN') + ' ₫' : '0')
     calculateTotals()
   }
 
   function calculateTotals() {
     let subtotal = 0
     $('#itemsTableBody tr').each(function () {
-      const quantity =
-        parseFloat($(this).find('input[name*="[quantity]"]').val()) || 0
-      const unitPrice =
-        parseFloat($(this).find('input[name*="[unitPrice]"]').val()) || 0
+      const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val()) || 0
+      const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val()) || 0
       subtotal += quantity * unitPrice
     })
 
@@ -262,7 +242,7 @@ $(function () {
       .val(stockEntry.warehouse?._id || '')
       .trigger('change')
     $('#createdBy')
-      .val(stockEntry.createdBy?.name || stockEntry.createdBy?.username || '')
+      .val(stockEntry.createdBy?.username || '')
       .data('id', stockEntry.createdBy?._id)
     $('#note').val(stockEntry.note || '')
 
@@ -394,20 +374,15 @@ $(function () {
     }
 
     if (!stockEntryId) {
-      stockEntryData.createdBy =
-        $('#createdBy').data('id') || '<%= currentUserId %>'
+      stockEntryData.createdBy = $('#createdBy').data('id') || '<%= currentUserId %>'
     }
 
     let subTotal = 0
     $('#itemsTableBody tr').each(function () {
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
-      const quantity = parseFloat(
-        $(this).find('input[name*="[quantity]"]').val()
-      )
+      const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val())
       const unit = $(this).find('select[name*="[unit]"]').val()
-      const unitPrice = parseFloat(
-        $(this).find('input[name*="[unitPrice]"]').val()
-      )
+      const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val())
 
       if (ingredientId && quantity && unitPrice) {
         const itemTotal = quantity * unitPrice

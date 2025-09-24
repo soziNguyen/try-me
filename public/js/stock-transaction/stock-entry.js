@@ -1,22 +1,6 @@
-// public/js/stock-entry.js
 $(function () {
-  let ingredients = []
-  let warehouses = []
   let table
-
-  Promise.all([
-    fetchData('inventory/ingredient/all'), // danh sách nguyên liệu
-    fetchData('inventory/warehouse/all') // danh sách kho
-  ])
-    .then(([ings, whs]) => {
-      ingredients = ings
-      warehouses = whs
-      initDataTable()
-    })
-    .catch((err) => {
-      toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
-    })
-
+  initDataTable()
   function initDataTable() {
     let showList = [10, 25, 50, 100]
     const numRows = Math.floor(
@@ -110,10 +94,7 @@ $(function () {
           title: 'Số lượng',
           render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const totalQty = items.reduce(
-              (acc, cur) => acc + (cur.quantity || 0),
-              0
-            )
+            const totalQty = items.reduce((acc, cur) => acc + (cur.quantity || 0), 0)
             return totalQty
           }
         },
@@ -127,9 +108,7 @@ $(function () {
             const sum = prices.reduce((s, p) => s + p, 0)
             const avg = sum / prices.length
             // Format theo vi-VN
-            return (
-              avg.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫'
-            )
+            return avg.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫'
           }
         },
         {
@@ -138,9 +117,7 @@ $(function () {
           title: 'Kho nhập',
           render: (data, type, row) => {
             if (type === 'display') {
-              return data
-                ? `${row.warehouse.name} - ${row.warehouse.location}`
-                : ''
+              return data ? `${row.warehouse.name} - ${row.warehouse.location}` : ''
             }
             return row.warehouse?.name || ''
           }
