@@ -178,8 +178,8 @@ export const getStockIssueById = async (req, res) => {
       organization: organizationId
     }).populate([
       { path: 'warehouse', select: 'name location' },
-      { path: 'createdBy', select: 'name username' },
-      { path: 'updatedBy', select: 'name username' },
+      { path: 'createdBy', select: 'username' },
+      { path: 'updatedBy', select: 'username' },
       { path: 'items.ingredient', select: 'name unit' }
     ])
 
@@ -366,8 +366,8 @@ export const updateStockIssue = async (req, res) => {
       // Populate để trả về client
       await updatedIssue.populate([
         { path: 'warehouse', select: 'name location' },
-        { path: 'createdBy', select: 'name username' },
-        { path: 'updatedBy', select: 'name username' },
+        { path: 'createdBy', select: 'username' },
+        { path: 'updatedBy', select: 'username' },
         { path: 'items.ingredient', select: 'name unit' }
       ])
 

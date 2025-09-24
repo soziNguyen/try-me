@@ -4,12 +4,12 @@ $(function () {
   function initDataTable() {
     let showList = [10, 25, 50, 100]
     const numRows = Math.floor(
-      ($(window).height() - $('#stockEntryTableBody').offset().top - 100) / 45
+      ($(window).height() - $('#productEntryTableBody').offset().top - 100) / 45
     )
     if (!showList.includes(numRows)) showList.push(numRows)
     showList.sort((a, b) => a - b)
 
-    table = $('#stockEntryTable').DataTable({
+    table = $('#productEntryTable').DataTable({
       dom:
         '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
         'l' +
@@ -23,7 +23,7 @@ $(function () {
       autoWidth: false,
       order: [],
       ajax: {
-        url: '/api/inventory/stock-entries',
+        url: '/api/product/entries',
         method: 'GET'
       },
       lengthMenu: [showList, showList],
@@ -45,7 +45,7 @@ $(function () {
           orderable: false,
           className: 'text-center',
           render: (data, type, row) =>
-            `<input type="checkbox" class="stockEntryCheckbox" data-id="${row._id}">`
+            `<input type="checkbox" class="productEntryCheckbox" data-id="${row._id}">`
         },
         {
           data: 'code',
@@ -67,18 +67,12 @@ $(function () {
           }
         },
         {
-          data: 'supplier.name',
-          title: 'Nhà cung cấp',
-          className: 'text-center',
-          render: (data) => data || ''
-        },
-        {
           data: 'items',
           className: 'text-start px-1',
-          title: 'Nguyên liệu',
+          title: 'Sản phẩm',
           render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const names = items.map((it) => it.ingredient?.name).filter(Boolean)
+            const names = items.map((it) => it.product?.name).filter(Boolean)
             const uniqueNames = new Set(names)
 
             if (uniqueNames.size === 0) return ''
@@ -99,16 +93,11 @@ $(function () {
           }
         },
         {
-          data: 'items',
-          title: 'Giá TB (₫)',
+          data: 'total',
+          title: 'Tổng giá trị (đ)',
           className: 'text-center',
-          render: (items) => {
-            if (!Array.isArray(items) || items.length === 0) return ''
-            const prices = items.map((it) => it.unitPrice || 0)
-            const sum = prices.reduce((s, p) => s + p, 0)
-            const avg = sum / prices.length
-            // Format theo vi-VN
-            return avg.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫'
+          render: (data) => {
+            return data.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫'
           }
         },
         {
@@ -158,36 +147,36 @@ $(function () {
       initComplete: function () {
         $('.right-group').html(`
           <div class="btn-group flex-wrap">
-            <button class="btn btn-outline-danger me-2" id="deleteStockEntryBtn">
+            <button class="btn btn-outline-danger me-2" id="deleteProductEntryBtn">
               <i class="bi bi-trash"></i> Xóa
             </button>
-            <button class="btn btn-outline-success" id="addStockEntryBtn">
+            <button class="btn btn-outline-success" id="addProductEntryBtn">
               <i class="bi bi-plus-circle"></i> Thêm
             </button>
           </div>
         `)
 
         // Event handler cho nút "Thêm"
-        $('#addStockEntryBtn').on('click', () => {
-          createNewRecord('inventory/stock-entry', {}, (data) => {
-            window.location.href = `/inventory/stock-entry/${data.id}?mode=new`
+        $('#addProductEntryBtn').on('click', () => {
+          createNewRecord('product/entry', {}, (data) => {
+            window.location.href = `/product/entry/${data.id}?mode=new`
           })
         })
 
         // Event handler cho nút "Chi tiết"
         $(document).on('click', '.detail-btn', function () {
           const id = $(this).data('id')
-          window.location.href = `/inventory/stock-entry/${id}`
+          window.location.href = `/product/entry/${id}`
         })
 
         // CHỈ GIỮ LẠI DELETE VÀ CHECKBOX EVENTS
         handlerDeleteEvent(
-          '#stockEntryTable',
-          '#deleteStockEntryBtn',
-          'stockEntryCheckbox',
-          'inventory/stock-entry'
+          '#productEntryTable',
+          '#deleteProductEntryBtn',
+          'productEntryCheckbox',
+          'product/entry'
         )
-        initTableCheckboxEvents('#stockEntryTable', 'stockEntryCheckbox')
+        initTableCheckboxEvents('#productEntryTable', 'productEntryCheckbox')
       }
     })
   }
