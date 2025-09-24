@@ -21,9 +21,7 @@ $(function () {
 
         // Hiển thị tổng giờ & tổng lương
         $('#totalHours').text((payroll.totalWorkingMinutes / 60).toFixed(1))
-        $('#totalSalary').text(
-          payroll.totalSalary.toLocaleString('vi-VN') + ' đ'
-        )
+        $('#totalSalary').text(payroll.totalSalary.toLocaleString('vi-VN') + ' đ')
 
         initDataTable(details)
       })
@@ -33,7 +31,7 @@ $(function () {
     table = $('#payrollDetailTable').DataTable({
       data: details,
       dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +

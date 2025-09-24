@@ -2,9 +2,7 @@ $(function () {
   let table
 
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(
-    ($(window).height() - $('#payrollTableBody').offset().top - 100) / 45
-  )
+  const numRows = Math.floor(($(window).height() - $('#payrollTableBody').offset().top - 100) / 45)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -14,7 +12,7 @@ $(function () {
   function initDataTable() {
     table = $('#payrollTable').DataTable({
       dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -45,8 +43,7 @@ $(function () {
           data: null,
           className: 'text-center',
           title: 'STT',
-          render: (data, type, row, meta) =>
-            meta.row + 1 + meta.settings._iDisplayStart
+          render: (data, type, row, meta) => meta.row + 1 + meta.settings._iDisplayStart
         },
         {
           data: 'user.username',

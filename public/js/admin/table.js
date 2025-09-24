@@ -8,7 +8,7 @@ $(function () {
 
   const table = $('#tableTable').DataTable({
     dom:
-      '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+      '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
       'l' +
       'f' +
       '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -101,7 +101,7 @@ $(function () {
     },
     initComplete: function () {
       $('.right-group').html(`
-        <div class="btn-group flex-wrap">
+        <div class="btn-group flex-wrap mb-2">
           <button class="btn btn-outline-danger me-2" id="deleteTableBtn">
           <i class="bi bi-trash"></i> Xóa
           </button>

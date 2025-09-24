@@ -12,9 +12,7 @@ $(function () {
 
   const dataFields = ['username', 'email', 'role']
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(
-    ($(window).height() - $('#userTableBody').offset().top - 100) / 45
-  )
+  const numRows = Math.floor(($(window).height() - $('#userTableBody').offset().top - 100) / 45)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -22,7 +20,7 @@ $(function () {
 
   table = $('#userTable').DataTable({
     dom:
-      '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+      '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
       'l' +
       'f' +
       '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -115,7 +113,7 @@ $(function () {
     },
     initComplete: function () {
       $('.right-group').html(`
-        <div class="btn-group flex-wrap">
+        <div class="btn-group flex-wrap mb-2">
           <button class="btn btn-outline-danger me-2" id="deleteUserBtn">
           <i class="bi bi-trash"></i> Xóa
           </button>
@@ -166,12 +164,7 @@ $(function () {
       })
 
       // Handle delete user
-      handlerDeleteEvent(
-        '#userTable',
-        '#deleteUserBtn',
-        'userCheckbox',
-        'admin'
-      )
+      handlerDeleteEvent('#userTable', '#deleteUserBtn', 'userCheckbox', 'admin')
 
       // Handle update user
       $('#userTable_wrapper').on('click', '.updateUserBtn', function () {

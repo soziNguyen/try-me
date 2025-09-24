@@ -269,6 +269,7 @@ table tbody td input.number {
   padding: 0 !important;
 }
 .select2-container--default .select2-results__options {
+  position: relative;
   background-color: var(--white);
   list-style: none;
   padding-left: 0px;
@@ -276,6 +277,7 @@ table tbody td input.number {
   max-height: 200px;
   overflow-y: auto;
   border: 1px solid var(--success);
+  z-index: 10;
 }
 .select2-container--default .select2-results__options .select2-results__option {
   padding-left: 4px;
@@ -433,6 +435,11 @@ table tbody td input.number {
 #resetProvince {
   right: 17px;
   bottom: 5.5px;
+}
+
+.top-bar .dt-search .dt-input {
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
 }
 
 textarea {

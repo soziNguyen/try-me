@@ -9,6 +9,7 @@ import { generateDocumentCode } from '../../../helpers/common.js'
 import { lookupRef } from '../../../helpers/lookupHelper.js'
 import StockHistory from '../stock-history/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import BusinessError from '../../error/BusinessError.js'
 
 // DATATABLE SERVER-SIDE
 export const getStockTransfers = async (req, res) => {
@@ -204,77 +205,95 @@ export const createStockTransfer = async (req, res) => {
 // UPDATE (form)
 export const updateStockTransferFromForm = async (req, res) => {
   try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
     const updatedDoc = await withTransaction(async (session) => {
       const { id } = req.params
       if (!mongoose.isValidObjectId(id)) {
-        throw new Error('ID không hợp lệ')
+        throw new BusinessError('ID không hợp lệ', 400)
       }
-
-      const organizationId = getCurrentOrg(req)
-      if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
       // Lấy phiếu chuyển kho cũ
       const oldTransfer = await StockTransfer.findOne({
         _id: id,
         organization: organizationId
       }).session(session)
-      if (!oldTransfer) throw new Error('Phiếu chuyển kho không tồn tại')
 
+      if (!oldTransfer) throw new BusinessError('Phiếu chuyển kho không tồn tại', 404)
       if (oldTransfer.isLocked) {
-        throw new Error('Phiếu chuyển kho đã bị khóa, không thể chỉnh sửa')
+        throw new BusinessError('Phiếu chuyển kho đã bị khóa, không thể chỉnh sửa', 400)
       }
 
       // Lấy dữ liệu mới từ form
       const { note, items: rawItems = [] } = req.body
-      // Chuẩn hóa dữ liệu items mới với validation
-      const newItems = await Promise.all(
-        rawItems
-          .filter(
-            (item) => item.ingredient && item.fromWarehouse && item.toWarehouse && item.quantity > 0
-          )
-          .map(async (item) => {
-            const quantity = parseFloat(item.quantity) || 0
-            if (quantity <= 0) {
-              throw new Error('Số lượng chuyển phải lớn hơn 0')
-            }
 
-            // Validate: Kho nguồn và kho đích không được giống nhau
-            if (item.fromWarehouse === item.toWarehouse) {
-              throw new Error('Kho nguồn và kho đích không được giống nhau')
-            }
-
-            // Validate: Kiểm tra tồn tại của ingredient và warehouse
-            const [ingredient, fromWarehouse, toWarehouse] = await Promise.all([
-              Ingredient.findOne({
-                _id: item.ingredient,
-                organization: organizationId
-              }).session(session),
-              Warehouse.findOne({
-                _id: item.fromWarehouse,
-                organization: organizationId
-              }).session(session),
-              Warehouse.findOne({
-                _id: item.toWarehouse,
-                organization: organizationId
-              }).session(session)
-            ])
-
-            if (!ingredient) throw new Error(`Nguyên liệu không tồn tại: ${item.ingredient}`)
-            if (!fromWarehouse) throw new Error(`Kho nguồn không tồn tại: ${item.fromWarehouse}`)
-            if (!toWarehouse) throw new Error(`Kho đích không tồn tại: ${item.toWarehouse}`)
-
-            return {
-              ingredient: item.ingredient,
-              fromWarehouse: item.fromWarehouse,
-              toWarehouse: item.toWarehouse,
-              quantity
-            }
-          })
+      // Pre-validate và batch query để tối ưu performance
+      const validRawItems = rawItems.filter(
+        (item) => item.ingredient && item.fromWarehouse && item.toWarehouse
       )
 
-      if (newItems.length === 0) {
-        throw new Error('Phải có ít nhất một mặt hàng để chuyển kho')
+      if (validRawItems.length === 0) {
+        throw new BusinessError('Phải có ít nhất một mặt hàng để chuyển kho', 400)
       }
+
+      const ingredientIds = [...new Set(validRawItems.map((item) => item.ingredient))].filter(
+        Boolean
+      )
+      const warehouseIds = [
+        ...new Set([
+          ...validRawItems.map((item) => item.fromWarehouse),
+          ...validRawItems.map((item) => item.toWarehouse)
+        ])
+      ].filter(Boolean)
+
+      // Batch query để giảm database calls
+      const [allIngredients, allWarehouses] = await Promise.all([
+        Ingredient.find({ _id: { $in: ingredientIds }, organization: organizationId })
+          .select('_id name')
+          .session(session),
+        Warehouse.find({ _id: { $in: warehouseIds }, organization: organizationId })
+          .select('_id name')
+          .session(session)
+      ])
+
+      const ingredientMap = new Map(allIngredients.map((ing) => [ing._id.toString(), ing]))
+      const warehouseMap = new Map(allWarehouses.map((wh) => [wh._id.toString(), wh]))
+
+      // Chuẩn hóa dữ liệu items mới với validation
+      const newItems = validRawItems.map((item) => {
+        const quantity = parseFloat(item.quantity) || 0
+        if (quantity <= 0) {
+          throw new BusinessError('Số lượng chuyển phải lớn hơn 0', 400)
+        }
+
+        // Validate: Kho nguồn và kho đích không được giống nhau
+        if (item.fromWarehouse === item.toWarehouse) {
+          throw new BusinessError('Kho nguồn và kho đích không được giống nhau', 400)
+        }
+
+        // Validate existence using pre-loaded data
+        const ingredient = ingredientMap.get(item.ingredient)
+        const fromWarehouse = warehouseMap.get(item.fromWarehouse)
+        const toWarehouse = warehouseMap.get(item.toWarehouse)
+
+        if (!ingredient) {
+          throw new BusinessError(`Nguyên liệu không tồn tại: ${item.ingredient}`, 404)
+        }
+        if (!fromWarehouse) {
+          throw new BusinessError(`Kho nguồn không tồn tại: ${item.fromWarehouse}`, 404)
+        }
+        if (!toWarehouse) {
+          throw new BusinessError(`Kho đích không tồn tại: ${item.toWarehouse}`, 404)
+        }
+
+        return {
+          ingredient: item.ingredient,
+          fromWarehouse: item.fromWarehouse,
+          toWarehouse: item.toWarehouse,
+          quantity
+        }
+      })
 
       // TÍNH TOÁN ẢNH HƯỞNG NET (không hoàn tác ngay)
       const stockChanges = new Map() // key: ingredient_warehouse, value: net change
@@ -287,13 +306,21 @@ export const updateStockTransferFromForm = async (req, res) => {
           oldItem.fromWarehouse &&
           oldItem.toWarehouse
         ) {
+          // Validate data integrity - phát hiện data corrupt
+          if (oldItem.quantity <= 0) {
+            throw new BusinessError(
+              `Dữ liệu không hợp lệ: Item cũ có quantity <= 0 (ID: ${oldItem._id})`,
+              500
+            )
+          }
+
           const fromKey = `${oldItem.ingredient}_${oldItem.fromWarehouse}`
           const toKey = `${oldItem.ingredient}_${oldItem.toWarehouse}`
 
           // Hoàn tác: Cộng lại vào kho nguồn
-          stockChanges.set(fromKey, (stockChanges.get(fromKey) || 0) + Math.abs(oldItem.quantity))
+          stockChanges.set(fromKey, (stockChanges.get(fromKey) || 0) + oldItem.quantity)
           // Hoàn tác: Trừ khỏi kho đích
-          stockChanges.set(toKey, (stockChanges.get(toKey) || 0) - Math.abs(oldItem.quantity))
+          stockChanges.set(toKey, (stockChanges.get(toKey) || 0) - oldItem.quantity)
         }
       }
 
@@ -303,48 +330,53 @@ export const updateStockTransferFromForm = async (req, res) => {
         const toKey = `${newItem.ingredient}_${newItem.toWarehouse}`
 
         // Trừ từ kho nguồn
-        stockChanges.set(fromKey, (stockChanges.get(fromKey) || 0) - Math.abs(newItem.quantity))
+        stockChanges.set(fromKey, (stockChanges.get(fromKey) || 0) - newItem.quantity)
         // Cộng vào kho đích
-        stockChanges.set(toKey, (stockChanges.get(toKey) || 0) + Math.abs(newItem.quantity))
+        stockChanges.set(toKey, (stockChanges.get(toKey) || 0) + newItem.quantity)
       }
 
       // KIỂM TRA tồn kho có đủ cho tất cả thay đổi
+      const stockValidationQueries = []
+      const negativeChanges = []
+
       for (const [key, netChange] of stockChanges) {
         if (netChange >= 0) continue // Không cần kiểm tra nếu tăng hoặc không đổi
 
         const [ingredientId, warehouseId] = key.split('_')
+        negativeChanges.push({ key, netChange, ingredientId, warehouseId })
 
-        const currentStock = await IngredientStock.findOne({
-          ingredient: ingredientId,
-          warehouse: warehouseId,
-          organization: organizationId
-        }).session(session)
+        stockValidationQueries.push(
+          IngredientStock.findOne({
+            ingredient: ingredientId,
+            warehouse: warehouseId,
+            organization: organizationId
+          }).session(session)
+        )
+      }
 
-        const currentQuantity = currentStock?.quantity || 0
-        const finalQuantity = currentQuantity + netChange
+      // Batch query stock validation
+      if (stockValidationQueries.length > 0) {
+        const stockResults = await Promise.all(stockValidationQueries)
 
-        if (finalQuantity < 0) {
-          const [ingredient, warehouse] = await Promise.all([
-            Ingredient.findOne({
-              _id: ingredientId,
-              organization: organizationId
-            })
-              .select('name')
-              .session(session),
-            Warehouse.findOne({
-              _id: warehouseId,
-              organization: organizationId
-            })
-              .select('name')
-              .session(session)
-          ])
+        for (let i = 0; i < negativeChanges.length; i++) {
+          const { netChange, ingredientId, warehouseId } = negativeChanges[i]
+          const currentStock = stockResults[i]
+          const currentQuantity = currentStock?.quantity || 0
+          const finalQuantity = currentQuantity + netChange
 
-          throw new Error(
-            `Không đủ tồn kho cho nguyên liệu "${ingredient?.name || 'Unknown'}" ` +
-              `tại kho "${warehouse?.name || 'Unknown'}". ` +
-              `Hiện có: ${currentQuantity}, Cần: ${Math.abs(netChange)}, ` +
-              `Thiếu: ${Math.abs(finalQuantity)}`
-          )
+          if (finalQuantity < 0) {
+            const ingredient = ingredientMap.get(ingredientId)
+            const warehouse = warehouseMap.get(warehouseId)
+
+            throw new BusinessError(
+              `Không đủ tồn kho cho "${ingredient?.name || 'Unknown'}" ` +
+                `tại kho "${warehouse?.name || 'Unknown'}". ` +
+                `Tồn kho hiện tại: ${currentQuantity}, ` +
+                `Cần chuyển: ${Math.abs(netChange)}, ` +
+                `Thiếu: ${Math.abs(finalQuantity)}`,
+              400
+            )
+          }
         }
       }
 
@@ -367,9 +399,12 @@ export const updateStockTransferFromForm = async (req, res) => {
           session
         }
       )
-      if (!updatedTransfer) throw new Error('Cập nhật thất bại')
 
-      // ÁP DỤNG tất cả thay đổi tồn kho
+      if (!updatedTransfer) throw new BusinessError('Cập nhật thất bại', 400)
+
+      // ÁP DỤNG tất cả thay đổi tồn kho với bulk operations
+      const bulkStockOps = []
+
       for (const [key, netChange] of stockChanges) {
         if (netChange === 0) continue // Bỏ qua nếu không có thay đổi
 
@@ -377,37 +412,46 @@ export const updateStockTransferFromForm = async (req, res) => {
 
         if (netChange > 0) {
           // Tăng tồn kho
-          await IngredientStock.updateOne(
-            {
-              ingredient: ingredientId,
-              warehouse: warehouseId,
-              organization: organizationId
-            },
-            {
-              $inc: { quantity: netChange },
-              $setOnInsert: {
+          bulkStockOps.push({
+            updateOne: {
+              filter: {
                 ingredient: ingredientId,
                 warehouse: warehouseId,
-                createdAt: new Date()
-              }
-            },
-            { upsert: true, session }
-          )
+                organization: organizationId
+              },
+              update: {
+                $inc: { quantity: netChange },
+                $setOnInsert: {
+                  ingredient: ingredientId,
+                  warehouse: warehouseId,
+                  organization: organizationId,
+                  createdAt: new Date()
+                }
+              },
+              upsert: true
+            }
+          })
         } else {
           // Giảm tồn kho
-          await IngredientStock.updateOne(
-            {
-              ingredient: ingredientId,
-              warehouse: warehouseId,
-              organization: organizationId
-            },
-            { $inc: { quantity: netChange } },
-            { session }
-          )
+          bulkStockOps.push({
+            updateOne: {
+              filter: {
+                ingredient: ingredientId,
+                warehouse: warehouseId,
+                organization: organizationId
+              },
+              update: { $inc: { quantity: netChange } }
+            }
+          })
         }
       }
 
-      // CẬP NHẬT tổng tồn kho trong Ingredient
+      // Execute bulk operations
+      if (bulkStockOps.length > 0) {
+        await IngredientStock.bulkWrite(bulkStockOps, { session })
+      }
+
+      // CẬP NHẬT tổng tồn kho trong Ingredient với batch query
       const affectedIngredientIds = [
         ...new Set([
           ...oldTransfer.items.map((i) => i.ingredient.toString()),
@@ -415,49 +459,78 @@ export const updateStockTransferFromForm = async (req, res) => {
         ])
       ]
 
-      await Promise.all(
-        affectedIngredientIds.map(async (ingId) => {
-          const totalStockAgg = await IngredientStock.aggregate([
-            {
-              $match: {
-                ingredient: new mongoose.Types.ObjectId(ingId),
-                organization: organizationId
+      if (affectedIngredientIds.length > 0) {
+        const stockAggResults = await IngredientStock.aggregate([
+          {
+            $match: {
+              ingredient: {
+                $in: affectedIngredientIds.map((id) => new mongoose.Types.ObjectId(id))
+              },
+              organization: organizationId
+            }
+          },
+          {
+            $group: {
+              _id: '$ingredient',
+              totalQuantity: { $sum: '$quantity' }
+            }
+          }
+        ]).session(session)
+
+        const stockMap = new Map(
+          stockAggResults.map((result) => [result._id.toString(), result.totalQuantity])
+        )
+
+        // Update ingredients với stock = 0 cho những ingredient không có trong aggregate
+        const bulkIngredientOps = affectedIngredientIds.map((ingredientId) => ({
+          updateOne: {
+            filter: { _id: ingredientId, organization: organizationId },
+            update: {
+              $set: {
+                stock: Math.max(0, stockMap.get(ingredientId) || 0),
+                updatedAt: new Date()
               }
-            },
-            { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
-          ]).session(session)
+            }
+          }
+        }))
 
-          const totalStock = Math.max(0, totalStockAgg[0]?.totalQuantity || 0)
+        await Ingredient.bulkWrite(bulkIngredientOps, { session })
+      }
 
-          return Ingredient.updateOne(
-            { _id: ingId, organization: organizationId },
-            { $set: { stock: totalStock, updatedAt: new Date() } },
-            { session }
-          )
-        })
-      )
-
-      // Dọn dẹp các record có quantity = 0
+      // Dọn dẹp các record có quantity <= 0
       await IngredientStock.deleteMany(
         { organization: organizationId, quantity: { $lte: 0 } },
         { session }
       )
 
-      await updatedTransfer.populate([
-        { path: 'createdBy', select: 'username' },
-        { path: 'updatedBy', select: 'username' },
-        { path: 'lockedBy', select: 'username' },
-        { path: 'items.ingredient', select: 'name unit' },
-        { path: 'items.fromWarehouse', select: 'name location' },
-        { path: 'items.toWarehouse', select: 'name location' }
-      ])
+      // Populate với error handling
+      try {
+        await updatedTransfer.populate([
+          { path: 'createdBy', select: 'username' },
+          { path: 'updatedBy', select: 'username' },
+          { path: 'lockedBy', select: 'username' },
+          { path: 'items.ingredient', select: 'name unit' },
+          { path: 'items.fromWarehouse', select: 'name location' },
+          { path: 'items.toWarehouse', select: 'name location' }
+        ])
+      } catch (populateError) {
+        // Log populate error nhưng không fail transaction
+        console.warn('Populate error (non-critical):', populateError.message)
+      }
 
       return updatedTransfer
     })
 
     responseHelper.success(res, updatedDoc, 'Cập nhật phiếu chuyển kho thành công')
-  } catch (err) {
-    responseHelper.error(res, err.message)
+  } catch (error) {
+    if (error instanceof BusinessError) {
+      // Expected business errors - no logging to reduce terminal noise
+      return responseHelper.error(res, error.message, error.statusCode)
+    } else {
+      // Log unexpected errors for debugging
+      console.error('Unexpected error in updateStockTransferFromForm:', error)
+      return responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    }
   }
 }
 
@@ -470,13 +543,13 @@ export const deleteStockTransfers = async (req, res) => {
     await withTransaction(async (session) => {
       const { ids } = req.body
       if (!Array.isArray(ids) || ids.length === 0) {
-        throw new Error('Không có phiếu nào được chọn')
+        throw new BusinessError('Không có phiếu nào được chọn', 400)
       }
 
       // Validate ObjectIds
       const validIds = ids.filter((id) => mongoose.isValidObjectId(id))
       if (validIds.length !== ids.length) {
-        throw new Error('Một số ID không hợp lệ')
+        throw new BusinessError('Một số ID không hợp lệ', 400)
       }
 
       // Lấy các phiếu chuyển kho với populate để có thông tin chi tiết
@@ -490,18 +563,21 @@ export const deleteStockTransfers = async (req, res) => {
         .session(session)
 
       if (transfers.length === 0) {
-        throw new Error('Không tìm thấy phiếu chuyển kho nào')
+        throw new BusinessError('Không tìm thấy phiếu chuyển kho nào', 404)
       }
 
       if (transfers.length !== validIds.length) {
-        throw new Error('Một số phiếu chuyển kho không tồn tại')
+        throw new BusinessError('Một số phiếu chuyển kho không tồn tại', 404)
       }
 
       // Kiểm tra phiếu đã khóa
       const lockedTransfers = transfers.filter((t) => t.isLocked)
       if (lockedTransfers.length > 0) {
         const lockedCodes = lockedTransfers.map((t) => t.code).join(', ')
-        throw new Error(`Các phiếu chuyển kho sau đã bị khóa, không thể xóa: ${lockedCodes}`)
+        throw new BusinessError(
+          `Các phiếu chuyển kho sau đã bị khóa, không thể xóa: ${lockedCodes}`,
+          400
+        )
       }
 
       // TÍNH TOÁN THAY ĐỔI TỒN KHO (hoàn tác tất cả transfers)
@@ -524,7 +600,7 @@ export const deleteStockTransfers = async (req, res) => {
           const toWarehouseId = item.toWarehouse._id
             ? item.toWarehouse._id.toString()
             : item.toWarehouse.toString()
-          const absQuantity = Math.abs(item.quantity)
+          const quantity = Number(item.quantity)
 
           affectedIngredients.add(ingredientId)
 
@@ -532,10 +608,10 @@ export const deleteStockTransfers = async (req, res) => {
           const toKey = `${ingredientId}_${toWarehouseId}`
 
           // HOÀN TÁC: Cộng lại vào kho nguồn (vì trước đó đã trừ đi)
-          stockChanges.set(fromKey, (stockChanges.get(fromKey) || 0) + absQuantity)
+          stockChanges.set(fromKey, (stockChanges.get(fromKey) || 0) + quantity)
 
           // HOÀN TÁC: Trừ khỏi kho đích (vì trước đó đã cộng vào)
-          stockChanges.set(toKey, (stockChanges.get(toKey) || 0) - absQuantity)
+          stockChanges.set(toKey, (stockChanges.get(toKey) || 0) - quantity)
         }
       }
 
@@ -592,7 +668,10 @@ export const deleteStockTransfers = async (req, res) => {
       }
 
       if (validationErrors.length > 0) {
-        throw new Error(`Không thể xóa do các xung đột tồn kho:\n${validationErrors.join('\n')}`)
+        throw new BusinessError(
+          `Không thể xóa do các xung đột tồn kho:\n${validationErrors.join('\n')}`,
+          400
+        )
       }
 
       // ÁP DỤNG THAY ĐỔI TỒN KHO
@@ -659,7 +738,7 @@ export const deleteStockTransfers = async (req, res) => {
       )
 
       if (deleteResult.deletedCount !== transfers.length) {
-        throw new Error('Một số phiếu chuyển kho không thể xóa')
+        throw new BusinessError('Một số phiếu chuyển kho không thể xóa', 400)
       }
     })
 
@@ -669,7 +748,12 @@ export const deleteStockTransfers = async (req, res) => {
       `Xóa thành công ${req.body.ids.length} phiếu chuyển kho và hoàn tác tồn kho`
     )
   } catch (error) {
-    responseHelper.error(res, error.message)
+    if (error instanceof BusinessError) {
+      // Expected business errors - no logging to reduce terminal noise
+      return responseHelper.error(res, error.message, error.statusCode)
+    } else {
+      return responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    }
   }
 }
 

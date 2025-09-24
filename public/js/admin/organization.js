@@ -12,9 +12,7 @@ $(function () {
   })
 
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(
-    ($(window).height() - $('#orgTableBody').offset().top - 100) / 45
-  )
+  const numRows = Math.floor(($(window).height() - $('#orgTableBody').offset().top - 100) / 45)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -22,7 +20,7 @@ $(function () {
 
   table = $('#orgTable').DataTable({
     dom:
-      '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+      '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
       'l' +
       'f' +
       '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -114,7 +112,7 @@ $(function () {
     },
     initComplete: function () {
       $('.right-group').html(`
-        <div class="btn-group flex-wrap">
+        <div class="btn-group flex-wrap mb-2">
           <button class="btn btn-outline-danger me-2" id="deleteOrgsBtn">
           <i class="bi bi-trash"></i> Xóa
           </button>
@@ -124,12 +122,7 @@ $(function () {
         </div>
       `)
       handlerAddEvent('#orgTable', '#addOrgBtn', 'admin/organization')
-      handlerDeleteEvent(
-        '#orgTable',
-        '#deleteOrgsBtn',
-        'orgCheckbox',
-        'admin/organization'
-      )
+      handlerDeleteEvent('#orgTable', '#deleteOrgsBtn', 'orgCheckbox', 'admin/organization')
       handlerUpdateEvent('#orgTable', 'organization')
       initTableCheckboxEvents('#orgTable', 'orgCheckbox')
 

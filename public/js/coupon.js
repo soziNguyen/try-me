@@ -2,9 +2,7 @@ $(function () {
   let table
 
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(
-    ($(window).height() - $('#couponTableBody').offset().top - 100) / 45
-  )
+  const numRows = Math.floor(($(window).height() - $('#couponTableBody').offset().top - 100) / 45)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -15,7 +13,7 @@ $(function () {
   function initDataTable() {
     table = $('#couponTable').DataTable({
       dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -181,7 +179,7 @@ $(function () {
       },
       initComplete: function () {
         $('.right-group').html(`
-          <div class="btn-group flex-wrap">
+          <div class="btn-group flex-wrap mb-2">
             <button class="btn btn-outline-danger me-2" id="deleteCouponBtn">
               <i class="bi bi-trash"></i> Xóa
             </button>
@@ -193,12 +191,7 @@ $(function () {
       }
     })
     handlerAddEvent('#couponTable', '#addCouponBtn', 'coupon')
-    handlerDeleteEvent(
-      '#couponTable',
-      '#deleteCouponBtn',
-      'couponCheckbox',
-      'coupon'
-    )
+    handlerDeleteEvent('#couponTable', '#deleteCouponBtn', 'couponCheckbox', 'coupon')
     initTableCheckboxEvents('#couponTable', 'couponCheckbox')
     handlerUpdateEvent('#couponTable', 'coupon')
   }
