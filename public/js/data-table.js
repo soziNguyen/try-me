@@ -53,6 +53,7 @@ function handlerDeleteEvent(tableSelector, btnSelector, checkboxClass, module) {
     showConfirmModal({
       title: 'Xóa các mục đã chọn',
       message: `Bạn có chắc chắn muốn xóa <strong>${selected.length}</strong> bản ghi không?`,
+      okBtnColor: 'danger',
       onConfirm: function () {
         $btn.prop('disabled', true) // disable khi user confirm
         $.ajax({

@@ -13,7 +13,9 @@ const UserSchema = new Schema(
     organization: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',
-      required: true
+      required: function () {
+        return this.role !== 'Admin' // Admin không bắt buộc organization
+      }
     },
     resetToken: { type: String, default: null },
     resetTokenExpires: { type: Date, default: null }

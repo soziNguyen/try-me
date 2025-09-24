@@ -79,9 +79,7 @@ $(function () {
               ? 'table-image-container'
               : 'table-image-container no-image'
             const imgClass = hasImage ? '' : 'no-image'
-            const overlayClass = hasImage
-              ? 'image-overlay has-image'
-              : 'image-overlay no-image'
+            const overlayClass = hasImage ? 'image-overlay has-image' : 'image-overlay no-image'
 
             const previewBtn = hasImage
               ? `<button type="button" class="btn btn-outline-light btn-sm me-1 preview-btn" title="Xem ảnh">
@@ -89,9 +87,7 @@ $(function () {
                  </button>`
               : ''
 
-            const uploadBtnClass = hasImage
-              ? 'btn-outline-light'
-              : 'btn-outline-secondary'
+            const uploadBtnClass = hasImage ? 'btn-outline-light' : 'btn-outline-secondary'
             const uploadBtnTitle = hasImage ? 'Chọn ảnh mới' : 'Thêm ảnh'
 
             return `
@@ -264,11 +260,7 @@ $(function () {
 
     // =======================================================
     // EVENT HANDLER
-    handlerAddEvent(
-      '#ingredientTable',
-      '#addIngredientBtn',
-      'inventory/ingredient'
-    )
+    handlerAddEvent('#ingredientTable', '#addIngredientBtn', 'inventory/ingredient')
     handlerDeleteEvent(
       '#ingredientTable',
       '#deleteIngredientBtn',
@@ -321,9 +313,7 @@ $(function () {
     $('#imagePreviewModal').remove()
     $('body').append(previewModal)
 
-    const modal = new bootstrap.Modal(
-      document.getElementById('imagePreviewModal')
-    )
+    const modal = showModal('imagePreviewModal')
     modal.show()
 
     $('#imagePreviewModal').on('hidden.bs.modal', function () {
@@ -425,9 +415,7 @@ $(function () {
             }
 
             // Đóng modal và destroy cropper
-            bootstrap.Modal.getInstance(
-              document.getElementById('imageCropModal')
-            ).hide()
+            bootstrap.Modal.getInstance(document.getElementById('imageCropModal')).hide()
             cropper.destroy()
             cropper = null
           },

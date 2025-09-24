@@ -154,7 +154,7 @@ $(document).ready(function () {
         </div>
       </div>`
     $('body').append(modalHtml)
-    const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'))
+    const modal = showModal('imagePreviewModal')
     modal.show()
     $('#imagePreviewModal').on('hidden.bs.modal', (e) => e.target.remove())
   })
@@ -169,7 +169,7 @@ $(document).ready(function () {
       const reader = new FileReader()
       reader.onload = (event) => {
         $('#imagePreview').attr('src', event.target.result)
-        const modal = new bootstrap.Modal(document.getElementById('imageCropModal'))
+        const modal = showModal('imageCropModal')
         modal.show()
 
         $('#imageCropModal').on('shown.bs.modal', () => {
