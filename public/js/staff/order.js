@@ -575,60 +575,182 @@ async function removeItemFromOrder(itemId, type) {
     toastr.error('Lỗi kết nối server')
   }
 }
+//
+//
+//
 
-$(document).ready(function () {
-  const $select = $('#customerSelect')
-  const $loyaltyPoints = $('#loyaltyPoints')
-  const $addCustomerBtn = $('#addCustomerBtn')
+$(async () => {
+  const $select = $('#customerSelect'),
+    $loyaltyPoints = $('#loyaltyPoints'),
+    $addCustomerBtn = $('#addCustomerBtn'),
+    orderId = new URLSearchParams(window.location.search).get('orderId')
 
-  $select.select2({
-    placeholder: 'Tìm kiếm',
-    ajax: {
-      url: '/api/customers/search',
-      dataType: 'json',
-      delay: 300,
-      data: function (params) {
+  const updatePoints = (points = 0) => {
+    $loyaltyPoints.text(`${points} điểm`)
+    $addCustomerBtn.toggleClass('d-none', points > 0)
+  }
+
+  function initSelect2() {
+    if ($select.hasClass('select2-hidden-accessible')) {
+      $select.select2('destroy')
+    }
+    $select.select2({
+      placeholder: 'Tìm kiếm hoặc nhập tên - số điện thoại',
+      minimumInputLength: 1,
+      tags: true, // Cho phép nhập tag mới
+      createTag: function (params) {
+        const term = $.trim(params.term)
+        if (term === '') return null
+        if (!term.includes(' - ')) return null
         return {
-          search: params.term
+          id: term,
+          text: term,
+          isNew: true
         }
       },
-      processResults: function (response) {
-        const data = response.data || []
-
-        if (data.length === 0) {
-          $addCustomerBtn.removeClass('d-none')
-        } else {
-          $addCustomerBtn.addClass('d-none')
-        }
-
-        return {
-          results: data.map((customer) => ({
-            id: customer._id,
-            text: `${customer.name} - ${customer.phone}`,
-            points: customer.totalPoints
-          }))
-        }
+      ajax: {
+        url: '/api/customers/search',
+        dataType: 'json',
+        delay: 300,
+        data: (params) => ({ search: params.term }),
+        processResults: (res) => {
+          const data = res.data || []
+          if (data.length === 0) updatePoints(0)
+          return {
+            results: data.map((c) => ({
+              id: c._id,
+              text: `${c.name} - ${c.phone}`,
+              points: c.totalPoints || 0
+            }))
+          }
+        },
+        cache: true
       },
-      cache: true
-    },
-    templateResult: function (customer) {
-      if (customer.loading) return customer.text
-      return `
-        <div>
-          <strong>${customer.text}</strong><br>
-        </div>
-      `
-    },
-    templateSelection: function (customer) {
-      $loyaltyPoints.text(`${customer.points || 0} điểm`)
+      templateResult: (c) => {
+        if (c.loading) return c.text
+        if (c.isNew) return `<div><em>Không có thông tin khách hàng</em></div>`
+        return `<div><strong>${c.text}</strong></div>`
+      },
+      templateSelection: (c) => c.text || c.id,
+      escapeMarkup: (m) => m
+    })
+  }
 
+  async function loadOrder() {
+    if (!orderId) return initSelect2()
+
+    try {
+      const res = await fetch(`/api/orders/${orderId}`)
+      if (!res.ok) throw new Error('Không lấy được dữ liệu hóa đơn')
+      const order = await res.json()
+      const customer = order.customerId
+
+      initSelect2()
+
+      if (customer?._id) {
+        const option = new Option(`${customer.name} - ${customer.phone}`, customer._id, true, true)
+        $(option).data('points', customer.totalPoints || 0)
+        $select.append(option).trigger('change')
+        updatePoints(customer.totalPoints)
+      }
+    } catch (e) {
+      console.error(e)
+      initSelect2()
+    }
+  }
+
+  // Khi chọn 1 item trong select
+  $select.on('select2:select', async (e) => {
+    const customer = e.params.data
+
+    if (customer.isNew) {
+      updatePoints(0)
+      $addCustomerBtn.removeClass('d-none')
+    } else {
+      updatePoints(customer.points)
       $addCustomerBtn.addClass('d-none')
 
-      return customer.text
-    },
-    escapeMarkup: function (markup) {
-      return markup
-    },
-    minimumInputLength: 1
+      if (!orderId) return
+
+      try {
+        const result = await ajax(
+          `/api/orders/${orderId}/customer`,
+          { customerId: customer.id || customer._id },
+          'PUT'
+        )
+        if (!result) return
+
+        toastr.success('Đã gán khách hàng vào hóa đơn thành công!')
+        updatePoints(result.customer.totalPoints)
+      } catch (error) {
+        console.error(error)
+        toastr.error('Không thể gán khách hàng vào đơn.')
+      }
+    }
   })
+
+  // Khi clear select thì ẩn nút thêm
+  $select.on('select2:clear', () => {
+    updatePoints(0)
+    $addCustomerBtn.addClass('d-none')
+  })
+
+  $addCustomerBtn.on('click', async () => {
+    const val = $select.val()
+    if (!val) {
+      toastr.warning('Vui lòng nhập tên và số điện thoại theo định dạng "Tên - Số điện thoại"')
+      return
+    }
+
+    const parts = val.split(' - ')
+    if (parts.length !== 2) {
+      toastr.warning('Vui lòng nhập theo định dạng "Tên - Số điện thoại"')
+      return
+    }
+
+    const name = parts[0].trim()
+    const phone = parts[1].trim()
+
+    if (!name || !phone) {
+      toastr.warning('Tên và số điện thoại không được để trống')
+      return
+    }
+
+    try {
+      const data = await ajax('/api/customers/create', { name, phone }, 'POST')
+      if (!data) return
+
+      // Thêm customer mới vào select2 và chọn luôn
+      const newOption = new Option(`${data.name} - ${data.phone}`, data._id, true, true)
+      $(newOption).data('points', data.totalPoints || 0)
+
+      $select.empty().append(newOption).trigger('change')
+      updatePoints(data.totalPoints)
+      $addCustomerBtn.addClass('d-none')
+
+      // Nếu có orderId thì gán luôn
+      if (orderId) {
+        try {
+          const result = await ajax(
+            `/api/orders/${orderId}/customer`,
+            { customerId: data._id },
+            'PUT'
+          )
+          if (result) {
+            updatePoints(result.customer.totalPoints)
+          }
+        } catch (error) {
+          console.error(error)
+          toastr.error('Không thể gán khách hàng vào đơn.')
+        }
+      }
+
+      toastr.success('Tạo khách hàng mới thành công!')
+    } catch (error) {
+      console.error(error)
+      toastr.error(error.message || 'Không thể tạo khách hàng!')
+    }
+  })
+
+  await loadOrder()
 })

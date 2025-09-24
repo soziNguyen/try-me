@@ -230,7 +230,7 @@ export const getOrderById = async (req, res) => {
       .populate('tableId', 'name area')
       .populate('items.foodId', 'name price')
       .populate('items.comboId', 'name price')
-      .populate('customerId', 'name phone')
+      .populate('customerId', 'name phone totalPoints')
       .populate('organization', 'name phone province commune street logo')
       .populate({
         path: 'paymentMethodId',
@@ -993,4 +993,38 @@ export const generateInvoiceCode = async (Model, prefix = 'INV') => {
   const nextNumber = lastNumber + 1
   const numberPart = String(nextNumber).padStart(12, '0')
   return `${prefix}${numberPart}`
+}
+
+export const assignCustomerToOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params
+    const { customerId } = req.body
+    const organizationId = getCurrentOrg(req)
+
+    if (!orderId || !customerId) {
+      return responseHelper.error(res, 'Thiếu thông tin đơn hàng hoặc khách hàng', 400)
+    }
+
+    const [order, customer] = await Promise.all([
+      Order.findOne({ _id: orderId, organization: organizationId }),
+      Customer.findOne({ _id: customerId, organization: organizationId })
+    ])
+
+    if (!order) return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
+    if (!customer) return responseHelper.error(res, 'Khách hàng không tồn tại', 404)
+    if (order.customerId) return responseHelper.error(res, 'Đơn hàng đã có khách hàng', 400)
+
+    order.customerId = customer._id
+    await order.save()
+
+    const { _id, name, phone, totalPoints = 0 } = customer
+
+    return responseHelper.success(res, {
+      message: 'Gán khách hàng thành công',
+      customer: { _id, name, phone, totalPoints }
+    })
+  } catch (error) {
+    console.error('assignCustomerToOrder error:', error)
+    return responseHelper.error(res, 'Có lỗi xảy ra khi gán khách hàng')
+  }
 }
