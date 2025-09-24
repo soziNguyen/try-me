@@ -132,3 +132,48 @@ export const searchCustomers = async (req, res) => {
     responseHelper.error(res, error.message)
   }
 }
+
+export const createCustomer = async (req, res) => {
+  try {
+    let { name, phone } = req.body
+    const organizationId = getCurrentOrg(req)
+
+    if (!organizationId) {
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    }
+
+    name = name?.trim()
+    phone = phone?.trim()
+
+    if (!name || !phone) {
+      return responseHelper.error(res, 'Vui lòng nhập tên và số điện thoại', 400)
+    }
+
+    // Tìm khách hàng đã tồn tại
+    let customer = await Customer.findOne({ phone, organization: organizationId })
+
+    if (!customer) {
+      try {
+        customer = await Customer.create({
+          name,
+          phone,
+          organization: organizationId,
+          totalPoints: 0
+        })
+      } catch (e) {
+        // Duplicate key hoặc lỗi khác
+        return responseHelper.error(res, 'Khách hàng đã tồn tại', 409)
+      }
+    }
+
+    return responseHelper.success(res, {
+      _id: customer._id,
+      name: customer.name,
+      phone: customer.phone,
+      totalPoints: customer.totalPoints || 0
+    })
+  } catch (error) {
+    console.error('Error in createCustomer:', error)
+    return responseHelper.error(res, 'Không thể tạo khách hàng')
+  }
+}
