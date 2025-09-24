@@ -135,7 +135,7 @@ body {
   -webkit-box-pack: justify;
       -ms-flex-pack: justify;
           justify-content: space-between;
-  padding: 0 1rem;
+  padding: 0 0.5rem;
   z-index: 10;
 }
 .admin__layout .admin__header #toggleSidebar {
@@ -165,7 +165,7 @@ body {
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
   height: calc(100vh - 40px) !important;
-  padding: 0 1rem 1rem 1rem;
+  padding: 0 0.5rem 1rem 0.5rem;
   -webkit-transition: width 0.3s;
   transition: width 0.3s;
   font-size: 1.25rem;
@@ -361,7 +361,7 @@ body {
   -webkit-box-pack: justify;
       -ms-flex-pack: justify;
           justify-content: space-between;
-  padding: 0 1rem;
+  padding: 0 0.5rem;
   z-index: 10;
 }
 .staff__layout .staff__header #toggleSidebar {
@@ -391,7 +391,7 @@ body {
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
   height: calc(100vh - 40px) !important;
-  padding: 0 1rem 1rem 1rem;
+  padding: 0 0.5rem 1rem 0.5rem;
   -webkit-transition: width 0.3s;
   transition: width 0.3s;
   font-size: 1.25rem;
