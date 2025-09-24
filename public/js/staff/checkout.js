@@ -342,28 +342,101 @@ function getCurrentOrderFormData() {
 
 // Xử lý thay đổi số điểm sử dụng
 function initPointsInput() {
+  const applyPointsForm = document.getElementById('applyPointsForm')
+  const applyPointsBtn = document.getElementById('applyPointsBtn')
   const pointsInput = document.getElementById('pointsInput')
-  if (!pointsInput) return
+  const pointsMessage = document.getElementById('pointsMessage')
+  const pointsDiscountWrapper = document.getElementById('pointsDiscountWrapper')
+  const pointsDiscountInput = document.getElementById('pointsDiscountInput')
 
-  pointsInput.addEventListener('change', async () => {
-    calculateTotals()
+  const storedPoints = localStorage.getItem(`appliedPoints_${orderId}`)
 
-    const orderId = window.currentOrderId
-    if (!orderId) {
-      toastr.error('Không xác định được đơn hàng!')
+  if (!applyPointsForm) return
+
+  // Nếu có điểm đã áp dụng lưu trong localStorage, hiển thị trạng thái đã áp dụng
+  if (storedPoints && parseInt(storedPoints, 10) > 0) {
+    pointsInput.value = storedPoints
+    pointsInput.disabled = true
+    applyPointsBtn.textContent = 'X'
+    applyPointsBtn.classList.remove('btn-primary')
+    applyPointsBtn.classList.add('btn-danger')
+    applyPointsBtn.dataset.state = 'applied'
+
+    // Hiển thị phần giảm điểm và tính số tiền giảm tương ứng
+    pointsDiscountInput.value = parseInt(storedPoints, 10) * 500
+    pointsDiscountWrapper.classList.remove('d-none')
+  } else {
+    applyPointsBtn.dataset.state = 'idle'
+
+    // Ẩn phần giảm điểm khi chưa áp dụng
+    pointsDiscountInput.value = 0
+    pointsDiscountWrapper.classList.add('d-none')
+  }
+
+  applyPointsForm.addEventListener('submit', async (e) => {
+    e.preventDefault()
+
+    if (applyPointsBtn.dataset.state === 'applied') {
+      try {
+        await ajax(`/api/orders/${orderId}/update-draft`, { pointsUsed: 0 }, 'POST')
+
+        window.appliedPoints = null
+        localStorage.removeItem(`appliedPoints_${orderId}`)
+        pointsInput.value = 0
+        pointsInput.disabled = false
+        applyPointsBtn.textContent = 'Áp dụng'
+        applyPointsBtn.classList.add('btn-primary')
+        applyPointsBtn.classList.remove('btn-danger')
+        applyPointsBtn.dataset.state = 'idle'
+        pointsMessage.textContent = ''
+
+        // Ẩn phần giảm điểm khi hủy
+        pointsDiscountInput.value = 0
+        pointsDiscountWrapper.classList.add('d-none')
+
+        calculateTotals()
+      } catch (error) {
+        console.error('Lỗi khi hủy áp dụng điểm:', error)
+        pointsMessage.textContent = 'Lỗi khi hủy áp dụng điểm'
+        pointsMessage.className = 'text-danger d-block mt-1'
+      }
       return
     }
 
-    const data = getCurrentOrderFormData()
+    // Áp dụng điểm
+    const points = parseInt(pointsInput.value, 10)
+    if (isNaN(points) || points <= 0) {
+      pointsMessage.textContent = 'Vui lòng nhập số điểm hợp lệ'
+      pointsMessage.className = 'text-danger d-block mt-1'
+      return
+    }
 
     try {
-      const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+      const result = await ajax(
+        `/api/orders/${orderId}/update-draft`,
+        { pointsUsed: points },
+        'POST'
+      )
       if (result) {
-        toastr.success('Cập nhật điểm sử dụng thành công!')
+        window.appliedPoints = points
+        localStorage.setItem(`appliedPoints_${orderId}`, points)
+        applyPointsBtn.textContent = 'X'
+        applyPointsBtn.classList.remove('btn-primary')
+        applyPointsBtn.classList.add('btn-danger')
+        applyPointsBtn.dataset.state = 'applied'
+        pointsInput.disabled = true
+        pointsMessage.textContent = 'Điểm đã được áp dụng'
+        pointsMessage.className = 'text-success d-block mt-1'
+
+        pointsDiscountInput.value = points * 500
+        pointsDiscountWrapper.classList.remove('d-none')
+
+        calculateTotals()
       }
     } catch (error) {
-      console.error('Lỗi khi gọi API:', error)
-      toastr.error('Lỗi mạng hoặc server')
+      console.error('Lỗi khi áp dụng điểm:', error)
+      pointsMessage.textContent = 'Lỗi khi áp dụng điểm'
+      pointsMessage.className = 'text-danger d-block mt-1'
     }
   })
 }
@@ -376,6 +449,7 @@ function initDiscountCode() {
   const discountInput = document.getElementById('discountInput')
   const discountMessage = document.getElementById('discountMessage')
   const totalAmountEl = document.getElementById('totalAmount')
+  const discountInputWrapper = document.getElementById('discountInputWrapper')
   const storedCouponId = localStorage.getItem(`appliedCouponId_${orderId}`)
   const storedCouponCode = localStorage.getItem(`appliedCouponCode_${orderId}`)
 
@@ -387,6 +461,8 @@ function initDiscountCode() {
     applyDiscountBtn.classList.remove('btn-primary')
     applyDiscountBtn.classList.add('btn-danger')
     applyDiscountBtn.dataset.state = 'applied'
+
+    discountInputWrapper.classList.remove('d-none')
   }
 
   applyCouponForm.addEventListener('submit', async (e) => {
@@ -403,6 +479,8 @@ function initDiscountCode() {
       applyDiscountBtn.classList.add('btn-primary')
       applyDiscountBtn.classList.remove('btn-danger')
       applyDiscountBtn.dataset.state = 'idle'
+
+      discountInputWrapper.classList.add('d-none')
       calculateTotals()
       return
     }
@@ -459,6 +537,8 @@ function initDiscountCode() {
       applyDiscountBtn.dataset.state = 'applied'
       codeInput.disabled = true
       discountMessage.className = 'text-danger d-none mt-1'
+
+      discountInputWrapper.classList.remove('d-none')
       calculateTotals()
     } catch (error) {
       discountMessage.textContent = 'Lỗi khi áp dụng mã giảm giá'
