@@ -143,3 +143,10 @@ $orange-800: #9a3412;
 .select2-container--default .select2-selection--single .select2-selection__placeholder {
   opacity: 0.5 !important;
 }
+.border-dashed {
+  border-style: dashed !important;
+}
+#createOrderCard {
+  cursor: pointer;
+  max-width: 500px;
+}
