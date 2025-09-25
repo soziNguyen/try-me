@@ -652,42 +652,37 @@ export const invoicePage = async (req, res) => {
   )
 }
 
-export const tablePage = (req, res) => {
+export const productEntryPage = async (req, res) => {
   res.render(
-    'staff/tables',
-    getPageData(req, 'Quản Lý Bàn', 'Table', {
-      headerClass: 'staff__header',
-      pageTitle: 'QUẢN LÝ BÀN'
+    'product/entry',
+    getPageData(req, 'Quản lý thành phẩm', 'Product Entry', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ THÀNH PHẨM'
     })
   )
 }
 
-export const ordersPage = (req, res) => {
+export const newProductEntryPage = async (req, res) => {
+  const productEntryId = req.params.id
+  const mode = req.query.mode || ''
+  const isNew = mode === 'new' ? 'Nhập Sản Phẩm Mới' : 'Chi Tiết Nhập Sản Phẩm'
+
   res.render(
-    'staff/orders',
-    getPageData(req, 'Đặt món', 'Orders', {
-      headerClass: 'staff__header',
-      pageTitle: 'ĐẶT MÓN'
+    'product/entry-detail',
+    getPageData(req, isNew, 'New Product Entry', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ THÀNH PHẨM',
+      productEntryId: productEntryId
     })
   )
 }
 
-export const foodsPage = (req, res) => {
+export const productStockPage = (req, res) => {
   res.render(
-    'staff/foods',
-    getPageData(req, 'Quản Lý Món Ăn', 'Foods', {
-      headerClass: 'staff__header',
-      pageTitle: 'Quản Lý Món Ăn'
-    })
-  )
-}
-
-export const billsPage = (req, res) => {
-  res.render(
-    'staff/bills',
-    getPageData(req, 'Hóa Đơn', 'Bills', {
-      headerClass: 'staff__header',
-      pageTitle: 'HÓA ĐƠN'
+    'product/stock',
+    getPageData(req, 'Quản lý kho thành phẩm', 'Product Stock', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ KHO THÀNH PHẨM'
     })
   )
 }

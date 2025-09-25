@@ -5,10 +5,7 @@ $(function () {
   let units = []
   let itemCounter = 1
   let stockIssue = null
-  const disableStockIssueSave = setupSaveButtonWatcher(
-    '#stockIssueForm',
-    '#btn-save-issue'
-  )
+  const disableStockIssueSave = setupSaveButtonWatcher('#stockIssueForm', '#btn-save-issue')
   const csrfToken = $('#_csrf').val()
 
   // Lấy stockIssueId từ URL
@@ -21,9 +18,7 @@ $(function () {
   Promise.all([
     fetchData('inventory/ingredient/all'),
     fetchData('inventory/warehouse/all'),
-    stockIssueId
-      ? fetchData(`inventory/stock-issue/${stockIssueId}`)
-      : Promise.resolve(null)
+    stockIssueId ? fetchData(`inventory/stock-issue/${stockIssueId}`) : Promise.resolve(null)
   ])
     .then(([ings, whs, stockIssueRes]) => {
       ingredients = ings
@@ -47,13 +42,10 @@ $(function () {
   function initForm() {
     // Populate warehouses dropdown
     const warehouseOptions = warehouses
-      .map(
-        (wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`
-      )
+      .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
       .join('')
     const $warehouseSelected = $('#warehouse').html(
-      '<option value="" class="text-center">— Chọn kho —</option>' +
-      warehouseOptions
+      '<option value="" class="text-center">— Chọn kho —</option>' + warehouseOptions
     )
 
     initSelect2($warehouseSelected, '— Chọn kho —')
@@ -137,21 +129,16 @@ $(function () {
     $select
       .empty()
       .html(
-        '<option value="" class="text-center">— Chọn nguyên liệu —</option>' +
-        ingredientOptions
+        '<option value="" class="text-center">— Chọn nguyên liệu —</option>' + ingredientOptions
       )
 
     const $unitSelect = $(`select[name="items[${rowIndex}][unit]"]`)
     if ($unitSelect.length) {
-      const unitOptions = units
-        .map((u) => `<option value="${u}">${u}</option>`)
-        .join('')
+      const unitOptions = units.map((u) => `<option value="${u}">${u}</option>`).join('')
 
       $unitSelect
         .empty()
-        .html(
-          '<option value="" class="text-center">— Chọn —</option>' + unitOptions
-        )
+        .html('<option value="" class="text-center">— Chọn —</option>' + unitOptions)
     }
   }
 
@@ -201,7 +188,7 @@ $(function () {
       .val(stockIssue.warehouse?._id || '')
       .trigger('change')
     $('#createdBy')
-      .val(stockIssue.createdBy?.name || stockIssue.createdBy?.username || '')
+      .val(stockIssue.createdBy?.username || '')
       .data('id', stockIssue.createdBy?._id)
     $('#note').val(stockIssue.note || '')
 
@@ -291,8 +278,7 @@ $(function () {
       if (hasAnyValue && !isComplete) {
         const missingFields = []
         if (!ingredientId) missingFields.push('nguyên liệu')
-        if (!quantity || parseFloat(quantity) <= 0)
-          missingFields.push('số lượng hợp lệ')
+        if (!quantity || parseFloat(quantity) <= 0) missingFields.push('số lượng hợp lệ')
         if (!unit) missingFields.push('đơn vị')
 
         partialErrors.push(`Dòng ${rowIndex} thiếu ${missingFields.join(', ')}`)
@@ -330,15 +316,12 @@ $(function () {
     }
 
     if (!stockIssueId) {
-      stockIssueData.createdBy =
-        $('#createdBy').data('id') || '<%= currentUserId %>'
+      stockIssueData.createdBy = $('#createdBy').data('id') || '<%= currentUserId %>'
     }
 
     $('#itemsTableBody tr').each(function () {
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
-      const quantity = parseFloat(
-        $(this).find('input[name*="[quantity]"]').val()
-      )
+      const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val())
       const unit = $(this).find('select[name*="[unit]"]').val()
 
       if (ingredientId && quantity > 0 && unit) {
