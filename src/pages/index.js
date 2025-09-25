@@ -672,7 +672,9 @@ export const newProductEntryPage = async (req, res) => {
     getPageData(req, isNew, 'New Product Entry', {
       headerClass: 'admin__header',
       pageTitle: 'QUẢN LÝ THÀNH PHẨM',
-      productEntryId: productEntryId
+      productEntryId: productEntryId,
+      userRole: req.user.role,
+      currentOrgId: req.user.organization
     })
   )
 }

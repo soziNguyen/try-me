@@ -221,7 +221,7 @@ export const logIn = async (req, res, next) => {
       req.session.cookie.maxAge = req.body?.remember ? 30 * 24 * 60 * 60 * 1000 : false
 
       try {
-        if ((user.role || '').toLowerCase() === 'member') {
+        if ((user.role || '').toLowerCase() === 'Staff') {
           const now = new Date()
           const today = new Date(now)
           today.setHours(0, 0, 0, 0)
@@ -322,7 +322,7 @@ export const logOut = async (req, res) => {
       return req.logout(() => responseHelper.success(res, 'Logged out'))
     }
 
-    if ((user.role || '').toLowerCase() === 'member') {
+    if ((user.role || '').toLowerCase() === 'Staff') {
       const now = new Date()
 
       const todayStart = new Date(now)

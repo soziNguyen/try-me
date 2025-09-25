@@ -7,6 +7,7 @@ $(function () {
   let productEntry = null
   const disableStockEntrySave = setupSaveButtonWatcher('#stockEntryForm', '#btn-save-entry')
   const csrfToken = $('#_csrf').val()
+  const orgId = document.getElementById('currentOrgId').value
 
   // Lấy productEntryId từ URL
   productEntryId = window.location.pathname.split('/').pop()
@@ -14,22 +15,18 @@ $(function () {
   // Load dữ liệu ban đầu
   Promise.all([
     fetchData('menu/get/active'),
-    fetchData('inventory/warehouse/all'),
-    productEntryId ? fetchData(`product/entry/${productEntryId}`) : Promise.resolve(null)
+    productEntryId ? fetchData(`product/entry/${productEntryId}`) : Promise.resolve(null),
+    fetchData(`organization/${orgId}`)
   ])
-    .then(([pros, whs, productEntryRes]) => {
-      console.log(pros, whs, productEntryRes)
-
+    .then(([pros, productEntryRes, currentOrg]) => {
       products = pros || []
-      warehouses = whs || []
       units = productEntryRes?.units || []
 
       initForm()
       if (productEntryRes) {
         productEntry = productEntryRes.productEntry
-        console.log(productEntry)
 
-        populateForm(productEntry)
+        populateForm(productEntry, currentOrg.defaultWarehouse.name)
       } else {
         const currentUserName = '<%= currentUserName %>'
         const currentUserId = '<%= currentUserId %>'
@@ -53,16 +50,6 @@ $(function () {
     $('.select2-units').each(function () {
       initSelect2($(this), '— Chọn —')
     })
-
-    // Populate warehouses dropdown (main warehouse select)
-    const warehouseOptions = warehouses
-      .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
-      .join('')
-    const $warehouseSelected = $('#warehouse').html(
-      '<option value="" class="text-center">— Chọn kho —</option>' + warehouseOptions
-    )
-
-    initSelect2($warehouseSelected, '— Chọn kho —')
 
     // Event handlers
     $('#addItemBtn').on('click', addNewItem)
@@ -212,15 +199,13 @@ $(function () {
     $('#totalAmount').text(subtotal.toLocaleString('vi-VN') + ' ₫')
   }
 
-  function populateForm(productEntry) {
+  function populateForm(productEntry, defaultWarehouse) {
     $('#code').val(productEntry.code || '')
     $('#date').val(formatDate(productEntry.date) || '')
     $('#supplier')
       .val(productEntry.supplier?._id || '')
       .trigger('change')
-    $('#warehouse')
-      .val(productEntry.warehouse?._id || '')
-      .trigger('change')
+    $('#warehouse').val(defaultWarehouse)
     $('#createdBy')
       .val(productEntry.createdBy?.username || '')
       .data('id', productEntry.createdBy?._id)

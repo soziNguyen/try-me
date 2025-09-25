@@ -7,6 +7,7 @@ import { generateDocumentCode } from '../../../helpers/common.js'
 import withTransaction from '../../../helpers/withTransaction.js'
 import { lookupRef, lookupUser } from '../../../helpers/lookupHelper.js'
 import BusinessError from '../../error/BusinessError.js'
+import Organization from '../../organization/model.js'
 
 export const createProductEntry = async (req, res) => {
   try {
@@ -177,14 +178,17 @@ export const updateProductEntry = async (req, res) => {
       if (oldEntry.isLocked)
         throw new BusinessError('Phiếu nhập đã bị khóa, không thể chỉnh sửa', 400)
 
-      const { warehouse, items: rawItems = [], note } = req.body
+      const { items: rawItems = [], note } = req.body
 
       // Validation đầu vào
       if (!Array.isArray(rawItems) || rawItems.length === 0) {
         throw new BusinessError('Phiếu nhập phải có ít nhất 1 sản phẩm', 400)
       }
 
-      if (!warehouse) throw new BusinessError('Vui lòng chọn kho', 400)
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      const warehouse = org?.defaultWarehouse
+
+      if (!warehouse) throw new BusinessError('Tổ chức chưa cấu hình kho mặc định', 400)
 
       if (!mongoose.isValidObjectId(warehouse)) {
         throw new BusinessError('ID kho không hợp lệ', 400)

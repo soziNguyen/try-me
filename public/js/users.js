@@ -312,7 +312,7 @@ if (logInForm) {
       const user = await ajax(`/api/users/${userId}`, {}, 'GET')
 
       // Đổ roles
-      const roles = ['Org', 'Member']
+      const roles = ['Org', 'Staff']
       const roleSelect = document.getElementById('new-role')
       roleSelect.innerHTML = ''
       roles.forEach((r) => {
@@ -325,7 +325,7 @@ if (logInForm) {
       // Gán dữ liệu
       document.getElementById('new-username').value = user.username || ''
       document.getElementById('new-email').value = user.email || ''
-      document.getElementById('new-role').value = user.role || 'Member'
+      document.getElementById('new-role').value = user.role || 'Staff'
       document.getElementById('new-password').value = ''
       document.getElementById('new-confirm-password').value = ''
 

@@ -169,7 +169,7 @@ $(function () {
       // Handle update user
       $('#userTable_wrapper').on('click', '.updateUserBtn', function () {
         const userId = $(this).data('id')
-        const roles = ['Admin', 'Org', 'Member']
+        const roles = ['Admin', 'Org', 'Staff']
         const $roleSelected = $('#new-role')
         $roleSelected.empty().append(
           roles
@@ -183,12 +183,12 @@ $(function () {
             const user = res.data
             $('#new-username').val(user.username || '')
             $('#new-email').val(user.email || '')
-            $roleSelected.val(user.role || 'Member')
+            $roleSelected.val(user.role || 'Staff')
             loadOrganizations($('#new-organizations'), user.organization?._id)
               .then(() => {
                 $('#updateUserForm').data({
                   'user-id': userId,
-                  'original-role': user.role || 'Member'
+                  'original-role': user.role || 'Staff'
                 })
                 $('#updateUserModal').modal('show')
               })
