@@ -139,7 +139,156 @@ document.getElementById('tableGrid').addEventListener('click', async (e) => {
   }
 })
 
-// ======== Các hàm lấy dữ liệu & render UI ========
+// ===== hóa đơn trống =====
+const createOrderCard = document.getElementById('createOrderCard')
+const orderFull = document.getElementById('orderFull')
+const btnShowEmptyOrders = document.getElementById('btnShowEmptyOrders')
+const emptyOrdersContainer = document.getElementById('emptyOrdersContainer')
+
+let isLoaded = false
+
+// Kiểm tra orderId trong URL để ẩn/hiện phần tương ứng
+function checkOrderIdInURL() {
+  const orderId = new URLSearchParams(window.location.search).get('orderId')
+
+  if (orderId) {
+    createOrderCard.style.display = 'none'
+    orderFull.classList.remove('d-none')
+  } else {
+    createOrderCard.style.display = 'block'
+    orderFull.classList.add('d-none')
+  }
+}
+
+// Hàm tạo hóa đơn
+async function handleCreateNewOrder(button) {
+  button.disabled = true
+  try {
+    const orderResult = await ajax('/api/orders', { tableId: null, isTakeaway: false }, 'POST')
+    if (orderResult?.orderId) {
+      toastr.success('Tạo hóa đơn thành công!')
+      setTimeout(() => {
+        window.location.href = `/orders?orderId=${orderResult.orderId}`
+      }, 500)
+    } else {
+      toastr.error('Không thể tạo hóa đơn trống.')
+      button.disabled = false
+    }
+  } catch (err) {
+    toastr.error('Lỗi khi tạo hóa đơn: ' + err.message)
+    button.disabled = false
+  }
+}
+
+// Hàm tạo nút "Tạo hóa đơn mới" dùng lại nhiều lần
+function createNewOrderButton() {
+  return `
+    <button id="btnCreateNewOrder" class="btn btn-outline-success m-1 fw-bold" title="Tạo hóa đơn mới">
+      <i class="bi bi-plus-circle"></i>
+    </button>
+  `
+}
+
+// Hàm render danh sách hóa đơn trống
+function renderEmptyOrders(orders) {
+  let html = ''
+
+  // Lấy orderId từ URL
+  const urlParams = new URLSearchParams(window.location.search)
+  const currentOrderId = urlParams.get('orderId')
+
+  if (!orders || orders.length === 0) {
+    // Chỉ có tab "Thêm mới"
+    html = `
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <button class="nav-link active" id="order-tab-new" type="button" role="tab" aria-selected="true">
+            <span id="btnCreateNewOrder" style="cursor:pointer;">+ Thêm hóa đơn mới</span>
+          </button>
+        </div>
+      </nav>
+      <p class="mt-2">Không có hóa đơn.</p>
+    `
+  } else {
+    // Tạo các tab hóa đơn
+    const tabs = orders
+      .map((order, idx) => {
+        const isActive = currentOrderId ? order._id === currentOrderId : idx === 0 // nếu không có orderId thì chọn tab đầu tiên
+
+        return `
+          <button class="nav-link ${isActive ? 'active' : ''}" 
+                  id="order-tab-${order._id}" 
+                  data-order-id="${order._id}" 
+                  type="button" 
+                  role="tab" 
+                  aria-selected="${isActive}">
+            ${order._id}
+          </button>
+        `
+      })
+      .join('')
+
+    // Thêm tab cuối cho nút tạo hóa đơn mới
+    const newOrderTab = `
+      <button class="nav-link" id="order-tab-new" type="button" role="tab" aria-selected="false">
+        <span id="btnCreateNewOrder" style="cursor:pointer;">+ Thêm hóa đơn mới</span>
+      </button>
+    `
+
+    html = `
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          ${tabs}
+          ${newOrderTab}
+        </div>
+      </nav>
+    `
+  }
+
+  emptyOrdersContainer.innerHTML = html
+
+  // Gán sự kiện click cho nút tạo mới
+  const btnCreateNewOrder = document.getElementById('btnCreateNewOrder')
+  if (btnCreateNewOrder) {
+    btnCreateNewOrder.addEventListener('click', () => handleCreateNewOrder(btnCreateNewOrder))
+  }
+
+  // Gán sự kiện click cho các tab hóa đơn
+  const tabButtons = emptyOrdersContainer.querySelectorAll('.nav-link[data-order-id]')
+  tabButtons.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const orderId = tab.getAttribute('data-order-id')
+      // Điều hướng và cập nhật URL
+      window.location.href = `/orders?orderId=${orderId}`
+    })
+  })
+}
+
+// Lấy danh sách hóa đơn trống
+async function fetchEmptyOrders() {
+  emptyOrdersContainer.innerHTML = 'Đang tải...'
+
+  try {
+    const data = await ajax('/api/orders/get', { empty: true, length: 20 }, 'GET')
+
+    if (!data) {
+      emptyOrdersContainer.innerHTML = '<p class="text-danger">Không thể tải dữ liệu</p>'
+      return
+    }
+
+    renderEmptyOrders(data)
+    isLoaded = true
+  } catch (error) {
+    emptyOrdersContainer.innerHTML = `<p class="text-danger">Lỗi kết nối: ${error.message}</p>`
+  }
+}
+
+// Sự kiện click nút tạo hóa đơn
+createOrderCard.addEventListener('click', () => handleCreateNewOrder(createOrderCard))
+
+// Chạy kiểm tra ngay khi trang load
+checkOrderIdInURL()
+fetchEmptyOrders()
 
 // Lấy danh sách bàn
 async function getTables() {

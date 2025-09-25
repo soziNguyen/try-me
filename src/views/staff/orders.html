@@ -2,11 +2,17 @@
   <%- include('../partials/staff_sidebar.html') %>
 
     <div class="staff__content">
-      <div>
-        <div class="row">
-          <div class="col-12 px-3">
-            <div class="table-order">
-              <button class="btn btn-outline-primary w-100 btn-select-table" id="btnSelectTable">
+
+      <div id="createOrderCard" class="card border border-3 border-success border-dashed text-center mx-auto my-4 p-5">
+        <div class="text-success display-1 user-select-none"><i class="bi bi-plus-circle"></i></div>
+        <div class="fs-5 mt-2">Tạo hóa đơn mới</div>
+      </div>
+
+      <div class="order d-none" id="orderFull">
+        <div class="row d-none">
+          <div class="col-12">
+            <div class="table-order ">
+              <button class="btn btn-outline-primary w-100 btn-select-table" id="btnSelectTable ">
                 <i class="bi bi-list-ul"></i> XEM DANH SÁCH BÀN ĐANG HOẠT ĐỘNG
               </button>
               <div id="tableGrid"></div>
@@ -15,21 +21,29 @@
         </div>
 
         <div class="row">
+          <div class="col-12">
+            <div class="table-order">
+              <div id="emptyOrdersContainer" class="mt-3 text-center"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row ">
           <div class="col-lg-8 mt-3" id="foodMenuCol">
             <div id="orderWarning"></div>
+            <div class="search-form d-flex align-items-center mb-4 mt-3" id="search-menu">
+              <input type="text" id="searchMenuInput" class="form-control me-2" placeholder="Tìm kiếm" />
+            </div>
             <h3>🍽️ Danh sách thực đơn</h3>
             <div class="d-flex justify-content-between">
               <div id="categoryList" class="mb-4 d-flex gap-2 flex-wrap"></div>
-              <div class="search-form d-flex align-items-center mb-4" id="search-menu">
-                <input type="text" id="searchMenuInput" class="form-control me-2" placeholder="Tìm kiếm" />
-              </div>
             </div>
             <div id="foodMenu" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xxl-4 g-3">
               <!-- Món ăn sẽ được render ở đây -->
             </div>
           </div>
 
-          <div class="col-lg-4 mt-4 d-none" id="orderSection">
+          <div class="col-lg-4 mt-3 d-none" id="orderSection">
             <!-- Accordion thông tin khách hàng -->
             <div class="accordion mb-3" id="accordionClent">
               <div class="accordion-item">

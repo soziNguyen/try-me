@@ -139,16 +139,49 @@ export const createOrder = async (req, res) => {
 
       // 3. Đơn tại bàn
       if (!tableId) {
-        throw new Error('Thiếu thông tin bàn')
+        // Nếu không có tableId, tạo hóa đơn trống (chưa gán bàn)
+        let newOrder
+        if (session) {
+          const [createdOrder] = await Order.create(
+            [
+              {
+                tableId: null,
+                isTakeaway: false,
+                status: 'open',
+                organization: organizationId,
+                customerId: customer?._id || null,
+                code: orderCode
+              }
+            ],
+            { session }
+          )
+          newOrder = createdOrder
+        } else {
+          newOrder = await Order.create({
+            tableId: null,
+            isTakeaway: false,
+            status: 'open',
+            organization: organizationId,
+            customerId: customer?._id || null,
+            code: orderCode
+          })
+        }
+
+        return {
+          orderId: newOrder._id,
+          orderCode: newOrder.code,
+          tableId: null
+        }
       }
 
+      // Nếu có tableId thì xử lý tạo order gán bàn như trước:
       const table = await Table.findById(tableId)[session ? 'session' : 'exec'](
         session || undefined
       )
       if (!table) throw new Error('Bàn không tồn tại')
       if (table.status === 'occupied') throw new Error('Bàn đã có khách')
 
-      // Tạo order mới
+      // Tạo order mới với bàn cụ thể
       let newOrder
       if (session) {
         const [createdOrder] = await Order.create(
@@ -851,13 +884,20 @@ export const getOrders = async (req, res) => {
     const colIdx = req.query['order[0][column]']
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
+    const empty = req.query.empty === 'true' // <-- thêm dòng này
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    // Base match object
+    const match = { organization: organizationId }
+    if (empty) {
+      match.tableId = null // Lọc các hóa đơn chưa gán bàn
+    }
+
     // Base pipeline
     const pipeline = [
-      { $match: { organization: organizationId } },
+      { $match: match },
       ...lookupRef('customerId', 'Customers', { as: 'customer' }),
       ...lookupRef('tableId', 'Tables', { as: 'table' }),
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
