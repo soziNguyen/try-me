@@ -1,5 +1,6 @@
 $(function () {
   let table
+  const csrfToken = $('#_csrf').val()
 
   let showList = [10, 25, 50, 100]
   const numRows = Math.floor(($(window).height() - $('#payrollTableBody').offset().top - 100) / 45)
@@ -107,7 +108,11 @@ $(function () {
       confirmed: 'Xác nhận',
       onConfirm: async () => {
         try {
-          await $.post('/api/payroll/create')
+          await $.ajax({
+            url: '/api/payroll/create',
+            type: 'POST',
+            headers: { 'X-CSRF-Token': csrfToken }
+          })
           toastr.success('Đã tạo bảng lương')
           $('#payrollTable').DataTable().ajax.reload()
         } catch (err) {

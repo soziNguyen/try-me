@@ -142,13 +142,6 @@ export const createPayroll = async (req, res) => {
       month = new Date().getMonth() + 1,
       hourlyRate = 50000
     } = req.body || {}
-    console.log('CREATE PAYROLL:', {
-      organizationId,
-      user,
-      year,
-      month,
-      hourlyRate
-    })
 
     const payroll = await generatePayroll(organizationId, user, year, month, hourlyRate)
     if (!payroll || (Array.isArray(payroll) && payroll.length === 0)) {
