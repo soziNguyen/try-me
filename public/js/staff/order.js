@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Xử lý order nếu có orderId
     if (orderId) {
       const orderRes = await fetch(`/api/orders/${orderId}`)
+      searchInput.focus()
       const orderData = await orderRes.json()
       if (orderRes.ok) updateOrderUI(orderData)
     } else {
@@ -72,74 +73,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     })
   }
-
-  // Nút hiển thị danh sách bàn
-  const viewTable = document.querySelector('.btn-select-table')
-  if (viewTable) {
-    viewTable.addEventListener('click', () => {
-      getTables()
-      const table = document.getElementById('tableGrid')
-      if (table) table.classList.toggle('show')
-    })
-  }
 })
 
-// Click chọn bàn (bao gồm "Mang Về")
-document.getElementById('tableGrid').addEventListener('click', async (e) => {
-  const btnTable = e.target.closest('.table-button')
-  if (!btnTable) return
-
-  // ===== Mang Về =====
-  if (btnTable.hasAttribute('data-mang-ve')) {
-    try {
-      const orderResult = await ajax('/api/orders', { tableId: null, isTakeaway: true }, 'POST')
-
-      if (orderResult?.orderId) {
-        if (orderResult.isNewOrder && !confirm('Bạn có muốn tạo order mang về không?')) return
-        toastr.success('Order mang về đã được tạo thành công!')
-        window.location.href = `/orders?orderId=${orderResult.orderId}`
-      } else {
-        toastr.error('Không thể tạo hoặc lấy order mang về.')
-      }
-    } catch (err) {
-      toastr.error('Lỗi khi xử lý order mang về: ' + err.message)
-    }
-    return
-  }
-
-  // ===== Bàn thường =====
-  const tableId = btnTable.getAttribute('data-table-id')
-  const orderId = btnTable.getAttribute('data-order-id')
-  const status = btnTable.getAttribute('data-status')
-
-  if (status === 'available') {
-    if (confirm('Bạn có muốn tạo order và gọi món cho bàn này không?')) {
-      try {
-        const orderResult = await ajax('/api/orders', { tableId }, 'POST')
-        if (orderResult?.orderId) {
-          toastr.success('Order cho bàn đã được tạo thành công!')
-          setTimeout(() => {
-            window.location.href = `/orders?orderId=${orderResult.orderId}`
-          }, 500)
-        } else {
-          toastr.error('Không thể tạo order mới.')
-        }
-      } catch (err) {
-        toastr.error('Lỗi khi tạo order: ' + err.message)
-      }
-    }
-  } else if (status === 'occupied') {
-    if (orderId) {
-      window.location.href = `/orders?orderId=${orderId}`
-    } else {
-      toastr.warning('Bàn này đang bận nhưng không tìm thấy order.')
-    }
-  } else {
-    toastr.info('Trạng thái bàn chưa xác định.')
-  }
-})
-
-// ===== hóa đơn trống =====
+// ===== hóa đơn trống ======
 const createOrderCard = document.getElementById('createOrderCard')
 const orderFull = document.getElementById('orderFull')
 const btnShowEmptyOrders = document.getElementById('btnShowEmptyOrders')
@@ -148,15 +84,21 @@ const emptyOrdersContainer = document.getElementById('emptyOrdersContainer')
 let isLoaded = false
 
 // Kiểm tra orderId trong URL để ẩn/hiện phần tương ứng
-function checkOrderIdInURL() {
-  const orderId = new URLSearchParams(window.location.search).get('orderId')
+function checkOrderIdInURL(orders = []) {
+  const urlParams = new URLSearchParams(window.location.search)
+  const orderId = urlParams.get('orderId')
 
   if (orderId) {
     createOrderCard.style.display = 'none'
     orderFull.classList.remove('d-none')
   } else {
-    createOrderCard.style.display = 'block'
-    orderFull.classList.add('d-none')
+    if (orders.length > 0) {
+      // Nếu có hóa đơn nhưng không có orderId => chuyển đến order mới nhất (hoặc đầu tiên)
+      window.location.href = `/orders?orderId=${orders[0]._id}`
+    } else {
+      createOrderCard.style.display = 'block' // <-- hiện khi không có orderId
+      orderFull.classList.add('d-none')
+    }
   }
 }
 
@@ -169,7 +111,7 @@ async function handleCreateNewOrder(button) {
       toastr.success('Tạo hóa đơn thành công!')
       setTimeout(() => {
         window.location.href = `/orders?orderId=${orderResult.orderId}`
-      }, 500)
+      }, 300)
     } else {
       toastr.error('Không thể tạo hóa đơn trống.')
       button.disabled = false
@@ -180,10 +122,10 @@ async function handleCreateNewOrder(button) {
   }
 }
 
-// Hàm tạo nút "Tạo hóa đơn mới" dùng lại nhiều lần
+// Hàm tạo nút "Tạo hóa đơn mới"
 function createNewOrderButton() {
   return `
-    <button id="btnCreateNewOrder" class="btn btn-outline-success m-1 fw-bold" title="Tạo hóa đơn mới">
+    <button id="order-tab-new" class="btn btn-outline-success m-1 fw-bold" title="Tạo hóa đơn mới">
       <i class="bi bi-plus-circle"></i>
     </button>
   `
@@ -203,17 +145,22 @@ function renderEmptyOrders(orders) {
       <nav>
         <div class="nav nav-tabs" id="nav-tab" role="tablist">
           <button class="nav-link active" id="order-tab-new" type="button" role="tab" aria-selected="true">
-            <span id="btnCreateNewOrder" style="cursor:pointer;">+ Thêm hóa đơn mới</span>
+            <span id="btnCreateNewOrder" class="cursor-pointer"><i class="bi bi-plus"></i></span>
           </button>
         </div>
       </nav>
       <p class="mt-2">Không có hóa đơn.</p>
     `
   } else {
-    // Tạo các tab hóa đơn
-    const tabs = orders
-      .map((order, idx) => {
-        const isActive = currentOrderId ? order._id === currentOrderId : idx === 0 // nếu không có orderId thì chọn tab đầu tiên
+    // Đảo ngược mảng orders để hóa đơn mới nhất (thường có index 0) xuất hiện cuối
+    const reversedOrders = [...orders].reverse()
+
+    // Tạo các tab hóa đơn với thứ tự đã đảo ngược
+    const tabs = reversedOrders
+      .map((order) => {
+        const isActive = currentOrderId
+          ? order._id === currentOrderId
+          : order._id === reversedOrders[reversedOrders.length - 1]._id // Active tab cuối cùng (mới nhất)
 
         return `
           <button class="nav-link ${isActive ? 'active' : ''}" 
@@ -222,7 +169,7 @@ function renderEmptyOrders(orders) {
                   type="button" 
                   role="tab" 
                   aria-selected="${isActive}">
-            ${order._id}
+            ${order.code}
           </button>
         `
       })
@@ -230,8 +177,8 @@ function renderEmptyOrders(orders) {
 
     // Thêm tab cuối cho nút tạo hóa đơn mới
     const newOrderTab = `
-      <button class="nav-link" id="order-tab-new" type="button" role="tab" aria-selected="false">
-        <span id="btnCreateNewOrder" style="cursor:pointer;">+ Thêm hóa đơn mới</span>
+      <button class="nav-link " id="order-tab-new" type="button" role="tab" aria-selected="false">
+        <span id="btnCreateNewOrder" class="cursor-pointer w-100"><i class="bi bi-plus"></i></span>
       </button>
     `
 
@@ -248,7 +195,7 @@ function renderEmptyOrders(orders) {
   emptyOrdersContainer.innerHTML = html
 
   // Gán sự kiện click cho nút tạo mới
-  const btnCreateNewOrder = document.getElementById('btnCreateNewOrder')
+  const btnCreateNewOrder = document.getElementById('order-tab-new')
   if (btnCreateNewOrder) {
     btnCreateNewOrder.addEventListener('click', () => handleCreateNewOrder(btnCreateNewOrder))
   }
@@ -258,7 +205,6 @@ function renderEmptyOrders(orders) {
   tabButtons.forEach((tab) => {
     tab.addEventListener('click', () => {
       const orderId = tab.getAttribute('data-order-id')
-      // Điều hướng và cập nhật URL
       window.location.href = `/orders?orderId=${orderId}`
     })
   })
@@ -270,12 +216,16 @@ async function fetchEmptyOrders() {
 
   try {
     const data = await ajax('/api/orders/get', { empty: true, length: 20 }, 'GET')
-
+    console.log('Empty orders fetched:', data)
     if (!data) {
       emptyOrdersContainer.innerHTML = '<p class="text-danger">Không thể tải dữ liệu</p>'
       return
     }
 
+    // Kiểm tra trạng thái URL sau khi đã có danh sách orders
+    checkOrderIdInURL(data)
+
+    // Sau khi xử lý URL xong thì render danh sách
     renderEmptyOrders(data)
     isLoaded = true
   } catch (error) {
@@ -285,10 +235,44 @@ async function fetchEmptyOrders() {
 
 // Sự kiện click nút tạo hóa đơn
 createOrderCard.addEventListener('click', () => handleCreateNewOrder(createOrderCard))
-
-// Chạy kiểm tra ngay khi trang load
-checkOrderIdInURL()
 fetchEmptyOrders()
+
+// Click chọn bàn
+document.getElementById('tableGrid').addEventListener('click', async (e) => {
+  const btnTable = e.target.closest('.table-button')
+  if (!btnTable) return
+
+  // ===== Bàn thường =====
+  const tableId = btnTable.getAttribute('data-table-id')
+  const orderId = btnTable.getAttribute('data-order-id')
+  const status = btnTable.getAttribute('data-status')
+
+  if (status === 'available') {
+    if (confirm('Bạn có muốn tạo order và gọi món cho bàn này không?')) {
+      try {
+        const orderResult = await ajax('/api/orders', { tableId }, 'POST')
+        if (orderResult?.orderId) {
+          toastr.success('Order cho bàn đã được tạo thành công!')
+          setTimeout(() => {
+            window.location.href = `/orders?orderId=${orderResult.orderId}`
+          }, 300)
+        } else {
+          toastr.error('Không thể tạo order mới.')
+        }
+      } catch (err) {
+        toastr.error('Lỗi khi tạo order: ' + err.message)
+      }
+    }
+  } else if (status === 'occupied') {
+    if (orderId) {
+      window.location.href = `/orders?orderId=${orderId}`
+    } else {
+      toastr.warning('Bàn này đang bận nhưng không tìm thấy order.')
+    }
+  } else {
+    toastr.info('Trạng thái bàn chưa xác định.')
+  }
+})
 
 // Lấy danh sách bàn
 async function getTables() {
@@ -312,12 +296,7 @@ function renderTableList(tables = []) {
     return
   }
 
-  // Nút "Mang Về"
-  let html = `
-    <button class="btn btn-warning m-1 table-button" data-mang-ve="true">
-      <i class="bi bi-bag"></i> Mang Về
-    </button>
-  `
+  let html = ''
 
   html += tables
     .map((table) => {
@@ -338,6 +317,10 @@ function renderTableList(tables = []) {
 
   tableGrid.innerHTML = html
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  getTables()
+})
 
 // ===== Categories =====
 function extractCategories(items) {
@@ -534,22 +517,6 @@ async function fetchCombos() {
     return []
   }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.location.hash === '#checkoutActions') {
-    setTimeout(() => {
-      const element = document.querySelector('#checkoutActions')
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }
-
-      const checkoutBtn = document.querySelector('#confirmCheckoutBtn')
-      if (checkoutBtn) {
-        checkoutBtn.focus()
-      }
-    }, 300)
-  }
-})
 
 // ======== Cập nhật UI Hóa đơn ========
 
@@ -790,6 +757,8 @@ $(async () => {
 
     try {
       const res = await fetch(`/api/orders/${orderId}`)
+      searchInput.focus()
+
       if (!res.ok) throw new Error('Không lấy được dữ liệu hóa đơn')
       const order = await res.json()
       const customer = order.customerId
