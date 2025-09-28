@@ -6,17 +6,23 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import { normalizeValue } from '../../../helpers/common.js'
 import { logActivity } from '../../activity-logs/service.js'
 
-export const getAllIngredients = async (req, res) => {
+export const getActiveIngredients = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const matchCondition = {
+      isActive: true,
+      organization: organizationId
+    }
+
+    // Sử dụng warehouseFilter được set bởi middleware
+    if (req.warehouseFilter) {
+      matchCondition.warehouse = req.warehouseFilter
+    }
+
     const pipeline = [
-      {
-        $match: {
-          isActive: true,
-          organization: organizationId
-        }
-      },
+      { $match: matchCondition },
       { $sort: { name: 1 } },
       {
         $project: {
@@ -26,6 +32,7 @@ export const getAllIngredients = async (req, res) => {
         }
       }
     ]
+
     const ings = await Ingredient.aggregate(pipeline)
     responseHelper.success(res, ings)
   } catch (err) {
@@ -46,9 +53,17 @@ export const ingredientDataAPI = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    // Base pipeline
+    // Build base match condition
+    const baseMatch = { organization: organizationId }
+
+    // Thêm warehouse filter (cho Staff)
+    if (req.warehouseFilter) {
+      baseMatch.warehouse = req.warehouseFilter
+    }
+
+    // Base pipeline với warehouse filter
     const pipeline = [
-      { $match: { organization: organizationId } },
+      { $match: baseMatch },
       ...lookupRef('category', 'IngredientCategories', { as: 'category' }),
       ...lookupUser('createdBy'),
       ...lookupUser('updatedBy')
@@ -73,10 +88,8 @@ export const ingredientDataAPI = async (req, res) => {
       pipeline.push({ $match: { $or: orConditions } })
     }
 
-    // Get total count
-    const recordsTotal = await Ingredient.countDocuments({
-      organization: organizationId
-    })
+    // Get total count với warehouse filter
+    const recordsTotal = await Ingredient.countDocuments(baseMatch)
 
     // Get filtered count
     const countPipeline = [...pipeline, { $count: 'count' }]
@@ -139,6 +152,7 @@ export const ingredientDataAPI = async (req, res) => {
           isActive: 1,
           createdAt: 1,
           updatedAt: 1,
+          warehouse: 1, // Có thể thêm để debug
           category: {
             _id: '$category._id',
             name: '$category.name'
