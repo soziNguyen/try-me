@@ -9,16 +9,6 @@
       </div>
 
       <div class="order d-none" id="orderFull">
-        <div class="row d-none">
-          <div class="col-12">
-            <div class="table-order ">
-              <button class="btn btn-outline-primary w-100 btn-select-table" id="btnSelectTable ">
-                <i class="bi bi-list-ul"></i> XEM DANH SÁCH BÀN ĐANG HOẠT ĐỘNG
-              </button>
-              <div id="tableGrid"></div>
-            </div>
-          </div>
-        </div>
 
         <div class="row">
           <div class="col-12">
@@ -44,6 +34,31 @@
           </div>
 
           <div class="col-lg-4 mt-3 d-none" id="orderSection">
+
+            <!-- Accordion trống -->
+            <div class="accordion mb-3" id="accordionTable">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTable">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseTable" aria-expanded="false" aria-controls="collapseTable">
+                    Danh sách bàn
+                  </button>
+                </h2>
+                <div id="collapseTable" class="accordion-collapse collapse" aria-labelledby="headingTable"
+                  data-bs-parent="#accordionTable">
+                  <div class="accordion-body">
+                    <div class="row">
+                      <div>
+                        <div class="table-order ">
+                          <div id="tableGrid"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Accordion thông tin khách hàng -->
             <div class="accordion mb-3" id="accordionClent">
               <div class="accordion-item">
@@ -92,6 +107,12 @@
                   <div class="accordion-body p-0">
                     <div id="orderSummary" class="card p-3 shadow-sm table-responsive m-0">
                       <table class="table table-bordered table-sm mb-0">
+                        <p class="mb-2">
+                          <strong>Thu ngân:</strong>
+                          <span id="cashier">
+                            <%= user.username %>
+                          </span>
+                        </p>
                         <thead class="table-light">
                           <tr>
                             <th class="text">Món</th>

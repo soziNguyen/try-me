@@ -645,6 +645,8 @@ function initCheckoutConfirm() {
       toastr.success('Thanh toán thành công!')
       document.getElementById('checkoutDetail').style.display = 'none'
 
+      fetchEmptyOrders()
+
       if (printInvoice === 'yes') {
         window.open(`/orders/print/${orderId}`, '_blank')
       }

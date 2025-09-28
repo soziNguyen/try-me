@@ -893,6 +893,7 @@ export const getOrders = async (req, res) => {
     const match = { organization: organizationId }
     if (empty) {
       match.tableId = null // Lọc các hóa đơn chưa gán bàn
+      match.status = 'open'
     }
 
     // Base pipeline
@@ -912,6 +913,7 @@ export const getOrders = async (req, res) => {
       {
         $group: {
           _id: '$_id',
+          code: { $first: '$code' },
           customer: { $first: '$customer' },
           table: { $first: '$table' },
           total: { $first: '$total' },
@@ -988,6 +990,7 @@ export const getOrders = async (req, res) => {
       {
         $project: {
           _id: 1,
+          code: 1,
           total: 1,
           customer: { _id: 1, name: 1 },
           table: { _id: 1, name: 1 },
