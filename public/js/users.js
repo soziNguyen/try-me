@@ -210,6 +210,7 @@ if (logInForm) {
 } else {
   document.addEventListener('DOMContentLoaded', async () => {
     await getUsers()
+    await getActiveWarehouses()
     await addUser()
   })
 
@@ -223,13 +224,37 @@ if (logInForm) {
     }
   })
 
+  /**
+   * [GET] active warehouse
+   */
+
+  let warehouses = []
+  const getActiveWarehouses = async () => {
+    try {
+      const result = await ajax('/api/inventory/warehouse/all', {}, 'GET')
+      if (!result) {
+        toastr.error('Không thể lấy thông tin nhà kho')
+      }
+      warehouses = result
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   async function addUser() {
     const newUserModal = showModal('newUserModal') || null
     const newUser = document.querySelector('#newUser')
     const form = document.getElementById('newUserForm')
+    const warehouse = document.getElementById('warehouse1')
 
     if (newUser && newUserModal) {
       newUser.addEventListener('click', function () {
+        warehouses.forEach((wh) => {
+          const option = document.createElement('option')
+          option.value = wh._id
+          option.textContent = wh.name
+          warehouse.appendChild(option)
+        })
         newUserModal.show()
       })
     }
@@ -246,10 +271,18 @@ if (logInForm) {
           return
         }
 
+        if (!warehouse.value) {
+          toastr.warning('Vui lòng chọn kho')
+          return
+        }
+
+        const warehouseId = warehouse.value
+
         try {
           const result = await ajax('/api/users/create', {
             username,
             email,
+            warehouse: warehouseId,
             password
           })
           if (result) {
@@ -311,21 +344,30 @@ if (logInForm) {
       // Lấy thông tin user
       const user = await ajax(`/api/users/${userId}`, {}, 'GET')
 
-      // Đổ roles
+      // Đổ roles với selected đúng
       const roles = ['Org', 'Staff']
-      const roleSelect = document.getElementById('new-role')
-      roleSelect.innerHTML = ''
-      roles.forEach((r) => {
-        const opt = document.createElement('option')
-        opt.value = r
-        opt.textContent = r
-        roleSelect.appendChild(opt)
-      })
+      const roleOptions = roles
+        .map(
+          (r) =>
+            `<option value="${r}" ${r === (user.role || 'Staff') ? 'selected' : ''}>${r}</option>`
+        )
+        .join('')
+      document.getElementById('new-role').innerHTML = roleOptions
 
-      // Gán dữ liệu
+      // Đổ warehouses với selected đúng
+      const warehouseOptions = warehouses
+        .map(
+          (wh) =>
+            `<option value="${wh._id}" ${wh._id === user.warehouse?._id ? 'selected' : ''}>${wh.name}</option>`
+        )
+        .join('')
+      // Thêm option mặc định
+      const defaultOption = `<option value="" ${!user.warehouse?._id ? 'selected' : ''}>— Chọn kho —</option>`
+      document.getElementById('warehouse2').innerHTML = defaultOption + warehouseOptions
+
+      // Gán dữ liệu cho các field khác
       document.getElementById('new-username').value = user.username || ''
       document.getElementById('new-email').value = user.email || ''
-      document.getElementById('new-role').value = user.role || 'Staff'
       document.getElementById('new-password').value = ''
       document.getElementById('new-confirm-password').value = ''
 
@@ -344,21 +386,25 @@ if (logInForm) {
         const password = document.getElementById('new-password').value.trim()
         const confirmPassword = document.getElementById('new-confirm-password').value.trim()
         const role = document.getElementById('new-role').value
-        const dataUpdate = { username, email, role }
+        const warehouse = document.getElementById('warehouse2').value
+        const dataUpdate = { username, email, warehouse, role }
 
         const isValidUser = isValidUserAccountName(username, email)
         if (isValidUser) {
           toastr.warning(isValidUser)
           return
         }
+
         if (role !== user.role && userId === currentUserId) {
           toastr.warning('Bạn không thể tự thay đổi vai trò của mình')
           return
         }
+
         if ((password && !confirmPassword) || (!password && confirmPassword)) {
           toastr.warning('Vui lòng nhập đầy đủ mật khẩu và xác nhận mật khẩu.')
           return
         }
+
         if (password && confirmPassword) {
           if (!isValidPassword(password)) {
             toastr.warning(
@@ -459,6 +505,7 @@ function renderTable(users = []) {
             }"></td>
             <td><span class="form-control border-0 w-100">${user.username}</span></td>
             <td><span class="form-control border-0 w-100">${user.email}</span></td>
+            <td><span class="form-control border-0 w-100">${user.warehouse?.name ? user.warehouse?.name : ''}</span></td>
             <td><span class="form-control border-0 w-100">${user.role}</span></td>
             <td><span class="form-control border-0 w-100">${formatDate(user.createdAt)}</span></td>
             <td><span class="form-control border-0 w-100">${formatDate(user.updatedAt)}</span></td>

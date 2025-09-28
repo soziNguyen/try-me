@@ -1,7 +1,7 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/org_sidebar.html') %>
     <div class="admin__content">
-      <h3 class="fw-bold mb-4">STAFF MANAGEMENT</h3>
+      <h3 class="fw-bold mb-4"><%= pageTitle %></h3>
 
       <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="search-form d-flex align-items-center" id="search-container">
@@ -23,6 +23,7 @@
             <th class="t_center"><input type="checkbox" id="selectAll"></th>
             <th>Tên đăng nhập</th>
             <th>Email</th>
+            <th>Kho</th>
             <th>Vai trò</th>
             <th>Thời gian tạo</th>
             <th>Thời gian cập nhật</th>
@@ -51,6 +52,12 @@
                 <div class="mb-3">
                   <label>Email:</label>
                   <input type="email" id="email" class="form-control" autocomplete="username">
+                </div>
+                <div class="mb-3">
+                  <label>Kho:</label>
+                  <select id="warehouse1" class="form-control">
+                    <option value="">— Chọn kho —</option>
+                  </select>
                 </div>
                 <div class="mb-3">
                   <label>Mật khẩu:</label>
@@ -93,6 +100,12 @@
                 <div class="mb-3">
                   <label>Email:</label>
                   <input type="email" id="new-email" class="form-control" autocomplete="username">
+                </div>
+                <div class="mb-3">
+                  <label>Kho:</label>
+                  <select id="warehouse2" class="form-control">
+                    <option value="">— Chọn kho —</option>
+                  </select>
                 </div>
                 <div class="mb-3">
                   <label>Mật khẩu mới:</label>

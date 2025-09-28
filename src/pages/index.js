@@ -10,13 +10,10 @@ import InvoiceOption from '../modules/invoice/model.js'
 export const userPage = async (req, res) => {
   res.render(
     'users/user',
-    getPageData(
-      req,
-      'Dashboard',
-      'User',
-      { headerClass: 'admin__header' },
-      { pageTitle: 'QUẢN LÝ NHÂN VIÊN' }
-    )
+    getPageData(req, 'Dashboard', 'User', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ NHÂN VIÊN'
+    })
   )
 }
 

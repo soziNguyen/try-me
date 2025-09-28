@@ -10,6 +10,11 @@ const UserSchema = new Schema(
     email: { type: String, default: '', unique: true },
     password: { type: String, select: false, default: '' },
     role: { type: String, enum: ['Admin', 'Org', 'Staff'], default: 'Staff' },
+    warehouse: {
+      type: Schema.Types.ObjectId,
+      ref: 'Warehouse',
+      default: null
+    },
     organization: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',

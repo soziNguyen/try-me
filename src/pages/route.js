@@ -23,7 +23,7 @@ router.get('/receipt/:id', isAuthenticated, page.receiptDetailPage)
 router.get('/invoice', isAuthenticated, page.invoicePage)
 
 // Inventory
-router.get('/inventory/ingredients', isAuthenticated, isPermit('Admin', 'Org'), page.ingredientPage)
+router.get('/inventory/ingredients', isAuthenticated, page.ingredientPage)
 router.get('/inventory/categories', isAuthenticated, isPermit('Admin', 'Org'), page.categoryPage)
 router.get(
   '/inventory/inventory-stock',
