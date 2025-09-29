@@ -134,7 +134,7 @@ export const updateUser = async (req, res) => {
       return responseHelper.error(res, 'Username hoặc Email đã tồn tại', 400)
     }
 
-    if (!warehouse) return responseHelper.error(res, 'Vui lòng chọn kho', 400)
+    if (role === 'Staff' && !warehouse) return responseHelper.error(res, 'Vui lòng chọn kho', 400)
 
     const updatedFields = { username, email, role }
     if (warehouse) updatedFields.warehouse = warehouse

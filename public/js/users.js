@@ -341,43 +341,55 @@ if (logInForm) {
   // update event handler
   async function updateUser(userId) {
     try {
-      // Lấy thông tin user
       const user = await ajax(`/api/users/${userId}`, {}, 'GET')
 
-      // Đổ roles với selected đúng
+      const roleSelect = document.getElementById('new-role')
+      const warehouseGroup = document.getElementById('warehouse-group')
+      const warehouseSelect = document.getElementById('warehouse2')
+
+      // Đổ roles
       const roles = ['Org', 'Staff']
-      const roleOptions = roles
+      roleSelect.innerHTML = roles
         .map(
           (r) =>
             `<option value="${r}" ${r === (user.role || 'Staff') ? 'selected' : ''}>${r}</option>`
         )
         .join('')
-      document.getElementById('new-role').innerHTML = roleOptions
 
-      // Đổ warehouses với selected đúng
-      const warehouseOptions = warehouses
+      // Đổ kho
+      const options = warehouses
         .map(
           (wh) =>
             `<option value="${wh._id}" ${wh._id === user.warehouse?._id ? 'selected' : ''}>${wh.name}</option>`
         )
         .join('')
-      // Thêm option mặc định
-      const defaultOption = `<option value="" ${!user.warehouse?._id ? 'selected' : ''}>— Chọn kho —</option>`
-      document.getElementById('warehouse2').innerHTML = defaultOption + warehouseOptions
+      warehouseSelect.innerHTML = `<option value="">— Chọn kho —</option>${options}`
 
-      // Gán dữ liệu cho các field khác
+      // Toggle field kho với class d-none
+      const toggleWarehouse = (role) => {
+        warehouseGroup.classList.toggle('d-none', role !== 'Staff')
+      }
+      toggleWarehouse(user.role)
+
+      // Khi đổi role trong modal
+      roleSelect.addEventListener('change', (e) => {
+        toggleWarehouse(e.target.value)
+        if (e.target.value !== 'Staff') warehouseSelect.value = ''
+      })
+
+      // Gán dữ liệu khác
       document.getElementById('new-username').value = user.username || ''
       document.getElementById('new-email').value = user.email || ''
       document.getElementById('new-password').value = ''
       document.getElementById('new-confirm-password').value = ''
 
-      // Hiển thị modal
+      // Show modal
       const modal = showModal('updateUserModal')
       modal.show()
 
-      // Xử lý submit chỉ một lần
+      // Submit
       const form = document.getElementById('updateUserForm')
-      const submitHandler = async (e) => {
+      form.onsubmit = async (e) => {
         e.preventDefault()
 
         const currentUserId = document.getElementById('currentUserId').value
@@ -385,46 +397,42 @@ if (logInForm) {
         const email = document.getElementById('new-email').value.trim()
         const password = document.getElementById('new-password').value.trim()
         const confirmPassword = document.getElementById('new-confirm-password').value.trim()
-        const role = document.getElementById('new-role').value
-        const warehouse = document.getElementById('warehouse2').value
-        const dataUpdate = { username, email, warehouse, role }
+        const role = roleSelect.value
+        const warehouse = warehouseSelect.value
+        const dataUpdate = { username, email, role }
 
+        // Bắt buộc kho nếu là Staff
+        if (role === 'Staff' && !warehouse) {
+          return toastr.warning('Vui lòng chọn kho cho nhân viên')
+        }
+        if (role === 'Staff') dataUpdate.warehouse = warehouse
+
+        // Chặn tự đổi role
+        if (userId === currentUserId && role !== user.role) {
+          return toastr.warning('Bạn không thể tự thay đổi vai trò của mình')
+        }
+
+        // Validate username/email
         const isValidUser = isValidUserAccountName(username, email)
-        if (isValidUser) {
-          toastr.warning(isValidUser)
-          return
-        }
+        if (isValidUser) return toastr.warning(isValidUser)
 
-        if (role !== user.role && userId === currentUserId) {
-          toastr.warning('Bạn không thể tự thay đổi vai trò của mình')
-          return
-        }
-
+        // Validate password
         if ((password && !confirmPassword) || (!password && confirmPassword)) {
-          toastr.warning('Vui lòng nhập đầy đủ mật khẩu và xác nhận mật khẩu.')
-          return
+          return toastr.warning('Nhập đầy đủ mật khẩu và xác nhận mật khẩu')
         }
-
         if (password && confirmPassword) {
-          if (!isValidPassword(password)) {
-            toastr.warning(
-              'Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm ký tự hoa, thường, số và ký tự đặc biệt'
-            )
-            return
-          }
-          if (password !== confirmPassword) {
-            toastr.warning('Mật khẩu không khớp')
-            return
-          }
+          if (!isValidPassword(password)) return toastr.warning('Mật khẩu không hợp lệ')
+          if (password !== confirmPassword) return toastr.warning('Mật khẩu không khớp')
           dataUpdate.password = password
           dataUpdate.confirmPassword = confirmPassword
         }
 
+        // Gửi request
         try {
           const result = await ajax(`/api/users/update/${userId}`, dataUpdate, 'PUT')
           if (result) {
             toastr.success('Cập nhật thành công')
-            modal.hide()
+            hideModal('updateUserModal')
             clearForm('update')
             await getUsers()
           }
@@ -432,13 +440,8 @@ if (logInForm) {
           toastr.error(err.message)
         }
       }
-
-      // Gỡ event cũ rồi gắn mới (hoặc dùng once)
-      form.replaceWith(form.cloneNode(true))
-      const newForm = document.getElementById('updateUserForm')
-      newForm.addEventListener('submit', submitHandler, { once: true })
-    } catch (error) {
-      toastr.error(error.message)
+    } catch (err) {
+      toastr.error(err.message)
     }
   }
 
