@@ -10,7 +10,7 @@ async function fetchWarehouses(selectedId = '') {
 
     if (data.success) {
       const select = document.getElementById('orgWarehouse')
-      select.innerHTML = '<option value="">— Chọn kho mặc định —</option>'
+      select.innerHTML = '<option value="">— Tất cả —</option>'
       data.data.forEach((w) => {
         const opt = document.createElement('option')
         opt.value = w._id

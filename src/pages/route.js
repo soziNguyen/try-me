@@ -33,8 +33,8 @@ router.get(
 )
 router.get('/inventory/suppliers', isAuthenticated, isPermit('Admin', 'Org'), page.supplierPage)
 router.get('/inventory/warehouses', isAuthenticated, isPermit('Admin', 'Org'), page.warehousePage)
-router.get('/inventory/stock-entries', isAuthenticated, isPermit('Admin', 'Org'), page.importPage)
-router.get('/inventory/stock-issues', isAuthenticated, isPermit('Admin', 'Org'), page.exportPage)
+router.get('/inventory/stock-entries', isAuthenticated, page.importPage)
+router.get('/inventory/stock-issues', isAuthenticated, page.exportPage)
 router.get(
   '/inventory/stock-transfers',
   isAuthenticated,
@@ -47,18 +47,8 @@ router.get(
   isPermit('Admin', 'Org'),
   page.historyPage
 )
-router.get(
-  '/inventory/stock-entry/:id',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.newStockEntryPage
-)
-router.get(
-  '/inventory/stock-issue/:id',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.newStockIssuePage
-)
+router.get('/inventory/stock-entry/:id', isAuthenticated, page.newStockEntryPage)
+router.get('/inventory/stock-issue/:id', isAuthenticated, page.newStockIssuePage)
 router.get(
   '/inventory/stock-transfer/:id',
   isAuthenticated,
