@@ -98,6 +98,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       orderTypeEl.textContent = 'Mang về'
     } else if (order.tableId?.name) {
       orderTypeEl.textContent = `Bàn ${order.tableId.name} - ${order.tableId.area || ''}`
+    } else if (!order.tableId && !order.isTakeaway) {
+      orderTypeEl.textContent = 'Hóa đơn trống'
     } else {
       orderTypeEl.textContent = 'Không xác định'
     }
