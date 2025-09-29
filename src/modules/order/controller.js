@@ -884,7 +884,8 @@ export const getOrders = async (req, res) => {
     const colIdx = req.query['order[0][column]']
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
-    const empty = req.query.empty === 'true' // <-- thêm dòng này
+    const empty = req.query.empty === 'true'
+    const statusFilter = req.query.status
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -892,8 +893,10 @@ export const getOrders = async (req, res) => {
     // Base match object
     const match = { organization: organizationId }
     if (empty) {
-      match.tableId = null // Lọc các hóa đơn chưa gán bàn
+      match.tableId = null
       match.status = 'open'
+    } else if (statusFilter) {
+      match.status = statusFilter
     }
 
     // Base pipeline
@@ -1069,5 +1072,52 @@ export const assignCustomerToOrder = async (req, res) => {
   } catch (error) {
     console.error('assignCustomerToOrder error:', error)
     return responseHelper.error(res, 'Có lỗi xảy ra khi gán khách hàng')
+  }
+}
+
+export const assignTableToOrder = async (req, res) => {
+  try {
+    const result = await withTransaction(async (session) => {
+      const organizationId = getCurrentOrg(req)
+      if (!organizationId) throw new Error('Thiếu thông tin tổ chức')
+
+      const { orderId } = req.params
+      const { tableId } = req.body
+      if (!orderId || !tableId) throw new Error('Thiếu orderId hoặc tableId')
+
+      // Tìm order trống
+      const order = await Order.findOne({
+        _id: orderId,
+        organization: organizationId,
+        status: 'open'
+      }).session(session)
+      if (!order) throw new Error('Order không tồn tại hoặc không hợp lệ')
+
+      // Kiểm tra bàn
+      const table = await Table.findById(tableId).session(session)
+      if (!table) throw new Error('Bàn không tồn tại')
+      if (table.status === 'occupied') throw new Error('Bàn đã có khách')
+
+      await Promise.all([
+        Order.updateOne({ _id: orderId }, { tableId, isTakeaway: false }, { session }),
+        Table.updateOne(
+          { _id: tableId },
+          {
+            status: 'occupied',
+            checkInTime: new Date(),
+            currentOrderId: order._id,
+            orderCode: order.code
+          },
+          { session }
+        )
+      ])
+
+      return { orderId: order._id, tableId }
+    })
+
+    responseHelper.success(res, result)
+  } catch (error) {
+    console.error('Assign table to order error:', error)
+    responseHelper.error(res, error.message)
   }
 }
