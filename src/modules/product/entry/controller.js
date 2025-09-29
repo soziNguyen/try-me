@@ -8,20 +8,29 @@ import withTransaction from '../../../helpers/withTransaction.js'
 import { lookupRef, lookupUser } from '../../../helpers/lookupHelper.js'
 import BusinessError from '../../error/BusinessError.js'
 import Organization from '../../organization/model.js'
+import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 
 export const createProductEntry = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
     const entry = await withTransaction(async (session) => {
       const code = await generateDocumentCode(ProductEntry, 'PE')
       const date = new Date()
-      const doc = new ProductEntry({
+
+      // Warehouse logic
+      const warehouse = await getWarehouse(req, organizationId)
+
+      const docData = {
         code: code,
         date: date,
         createdBy: req.user._id,
-        organization: organizationId
-      })
+        organization: organizationId,
+        warehouse: warehouse
+      }
+
+      const doc = new ProductEntry(docData)
       await doc.save({ session })
       return doc
     })
@@ -42,7 +51,17 @@ export const getProductEntryById = async (req, res) => {
       return responseHelper.error(res, 'ID không hợp lệ', 400)
     }
 
-    const productEntry = await ProductEntry.findOne({ _id: id, organization: organizationId })
+    const matchCondition = {
+      _id: id,
+      organization: organizationId
+    }
+
+    // Staff chỉ xem được phiếu của kho mình
+    if (req.warehouseFilter) {
+      matchCondition.warehouse = req.warehouseFilter
+    }
+
+    const productEntry = await ProductEntry.findOne(matchCondition)
       .populate('warehouse', 'name location')
       .populate('createdBy', 'username')
       .populate('updatedBy', 'username')
@@ -71,8 +90,21 @@ export const getProductEntries = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    const matchCondition = { organization: organizationId }
+
+    // Warehouse filtering
+    if (req.warehouseFilter) {
+      matchCondition.warehouse = req.warehouseFilter
+    } else {
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        matchCondition.warehouse = org.defaultWarehouse
+      }
+      // null -> xem tất cả
+    }
+
     const basePipeline = [
-      { $match: { organization: organizationId } },
+      { $match: matchCondition },
       ...lookupRef('warehouse', 'Warehouses'),
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
       ...lookupRef('items.product', 'MenuItems', { as: 'product' }),
@@ -124,11 +156,17 @@ export const getProductEntries = async (req, res) => {
         isLocked: { $first: '$isLocked' },
         items: {
           $push: {
-            product: '$product',
-            quantity: '$items.quantity',
-            unit: '$items.unit',
-            unitPrice: '$items.unitPrice',
-            total: '$items.total'
+            $cond: {
+              if: { $ifNull: ['$items', false] },
+              then: {
+                product: '$product',
+                quantity: '$items.quantity',
+                unit: '$items.unit',
+                unitPrice: '$items.unitPrice',
+                total: '$items.total'
+              },
+              else: '$REMOVE'
+            }
           }
         }
       }
@@ -169,29 +207,31 @@ export const updateProductEntry = async (req, res) => {
         throw new BusinessError('ID không hợp lệ', 400)
       }
 
-      const oldEntry = await ProductEntry.findOne({
+      // Tìm phiếu cũ với warehouse filter nếu là Staff
+      const findCondition = {
         _id: id,
         organization: organizationId
-      }).session(session)
+      }
+
+      // Staff chỉ được update phiếu của kho mình
+      if (req.warehouseFilter) {
+        findCondition.warehouse = req.warehouseFilter
+      }
+
+      const oldEntry = await ProductEntry.findOne(findCondition).session(session)
 
       if (!oldEntry) throw new BusinessError('Phiếu nhập không tồn tại', 404)
       if (oldEntry.isLocked)
         throw new BusinessError('Phiếu nhập đã bị khóa, không thể chỉnh sửa', 400)
+
+      // Warehouse không thay đổi - giữ nguyên từ phiếu cũ
+      const warehouse = oldEntry.warehouse
 
       const { items: rawItems = [], note } = req.body
 
       // Validation đầu vào
       if (!Array.isArray(rawItems) || rawItems.length === 0) {
         throw new BusinessError('Phiếu nhập phải có ít nhất 1 sản phẩm', 400)
-      }
-
-      const org = await Organization.findById(organizationId).select('defaultWarehouse')
-      const warehouse = org?.defaultWarehouse
-
-      if (!warehouse) throw new BusinessError('Tổ chức chưa cấu hình kho mặc định', 400)
-
-      if (!mongoose.isValidObjectId(warehouse)) {
-        throw new BusinessError('ID kho không hợp lệ', 400)
       }
 
       // Validate và parse items
@@ -225,39 +265,36 @@ export const updateProductEntry = async (req, res) => {
       }
 
       // Hoàn nguyên tồn kho từ phiếu cũ
-      if (oldEntry.warehouse) {
-        for (const item of oldEntry.items) {
-          if (item.product && item.quantity > 0) {
-            // Kiểm tra tồn kho hiện tại trước khi trừ
-            const currentStock = await ProductStock.findOne({
-              product: item.product,
-              warehouse: oldEntry.warehouse,
-              organization: organizationId
-            }).session(session)
+      for (const item of oldEntry.items) {
+        if (item.product && item.quantity > 0) {
+          // Kiểm tra tồn kho hiện tại trước khi trừ
+          const currentStock = await ProductStock.findOne({
+            product: item.product,
+            warehouse: warehouse,
+            organization: organizationId
+          }).session(session)
 
-            if (currentStock && currentStock.quantity < item.quantity) {
-              throw new BusinessError(
-                `Không thể hoàn nguyên tồn kho. Tồn kho hiện tại không đủ.`,
-                400
-              )
-            }
-
-            await ProductStock.updateOne(
-              {
-                product: item.product,
-                warehouse: oldEntry.warehouse,
-                organization: organizationId
-              },
-              { $inc: { quantity: -item.quantity } },
-              { session }
+          if (currentStock && currentStock.quantity < item.quantity) {
+            throw new BusinessError(
+              `Không thể hoàn nguyên tồn kho. Tồn kho hiện tại không đủ.`,
+              400
             )
           }
+
+          await ProductStock.updateOne(
+            {
+              product: item.product,
+              warehouse: warehouse,
+              organization: organizationId
+            },
+            { $inc: { quantity: -item.quantity } },
+            { session }
+          )
         }
       }
 
-      // Cập nhật thông tin phiếu nhập
+      // Cập nhật thông tin phiếu nhập (warehouse không đổi)
       const updateData = {
-        warehouse,
         note,
         items,
         total: subTotal,
@@ -276,21 +313,19 @@ export const updateProductEntry = async (req, res) => {
       if (!newEntry) throw new BusinessError('Cập nhật thất bại', 400)
 
       // Cộng tồn kho mới
-      if (newEntry.warehouse) {
-        for (const item of newEntry.items) {
-          if (item.product && item.quantity > 0) {
-            await ProductStock.updateOne(
-              {
-                product: item.product,
-                warehouse: newEntry.warehouse,
-                organization: organizationId
-              },
-              {
-                $inc: { quantity: item.quantity }
-              },
-              { upsert: true, session }
-            )
-          }
+      for (const item of newEntry.items) {
+        if (item.product && item.quantity > 0) {
+          await ProductStock.updateOne(
+            {
+              product: item.product,
+              warehouse: warehouse,
+              organization: organizationId
+            },
+            {
+              $inc: { quantity: item.quantity }
+            },
+            { upsert: true, session }
+          )
         }
       }
 
@@ -306,7 +341,6 @@ export const updateProductEntry = async (req, res) => {
     responseHelper.success(res, updatedDoc, 'Cập nhật phiếu nhập thành công')
   } catch (error) {
     if (error instanceof BusinessError) {
-      // Trả về đúng HTTP code của BusinessError
       return responseHelper.error(res, error.message, error.statusCode || 400)
     }
     console.error('Error updating product entry:', error)
@@ -316,20 +350,28 @@ export const updateProductEntry = async (req, res) => {
 
 export const deleteProductEntries = async (req, res) => {
   try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
     await withTransaction(async (session) => {
       const { ids } = req.body
       if (!Array.isArray(ids) || ids.length === 0) {
         throw new BusinessError('Không có phiếu nào được chọn để xóa')
       }
 
-      const organizationId = getCurrentOrg(req)
-      if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-
-      // Lấy các phiếu nhập
-      const entries = await ProductEntry.find({
+      // Tìm phiếu với warehouse filter nếu là Staff
+      const findCondition = {
         _id: { $in: ids },
         organization: organizationId
-      }).session(session)
+      }
+
+      // Staff chỉ được xóa phiếu của kho mình
+      if (req.warehouseFilter) {
+        findCondition.warehouse = req.warehouseFilter
+      }
+
+      // Lấy các phiếu nhập
+      const entries = await ProductEntry.find(findCondition).session(session)
 
       if (!entries.length) {
         throw new BusinessError('Không tìm thấy phiếu nhập', 404)
@@ -383,16 +425,12 @@ export const deleteProductEntries = async (req, res) => {
       }
 
       // Xóa phiếu
-      await ProductEntry.deleteMany({
-        _id: { $in: ids },
-        organization: organizationId
-      }).session(session)
+      await ProductEntry.deleteMany(findCondition).session(session)
     })
 
     responseHelper.success(res, null, 'Xóa và cập nhật tồn kho thành công')
   } catch (error) {
     if (error instanceof BusinessError) {
-      // Trả về đúng HTTP code của BusinessError
       return responseHelper.error(res, error.message, error.statusCode || 400)
     }
     responseHelper.error(res, error.message)

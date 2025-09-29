@@ -92,13 +92,8 @@ router.get('/staff/payroll/:id', isAuthenticated, isPermit('Admin', 'Org'), page
 router.get('/activity-logs', isAuthenticated, isPermit('Admin', 'Org'), page.activityLog)
 
 // Product
-router.get('/product/entries', isAuthenticated, isPermit('Admin', 'Org'), page.productEntryPage)
-router.get(
-  '/product/entry/:id',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.newProductEntryPage
-)
-router.get('/product/stocks', isAuthenticated, isPermit('Admin', 'Org'), page.productStockPage)
+router.get('/product/entries', isAuthenticated, page.productEntryPage)
+router.get('/product/entry/:id', isAuthenticated, page.newProductEntryPage)
+router.get('/product/stocks', isAuthenticated, page.productStockPage)
 
 export default router

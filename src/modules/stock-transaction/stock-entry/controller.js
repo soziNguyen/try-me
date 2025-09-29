@@ -302,7 +302,6 @@ export const createStockEntry = async (req, res) => {
   }
 }
 
-// UPDATE (form)
 // UPDATE với Delta-based Logic
 export const updateStockEntryFromForm = async (req, res) => {
   try {

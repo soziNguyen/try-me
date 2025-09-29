@@ -1,6 +1,5 @@
 $(function () {
   let products = []
-  let warehouses = []
   let units = []
   let productEntryId = null
   let itemCounter = 0
@@ -15,10 +14,9 @@ $(function () {
   // Load dữ liệu ban đầu
   Promise.all([
     fetchData('menu/get/active'),
-    productEntryId ? fetchData(`product/entry/${productEntryId}`) : Promise.resolve(null),
-    fetchData(`organization/${orgId}`)
+    productEntryId ? fetchData(`product/entry/${productEntryId}`) : Promise.resolve(null)
   ])
-    .then(([pros, productEntryRes, currentOrg]) => {
+    .then(([pros, productEntryRes]) => {
       products = pros || []
       units = productEntryRes?.units || []
 
@@ -26,11 +24,7 @@ $(function () {
       if (productEntryRes) {
         productEntry = productEntryRes.productEntry
 
-        populateForm(productEntry, currentOrg.defaultWarehouse.name)
-      } else {
-        const currentUserName = '<%= currentUserName %>'
-        const currentUserId = '<%= currentUserId %>'
-        $('#createdBy').val(currentUserName).data('id', currentUserId)
+        populateForm(productEntry, productEntry.warehouse?.name)
       }
     })
     .catch((err) => {

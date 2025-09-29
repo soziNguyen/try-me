@@ -9,7 +9,7 @@ import {
   lockStockEntry
 } from './controller.js'
 import isAuthenticated from '../../../helpers/isAuthenticated.js'
-import { checkWarehouseAccess } from '../../../helpers/warehouseAccess.js'
+import { checkWarehouseAccess } from '../../../helpers/warehouseHelper.js'
 
 const router = express.Router()
 
