@@ -228,34 +228,55 @@ async function fetchEmptyOrders() {
 createOrderCard.addEventListener('click', () => handleCreateNewOrder(createOrderCard))
 
 // Lấy danh sách bàn
-async function getTables() {
+async function getTables(order = null) {
   try {
     const res = await ajax('/api/tables', {}, 'GET')
-    if (Array.isArray(res?.tables)) {
-      renderTableList(res.tables)
+    const tables = Array.isArray(res?.tables) ? res.tables : []
+
+    const $select = $('#table-select')
+    const availableTables = tables.filter((t) => t.status === 'available')
+
+    let html = ''
+    if (order?.tableId?._id) {
+      html += `<option value="${order.tableId._id}" selected>Bàn: ${order.tableId.name}</option>`
     } else {
-      document.getElementById('tableGrid').innerHTML = `<div>Không có bàn nào.</div>`
+      html += '<option value="">Chọn bàn</option>'
+      html += availableTables.map((t) => `<option value="${t._id}">${t.name}</option>`).join('')
+    }
+
+    $select.html(html)
+
+    // Khởi tạo hoặc cập nhật select2
+    if ($select.hasClass('select2-hidden-accessible')) {
+      $select.trigger('change.select2')
+    } else {
+      $select.select2({ width: '100px', placeholder: 'Chọn bàn' })
+    }
+
+    // Nếu đã có bàn được gán thì disable select
+    if (order?.tableId?._id) {
+      $select.prop('disabled', true)
+    } else {
+      $select.prop('disabled', false)
     }
   } catch (error) {
     console.error('Lỗi khi lấy danh sách bàn:', error)
+    $('#tableGrid').html(`<div>Không có bàn nào.</div>`)
   }
 }
 
-// Render danh sách bàn
+// Render danh sách bàn thủ công
 function renderTableList(tables = []) {
   const $select = $('#table-select')
+  const availableTables = tables.filter((t) => t.status === 'available')
 
-  const availableTables = tables.filter((table) => table.status === 'available')
-
-  if (!Array.isArray(availableTables) || availableTables.length === 0) {
+  if (availableTables.length === 0) {
     $select.html('<option value="">Không có bàn nào</option>')
     return
   }
 
   const options = availableTables
-    .map((table) => {
-      return `<option value="${table._id}">${table.name}</option>`
-    })
+    .map((table) => `<option value="${table._id}">${table.name}</option>`)
     .join('')
 
   $select.html('<option value="">Chọn bàn</option>' + options)
@@ -263,13 +284,10 @@ function renderTableList(tables = []) {
   if ($select.hasClass('select2-hidden-accessible')) {
     $select.trigger('change.select2')
   } else {
-    $select.select2({
-      placeholder: 'Chọn bàn',
-      width: '100px'
-    })
+    $select.select2({ placeholder: 'Chọn bàn', width: '100px' })
   }
 }
-// select danh sách bàn
+
 $('#table-select').on('change', async function () {
   const tableId = $(this).val()
   if (!tableId) return
@@ -295,19 +313,30 @@ $('#table-select').on('change', async function () {
       toastr.error('Lỗi khi giao bàn')
       return
     }
+
     toastr.success('Gán bàn thành công!')
     await fetchEmptyOrders()
-    await getTables()
 
-    $(this).val('').trigger('change.select2')
+    // Lấy thông tin bàn vừa chọn (tên)
+    const selectedOption = $(this).find(`option[value="${tableId}"]`)
+    const tableName = selectedOption.length ? selectedOption.text() : 'Bàn đã gán'
+
+    // Cập nhật lại select để hiển thị bàn đã gán
+    await getTables({
+      tableId: {
+        _id: tableId,
+        name: tableName
+      }
+    })
   } catch (err) {
     toastr.error('Lỗi khi giao bàn: ' + err.message)
   }
 })
 
-document.addEventListener('DOMContentLoaded', () => {
-  fetchEmptyOrders()
-  getTables()
+// Khi trang được load
+document.addEventListener('DOMContentLoaded', async () => {
+  await fetchEmptyOrders()
+  await loadOrder()
 })
 
 // ===== Categories =====
@@ -755,7 +784,11 @@ $(async () => {
   }
 
   async function loadOrder() {
-    if (!orderId) return initSelect2()
+    if (!orderId) {
+      initSelect2()
+      await getTables()
+      return
+    }
 
     try {
       const res = await fetch(`/api/orders/${orderId}`)
@@ -765,6 +798,7 @@ $(async () => {
       const customer = order.customerId
 
       initSelect2()
+      const $select = $('#customer-select') // giả sử select khách hàng có id này
 
       if (customer?._id) {
         const option = new Option(`${customer.name} - ${customer.phone}`, customer._id, true, true)
@@ -772,9 +806,13 @@ $(async () => {
         $select.append(option).trigger('change')
         updatePoints(customer.totalPoints)
       }
+
+      // Gọi getTables truyền order để hiển thị bàn đã gán
+      await getTables(order)
     } catch (e) {
       console.error(e)
       initSelect2()
+      await getTables()
     }
   }
 
@@ -818,7 +856,7 @@ $(async () => {
     $('#addCustomerModal').modal('show')
   })
 
-  //  "Lưu" trong modal
+  // trong modal
   $('#saveCustomerBtn').on('click', async () => {
     const name = $('#newCustomerName').val().trim()
     const phone = $('#newCustomerPhone').val().trim()
@@ -863,6 +901,6 @@ $(async () => {
       toastr.error(error.message || 'Không thể tạo khách hàng!')
     }
   })
-
+  window.loadOrder = loadOrder
   await loadOrder()
 })

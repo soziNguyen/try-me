@@ -112,18 +112,18 @@
                   data-bs-parent="#accordionOrder">
                   <div class="accordion-body p-0">
                     <div id="orderSummary" class="card p-3 shadow-sm table-responsive m-0">
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                        <p class="mb-0">
+                          <strong>Thu ngân:</strong>
+                          <span id="cashier">
+                            <%= user.username %>
+                          </span>
+                        </p>
+                        <select id="table-select">
+                          <option value="">Chọn bàn</option>
+                        </select>
+                      </div>
                       <table class="table table-bordered table-sm mb-0">
-                        <div class="d-flex justify-content-between mb-2">
-                          <p>
-                            <strong>Thu ngân:</strong>
-                            <span id="cashier">
-                              <%= user.username %>
-                            </span>
-                          </p>
-                          <select id="table-select">
-                            <option value="">Chọn bàn</option>
-                          </select>
-                        </div>
                         <thead class="table-light">
                           <tr>
                             <th class="text">Món</th>
