@@ -126,9 +126,6 @@ $orange-800: #9a3412;
   padding: 0 !important;
 }
 
-.select2-container--default .select2-selection--single .select2-selection__placeholder {
-  opacity: 0.5 !important;
-}
 .border-dashed {
   border-style: dashed !important;
 }
@@ -139,4 +136,8 @@ $orange-800: #9a3412;
 
 #createOrderCard {
   display: none;
+}
+.select2-container--default .select2-selection--single {
+  opacity: 1 !important;
+  cursor: pointer !important;
 }
