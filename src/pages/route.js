@@ -96,4 +96,6 @@ router.get('/product/entries', isAuthenticated, page.productEntryPage)
 router.get('/product/entry/:id', isAuthenticated, page.newProductEntryPage)
 router.get('/product/stocks', isAuthenticated, page.productStockPage)
 
+router.get('/payment-receipts', isAuthenticated, page.receiptsPage)
+router.get('/payment-expenses', isAuthenticated, page.expensesPage)
 export default router

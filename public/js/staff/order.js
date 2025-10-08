@@ -461,9 +461,59 @@ function renderMenu(items) {
 
 const searchInput = document.getElementById('searchMenuInput')
 let currentSearchResults = []
+let exactMatchHandled = false
 
 if (searchInput) {
   let searchTimeout = null
+
+  const runSearch = async (keyword) => {
+    try {
+      const [menuRes, comboRes] = await Promise.all([
+        fetch(`/api/menu/search?keyword=${encodeURIComponent(keyword)}`),
+        fetch(`/api/menu/combo/search?keyword=${encodeURIComponent(keyword)}`)
+      ])
+
+      const menuData = menuRes.ok ? await menuRes.json() : { data: [] }
+      const comboData = comboRes.ok ? await comboRes.json() : { data: [] }
+
+      const combinedData = [...(menuData.data || []), ...(comboData.data || [])]
+
+      const exactMatch = combinedData.find((item) => item.code === keyword)
+
+      if (exactMatch) {
+        const id = exactMatch._id
+        const name = exactMatch.name || (exactMatch.isCombo ? 'Combo không rõ tên' : 'Không rõ tên')
+        const price = typeof exactMatch.price === 'number' ? exactMatch.price : 0
+        const isCombo = !!exactMatch.isCombo
+
+        if (isCombo) {
+          addComboToOrder(id, name, price)
+        } else {
+          addToOrder(id, name, price)
+        }
+
+        toastr.success(`Đã thêm ${name} vào hóa đơn`)
+
+        searchInput.value = ''
+        renderMenu(allItems)
+        currentSearchResults = allItems
+
+        exactMatchHandled = true
+        return
+      }
+
+      if (combinedData.length === 0) {
+        toastr.info('Không tìm thấy sản phẩm')
+      }
+
+      currentSearchResults = combinedData
+      renderMenu(combinedData)
+    } catch (err) {
+      console.error('Lỗi tìm kiếm:', err)
+      currentSearchResults = []
+      renderMenu([])
+    }
+  }
 
   searchInput.addEventListener('input', () => {
     const keyword = searchInput.value.trim()
@@ -477,34 +527,23 @@ if (searchInput) {
 
     if (searchTimeout) clearTimeout(searchTimeout)
 
-    searchTimeout = setTimeout(async () => {
-      try {
-        const [menuRes, comboRes] = await Promise.all([
-          fetch(`/api/menu/search?keyword=${encodeURIComponent(keyword)}`),
-          fetch(`/api/menu/combo/search?keyword=${encodeURIComponent(keyword)}`)
-        ])
-
-        const menuData = menuRes.ok ? await menuRes.json() : { data: [] }
-        const comboData = comboRes.ok ? await comboRes.json() : { data: [] }
-
-        const combinedData = [...(menuData.data || []), ...(comboData.data || [])]
-        if (combinedData.length === 0) {
-          toastr.info('Không tìm thấy sản phẩm')
-        }
-
-        currentSearchResults = combinedData
-        renderMenu(combinedData)
-      } catch (err) {
-        console.error('Lỗi tìm kiếm:', err)
-        currentSearchResults = []
-        renderMenu([])
-      }
-    }, 300)
+    if (keyword.length >= 6) {
+      runSearch(keyword)
+    } else {
+      searchTimeout = setTimeout(() => {
+        runSearch(keyword)
+      }, 300)
+    }
   })
 
   searchInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault()
+
+      if (exactMatchHandled) {
+        exactMatchHandled = false
+        return
+      }
 
       if (currentSearchResults.length === 0) {
         toastr.info('Không có món nào để thêm')
@@ -523,7 +562,6 @@ if (searchInput) {
         addToOrder(id, name, price)
       }
 
-      // toastr.success(`Đã thêm ${name} vào hóa đơn`)
       searchInput.value = ''
       renderMenu(allItems)
       currentSearchResults = allItems
