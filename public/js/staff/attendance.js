@@ -14,7 +14,7 @@ $(function () {
   function initDataTable() {
     table = $('#attendanceTable').DataTable({
       dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -53,9 +53,7 @@ $(function () {
           title: 'Ngày làm việc',
           render: (data, type, row) => {
             if (type === 'display') {
-              const dateValue = data
-                ? new Date(data).toISOString().slice(0, 10)
-                : ''
+              const dateValue = data ? new Date(data).toISOString().slice(0, 10) : ''
               return dateValue
             }
             return data

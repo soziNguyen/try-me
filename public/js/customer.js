@@ -8,7 +8,7 @@ $(function () {
 
   const table = $('#customerTable').DataTable({
     dom:
-      '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+      '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
       'l' +
       'f' +
       '<"right-group d-flex align-items-center btn-group flex-wrap">' +

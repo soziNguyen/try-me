@@ -13,9 +13,7 @@ $(function () {
       toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
     })
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(
-    ($(window).height() - $('#scheduleTableBody').offset().top - 100) / 45
-  )
+  const numRows = Math.floor(($(window).height() - $('#scheduleTableBody').offset().top - 100) / 45)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -24,7 +22,7 @@ $(function () {
   function initDataTable() {
     table = $('#scheduleTable').DataTable({
       dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -121,9 +119,7 @@ $(function () {
           className: 'text-center',
           render: (data, type, row) => {
             if (type === 'display') {
-              const dateValue = data
-                ? new Date(data).toISOString().slice(0, 10)
-                : ''
+              const dateValue = data ? new Date(data).toISOString().slice(0, 10) : ''
               return `
                 <input type="date" class="dataInput border-0 form-control text-center" 
                   data-field="date" 
@@ -180,7 +176,7 @@ $(function () {
       },
       initComplete: function () {
         $('.right-group').html(`
-          <div class="btn-group flex-wrap">
+          <div class="btn-group flex-wrap mb-2">
             <button class="btn btn-outline-danger me-2" id="deleteScheduleBtn">
               <i class="bi bi-trash"></i> Xóa
             </button>
@@ -193,12 +189,7 @@ $(function () {
     })
 
     handlerAddEvent('#scheduleTable', '#addScheduleBtn', 'schedule')
-    handlerDeleteEvent(
-      '#scheduleTable',
-      '#deleteScheduleBtn',
-      'scheduleCheckbox',
-      'schedule'
-    )
+    handlerDeleteEvent('#scheduleTable', '#deleteScheduleBtn', 'scheduleCheckbox', 'schedule')
     initTableCheckboxEvents('#scheduleTable', 'scheduleCheckbox')
     handlerUpdateEvent('#scheduleTable', 'schedule')
   }

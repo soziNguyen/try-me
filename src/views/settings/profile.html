@@ -2,7 +2,7 @@
 
   <% if (userRole==="Org" || userRole==="Admin" ) { %>
     <%- include('../partials/org_sidebar.html') %>
-      <% } else if (userRole==="Member" ) { %>
+      <% } else if (userRole==="Staff" ) { %>
         <%- include('../partials/staff_sidebar.html') %>
           <% } %>
 
@@ -60,6 +60,9 @@
                       <div class="col-md-6 mb-3">
                         <input type="text" id="orgStreet" class="form-control org-update" data-field="street"
                           placeholder="Số nhà/Đường">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <select id="orgWarehouse" class="form-control org-update" data-field="defaultWarehouse"></select>
                       </div>
                     </div>
 

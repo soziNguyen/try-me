@@ -14,7 +14,7 @@ import { logActivity } from '../activity-logs/service.js'
 // [CREATE] / User
 export const createUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body
+    const { username, email, warehouse, password } = req.body
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
@@ -26,9 +26,15 @@ export const createUser = async (req, res) => {
     if (exist) {
       return responseHelper.error(res, 'Tên đăng nhập hoặc email đã tồn tại.', 400)
     }
+
+    if (warehouse !== undefined) {
+      warehouse === '' ? null : warehouse
+    }
+
     const newUser = await User.create({
       username,
       email,
+      warehouse,
       password,
       organization: organizationId
     })
@@ -58,7 +64,9 @@ export const getUsers = async (req, res) => {
         { email: { $regex: s, $options: 'i' } }
       ]
     }
-    const users = await User.find(filter).populate('organization', 'name')
+    const users = await User.find(filter)
+      .populate('organization', 'name')
+      .populate('warehouse', '_id name location')
     responseHelper.success(res, users)
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -83,7 +91,9 @@ export const getUserById = async (req, res) => {
       query.organization = organizationId
     }
 
-    const user = await User.findOne(query).populate('organization', '_id name')
+    const user = await User.findOne(query)
+      .populate('organization', '_id name')
+      .populate('warehouse', '_id name location')
 
     if (!user) {
       return responseHelper.error(res, 'Không tìm thấy người dùng', 404)
@@ -103,7 +113,7 @@ export const updateUser = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-    const { username, email, password, confirmPassword, role } = req.body
+    const { username, email, warehouse, password, confirmPassword, role } = req.body
     const { id } = req.params
 
     const userExist = await User.findOne({
@@ -124,7 +134,10 @@ export const updateUser = async (req, res) => {
       return responseHelper.error(res, 'Username hoặc Email đã tồn tại', 400)
     }
 
+    if (role === 'Staff' && !warehouse) return responseHelper.error(res, 'Vui lòng chọn kho', 400)
+
     const updatedFields = { username, email, role }
+    if (warehouse) updatedFields.warehouse = warehouse
     if (password) {
       if (password !== confirmPassword) {
         return responseHelper.error(res, 'Mật khẩu không khớp', 400)
@@ -221,7 +234,7 @@ export const logIn = async (req, res, next) => {
       req.session.cookie.maxAge = req.body?.remember ? 30 * 24 * 60 * 60 * 1000 : false
 
       try {
-        if ((user.role || '').toLowerCase() === 'member') {
+        if ((user.role || '').toLowerCase() === 'Staff') {
           const now = new Date()
           const today = new Date(now)
           today.setHours(0, 0, 0, 0)
@@ -322,7 +335,7 @@ export const logOut = async (req, res) => {
       return req.logout(() => responseHelper.success(res, 'Logged out'))
     }
 
-    if ((user.role || '').toLowerCase() === 'member') {
+    if ((user.role || '').toLowerCase() === 'Staff') {
       const now = new Date()
 
       const todayStart = new Date(now)

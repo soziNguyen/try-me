@@ -1,44 +1,39 @@
 import express from 'express'
 import {
-  getAllIngredients,
+  getActiveIngredients,
   ingredientDataAPI,
   createIngredient,
   updateIngredient,
   deleteIngredients
 } from './controller.js'
 import isAuthenticated from '../../../helpers/isAuthenticated.js'
-import { isPermit } from '../../../helpers/isPermit.js'
+import { checkWarehouseAccess } from '../../../helpers/warehouseHelper.js'
 
 const router = express.Router()
 
 router.get(
   '/api/inventory/ingredient/all',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
-  getAllIngredients
+  checkWarehouseAccess,
+  getActiveIngredients
 )
-router.get(
-  '/api/inventory/ingredient',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  ingredientDataAPI
-)
+router.get('/api/inventory/ingredient', isAuthenticated, checkWarehouseAccess, ingredientDataAPI)
 router.post(
   '/api/inventory/ingredient/create',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  checkWarehouseAccess,
   createIngredient
 )
 router.post(
   '/api/inventory/ingredient/update/:id',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  checkWarehouseAccess,
   updateIngredient
 )
 router.post(
   '/api/inventory/ingredient/deletes',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  checkWarehouseAccess,
   deleteIngredients
 )
 

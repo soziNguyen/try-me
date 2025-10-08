@@ -21,9 +21,7 @@ $(function () {
   let showList = [10, 25, 50, 100]
   const numRows = Math.floor(
     ($(window).height() -
-      ($('#comboTableBody').offset()
-        ? $('#comboTableBody').offset().top
-        : 200) -
+      ($('#comboTableBody').offset() ? $('#comboTableBody').offset().top : 200) -
       100) /
       71
   )
@@ -33,7 +31,7 @@ $(function () {
   function initDataTable() {
     table = $('#comboTable').DataTable({
       dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -70,13 +68,11 @@ $(function () {
         },
         {
           data: 'sku',
-          render: (data, type, row) =>
-            type === 'display' ? `<span>${data || ''}</span>` : data
+          render: (data, type, row) => (type === 'display' ? `<span>${data || ''}</span>` : data)
         },
         {
           data: 'name',
-          render: (data, type, row) =>
-            type === 'display' ? `<span>${data || ''}</span>` : data
+          render: (data, type, row) => (type === 'display' ? `<span>${data || ''}</span>` : data)
         },
         {
           data: 'image',
@@ -118,13 +114,11 @@ $(function () {
         },
         {
           data: 'note',
-          render: (data, type, row) =>
-            type === 'display' ? `<span>${data || ''}</span>` : data
+          render: (data, type, row) => (type === 'display' ? `<span>${data || ''}</span>` : data)
         },
         {
           data: 'createdBy',
-          render: (data, type, row) =>
-            type === 'display' ? `<span>${data || ''}</span>` : data
+          render: (data, type, row) => (type === 'display' ? `<span>${data || ''}</span>` : data)
         },
         {
           data: 'createdAt',
@@ -153,7 +147,7 @@ $(function () {
       },
       initComplete: function () {
         $('.right-group').html(`
-          <div class="btn-group flex-wrap">
+          <div class="btn-group flex-wrap mb-2">
             <button class="btn btn-outline-danger me-2" id="deleteComboBtn">
               <i class="bi bi-trash"></i> Xóa
             </button>
@@ -174,12 +168,7 @@ $(function () {
 
     // =======================================================
     // EVENT HANDLER chung
-    handlerDeleteEvent(
-      '#comboTable',
-      '#deleteComboBtn',
-      'comboCheckbox',
-      'menu/combo'
-    )
+    handlerDeleteEvent('#comboTable', '#deleteComboBtn', 'comboCheckbox', 'menu/combo')
     initTableCheckboxEvents('#comboTable', 'comboCheckbox')
 
     // Add new combo
@@ -318,10 +307,7 @@ $(function () {
             imageSmoothingQuality: 'high'
           })
           .toBlob(function (blob) {
-            const newName = currentImageFile.name.replace(
-              /\.[^/.]+$/,
-              `.${ext}`
-            )
+            const newName = currentImageFile.name.replace(/\.[^/.]+$/, `.${ext}`)
             const croppedFile = new File([blob], newName, {
               type: mime,
               lastModified: Date.now()
@@ -366,8 +352,7 @@ $(function () {
       $('#itemTableBody tr').each(function () {
         const menuItemId = $(this).find('[name="menuItem"]').val()
         const quantity = parseFloat($(this).find('[name="quantity"]').val())
-        if (menuItemId && quantity > 0)
-          items.push({ menuItem: menuItemId, quantity })
+        if (menuItemId && quantity > 0) items.push({ menuItem: menuItemId, quantity })
       })
 
       if (!name || !items.length || isNaN(price)) {
@@ -435,9 +420,7 @@ $(function () {
 
     // Thêm dòng items
     $('#addItemRow').on('click', function () {
-      const options = menuItem
-        .map((o) => `<option value="${o._id}">${o.name}</option>`)
-        .join('')
+      const options = menuItem.map((o) => `<option value="${o._id}">${o.name}</option>`).join('')
       const rowHtml = `
         <tr>
           <td>

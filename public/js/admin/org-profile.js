@@ -3,6 +3,29 @@ const orgInfo = document.querySelector('.org-info')
 let cropper
 let isLoadingOrgData = false // cờ để tránh update lúc load
 
+async function fetchWarehouses(selectedId = '') {
+  try {
+    const res = await fetch('/api/inventory/warehouse/all')
+    const data = await res.json()
+
+    if (data.success) {
+      const select = document.getElementById('orgWarehouse')
+      select.innerHTML = '<option value="">— Tất cả —</option>'
+      data.data.forEach((w) => {
+        const opt = document.createElement('option')
+        opt.value = w._id
+        opt.textContent = w.name
+        if (w._id === selectedId) opt.selected = true
+        select.appendChild(opt)
+      })
+    } else {
+      toastr.error(data.message || 'Không lấy được danh sách kho')
+    }
+  } catch (err) {
+    console.error('Lỗi khi lấy danh sách kho:', err)
+  }
+}
+
 async function fetchOrgDetail() {
   try {
     isLoadingOrgData = true
@@ -11,6 +34,7 @@ async function fetchOrgDetail() {
 
     if (data.success) {
       const org = data.data
+      await fetchWarehouses(org.defaultWarehouse?._id)
 
       $('#taxCode').val(org.taxCode || '')
       $('#orgName').val(org.name || '')

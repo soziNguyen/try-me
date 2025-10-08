@@ -11,7 +11,7 @@ $(function () {
 
     table = $('#productEntryTable').DataTable({
       dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -20,7 +20,8 @@ $(function () {
         '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
-      autoWidth: false,
+      autoWidth: true,
+      scrollX: true,
       order: [],
       ajax: {
         url: '/api/product/entries',
@@ -146,7 +147,7 @@ $(function () {
       },
       initComplete: function () {
         $('.right-group').html(`
-          <div class="btn-group flex-wrap">
+          <div class="btn-group flex-wrap mb-2 mb-2">
             <button class="btn btn-outline-danger me-2" id="deleteProductEntryBtn">
               <i class="bi bi-trash"></i> Xóa
             </button>

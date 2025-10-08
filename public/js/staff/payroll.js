@@ -1,10 +1,9 @@
 $(function () {
   let table
+  const csrfToken = $('#_csrf').val()
 
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(
-    ($(window).height() - $('#payrollTableBody').offset().top - 100) / 45
-  )
+  const numRows = Math.floor(($(window).height() - $('#payrollTableBody').offset().top - 100) / 45)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -14,7 +13,7 @@ $(function () {
   function initDataTable() {
     table = $('#payrollTable').DataTable({
       dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -45,8 +44,7 @@ $(function () {
           data: null,
           className: 'text-center',
           title: 'STT',
-          render: (data, type, row, meta) =>
-            meta.row + 1 + meta.settings._iDisplayStart
+          render: (data, type, row, meta) => meta.row + 1 + meta.settings._iDisplayStart
         },
         {
           data: 'user.username',
@@ -110,7 +108,11 @@ $(function () {
       confirmed: 'Xác nhận',
       onConfirm: async () => {
         try {
-          await $.post('/api/payroll/create')
+          await $.ajax({
+            url: '/api/payroll/create',
+            type: 'POST',
+            headers: { 'X-CSRF-Token': csrfToken }
+          })
           toastr.success('Đã tạo bảng lương')
           $('#payrollTable').DataTable().ajax.reload()
         } catch (err) {

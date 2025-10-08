@@ -9,6 +9,7 @@ import { generateDocumentCode } from '../../../helpers/common.js'
 import { lookupRef, lookupUser } from '../../../helpers/lookupHelper.js'
 import StockHistory from '../stock-history/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import BusinessError from '../../error/BusinessError.js'
 
 // DATATABLE SERVER-SIDE
 export const getStockIssues = async (req, res) => {
@@ -229,25 +230,23 @@ export const updateStockIssue = async (req, res) => {
 
     const updatedDoc = await withTransaction(async (session) => {
       const { id } = req.params
-      if (!mongoose.isValidObjectId(id)) {
-        throw new Error('ID không hợp lệ')
-      }
+      if (!mongoose.isValidObjectId(id)) throw new BusinessError('ID không hợp lệ', 400)
 
       const oldIssue = await StockIssue.findOne({
         _id: id,
         organization: organizationId
       }).session(session)
 
-      if (!oldIssue) throw new Error('Phiếu xuất không tồn tại')
-      if (oldIssue.isLocked) throw new Error('Phiếu xuất đã bị khóa, không thể chỉnh sửa')
+      if (!oldIssue) throw new BusinessError('Phiếu xuất không tồn tại', 404)
+      if (oldIssue.isLocked)
+        throw new BusinessError('Phiếu xuất đã bị khóa, không thể chỉnh sửa', 400)
 
       const { warehouse, reason, note, items: rawItems = [] } = req.body
 
       // Validate input
-      if (!warehouse) throw new Error('Vui lòng chọn kho xuất')
-      if (!Array.isArray(rawItems) || rawItems.length === 0) {
-        throw new Error('Vui lòng thêm ít nhất một sản phẩm')
-      }
+      if (!warehouse) throw new BusinessError('Vui lòng chọn kho xuất', 400)
+      if (!Array.isArray(rawItems) || rawItems.length === 0)
+        throw new BusinessError('Vui lòng thêm ít nhất một sản phẩm', 400)
 
       // Chuẩn hóa items - lọc bỏ item có quantity = 0
       const newItems = rawItems
@@ -258,12 +257,12 @@ export const updateStockIssue = async (req, res) => {
         }))
         .filter((item) => item.ingredient && item.quantity > 0)
 
-      if (newItems.length === 0) throw new Error('Không có sản phẩm hợp lệ để xuất')
+      if (newItems.length === 0) throw new BusinessError('Không có sản phẩm hợp lệ để xuất', 400)
 
       // Tính toán thay đổi tồn kho
       const stockChanges = new Map() // key: ingredient_warehouse, value: {ingredient, warehouse, change}
 
-      // Hoàn trả items cũ (nếu có)
+      // Hoàn trả items cũ
       if (oldIssue.warehouse && oldIssue.items.length > 0) {
         for (const oldItem of oldIssue.items) {
           if (oldItem.ingredient && oldItem.quantity > 0) {
@@ -315,9 +314,10 @@ export const updateStockIssue = async (req, res) => {
             { _id: stockChange.warehouse, organization: organizationId },
             'name'
           ).session(session)
-          throw new Error(
+          throw new BusinessError(
             `Không đủ tồn kho cho "${ingredientDoc?.name || 'nguyên liệu'}" tại kho "${warehouseDoc?.name || 'không xác định'}". ` +
-              `Tồn kho hiện tại: ${currentStock}, yêu cầu: ${requiredStock}`
+              `Tồn kho hiện tại: ${currentStock}, yêu cầu: ${requiredStock}`,
+            400
           )
         }
       }
@@ -340,7 +340,7 @@ export const updateStockIssue = async (req, res) => {
           runValidators: true
         }
       )
-      if (!updatedIssue) throw new Error('Cập nhật phiếu xuất thất bại')
+      if (!updatedIssue) throw new BusinessError('Cập nhật phiếu xuất thất bại', 400)
 
       // Áp dụng thay đổi tồn kho
       for (const [, stockChange] of stockChanges) {
@@ -375,8 +375,13 @@ export const updateStockIssue = async (req, res) => {
     })
 
     responseHelper.success(res, updatedDoc, 'Cập nhật phiếu xuất thành công')
-  } catch (err) {
-    responseHelper.error(res, err.message)
+  } catch (error) {
+    if (error instanceof BusinessError) {
+      // Expected business errors - no logging to reduce terminal noise
+      return responseHelper.error(res, error.message, error.statusCode)
+    } else {
+      return responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    }
   }
 }
 
@@ -388,21 +393,21 @@ export const deleteStockIssues = async (req, res) => {
     await withTransaction(async (session) => {
       const { ids } = req.body
       if (!Array.isArray(ids) || ids.length === 0) {
-        throw new Error('Không có phiếu nào được chọn')
+        throw new BusinessError('Không có phiếu nào được chọn', 400)
       }
 
       const issues = await StockIssue.find({
         _id: { $in: ids },
         organization: organizationId
       }).session(session)
-      if (issues.length === 0) throw new Error('Không tìm thấy phiếu xuất nào')
+      if (issues.length === 0) throw new BusinessError('Không tìm thấy phiếu xuất', 404)
 
       const allAffectedIngredients = new Set()
 
       // Kiểm tra khóa và hoàn trả kho
       for (const issue of issues) {
         if (issue.isLocked) {
-          throw new Error(`Phiếu xuất "${issue.code}" đã bị khóa, không thể xóa`)
+          throw new BusinessError(`Phiếu xuất "${issue.code}" đã bị khóa, không thể xóa`, 400)
         }
 
         // Hoàn trả tồn kho nếu phiếu có warehouse và items
@@ -443,7 +448,12 @@ export const deleteStockIssues = async (req, res) => {
 
     responseHelper.success(res, null, 'Xóa phiếu xuất thành công và hoàn trả tồn kho')
   } catch (error) {
-    responseHelper.error(res, error.message)
+    if (error instanceof BusinessError) {
+      // Expected business errors - no logging to reduce terminal noise
+      return responseHelper.error(res, error.message, error.statusCode)
+    } else {
+      return responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    }
   }
 }
 

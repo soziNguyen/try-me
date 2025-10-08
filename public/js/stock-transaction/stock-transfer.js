@@ -19,15 +19,14 @@ $(function () {
   function initDataTable() {
     let showList = [10, 25, 50, 100]
     const numRows = Math.floor(
-      ($(window).height() - $('#stockTransferTableBody').offset().top - 100) /
-        45
+      ($(window).height() - $('#stockTransferTableBody').offset().top - 100) / 45
     )
     if (!showList.includes(numRows)) showList.push(numRows)
     showList.sort((a, b) => a - b)
 
     table = $('#stockTransferTable').DataTable({
       dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -104,10 +103,7 @@ $(function () {
           title: 'Số lượng',
           render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const totalQty = items.reduce(
-              (acc, cur) => acc + (cur.quantity || 0),
-              0
-            )
+            const totalQty = items.reduce((acc, cur) => acc + (cur.quantity || 0), 0)
             return totalQty
           }
         },
@@ -117,9 +113,7 @@ $(function () {
           title: 'Kho nguồn',
           render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const fromWarehouses = items
-              .map((item) => item.fromWarehouse?.name)
-              .filter(Boolean)
+            const fromWarehouses = items.map((item) => item.fromWarehouse?.name).filter(Boolean)
 
             const uniqueWarehouses = [...new Set(fromWarehouses)]
 
@@ -137,9 +131,7 @@ $(function () {
           title: 'Kho đích',
           render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const toWarehouses = items
-              .map((item) => item.toWarehouse?.name)
-              .filter(Boolean)
+            const toWarehouses = items.map((item) => item.toWarehouse?.name).filter(Boolean)
 
             const uniqueWarehouses = [...new Set(toWarehouses)]
 
@@ -189,7 +181,7 @@ $(function () {
       },
       initComplete: function () {
         $('.right-group').html(`
-          <div class="btn-group flex-wrap">
+          <div class="btn-group flex-wrap mb-2">
             <button class="btn btn-outline-danger me-2" id="deleteStockTransferBtn">
               <i class="bi bi-trash"></i> Xóa
             </button>

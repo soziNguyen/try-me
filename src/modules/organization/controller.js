@@ -208,7 +208,7 @@ export const getOrgById = async (req, res) => {
     const { id } = req.params
     if (!id) return responseHelper.error(res, 'Id tổ chức không hợp lệ', 400)
 
-    const org = await Organization.findById(id)
+    const org = await Organization.findById(id).populate('defaultWarehouse', '_id name location')
     if (!org) return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
 
     const responseData = {
@@ -304,7 +304,18 @@ export const createOrg = async (req, res) => {
 export const updateOrg = async (req, res) => {
   try {
     const { id } = req.params
-    const { logo, name, email, phone, province, commune, street, isActive, taxCode } = req.body
+    const {
+      logo,
+      name,
+      email,
+      phone,
+      province,
+      commune,
+      defaultWarehouse,
+      street,
+      isActive,
+      taxCode
+    } = req.body
 
     if (!id) return responseHelper.error(res, 'Id không hợp lệ', 400)
 
@@ -369,6 +380,8 @@ export const updateOrg = async (req, res) => {
     if (province !== undefined) data.province = province
     if (commune !== undefined) data.commune = commune
     if (street !== undefined) data.street = street
+    if (defaultWarehouse !== undefined)
+      data.defaultWarehouse = defaultWarehouse === '' ? null : defaultWarehouse
     if (isActive !== undefined) data.isActive = isActive
     if (taxCode !== undefined) data.taxCode = taxCode?.trim() || null
 

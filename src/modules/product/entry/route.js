@@ -7,28 +7,23 @@ import {
   deleteProductEntries
 } from './controller.js'
 import isAuthenticated from '../../../helpers/isAuthenticated.js'
-import { isPermit } from '../../../helpers/isPermit.js'
+import { checkWarehouseAccess } from '../../../helpers/warehouseHelper.js'
 
 const router = express.Router()
 
-router.get('/api/product/entries', isAuthenticated, isPermit('Admin', 'Org'), getProductEntries)
-router.get('/api/product/entry/:id', isAuthenticated, isPermit('Admin', 'Org'), getProductEntryById)
-router.post(
-  '/api/product/entry/create',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  createProductEntry
-)
+router.get('/api/product/entries', isAuthenticated, checkWarehouseAccess, getProductEntries)
+router.get('/api/product/entry/:id', isAuthenticated, checkWarehouseAccess, getProductEntryById)
+router.post('/api/product/entry/create', isAuthenticated, checkWarehouseAccess, createProductEntry)
 router.post(
   '/api/product/entry/update/:id',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  checkWarehouseAccess,
   updateProductEntry
 )
 router.post(
   '/api/product/entry/deletes',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  checkWarehouseAccess,
   deleteProductEntries
 )
 

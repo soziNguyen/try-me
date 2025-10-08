@@ -6,7 +6,7 @@ $(function () {
   function initDataTable() {
     table = $('#myScheduleTable').DataTable({
       dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -49,9 +49,7 @@ $(function () {
             let ca = data.name || ''
             let type = data.type && data.type === 'day' ? ' (Ngày)' : 'Đêm'
             let time =
-              data.startTime && data.endTime
-                ? ` - ${data.startTime} ~ ${data.endTime}`
-                : ''
+              data.startTime && data.endTime ? ` - ${data.startTime} ~ ${data.endTime}` : ''
             return ca + type + time
           }
         },

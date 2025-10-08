@@ -2,9 +2,7 @@ $(function () {
   let table
 
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(
-    ($(window).height() - $('#shiftTableBody').offset().top - 100) / 45
-  )
+  const numRows = Math.floor(($(window).height() - $('#shiftTableBody').offset().top - 100) / 45)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -12,7 +10,7 @@ $(function () {
 
   table = $('#shiftTable').DataTable({
     dom:
-      '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+      '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
       'l' +
       'f' +
       '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -117,7 +115,7 @@ $(function () {
     },
     initComplete: function () {
       $('.right-group').html(`
-        <div class="btn-group flex-wrap">
+        <div class="btn-group flex-wrap mb-2">
           <button class="btn btn-outline-danger me-2" id="deleteShiftBtn">
             <i class="bi bi-trash"></i> Xóa
           </button>

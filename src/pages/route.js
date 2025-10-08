@@ -23,7 +23,7 @@ router.get('/receipt/:id', isAuthenticated, page.receiptDetailPage)
 router.get('/invoice', isAuthenticated, page.invoicePage)
 
 // Inventory
-router.get('/inventory/ingredients', isAuthenticated, isPermit('Admin', 'Org'), page.ingredientPage)
+router.get('/inventory/ingredients', isAuthenticated, page.ingredientPage)
 router.get('/inventory/categories', isAuthenticated, isPermit('Admin', 'Org'), page.categoryPage)
 router.get(
   '/inventory/inventory-stock',
@@ -33,8 +33,8 @@ router.get(
 )
 router.get('/inventory/suppliers', isAuthenticated, isPermit('Admin', 'Org'), page.supplierPage)
 router.get('/inventory/warehouses', isAuthenticated, isPermit('Admin', 'Org'), page.warehousePage)
-router.get('/inventory/stock-entries', isAuthenticated, isPermit('Admin', 'Org'), page.importPage)
-router.get('/inventory/stock-issues', isAuthenticated, isPermit('Admin', 'Org'), page.exportPage)
+router.get('/inventory/stock-entries', isAuthenticated, page.importPage)
+router.get('/inventory/stock-issues', isAuthenticated, page.exportPage)
 router.get(
   '/inventory/stock-transfers',
   isAuthenticated,
@@ -47,18 +47,8 @@ router.get(
   isPermit('Admin', 'Org'),
   page.historyPage
 )
-router.get(
-  '/inventory/stock-entry/:id',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.newStockEntryPage
-)
-router.get(
-  '/inventory/stock-issue/:id',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.newStockIssuePage
-)
+router.get('/inventory/stock-entry/:id', isAuthenticated, page.newStockEntryPage)
+router.get('/inventory/stock-issue/:id', isAuthenticated, page.newStockIssuePage)
 router.get(
   '/inventory/stock-transfer/:id',
   isAuthenticated,
@@ -102,13 +92,8 @@ router.get('/staff/payroll/:id', isAuthenticated, isPermit('Admin', 'Org'), page
 router.get('/activity-logs', isAuthenticated, isPermit('Admin', 'Org'), page.activityLog)
 
 // Product
-router.get('/product/entries', isAuthenticated, isPermit('Admin', 'Org'), page.productEntryPage)
-router.get(
-  '/product/entry/:id',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  page.newProductEntryPage
-)
-router.get('/product/stocks', isAuthenticated, isPermit('Admin', 'Org'), page.productStockPage)
+router.get('/product/entries', isAuthenticated, page.productEntryPage)
+router.get('/product/entry/:id', isAuthenticated, page.newProductEntryPage)
+router.get('/product/stocks', isAuthenticated, page.productStockPage)
 
 export default router

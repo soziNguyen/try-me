@@ -11,12 +11,7 @@ import { isPermit } from '../../../helpers/isPermit.js'
 
 const router = express.Router()
 
-router.get(
-  '/api/inventory/warehouse/all',
-  isAuthenticated,
-  isPermit('Admin', 'Org'),
-  getActiveWarehouses
-)
+router.get('/api/inventory/warehouse/all', isAuthenticated, getActiveWarehouses)
 router.get('/api/inventory/warehouses', isAuthenticated, isPermit('Admin', 'Org'), getWareHouses)
 router.post(
   '/api/inventory/warehouse/create',

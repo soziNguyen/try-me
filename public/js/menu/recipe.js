@@ -1,4 +1,3 @@
-// public/js/stock-entry.js
 $(function () {
   let menuItem = []
 
@@ -13,15 +12,13 @@ $(function () {
 
   function initDataTable() {
     let showList = [10, 25, 50, 100]
-    const numRows = Math.floor(
-      ($(window).height() - $('#recipeTableBody').offset().top - 100) / 45
-    )
+    const numRows = Math.floor(($(window).height() - $('#recipeTableBody').offset().top - 100) / 45)
     if (!showList.includes(numRows)) showList.push(numRows)
     showList.sort((a, b) => a - b)
 
     table = $('#recipeTable').DataTable({
       dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap mb-3"' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
         'l' +
         'f' +
         '<"right-group d-flex align-items-center btn-group flex-wrap">' +
@@ -90,11 +87,8 @@ $(function () {
           title: 'Số lượng',
           render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const totalQty = items.reduce(
-              (acc, cur) => acc + (cur.quantity || 0),
-              0
-            )
-            return totalQty
+            const totalQty = items.reduce((acc, cur) => acc + (cur.quantity || 0), 0)
+            return totalQty.toFixed(2)
           }
         },
         {
@@ -126,7 +120,7 @@ $(function () {
       },
       initComplete: function () {
         $('.right-group').html(`
-          <div class="btn-group flex-wrap">
+          <div class="btn-group flex-wrap mb-2">
             <button class="btn btn-outline-danger me-2" id="deleteRecipeBtn">
               <i class="bi bi-trash"></i> Xóa
             </button>
@@ -150,12 +144,7 @@ $(function () {
         })
 
         // CHỈ GIỮ LẠI DELETE VÀ CHECKBOX EVENTS
-        handlerDeleteEvent(
-          '#recipeTable',
-          '#deleteRecipeBtn',
-          'recipeCheckbox',
-          'menu/recipe'
-        )
+        handlerDeleteEvent('#recipeTable', '#deleteRecipeBtn', 'recipeCheckbox', 'menu/recipe')
         initTableCheckboxEvents('#recipeTable', 'recipeCheckbox')
       }
     })
