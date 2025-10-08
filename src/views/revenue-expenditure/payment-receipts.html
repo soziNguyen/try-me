@@ -1,0 +1,17 @@
+<%- include('../partials/header.html') %>
+  <%- include('../partials/org_sidebar.html') %>
+    <div class="admin__content">
+      <h2 class="mb-3 bold semi-bold">
+        <%= pageTitle %>
+      </h2>
+
+
+    </div>
+
+    </div>
+    </div>
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <%- include('../partials/commonjs.html') %>
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/data-table.js"></script>
+      <%- include('../partials/footer.html') %>

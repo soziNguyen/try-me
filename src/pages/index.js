@@ -685,3 +685,23 @@ export const productStockPage = (req, res) => {
     })
   )
 }
+
+export const receiptsPage = (req, res) => {
+  res.render(
+    'revenue-expenditure/payment-receipts',
+    getPageData(req, 'Phiếu Thu', 'payment receipts', {
+      headerClass: 'admin__header',
+      pageTitle: 'Phiếu Thu'
+    })
+  )
+}
+
+export const expensesPage = (req, res) => {
+  res.render(
+    'revenue-expenditure/payment-expenses',
+    getPageData(req, 'Phiếu Chi', 'payment expenses', {
+      headerClass: 'admin__header',
+      pageTitle: 'Phiếu Chi'
+    })
+  )
+}
