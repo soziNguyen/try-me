@@ -5,6 +5,47 @@
         <%= pageTitle %>
       </h2>
 
+      <!-- Bộ lọc ngày thêm vào đây -->
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <label for="startDate">Từ ngày:</label>
+          <input type="date" id="startDate" class="form-control" />
+        </div>
+        <div class="col-md-3">
+          <label for="endDate">Đến ngày:</label>
+          <input type="date" id="endDate" class="form-control" />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button id="filterDateBtn" class="btn btn-primary" title="Lọc">
+            <i class="bi bi-funnel"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="orderSummary" class="row mt-3">
+        <p>Thống kê</p>
+        <div class="col-md-4">
+          <div class="alert alert-primary mb-2">
+            <strong>Tổng số đơn:</strong> <span id="summary-total-orders">0</span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="alert alert-success mb-2">
+            <strong>Tổng tiền thu:</strong> <span id="summary-total-amount">0</span> đ
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="alert alert-warning mb-2">
+            <strong>Tiền trung bình:</strong> <span id="summary-avg-amount">0</span> đ
+          </div>
+        </div>
+      </div>
+
+      <table id="receiptTable" class="table table-bordered">
+        <tbody id="receiptTableBody">
+
+        </tbody>
+      </table>
 
     </div>
 
@@ -12,6 +53,6 @@
     </div>
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
     <%- include('../partials/commonjs.html') %>
+      <script src="/js/payment-receipts.js"></script>
       <script src="/js/sidebar-toggle.js"></script>
-      <script src="/js/data-table.js"></script>
       <%- include('../partials/footer.html') %>

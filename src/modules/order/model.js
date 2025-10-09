@@ -47,6 +47,11 @@ const OrderSchema = new Schema(
       ref: 'Organization',
       required: true
     }
+    // warehouse: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: 'Warehouse',
+    //   required: true
+    // }
   },
   {
     collection: 'Orders',

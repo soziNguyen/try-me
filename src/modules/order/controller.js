@@ -24,6 +24,10 @@ export const createOrder = async (req, res) => {
         throw new Error('Thiếu thông tin tổ chức')
       }
 
+      // const { warehouseId } = req.body
+      // if (!warehouseId) {
+      //   throw new Error('Thiếu thông tin kho hàng')
+      // }
       const { tableId, isTakeaway, customerName, customerPhone } = req.body
       let prefix = 'INV'
 
@@ -91,6 +95,7 @@ export const createOrder = async (req, res) => {
           isTakeaway: true,
           status: 'open',
           organization: organizationId
+          // warehouse: warehouseId
         })[session ? 'session' : 'exec'](session || undefined)
 
         if (existingOrder) {
@@ -111,6 +116,7 @@ export const createOrder = async (req, res) => {
                 isTakeaway: true,
                 status: 'open',
                 organization: organizationId,
+                // warehouse: warehouseId,
                 customerId: customer?._id || null,
                 code: orderCode
               }
@@ -124,6 +130,7 @@ export const createOrder = async (req, res) => {
             isTakeaway: true,
             status: 'open',
             organization: organizationId,
+            // warehouse: warehouseId,
             customerId: customer?._id || null,
             code: orderCode
           })
@@ -149,6 +156,7 @@ export const createOrder = async (req, res) => {
                 isTakeaway: false,
                 status: 'open',
                 organization: organizationId,
+                // warehouse: warehouseId,
                 customerId: customer?._id || null,
                 code: orderCode
               }
@@ -162,6 +170,7 @@ export const createOrder = async (req, res) => {
             isTakeaway: false,
             status: 'open',
             organization: organizationId,
+            // warehouse: warehouseId,
             customerId: customer?._id || null,
             code: orderCode
           })
@@ -191,6 +200,7 @@ export const createOrder = async (req, res) => {
               isTakeaway: false,
               status: 'open',
               organization: organizationId,
+              // warehouse: warehouseId,
               customerId: customer?._id || null,
               code: orderCode
             }
@@ -204,6 +214,7 @@ export const createOrder = async (req, res) => {
           isTakeaway: false,
           status: 'open',
           organization: organizationId,
+          // warehouse: warehouseId,
           customerId: customer?._id || null,
           code: orderCode
         })
@@ -886,12 +897,16 @@ export const getOrders = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
     const empty = req.query.empty === 'true'
     const statusFilter = req.query.status
-
+    const startDate = req.query.startDate
+    const endDate = req.query.endDate
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // Base match object
     const match = { organization: organizationId }
+    if (req.query.warehouseId) {
+      match.warehouse = new mongoose.Types.ObjectId(req.query.warehouseId)
+    }
     if (empty) {
       match.tableId = null
       match.status = 'open'
@@ -899,6 +914,18 @@ export const getOrders = async (req, res) => {
       match.status = statusFilter
     }
 
+    // Thêm điều kiện lọc ngày
+    if (startDate || endDate) {
+      match.updatedAt = {}
+      if (startDate) {
+        match.updatedAt.$gte = new Date(startDate)
+      }
+      if (endDate) {
+        const end = new Date(endDate)
+        end.setHours(23, 59, 59, 999)
+        match.updatedAt.$lte = end
+      }
+    }
     // Base pipeline
     const pipeline = [
       { $match: match },
@@ -972,7 +999,22 @@ export const getOrders = async (req, res) => {
     const countResult = await Order.aggregate(countPipeline)
     const recordsFiltered = countResult.length > 0 ? countResult[0].count : 0
 
-    // Sort với trường phụ để đảm bảo tính nhất quán
+    // Tính thống kê đơn hàng (số lượng đơn, tổng tiền, trung bình)
+    const summaryPipeline = [
+      { $match: match },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalAmount: { $sum: '$total' },
+          avgAmount: { $avg: '$total' }
+        }
+      }
+    ]
+    const summaryResult = await Order.aggregate(summaryPipeline)
+    const summary =
+      summaryResult.length > 0 ? summaryResult[0] : { totalOrders: 0, totalAmount: 0, avgAmount: 0 }
+
     const sortFieldMap = {
       table: 'table.name',
       'table.name': 'table.name',
@@ -1009,7 +1051,12 @@ export const getOrders = async (req, res) => {
       draw,
       recordsTotal,
       recordsFiltered,
-      data
+      data,
+      summary: {
+        totalOrders: summary.totalOrders,
+        totalAmount: summary.totalAmount,
+        avgAmount: summary.avgAmount
+      }
     })
   } catch (error) {
     return res.status(500).json({
