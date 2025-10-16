@@ -1,6 +1,5 @@
 $(function () {
   let ingredients = []
-  let warehouses = []
   let stockIssueId = null
   let units = []
   let itemCounter = 1
@@ -17,22 +16,16 @@ $(function () {
   // Load dữ liệu ban đầu
   Promise.all([
     fetchData('inventory/ingredient/all'),
-    fetchData('inventory/warehouse/all'),
     stockIssueId ? fetchData(`inventory/stock-issue/${stockIssueId}`) : Promise.resolve(null)
   ])
-    .then(([ings, whs, stockIssueRes]) => {
+    .then(([ings, stockIssueRes]) => {
       ingredients = ings
-      warehouses = whs
       units = stockIssueRes.units
 
       initForm()
       if (stockIssueRes) {
         stockIssue = stockIssueRes.stockIssue
-        populateForm(stockIssue)
-      } else {
-        const currentUserName = '<%= currentUserName %>'
-        const currentUserId = '<%= currentUserId %>'
-        $('#createdBy').val(currentUserName).data('id', currentUserId)
+        populateForm(stockIssue, stockIssue.warehouse?.name)
       }
     })
     .catch((err) => {
@@ -40,16 +33,6 @@ $(function () {
     })
 
   function initForm() {
-    // Populate warehouses dropdown
-    const warehouseOptions = warehouses
-      .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
-      .join('')
-    const $warehouseSelected = $('#warehouse').html(
-      '<option value="" class="text-center">— Chọn kho —</option>' + warehouseOptions
-    )
-
-    initSelect2($warehouseSelected, '— Chọn kho —')
-
     if ($('#itemsTableBody tr').length === 0) {
       addNewItem()
     }
@@ -180,12 +163,12 @@ $(function () {
     itemCounter++
   }
 
-  function populateForm(stockIssue) {
+  function populateForm(stockIssue, defaultWarehouse) {
     $('#code').val(stockIssue.code || '')
     $('#date').val(formatDate(stockIssue.date) || '')
     $('#reason').val(stockIssue.reason || '')
     $('#warehouse')
-      .val(stockIssue.warehouse?._id || '')
+      .val(defaultWarehouse || '')
       .trigger('change')
     $('#createdBy')
       .val(stockIssue.createdBy?.username || '')

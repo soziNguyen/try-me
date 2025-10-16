@@ -333,7 +333,8 @@ export const updateStockEntryFromForm = async (req, res) => {
         throw new BusinessError('Phiếu nhập đã bị khóa, không thể chỉnh sửa', 400)
 
       // Lấy dữ liệu mới từ form
-      const { supplier, warehouse, note, items: rawItems = [] } = req.body
+      const { supplier, note, items: rawItems = [] } = req.body
+      const warehouse = oldEntry.warehouse // warehouse không được đổi
 
       // Validation: Staff không được đổi warehouse
       if (req.warehouseFilter && warehouse) {
@@ -477,7 +478,7 @@ export const updateStockEntryFromForm = async (req, res) => {
         const totalStockAgg = await IngredientStock.aggregate([
           {
             $match: {
-              ingredient: new mongoose.Types.ObjectId(ingId),
+              ingredient: ingId,
               organization: organizationId
             }
           },
