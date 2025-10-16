@@ -440,10 +440,17 @@ export const deleteStockIssues = async (req, res) => {
         throw new BusinessError('Không có phiếu nào được chọn', 400)
       }
 
-      const issues = await StockIssue.find({
+      // Match condition với warehouse filter
+      const matchCondition = {
         _id: { $in: ids },
         organization: organizationId
-      }).session(session)
+      }
+
+      if (req.warehouseFilter) {
+        matchCondition.warehouse = req.warehouseFilter
+      }
+
+      const issues = await StockIssue.find(matchCondition).session(session)
       if (issues.length === 0) throw new BusinessError('Không tìm thấy phiếu xuất', 404)
 
       const allAffectedIngredients = new Set()
@@ -476,13 +483,7 @@ export const deleteStockIssues = async (req, res) => {
       }
 
       // Xóa các phiếu
-      await StockIssue.deleteMany(
-        {
-          _id: { $in: ids },
-          organization: organizationId
-        },
-        { session }
-      )
+      await StockIssue.deleteMany(matchCondition, { session })
 
       // Cập nhật tổng stock cho tất cả ingredients bị ảnh hưởng
       if (allAffectedIngredients.size > 0) {
