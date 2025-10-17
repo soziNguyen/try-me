@@ -8,6 +8,7 @@ import withTransaction from '../../../helpers/withTransaction.js'
 import { generateDocumentCode } from '../../../helpers/common.js'
 import { lookupRef } from '../../../helpers/lookupHelper.js'
 import StockHistory from '../stock-history/model.js'
+import Organization from '../../organization/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import BusinessError from '../../error/BusinessError.js'
 
@@ -25,16 +26,25 @@ export const getStockTransfers = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const baseMatch = { organization: organizationId }
+    const matchCondition = { organization: organizationId }
+
+    // Warehouse filtering
+    if (req.warehouseFilter) {
+      matchCondition.fromWarehouse = req.warehouseFilter
+    } else {
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        matchCondition.fromWarehouse = org.defaultWarehouse
+      }
+      // null -> xem tất cả
+    }
 
     // Base pipeline (lookup trước khi group)
     const pipeline = [
-      { $match: baseMatch },
+      { $match: matchCondition },
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
       ...lookupRef('items.ingredient', 'Ingredients', { as: 'ingredient' }),
-      ...lookupRef('items.fromWarehouse', 'Warehouses', {
-        as: 'fromWarehouse'
-      }),
+      ...lookupRef('fromWarehouse', 'Warehouses', { as: 'fromWarehouse' }),
       ...lookupRef('items.toWarehouse', 'Warehouses', { as: 'toWarehouse' }),
       ...lookupRef('createdBy', 'Users', { as: 'createdBy' })
     ]
@@ -128,7 +138,7 @@ export const getStockTransfers = async (req, res) => {
     const data = result[0]?.data || []
 
     // Tổng số phiếu không filter
-    const recordsTotal = await StockTransfer.countDocuments(baseMatch)
+    const recordsTotal = await StockTransfer.countDocuments(matchCondition)
 
     res.json({
       draw,
@@ -153,15 +163,26 @@ export const getStockTransferById = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const stockTransfer = await StockTransfer.findOne({
+    const matchCondition = {
       _id: id,
       organization: organizationId
-    })
+    }
+
+    if (req.warehouseFilter) {
+      matchCondition.fromWarehouse = req.warehouseFilter
+    } else {
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        matchCondition.fromWarehouse = org.defaultWarehouse
+      }
+    }
+
+    const stockTransfer = await StockTransfer.findOne(matchCondition)
       .populate('createdBy', 'name username')
       .populate('updatedBy', 'name username')
       .populate('lockedBy', 'name username')
       .populate('items.ingredient', 'name unit')
-      .populate('items.fromWarehouse', 'name location')
+      .populate('fromWarehouse', 'name location')
       .populate('items.toWarehouse', 'name location')
       .lean()
 
@@ -183,12 +204,30 @@ export const createStockTransfer = async (req, res) => {
     const transfer = await withTransaction(async (session) => {
       const code = await generateDocumentCode(StockTransfer, 'ST')
       const date = new Date()
-      const doc = new StockTransfer({
+      const docData = {
         code: code,
         date: date,
         createdBy: req.user._id,
         organization: organizationId
-      })
+      }
+
+      // Xác định kho xuất (fromWarehouse)
+      if (req.warehouseFilter) {
+        // Nếu là nhân viên thì chỉ được phép dùng kho đã gán
+        docData.fromWarehouse = req.warehouseFilter
+      } else {
+        // Nếu là admin/org thì lấy kho mặc định của tổ chức
+        const org = await Organization.findById(organizationId).select('defaultWarehouse')
+        if (!org?.defaultWarehouse) {
+          throw new BusinessError(
+            'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật trong profile.',
+            400
+          )
+        }
+        docData.fromWarehouse = org.defaultWarehouse
+      }
+
+      const doc = new StockTransfer(docData)
       await doc.save(session ? { session } : {})
       return doc
     })
@@ -214,11 +253,17 @@ export const updateStockTransferFromForm = async (req, res) => {
         throw new BusinessError('ID không hợp lệ', 400)
       }
 
-      // Lấy phiếu chuyển kho cũ
-      const oldTransfer = await StockTransfer.findOne({
+      const matchCondition = {
         _id: id,
         organization: organizationId
-      }).session(session)
+      }
+
+      if (req.warehouseFilter) {
+        matchCondition.warehouse = req.warehouseFilter
+      }
+
+      // Lấy phiếu chuyển kho cũ
+      const oldTransfer = await StockTransfer.findOne(matchCondition).session(session)
 
       if (!oldTransfer) throw new BusinessError('Phiếu chuyển kho không tồn tại', 404)
       if (oldTransfer.isLocked) {
@@ -528,7 +573,6 @@ export const updateStockTransferFromForm = async (req, res) => {
       return responseHelper.error(res, error.message, error.statusCode)
     } else {
       // Log unexpected errors for debugging
-      console.error('Unexpected error in updateStockTransferFromForm:', error)
       return responseHelper.error(res, 'Lỗi server nội bộ', 500)
     }
   }

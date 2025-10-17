@@ -488,17 +488,12 @@ export const updateStockEntryFromForm = async (req, res) => {
       // Cập nhật tổng tồn kho trong Ingredient
       const affectedIngredientIds = [...deltaMap.keys()]
       for (const ingId of affectedIngredientIds) {
-        const totalStockAgg = await IngredientStock.aggregate([
-          {
-            $match: {
-              ingredient: ingId,
-              organization: organizationId
-            }
-          },
-          { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
-        ]).session(session)
+        const stocks = await IngredientStock.find({
+          ingredient: ingId,
+          organization: organizationId
+        }).session(session)
 
-        const totalStock = totalStockAgg[0]?.totalQuantity || 0
+        const totalStock = stocks.reduce((sum, item) => sum + (item.quantity || 0), 0)
 
         await Ingredient.updateOne(
           { _id: ingId, organization: organizationId },
@@ -632,17 +627,12 @@ export const deleteStockEntries = async (req, res) => {
 
       // Cập nhật tổng tồn kho trong Ingredient
       for (const ingId of affectedIngredients) {
-        const totalStockAgg = await IngredientStock.aggregate([
-          {
-            $match: {
-              ingredient: ingId,
-              organization: organizationId
-            }
-          },
-          { $group: { _id: null, totalQuantity: { $sum: '$quantity' } } }
-        ]).session(session)
+        const stocks = await IngredientStock.find({
+          ingredient: ingId,
+          organization: organizationId
+        }).session(session)
 
-        const totalStock = totalStockAgg[0]?.totalQuantity || 0
+        const totalStock = stocks.reduce((sum, item) => sum + (item.quantity || 0), 0)
 
         await Ingredient.updateOne(
           { _id: ingId, organization: organizationId },
@@ -735,7 +725,7 @@ export const lockStockEntry = async (req, res) => {
         quantity: Number(item.quantity) || 0
       }))
 
-      // tạo stockHistory (dùng các trường tương thích: toWarehouse cho ENTRY)
+      // tạo stockHistory
       const stockHistory = {
         transactionType: 'ENTRY',
         documentType: 'StockEntry',
