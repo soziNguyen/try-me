@@ -258,8 +258,9 @@ export const updateStockTransferFromForm = async (req, res) => {
         organization: organizationId
       }
 
+      // Sửa: warehouse filter nên check fromWarehouse
       if (req.warehouseFilter) {
-        matchCondition.warehouse = req.warehouseFilter
+        matchCondition.fromWarehouse = req.warehouseFilter
       }
 
       // Lấy phiếu chuyển kho cũ
@@ -272,10 +273,11 @@ export const updateStockTransferFromForm = async (req, res) => {
 
       // Lấy dữ liệu mới từ form
       const { note, items: rawItems = [] } = req.body
+      const fromWarehouse = oldTransfer.fromWarehouse // fromWarehouse không được đổi
 
       // Pre-validate và batch query để tối ưu performance
       const validRawItems = rawItems.filter(
-        (item) => item.ingredient && item.fromWarehouse && item.toWarehouse
+        (item) => item.ingredient && item.toWarehouse && item.quantity
       )
 
       if (validRawItems.length === 0) {
@@ -285,10 +287,13 @@ export const updateStockTransferFromForm = async (req, res) => {
       const ingredientIds = [...new Set(validRawItems.map((item) => item.ingredient))].filter(
         Boolean
       )
+
+      // Warehouse IDs bao gồm fromWarehouse và tất cả toWarehouse
       const warehouseIds = [
         ...new Set([
-          ...validRawItems.map((item) => item.fromWarehouse),
-          ...validRawItems.map((item) => item.toWarehouse)
+          fromWarehouse.toString(),
+          ...validRawItems.map((item) => item.toWarehouse),
+          ...oldTransfer.items.map((item) => item.toWarehouse.toString())
         ])
       ].filter(Boolean)
 
@@ -313,20 +318,16 @@ export const updateStockTransferFromForm = async (req, res) => {
         }
 
         // Validate: Kho nguồn và kho đích không được giống nhau
-        if (item.fromWarehouse === item.toWarehouse) {
+        if (fromWarehouse.toString() === item.toWarehouse.toString()) {
           throw new BusinessError('Kho nguồn và kho đích không được giống nhau', 400)
         }
 
         // Validate existence using pre-loaded data
         const ingredient = ingredientMap.get(item.ingredient)
-        const fromWarehouse = warehouseMap.get(item.fromWarehouse)
         const toWarehouse = warehouseMap.get(item.toWarehouse)
 
         if (!ingredient) {
           throw new BusinessError(`Nguyên liệu không tồn tại: ${item.ingredient}`, 404)
-        }
-        if (!fromWarehouse) {
-          throw new BusinessError(`Kho nguồn không tồn tại: ${item.fromWarehouse}`, 404)
         }
         if (!toWarehouse) {
           throw new BusinessError(`Kho đích không tồn tại: ${item.toWarehouse}`, 404)
@@ -334,7 +335,6 @@ export const updateStockTransferFromForm = async (req, res) => {
 
         return {
           ingredient: item.ingredient,
-          fromWarehouse: item.fromWarehouse,
           toWarehouse: item.toWarehouse,
           quantity
         }
@@ -345,12 +345,7 @@ export const updateStockTransferFromForm = async (req, res) => {
 
       // Tính toán thay đổi từ việc xóa items cũ (hoàn tác)
       for (const oldItem of oldTransfer.items) {
-        if (
-          oldItem.ingredient &&
-          oldItem.quantity &&
-          oldItem.fromWarehouse &&
-          oldItem.toWarehouse
-        ) {
+        if (oldItem.ingredient && oldItem.quantity && oldItem.toWarehouse) {
           // Validate data integrity - phát hiện data corrupt
           if (oldItem.quantity <= 0) {
             throw new BusinessError(
@@ -359,7 +354,7 @@ export const updateStockTransferFromForm = async (req, res) => {
             )
           }
 
-          const fromKey = `${oldItem.ingredient}_${oldItem.fromWarehouse}`
+          const fromKey = `${oldItem.ingredient}_${fromWarehouse}`
           const toKey = `${oldItem.ingredient}_${oldItem.toWarehouse}`
 
           // Hoàn tác: Cộng lại vào kho nguồn
@@ -371,7 +366,7 @@ export const updateStockTransferFromForm = async (req, res) => {
 
       // Tính toán thay đổi từ việc thêm items mới
       for (const newItem of newItems) {
-        const fromKey = `${newItem.ingredient}_${newItem.fromWarehouse}`
+        const fromKey = `${newItem.ingredient}_${fromWarehouse}`
         const toKey = `${newItem.ingredient}_${newItem.toWarehouse}`
 
         // Trừ từ kho nguồn
@@ -554,8 +549,8 @@ export const updateStockTransferFromForm = async (req, res) => {
           { path: 'createdBy', select: 'username' },
           { path: 'updatedBy', select: 'username' },
           { path: 'lockedBy', select: 'username' },
+          { path: 'fromWarehouse', select: 'name location' },
           { path: 'items.ingredient', select: 'name unit' },
-          { path: 'items.fromWarehouse', select: 'name location' },
           { path: 'items.toWarehouse', select: 'name location' }
         ])
       } catch (populateError) {
@@ -601,9 +596,9 @@ export const deleteStockTransfers = async (req, res) => {
         _id: { $in: validIds },
         organization: organizationId
       })
+        .populate('fromWarehouse', 'name') // fromWarehouse ở ngoài
         .populate('items.ingredient', 'name')
-        .populate('items.fromWarehouse', 'name')
-        .populate('items.toWarehouse', 'name')
+        .populate('items.toWarehouse', 'name') // toWarehouse trong items
         .session(session)
 
       if (transfers.length === 0) {
@@ -613,6 +608,8 @@ export const deleteStockTransfers = async (req, res) => {
       if (transfers.length !== validIds.length) {
         throw new BusinessError('Một số phiếu chuyển kho không tồn tại', 404)
       }
+
+      console.log(transfers)
 
       // Kiểm tra phiếu đã khóa
       const lockedTransfers = transfers.filter((t) => t.isLocked)
@@ -629,8 +626,12 @@ export const deleteStockTransfers = async (req, res) => {
       const affectedIngredients = new Set()
 
       for (const transfer of transfers) {
+        const fromWarehouseId = transfer.fromWarehouse._id
+          ? transfer.fromWarehouse._id.toString()
+          : transfer.fromWarehouse.toString()
+
         for (const item of transfer.items) {
-          if (!item.ingredient || !item.quantity || !item.fromWarehouse || !item.toWarehouse) {
+          if (!item.ingredient || !item.quantity || !item.toWarehouse) {
             continue
           }
 
@@ -638,9 +639,6 @@ export const deleteStockTransfers = async (req, res) => {
           const ingredientId = item.ingredient._id
             ? item.ingredient._id.toString()
             : item.ingredient.toString()
-          const fromWarehouseId = item.fromWarehouse._id
-            ? item.fromWarehouse._id.toString()
-            : item.fromWarehouse.toString()
           const toWarehouseId = item.toWarehouse._id
             ? item.toWarehouse._id.toString()
             : item.toWarehouse.toString()
@@ -687,21 +685,36 @@ export const deleteStockTransfers = async (req, res) => {
               return itemIngredientId === ingredientId
             })
 
-          const warehouseInfo = transfers
-            .flatMap((t) => t.items)
-            .find((item) => {
-              const fromId = item.fromWarehouse._id
-                ? item.fromWarehouse._id.toString()
-                : item.fromWarehouse.toString()
-              const toId = item.toWarehouse._id
-                ? item.toWarehouse._id.toString()
-                : item.toWarehouse.toString()
-              return fromId === warehouseId || toId === warehouseId
-            })
+          // Tìm warehouse name
+          let warehouseName = 'Unknown'
+
+          // Kiểm tra nếu là fromWarehouse
+          const fromWarehouseMatch = transfers.find((t) => {
+            const fwId = t.fromWarehouse._id
+              ? t.fromWarehouse._id.toString()
+              : t.fromWarehouse.toString()
+            return fwId === warehouseId
+          })
+
+          if (fromWarehouseMatch) {
+            warehouseName = fromWarehouseMatch.fromWarehouse.name || 'Unknown'
+          } else {
+            // Nếu không phải fromWarehouse thì là toWarehouse
+            const toWarehouseMatch = transfers
+              .flatMap((t) => t.items)
+              .find((item) => {
+                const toId = item.toWarehouse._id
+                  ? item.toWarehouse._id.toString()
+                  : item.toWarehouse.toString()
+                return toId === warehouseId
+              })
+
+            if (toWarehouseMatch) {
+              warehouseName = toWarehouseMatch.toWarehouse.name || 'Unknown'
+            }
+          }
 
           const ingredientName = ingredientInfo?.ingredient?.name || 'Unknown'
-          const warehouseName =
-            warehouseInfo?.fromWarehouse?.name || warehouseInfo?.toWarehouse?.name || 'Unknown'
 
           validationErrors.push(
             `Không thể hoàn tác: Nguyên liệu "${ingredientName}" ` +
@@ -829,6 +842,10 @@ export const lockStockTransfer = async (req, res) => {
       return responseHelper.error(res, 'Phiếu chuyển kho không có sản phẩm nào', 400)
     }
 
+    if (!transfer.fromWarehouse) {
+      return responseHelper.error(res, 'Phiếu chuyển kho thiếu thông tin kho nguồn', 400)
+    }
+
     // Validate items
     for (const item of transfer.items) {
       if (!item.ingredient) {
@@ -838,8 +855,8 @@ export const lockStockTransfer = async (req, res) => {
       if (!Number.isFinite(qty) || qty <= 0) {
         return responseHelper.error(res, 'Có sản phẩm với số lượng không hợp lệ', 400)
       }
-      if (!item.fromWarehouse || !item.toWarehouse) {
-        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin kho xuất hoặc kho nhận', 400)
+      if (!item.toWarehouse) {
+        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin kho nhận', 400)
       }
     }
 
@@ -863,10 +880,11 @@ export const lockStockTransfer = async (req, res) => {
       }
 
       // Chuẩn bị stockHistory items
+      const fromWarehouseId = transfer.fromWarehouse._id || transfer.fromWarehouse
+
       const itemsSummary = transfer.items.map((item) => ({
         ingredient: item.ingredient._id || item.ingredient,
         quantity: Number(item.quantity) || 0,
-        fromWarehouse: item.fromWarehouse._id || item.fromWarehouse,
         toWarehouse: item.toWarehouse._id || item.toWarehouse
       }))
 
@@ -876,8 +894,9 @@ export const lockStockTransfer = async (req, res) => {
         documentType: 'StockTransfer',
         documentId: transfer._id,
         documentCode: transfer.code || '',
-        fromWarehouse: null, // Tổng thể phiếu thì null, chi tiết từng item có fromWarehouse
-        toWarehouse: null,
+        warehouse: fromWarehouseId, // Kho chính
+        fromWarehouse: fromWarehouseId, // Kho nguồn
+        toWarehouse: null, //
         supplier: null,
         totalItems: transfer.items.length,
         totalQuantity: itemsSummary.reduce((sum, i) => sum + i.quantity, 0),
@@ -899,9 +918,9 @@ export const lockStockTransfer = async (req, res) => {
       organization: organizationId
     })
       .populate('lockedBy', 'name username')
+      .populate('fromWarehouse', '_id name')
       .populate('items.ingredient', 'name sku unit stock')
-      .populate('items.fromWarehouse', 'name code')
-      .populate('items.toWarehouse', 'name code')
+      .populate('items.toWarehouse', '_id name')
 
     responseHelper.success(res, finalTransfer, 'Đã khóa phiếu chuyển kho thành công')
   } catch (err) {

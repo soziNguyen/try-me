@@ -116,7 +116,7 @@ $(function () {
           toastr.success('Đã tạo bảng lương')
           $('#payrollTable').DataTable().ajax.reload()
         } catch (err) {
-          // console.log(err)
+          console.log(err)
           toastr.error('Có lỗi khi tính lương')
         }
       }

@@ -150,7 +150,6 @@ export const createPayroll = async (req, res) => {
 
     return res.json({ message: 'Chốt lương thành công', data: payroll })
   } catch (error) {
-    console.error('createPayroll error:', error)
     return res.status(500).json({ message: 'Lỗi khi tạo Payroll', error: error.message })
   }
 }

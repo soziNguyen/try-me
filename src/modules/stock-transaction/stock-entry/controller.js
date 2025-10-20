@@ -668,6 +668,7 @@ export const lockStockEntry = async (req, res) => {
       _id: id,
       organization: organizationId
     })
+
     if (!entry) {
       return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
     }
@@ -731,6 +732,7 @@ export const lockStockEntry = async (req, res) => {
         documentType: 'StockEntry',
         documentId: entry._id,
         documentCode: entry.code || entry.documentCode || '',
+        warehouse: warehouseId || null,
         toWarehouse: warehouseId || null,
         fromWarehouse: null,
         supplier: supplierId || null,

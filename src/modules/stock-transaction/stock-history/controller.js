@@ -2,6 +2,7 @@ import { lookupRef, lookupUser } from '../../../helpers/lookupHelper.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import StockHistory from './model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import Organization from '../../organization/model.js'
 
 export const getStockHistories = async (req, res) => {
   try {
@@ -16,8 +17,27 @@ export const getStockHistories = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    const matchCondition = { organization: organizationId }
+
+    if (req.warehouseFilter) {
+      matchCondition.$or = [
+        { warehouse: req.warehouseFilter },
+        { fromWarehouse: req.warehouseFilter },
+        { toWarehouse: req.warehouseFilter }
+      ]
+    } else {
+      const org = await Organization.findById(organizationId).select('defaultWarehouse').lean()
+      if (org?.defaultWarehouse) {
+        matchCondition.$or = [
+          { warehouse: org.defaultWarehouse },
+          { fromWarehouse: org.defaultWarehouse },
+          { toWarehouse: org.defaultWarehouse }
+        ]
+      }
+    }
+
     const pipeline = [
-      { $match: { organization: organizationId } },
+      { $match: matchCondition },
       {
         $lookup: {
           from: 'Ingredients',
@@ -27,6 +47,7 @@ export const getStockHistories = async (req, res) => {
         }
       },
       ...lookupUser('createdBy'),
+      ...lookupRef('warehouse', 'warehouses'), // Lookup warehouse chính
       ...lookupRef('fromWarehouse', 'warehouses'),
       ...lookupRef('toWarehouse', 'warehouses'),
       ...lookupRef('supplier', 'suppliers'),
@@ -48,15 +69,13 @@ export const getStockHistories = async (req, res) => {
                     0
                   ]
                 },
-                quantity: '$$item.quantity',
-                quantityBefore: '$$item.quantityBefore',
-                quantityAfter: '$$item.quantityAfter'
+                quantity: '$$item.quantity'
               }
             }
           }
         }
       },
-      // Tính tổng số lượng cho
+      // Tính tổng số lượng
       {
         $addFields: {
           totalQuantity: {
@@ -74,6 +93,8 @@ export const getStockHistories = async (req, res) => {
             { documentCode: { $regex: searchValue, $options: 'i' } },
             { 'items.ingredient.name': { $regex: searchValue, $options: 'i' } },
             { 'createdBy.username': { $regex: searchValue, $options: 'i' } },
+            { 'warehouse.name': { $regex: searchValue, $options: 'i' } },
+            { 'warehouse.code': { $regex: searchValue, $options: 'i' } },
             {
               $expr: {
                 $regexMatch: {
@@ -120,7 +141,10 @@ export const getStockHistories = async (req, res) => {
       case 'createdBy.username':
         sortObj['createdBy.username'] = sortDir
         break
-      case 'totalQuantity': // sort theo tổng số lượng
+      case 'warehouse.name':
+        sortObj['warehouse.name'] = sortDir
+        break
+      case 'totalQuantity':
         sortObj['totalQuantity'] = sortDir
         break
       default:
@@ -142,6 +166,7 @@ export const getStockHistories = async (req, res) => {
         transactionDate: 1,
         items: 1,
         totalQuantity: 1,
+        warehouse: 1, // Thêm warehouse vào response
         fromWarehouse: 1,
         toWarehouse: 1,
         supplier: 1,

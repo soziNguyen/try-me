@@ -98,4 +98,5 @@ router.get('/product/stocks', isAuthenticated, page.productStockPage)
 
 router.get('/payment-receipts', isAuthenticated, page.receiptsPage)
 router.get('/payment-expenses', isAuthenticated, page.expensesPage)
+router.get('/upgrade', isAuthenticated, page.upgradePage)
 export default router

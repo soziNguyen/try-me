@@ -2,6 +2,7 @@ import IngredientStock from './model.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import Organization from '../../organization/model.js'
 
 export const getIngredientStockList = async (req, res) => {
   try {
@@ -16,9 +17,23 @@ export const getIngredientStockList = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    const matchCondition = {
+      organization: organizationId
+    }
+
+    if (req.warehouseFilter) {
+      matchCondition.warehouse = req.warehouseFilter
+    } else {
+      const org = await Organization.findById(organizationId).select('defaultWarehouse').lean()
+      if (org?.defaultWarehouse) {
+        matchCondition.warehouse = org.defaultWarehouse
+      }
+      // Không có filter -> query tất cả warehouse
+    }
+
     // Khởi tạo pipeline với lookup
     const pipeline = [
-      { $match: { organization: organizationId } },
+      { $match: matchCondition },
       ...lookupRef('ingredient', 'Ingredients'),
       ...lookupRef('warehouse', 'Warehouses'),
       ...lookupRef('supplier', 'Suppliers')

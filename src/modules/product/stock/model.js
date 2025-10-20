@@ -5,7 +5,12 @@ const productStockSchema = new mongoose.Schema(
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'MenuItem',
-      required: true
+      default: null
+    },
+    combo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Combo',
+      default: null
     },
     warehouse: {
       type: mongoose.Schema.Types.ObjectId,

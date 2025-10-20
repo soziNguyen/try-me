@@ -14,7 +14,7 @@
 
           <!-- Form Content -->
           <div class="card-body p-4">
-            <form id="stockEntryForm">
+            <form id="productEntryForm">
               <!-- Thông tin chung -->
               <div class="mb-4">
                 <h5 class="text-primary border-bottom pb-2 mb-3">
@@ -118,6 +118,7 @@
 
   <%- include('../partials/commonjs.html') %>
     <script src="/js/data-table.js"></script>
-    <input type="hidden" id="currentOrgId" value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
+    <input type="hidden" id="currentOrgId"
+      value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
     <script src="/js/product/entry-detail.js"></script>
     <%- include('../partials/footer.html') %>

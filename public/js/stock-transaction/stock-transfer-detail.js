@@ -2,6 +2,7 @@ $(function () {
   let ingredients = []
   let warehouses = []
   let stockTransferId = null
+  let stockTransfer = null
   let itemCounter = 1
   const disableStockTransferSave = setupSaveButtonWatcher(
     '#stockTransferForm',
@@ -29,12 +30,10 @@ $(function () {
       warehouses = whs
 
       initForm()
+      console.log(stockTransfer)
+
       if (stockTransfer) {
-        populateForm(stockTransfer)
-      } else {
-        const currentUserName = '<%= currentUserName %>'
-        const currentUserId = '<%= currentUserId %>'
-        $('#createdBy').val(currentUserName).data('id', currentUserId)
+        populateForm(stockTransfer, stockTransfer.fromWarehouse?.name)
       }
     })
     .catch((err) => {
@@ -108,7 +107,6 @@ $(function () {
 
   function updateRowDropdowns(rowIndex) {
     const $ingredientSelect = $(`select[name="items[${rowIndex}][ingredient]"]`)
-    const $fromWarehouseSelect = $(`select[name="items[${rowIndex}][fromWarehouse]"]`)
     const $toWarehouseSelect = $(`select[name="items[${rowIndex}][toWarehouse]"]`)
 
     // Update ingredient options
@@ -126,12 +124,6 @@ $(function () {
       .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
       .join('')
 
-    const $fSelected = $fromWarehouseSelect
-      .empty()
-      .html('<option value="" class="text-center">— Chọn kho nguồn —</option>' + warehouseOptions)
-
-    initSelect2($fSelected, '— Chọn kho nguồn —')
-
     const tSelected = $toWarehouseSelect
       .empty()
       .html('<option value="" class="text-center">— Chọn kho đích —</option>' + warehouseOptions)
@@ -144,11 +136,6 @@ $(function () {
         <td>
           <select class="form-select form-select-sm select2-ingredient" name="items[${itemCounter}][ingredient]">
             <option value="" class="text-center">— Chọn nguyên liệu —</option>
-          </select>
-        </td>
-        <td>
-          <select class="form-select form-select-sm" name="items[${itemCounter}][fromWarehouse]">
-            <option value="" class="text-center">— Chọn kho nguồn —</option>
           </select>
         </td>
         <td>
@@ -178,9 +165,12 @@ $(function () {
     itemCounter++
   }
 
-  function populateForm(stockTransfer) {
+  function populateForm(stockTransfer, defaultWarehouse) {
     $('#code').val(stockTransfer.code || '')
     $('#date').val(formatDate(stockTransfer.date) || '')
+    $('#warehouse')
+      .val(defaultWarehouse || '')
+      .trigger('change')
     $('#createdBy')
       .val(stockTransfer.createdBy?.username || '')
       .data('id', stockTransfer.createdBy?._id)
@@ -196,11 +186,6 @@ $(function () {
             <td>
               <select class="form-select form-select-sm select2-ingredient" name="items[${index}][ingredient]">
                 <option value="" class="text-center">— Chọn nguyên liệu —</option>
-              </select>
-            </td>
-            <td>
-              <select class="form-select form-select-sm" name="items[${index}][fromWarehouse]">
-                <option value="" class="text-center">— Chọn kho nguồn —</option>
               </select>
             </td>
             <td>
@@ -228,9 +213,6 @@ $(function () {
         $sel.val(item.ingredient?._id || '')
         initSelect2($sel, '— Chọn nguyên liệu —')
 
-        $(`select[name="items[${index}][fromWarehouse]"]`)
-          .val(item.fromWarehouse?._id || '')
-          .trigger('change')
         $(`select[name="items[${index}][toWarehouse]"]`)
           .val(item.toWarehouse?._id || '')
           .trigger('change')
@@ -258,16 +240,16 @@ $(function () {
     const partialErrors = []
 
     // Kiểm tra từng dòng
+    const fromWarehouseId = $('#warehouse').val()
     $rows.each(function (index) {
       const rowIndex = index + 1
 
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
-      const fromWarehouseId = $(this).find('select[name*="[fromWarehouse]"]').val()
       const toWarehouseId = $(this).find('select[name*="[toWarehouse]"]').val()
       const quantity = $(this).find('input[name*="[quantity]"]').val()
 
-      const hasAnyValue = ingredientId || fromWarehouseId || toWarehouseId || quantity
-      const isComplete = ingredientId && fromWarehouseId && toWarehouseId && quantity
+      const hasAnyValue = ingredientId || toWarehouseId || quantity
+      const isComplete = ingredientId && toWarehouseId && quantity
 
       if (hasAnyValue && !isComplete) {
         const missingFields = []
@@ -295,11 +277,10 @@ $(function () {
     if ($rows.length > 1) {
       $rows.each(function () {
         const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
-        const fromWarehouseId = $(this).find('select[name*="[fromWarehouse]"]').val()
         const toWarehouseId = $(this).find('select[name*="[toWarehouse]"]').val()
         const quantity = $(this).find('input[name*="[quantity]"]').val()
 
-        if (!ingredientId && !fromWarehouseId && !toWarehouseId && !quantity) {
+        if (!ingredientId && !toWarehouseId && !quantity) {
           $(this).remove()
         }
       })
@@ -311,6 +292,7 @@ $(function () {
       code: formData.get('code'),
       date: formData.get('date'),
       note: formData.get('note'),
+      warehouse: fromWarehouseId,
       items: []
     }
 
@@ -320,14 +302,12 @@ $(function () {
 
     $('#itemsTableBody tr').each(function () {
       const ingredientId = $(this).find('select[name*="[ingredient]"]').val()
-      const fromWarehouseId = $(this).find('select[name*="[fromWarehouse]"]').val()
       const toWarehouseId = $(this).find('select[name*="[toWarehouse]"]').val()
       const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val())
 
-      if (ingredientId && fromWarehouseId && toWarehouseId && quantity) {
+      if (ingredientId && toWarehouseId && quantity) {
         stockTransferData.items.push({
           ingredient: ingredientId,
-          fromWarehouse: fromWarehouseId,
           toWarehouse: toWarehouseId,
           quantity
         })

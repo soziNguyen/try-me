@@ -275,10 +275,15 @@ export const updateStockIssue = async (req, res) => {
       const { id } = req.params
       if (!mongoose.isValidObjectId(id)) throw new BusinessError('ID không hợp lệ', 400)
 
-      const oldIssue = await StockIssue.findOne({
+      const matchCondition = {
         _id: id,
         organization: organizationId
-      }).session(session)
+      }
+
+      if (req.warehouseFilter) {
+        matchCondition.warehouse = req.warehouseFilter
+      }
+      const oldIssue = await StockIssue.findOne(matchCondition).session(session)
 
       if (!oldIssue) throw new BusinessError('Phiếu xuất không tồn tại', 404)
       if (oldIssue.isLocked)
@@ -584,6 +589,7 @@ export const lockStockIssue = async (req, res) => {
         documentType: 'StockIssue',
         documentId: finalIssue._id,
         documentCode: finalIssue.code || finalIssue.documentCode || '',
+        warehouse: warehouseId,
         fromWarehouse: warehouseId || null,
         toWarehouse: null,
         totalItems,
