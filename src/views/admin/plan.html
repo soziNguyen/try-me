@@ -1,0 +1,95 @@
+<%- include('../partials/header.html') %>
+  <%- include('../partials/admin_sidebar.html') %>
+    <div class="admin__content">
+      <h2 class="mb-3 bold">
+        <%= pageTitle %>
+      </h2>
+
+      <table id="planTable" class="table">
+        <thead>
+          <tr>
+            <th>
+              <input type="checkbox" id="selectAll">
+            </th>
+            <th>Tên gói</th>
+            <th>Giá tháng</th>
+            <th>Giá năm</th>
+            <th>Giá gốc</th>
+            <th>Giới hạn kho</th>
+            <th>Giới hạn nhân viên</th>
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="planTableBody">
+        </tbody>
+      </table>
+
+    </div>
+
+    </div>
+    </div>
+
+    <!-- Modal Add/Edit -->
+    <div class="modal fade" id="planModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="planModalLabel">Thêm gói</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="planForm">
+            <div class="modal-body">
+              <input type="hidden" id="planId">
+              <div class="mb-3">
+                <label class="fw-bold">Tên gói</label>
+                <input type="text" class="form-control" id="name" required>
+              </div>
+              <div class="mb-3">
+                <label class="fw-bold">Giá tháng (VND)</label>
+                <input type="number" class="form-control" id="monthlyPrice" min="0" required>
+              </div>
+              <div class="mb-3">
+                <label class="fw-bold">Giá năm (VND)</label>
+                <input type="number" class="form-control" id="annualPrice" min="0" required>
+              </div>
+              <div class="mb-3">
+                <label class="fw-bold">Giá gốc (VND)</label>
+                <input type="number" class="form-control" id="originalPrice" min="0">
+              </div>
+              <div class="mb-3">
+                <label class="fw-bold">Giới hạn kho (để trống nếu không giới hạn)</label>
+                <input type="number" class="form-control" id="warehouseLimit" min="0">
+              </div>
+              <div class="mb-3">
+                <label class="fw-bold">Giới hạn nhân viên (để trống nếu không giới hạn)</label>
+                <input type="number" class="form-control" id="staffLimit" min="0">
+              </div>
+              <div class="mb-3">
+                <label class="fw-bold">Mô tả</label>
+                <textarea class="form-control" id="description" rows="3"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="fw-bold">Trạng thái</label>
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" id="isActive">
+                  <label class="form-check-label">Hoạt động</label>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+              <button type="submit" class="btn btn-primary">Lưu</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <%- include('../partials/commonjs.html') %>
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/data-table.js"></script>
+      <script src="/js/admin/plan.js"></script>
+      <%- include('../partials/footer.html') %>
