@@ -17,7 +17,22 @@ const OrganizationSchema = new Schema(
     },
     logo: { type: String, trim: true, default: '' },
     taxCode: { type: String, trim: true, default: '' },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    plan: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Plan', // liên kết với bảng Plan
+      default: null
+    },
+    planExpiredAt: {
+      type: Date,
+      default: null
+    },
+
+    // lưu thông tin khi nâng cấp gần nhất
+    lastUpgradedAt: {
+      type: Date,
+      default: null
+    }
   },
   {
     collection: 'Organizations',

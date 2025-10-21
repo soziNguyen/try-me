@@ -1,7 +1,6 @@
 $(function () {
   let suppliers = []
   let ingredients = []
-  let warehouses = []
   let units = []
   let stockEntryId = null
   let itemCounter = 0
@@ -20,23 +19,17 @@ $(function () {
   Promise.all([
     fetchData('inventory/supplier/all'),
     fetchData('inventory/ingredient/all'),
-    fetchData('inventory/warehouse/all'),
     stockEntryId ? fetchData(`inventory/stock-entry/${stockEntryId}`) : Promise.resolve(null)
   ])
-    .then(([sups, ings, whs, stockEntryRes]) => {
+    .then(([sups, ings, stockEntryRes]) => {
       suppliers = sups || []
       ingredients = ings || []
-      warehouses = whs || []
       units = stockEntryRes?.units || []
 
       initForm()
       if (stockEntryRes) {
         stockEntry = stockEntryRes.stockEntry
-        populateForm(stockEntry)
-      } else {
-        const currentUserName = '<%= currentUserName %>'
-        const currentUserId = '<%= currentUserId %>'
-        $('#createdBy').val(currentUserName).data('id', currentUserId)
+        populateForm(stockEntry, stockEntry.warehouse?.name)
       }
     })
     .catch((err) => {
@@ -65,16 +58,6 @@ $(function () {
       '<option value="" class="text-center">— Chọn nhà cung cấp —</option>' + supplierOptions
     )
     initSelect2($supplierSelect, '— Chọn nhà cung cấp —')
-
-    // Populate warehouses dropdown (main warehouse select)
-    const warehouseOptions = warehouses
-      .map((wh) => `<option value="${wh._id}">${wh.name} - ${wh.location}</option>`)
-      .join('')
-    const $warehouseSelected = $('#warehouse').html(
-      '<option value="" class="text-center">— Chọn kho —</option>' + warehouseOptions
-    )
-
-    initSelect2($warehouseSelected, '— Chọn kho —')
 
     // Event handlers
     $('#addItemBtn').on('click', addNewItem)
@@ -232,15 +215,13 @@ $(function () {
     $('#totalAmount').text(total.toLocaleString('vi-VN') + ' ₫')
   }
 
-  function populateForm(stockEntry) {
+  function populateForm(stockEntry, defaultWarehouse) {
     $('#code').val(stockEntry.code || '')
     $('#date').val(formatDate(stockEntry.date) || '')
     $('#supplier')
       .val(stockEntry.supplier?._id || '')
       .trigger('change')
-    $('#warehouse')
-      .val(stockEntry.warehouse?._id || '')
-      .trigger('change')
+    $('#warehouse').val(defaultWarehouse).trigger('change')
     $('#createdBy')
       .val(stockEntry.createdBy?.username || '')
       .data('id', stockEntry.createdBy?._id)
@@ -401,12 +382,6 @@ $(function () {
     if (!stockEntryData.supplier) {
       toastr.remove()
       toastr.error('Vui lòng chọn nhà cung cấp', 'Lỗi dữ liệu')
-      return
-    }
-
-    if (!stockEntryData.warehouse) {
-      toastr.remove()
-      toastr.error('Vui lòng chọn kho', 'Lỗi dữ liệu')
       return
     }
 

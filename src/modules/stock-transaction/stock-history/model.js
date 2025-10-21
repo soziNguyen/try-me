@@ -14,6 +14,11 @@ const stockHistorySchema = new mongoose.Schema(
     },
     documentId: { type: mongoose.Schema.Types.ObjectId, required: true },
     documentCode: { type: String, required: true },
+    warehouse: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Warehouse',
+      required: true
+    },
 
     fromWarehouse: {
       type: mongoose.Schema.Types.ObjectId,
@@ -39,9 +44,7 @@ const stockHistorySchema = new mongoose.Schema(
           ref: 'Ingredient',
           required: true
         },
-        quantity: { type: Number, required: true },
-        quantityBefore: { type: Number, default: 0 },
-        quantityAfter: { type: Number, default: 0 }
+        quantity: { type: Number, required: true }
       }
     ],
 

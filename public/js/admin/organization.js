@@ -71,7 +71,7 @@ $(function () {
         render: (data, type, row) => {
           if (type === 'display') {
             const provinceObj = provinceLists.find((p) => p.id === data)
-            return provinceObj ? provinceObj.name : ''
+            return provinceObj ? `<span class="text">${provinceObj.name}</span>` : ''
           }
           return data
         }
@@ -81,7 +81,7 @@ $(function () {
         render: (data, type, row) => {
           if (type === 'display') {
             const communeObj = communeLists.find((p) => p.id === data)
-            return communeObj ? communeObj.name : ''
+            return communeObj ? `<span class="text">${communeObj.name}</span>` : ''
           }
           return data
         }
@@ -90,7 +90,7 @@ $(function () {
         data: 'street',
         render: (data, type, row) => {
           if (type === 'display') {
-            return data ? data : ''
+            return data ? `<span class="text">${data}</span>` : ''
           }
           return data
         }

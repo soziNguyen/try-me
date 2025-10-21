@@ -4,10 +4,7 @@ $(function () {
   let table
 
   // 1. Fetch danh sách nguyên liệu và kho
-  Promise.all([
-    fetchData('inventory/ingredient/all'),
-    fetchData('inventory/warehouse/all')
-  ])
+  Promise.all([fetchData('inventory/ingredient/all'), fetchData('inventory/warehouse/all')])
     .then(([ings, whs]) => {
       ingredients = ings
       warehouses = whs
@@ -28,7 +25,11 @@ $(function () {
 
     table = $('#stockIssueTable').DataTable({
       dom:
-        '<"top-bar d-flex justify-content-between mb-3"l f <"btn-group">>' +
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
+        'l' +
+        'f' +
+        '<"right-group d-flex align-items-center btn-group flex-wrap">' +
+        '>' +
         'rt' +
         '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
@@ -117,10 +118,7 @@ $(function () {
           title: 'Số lượng',
           render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const totalQty = items.reduce(
-              (acc, cur) => acc + (cur.quantity || 0),
-              0
-            )
+            const totalQty = items.reduce((acc, cur) => acc + (cur.quantity || 0), 0)
             return totalQty
           }
         },
@@ -165,13 +163,15 @@ $(function () {
         $(row).attr('data-id', data._id)
       },
       initComplete() {
-        $('.btn-group').html(`
-          <button class="btn btn-outline-danger me-2" id="deleteStockIssueBtn">
-            <i class="bi bi-trash"></i> Xóa
-          </button>
-          <button class="btn btn-outline-success" id="addStockIssueBtn">
-            <i class="bi bi-plus-circle"></i> Thêm
-          </button>
+        $('.right-group').html(`
+          <div class="btn-group flex-wrap mb-2">
+            <button class="btn btn-outline-danger me-2" id="deleteStockIssueBtn">
+              <i class="bi bi-trash"></i> Xóa
+            </button>
+            <button class="btn btn-outline-success" id="addStockIssueBtn">
+              <i class="bi bi-plus-circle"></i> Thêm
+            </button>
+          </div>
         `)
 
         $('#addStockIssueBtn').on('click', () => {

@@ -4,9 +4,8 @@ $(function () {
   let productEntryId = null
   let itemCounter = 0
   let productEntry = null
-  const disableStockEntrySave = setupSaveButtonWatcher('#stockEntryForm', '#btn-save-entry')
+  const disableProductEntrySave = setupSaveButtonWatcher('#productEntryForm', '#btn-save-entry')
   const csrfToken = $('#_csrf').val()
-  const orgId = document.getElementById('currentOrgId').value
 
   // Lấy productEntryId từ URL
   productEntryId = window.location.pathname.split('/').pop()
@@ -47,7 +46,7 @@ $(function () {
 
     // Event handlers
     $('#addItemBtn').on('click', addNewItem)
-    $('#stockEntryForm').on('submit', saveStockEntry)
+    $('#productEntryForm').on('submit', saveStockEntry)
     $('#btn-lock-entry').on('click', function () {
       showConfirmModal({
         title: 'Khóa phiếu',
@@ -69,7 +68,7 @@ $(function () {
                   .prop('disabled', true)
                   .html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
 
-                $('#stockEntryForm')
+                $('#productEntryForm')
                   .find('input, select, textarea, button')
                   .not('#btn-lock-entry, #btn-print')
                   .add('#btn-save-entry, #addItemBtn, #supplier, #warehouse')
@@ -264,7 +263,7 @@ $(function () {
         .prop('disabled', true)
         .html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
 
-      $('#stockEntryForm')
+      $('#productEntryForm')
         .find('input, select, textarea, button')
         .not('#btn-lock-entry, #btn-print')
         .add('#btn-save-entry, #addItemBtn, #supplier, #warehouse')
@@ -383,7 +382,7 @@ $(function () {
         if (res.success) {
           toastr.remove()
           toastr.success(res.message || 'Lưu phiếu nhập thành công')
-          disableStockEntrySave()
+          disableProductEntrySave()
         } else {
           toastr.error(res.message || 'Có lỗi xảy ra')
         }

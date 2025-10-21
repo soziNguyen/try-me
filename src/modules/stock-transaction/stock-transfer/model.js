@@ -4,16 +4,16 @@ const stockTransferSchema = new mongoose.Schema(
   {
     code: { type: String, default: '' },
     date: { type: Date, default: Date.now },
+    fromWarehouse: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Warehouse',
+      required: true
+    },
     items: [
       {
         ingredient: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Ingredient',
-          required: true
-        },
-        fromWarehouse: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Warehouse',
           required: true
         },
         toWarehouse: {

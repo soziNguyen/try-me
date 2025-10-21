@@ -705,3 +705,23 @@ export const expensesPage = (req, res) => {
     })
   )
 }
+
+export const planPage = (req, res) => {
+  res.render(
+    'admin/plan',
+    getPageData(req, 'Danh sách gói', 'Plan', {
+      headerClass: 'admin__header',
+      pageTitle: 'Danh sách gói'
+    })
+  )
+}
+
+export const upgradePage = (req, res) => {
+  res.render(
+    'package/package',
+    getPageData(req, 'Nâng cấp gói', 'Upgrade', {
+      headerClass: 'admin__header',
+      pageTitle: 'Nâng cấp gói'
+    })
+  )
+}

@@ -9,6 +9,7 @@ import { generateDocumentCode } from '../../../helpers/common.js'
 import { lookupRef, lookupUser } from '../../../helpers/lookupHelper.js'
 import StockHistory from '../stock-history/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import Organization from '../../organization/model.js'
 import BusinessError from '../../error/BusinessError.js'
 
 // DATATABLE SERVER-SIDE
@@ -25,8 +26,21 @@ export const getStockIssues = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    const matchCondition = { organization: organizationId }
+
+    // Warehouse filtering
+    if (req.warehouseFilter) {
+      matchCondition.warehouse = req.warehouseFilter
+    } else {
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        matchCondition.warehouse = org.defaultWarehouse
+      }
+      // null -> xem tất cả
+    }
+
     const pipeline = [
-      { $match: { organization: organizationId } },
+      { $match: matchCondition },
       ...lookupRef('warehouse', 'Warehouses'),
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
       ...lookupRef('items.ingredient', 'Ingredients', { as: 'ingredient' }),
@@ -174,10 +188,21 @@ export const getStockIssueById = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const stockIssue = await StockIssue.findOne({
+    const matchCondition = {
       _id: id,
       organization: organizationId
-    }).populate([
+    }
+
+    if (req.warehouseFilter) {
+      matchCondition.warehouse = req.warehouseFilter
+    } else {
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        matchCondition.warehouse = org.defaultWarehouse
+      }
+    }
+
+    const stockIssue = await StockIssue.findOne(matchCondition).populate([
       { path: 'warehouse', select: 'name location' },
       { path: 'createdBy', select: 'username' },
       { path: 'updatedBy', select: 'username' },
@@ -203,12 +228,30 @@ export const createStockIssue = async (req, res) => {
     const issue = await withTransaction(async (session) => {
       const code = await generateDocumentCode(StockIssue, 'SI')
       const date = new Date()
-      const doc = new StockIssue({
+      const docData = {
         code: code,
         date: date,
         createdBy: req.user._id,
         organization: organizationId
-      })
+      }
+
+      // Warehouse logic
+      if (req.warehouseFilter) {
+        // Staff - bắt buộc dùng kho được gán
+        docData.warehouse = req.warehouseFilter
+      } else {
+        // Admin/Org - dùng defaultWarehouse
+        const org = await Organization.findById(organizationId).select('defaultWarehouse')
+        if (!org?.defaultWarehouse) {
+          throw new BusinessError(
+            'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật trong profile.',
+            400
+          )
+        }
+        docData.warehouse = org.defaultWarehouse
+      }
+
+      const doc = new StockIssue(docData)
       await doc.save({ session })
       return doc
     })
@@ -232,16 +275,22 @@ export const updateStockIssue = async (req, res) => {
       const { id } = req.params
       if (!mongoose.isValidObjectId(id)) throw new BusinessError('ID không hợp lệ', 400)
 
-      const oldIssue = await StockIssue.findOne({
+      const matchCondition = {
         _id: id,
         organization: organizationId
-      }).session(session)
+      }
+
+      if (req.warehouseFilter) {
+        matchCondition.warehouse = req.warehouseFilter
+      }
+      const oldIssue = await StockIssue.findOne(matchCondition).session(session)
 
       if (!oldIssue) throw new BusinessError('Phiếu xuất không tồn tại', 404)
       if (oldIssue.isLocked)
         throw new BusinessError('Phiếu xuất đã bị khóa, không thể chỉnh sửa', 400)
 
-      const { warehouse, reason, note, items: rawItems = [] } = req.body
+      const { reason, note, items: rawItems = [] } = req.body
+      const warehouse = oldIssue.warehouse // warehouse không được đổi
 
       // Validate input
       if (!warehouse) throw new BusinessError('Vui lòng chọn kho xuất', 400)
@@ -396,10 +445,17 @@ export const deleteStockIssues = async (req, res) => {
         throw new BusinessError('Không có phiếu nào được chọn', 400)
       }
 
-      const issues = await StockIssue.find({
+      // Match condition với warehouse filter
+      const matchCondition = {
         _id: { $in: ids },
         organization: organizationId
-      }).session(session)
+      }
+
+      if (req.warehouseFilter) {
+        matchCondition.warehouse = req.warehouseFilter
+      }
+
+      const issues = await StockIssue.find(matchCondition).session(session)
       if (issues.length === 0) throw new BusinessError('Không tìm thấy phiếu xuất', 404)
 
       const allAffectedIngredients = new Set()
@@ -432,13 +488,7 @@ export const deleteStockIssues = async (req, res) => {
       }
 
       // Xóa các phiếu
-      await StockIssue.deleteMany(
-        {
-          _id: { $in: ids },
-          organization: organizationId
-        },
-        { session }
-      )
+      await StockIssue.deleteMany(matchCondition, { session })
 
       // Cập nhật tổng stock cho tất cả ingredients bị ảnh hưởng
       if (allAffectedIngredients.size > 0) {
@@ -539,6 +589,7 @@ export const lockStockIssue = async (req, res) => {
         documentType: 'StockIssue',
         documentId: finalIssue._id,
         documentCode: finalIssue.code || finalIssue.documentCode || '',
+        warehouse: warehouseId,
         fromWarehouse: warehouseId || null,
         toWarehouse: null,
         totalItems,

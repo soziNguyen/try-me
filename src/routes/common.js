@@ -31,6 +31,7 @@ import invoiceRoutes from '../modules/invoice/route.js'
 import customerRoutes from '../modules/customer/route.js'
 import productEntryRoutes from '../modules/product/entry/route.js'
 import productStockRoutes from '../modules/product/stock/route.js'
+import planRoutes from '../modules/plan/route.js'
 import uploadRouter from '../modules/upload/route.js'
 import pageRoute from '../pages/route.js'
 
@@ -93,7 +94,9 @@ const routes = [
 
   // Product
   productEntryRoutes,
-  productStockRoutes
+  productStockRoutes,
+
+  planRoutes
 ]
 
 routes.forEach((route) => router.use('/', route))
