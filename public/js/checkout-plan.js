@@ -1,16 +1,16 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search)
-  const planCode = urlParams.get('plan')
+  const planId = window.location.pathname.split('/').pop()
   const mode = urlParams.get('mode') || 'month'
 
-  if (!planCode) {
+  if (!planId) {
     toastr.error('Thiếu thông tin gói. Vui lòng quay lại trang trước.')
     return
   }
 
   try {
     // Gọi API lấy thông tin gói
-    const result = await ajax(`/api/admin/plan/code/${planCode}`, {}, 'GET')
+    const result = await ajax(`/api/admin/plan/${planId}`, {}, 'GET')
     const plan = result || {}
 
     // Hiển thị thông tin gói
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Gắn event cho nút xác nhận
     document.getElementById('confirmBtn').addEventListener('click', async () => {
       try {
-        const res = await ajax('/api/admin/plan/upgrade', { planCode, mode })
+        const res = await ajax('/api/admin/plan/upgrade', { planId, mode })
 
         if (res) {
           toastr.success('Đăng ký gói thành công!')

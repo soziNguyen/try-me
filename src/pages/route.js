@@ -100,6 +100,6 @@ router.get('/payment-receipts', isAuthenticated, page.receiptsPage)
 router.get('/payment-expenses', isAuthenticated, page.expensesPage)
 router.get('/upgrade', isAuthenticated, page.upgradePage)
 router.get('/plans', isAuthenticated, page.planPage)
-router.get('/checkout', isAuthenticated, page.checkoutPlan)
+router.get('/checkout/:id', isAuthenticated, page.checkoutPlan)
 router.get('/plan/:id', isAuthenticated, page.planInfoPage)
 export default router

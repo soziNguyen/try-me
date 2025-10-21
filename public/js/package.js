@@ -74,7 +74,7 @@ async function fillPlans(currentPlanCode, mode = 'month') {
     const planCard = document.createElement('div')
     planCard.classList.add('col-md-4', 'col-lg-3', 'mb-4')
     planCard.innerHTML = `
-      <form class="card h-100 rounded-4 shadow-sm position-relative plan-form" data-code="${plan.code}">
+      <form class="card h-100 rounded-4 shadow-sm position-relative plan-form" data-id=${plan._id} data-code="${plan.code}">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title text-center fw-bold mt-4 fs-2">${plan.name}</h5>
           <div class="text-center fs-1 fw-bold text-success mb-2">${price} <span class="fs-6 text-muted">${label}</span></div>
@@ -106,14 +106,13 @@ document.addEventListener('submit', async function (event) {
     event.preventDefault()
 
     const form = event.target
-    const selectedPlanCode = form.dataset.code
+    const selectedPlanId = form.dataset.id
 
     // Lấy mode hiện tại (tháng / năm)
     const activeOption = document.querySelector('.toggle-liquid .option.active')
     const mode = activeOption ? activeOption.dataset.mode : 'month'
 
     // Chuyển hướng sang trang checkout
-    const query = new URLSearchParams({ plan: selectedPlanCode, mode }).toString()
-    window.location.href = `/checkout?${query}`
+    window.location.href = `/checkout/${selectedPlanId}?mode=${mode}`
   }
 })
