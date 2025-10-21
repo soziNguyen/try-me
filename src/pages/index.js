@@ -711,7 +711,7 @@ export const planPage = (req, res) => {
     'admin/plan',
     getPageData(req, 'Danh sách gói', 'Plan', {
       headerClass: 'admin__header',
-      pageTitle: 'Danh sách gói'
+      pageTitle: 'DANH SÁCH GÓI DỊCH VỤ'
     })
   )
 }
@@ -721,7 +721,30 @@ export const upgradePage = (req, res) => {
     'package/package',
     getPageData(req, 'Nâng cấp gói', 'Upgrade', {
       headerClass: 'admin__header',
-      pageTitle: 'Nâng cấp gói'
+      pageTitle: 'NÂNG CẤP GÓI'
+    })
+  )
+}
+
+export const checkoutPlan = (req, res) => {
+  res.render(
+    'package/checkout',
+    getPageData(req, 'Thanh toán', 'Checkout', {
+      headerClass: 'admin__header',
+      pageTitle: 'THANH TOÁN'
+    })
+  )
+}
+
+export const planInfoPage = (req, res) => {
+  const planId = req.params.id
+  const mode = req.query.mode || ''
+
+  const isNew = mode === 'new' ? 'Tạo gói dịch vụ' : 'Chi tiết gói dịch vụ'
+  res.render(
+    'admin/plan-detail',
+    getPageData(req, isNew, 'Plan Info', {
+      planId: planId
     })
   )
 }

@@ -1,5 +1,7 @@
 import responseHelper from '../../helpers/responseHelper.js'
 import Plan from './model.js'
+import Organization from '../organization/model.js'
+import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
 // Lấy tất cả các gói (chỉ hiển thị gói active)
 export const getActivePlans = async (req, res) => {
@@ -46,6 +48,9 @@ export const getAllPlansAdmin = async (req, res) => {
     // Xử lý sắp xếp
     const sortObj = {}
     switch (sortField) {
+      case 'code':
+        sortObj.code = sortDir
+        break
       case 'name':
         sortObj.name = sortDir
         break
@@ -88,6 +93,20 @@ export const getAllPlansAdmin = async (req, res) => {
   }
 }
 
+export const getPlanByCode = async (req, res) => {
+  try {
+    const { code } = req.params
+    if (!code) return responseHelper.error(res, 'Thiếu mã gói', 400)
+
+    const plan = await Plan.findOne({ code }).lean()
+    if (!plan) return responseHelper.error(res, 'Không tìm thấy gói', 404)
+
+    responseHelper.success(res, plan)
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
 // Lấy chi tiết một gói theo ID
 export const getPlanById = async (req, res) => {
   try {
@@ -98,7 +117,7 @@ export const getPlanById = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy gói', 404)
     }
 
-    return responseHelper.success(res, plan, 'Lấy thông tin gói thành công')
+    return responseHelper.success(res, plan)
   } catch (error) {
     return responseHelper.error(res, error.message)
   }
@@ -107,50 +126,20 @@ export const getPlanById = async (req, res) => {
 // Tạo gói mới (dành cho admin)
 export const createPlan = async (req, res) => {
   try {
-    const {
-      name,
-      priceMonth,
-      priceYear,
-      originalPrice,
-      warehouseLimit,
-      staffLimit,
-      description,
-      isActive
-    } = req.body
-
-    // Validate dữ liệu
-    if (!name) {
-      return responseHelper.error(res, 'Tên gói là bắt buộc', 400)
-    }
-
-    if (!priceMonth) {
-      return responseHelper.error(res, 'Giá theo tháng là bắt buộc', 400)
-    }
-
-    if (!priceYear) {
-      return responseHelper.error(res, 'Giá theo năm là bắt buộc', 400)
-    }
-
-    // Kiểm tra tên gói đã tồn tại chưa
-    const existingPlan = await Plan.findOne({ name: name.trim().toUpperCase() })
-    if (existingPlan) {
-      return responseHelper.error(res, 'Tên gói đã tồn tại', 409)
-    }
-
     const newPlan = new Plan({
-      name: name.trim().toUpperCase(),
-      priceMonth: priceMonth || 0,
-      priceYear: priceYear || 0,
-      originalPrice: originalPrice || 0,
-      warehouseLimit,
-      staffLimit,
-      description: description || '',
-      isActive: isActive !== undefined ? isActive : true
+      code: '',
+      name: '',
+      priceMonth: 0,
+      priceYear: 0,
+      originalPrice: 0,
+      warehouseLimit: '',
+      staffLimit: '',
+      description: '',
+      isActive: false // draft
     })
 
     await newPlan.save()
-
-    return responseHelper.success(res, newPlan, 'Tạo gói thành công')
+    return responseHelper.success(res, newPlan)
   } catch (error) {
     return responseHelper.error(res, error.message)
   }
@@ -161,6 +150,7 @@ export const updatePlan = async (req, res) => {
   try {
     const { id } = req.params
     const {
+      code,
       name,
       priceMonth,
       priceYear,
@@ -176,7 +166,14 @@ export const updatePlan = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy gói', 404)
     }
 
-    // Nếu cập nhật tên, kiểm tra trùng lặp
+    // Nếu cập nhật tên, mã gói
+    if (code && code.trim().toUpperCase() !== plan.code) {
+      const existingCode = await Plan.findOne({ code: code.trim().toUpperCase(), _id: { $ne: id } })
+      if (existingCode) {
+        return responseHelper.error(res, 'Mã gói đã tồn tại', 409)
+      }
+    }
+
     if (name && name.trim().toUpperCase() !== plan.name) {
       const existingPlan = await Plan.findOne({ name: name.trim().toUpperCase(), _id: { $ne: id } })
       if (existingPlan) {
@@ -185,6 +182,7 @@ export const updatePlan = async (req, res) => {
     }
 
     // Cập nhật các trường
+    if (code) plan.code = code.trim().toUpperCase()
     if (name) plan.name = name.trim().toUpperCase()
     if (priceMonth !== undefined) plan.priceMonth = priceMonth
     if (priceYear !== undefined) plan.priceYear = priceYear
@@ -216,5 +214,65 @@ export const hardDeletePlan = async (req, res) => {
     return responseHelper.success(res, result.deletedCount, 'Xóa vĩnh viễn gói thành công')
   } catch (error) {
     return responseHelper.error(res, error.message)
+  }
+}
+
+export const upgradePlan = async (req, res) => {
+  try {
+    const organizationId = getCurrentOrg(req)
+    const { planCode, mode } = req.body // mode: 'month' | 'year'
+
+    if (!organizationId) {
+      return responseHelper.error(res, 'Không tìm thấy tổ chức hiện tại', 400)
+    }
+
+    if (!planCode) {
+      return responseHelper.error(res, 'Thiếu mã gói dịch vụ', 400)
+    }
+
+    // Tìm gói dịch vụ đang hoạt động
+    const plan = await Plan.findOne({ code: planCode, isActive: true })
+    if (!plan) {
+      return responseHelper.error(res, 'Gói dịch vụ không hợp lệ hoặc đã ngừng hoạt động', 404)
+    }
+
+    // Lấy tổ chức hiện tại
+    const org = await Organization.findById(organizationId).populate('plan')
+    if (!org) {
+      return responseHelper.error(res, 'Không tìm thấy tổ chức', 404)
+    }
+
+    // Nếu đang dùng cùng gói thì báo lại
+    if (org.plan && org.plan.code === plan.code) {
+      return responseHelper.error(res, 'Bạn đang sử dụng gói này rồi', 400)
+    }
+
+    // === Xác định hạn sử dụng ===
+    const now = new Date()
+    const expireAt = new Date()
+    if (mode === 'year') {
+      expireAt.setFullYear(expireAt.getFullYear() + 1)
+    } else {
+      expireAt.setMonth(expireAt.getMonth() + 1)
+    }
+
+    // === Cập nhật tổ chức ===
+    org.plan = plan._id
+    org.planExpiredAt = expireAt
+    org.lastUpgradedAt = now
+    await org.save()
+
+    // === Phản hồi về frontend ===
+    responseHelper.success(
+      res,
+      {
+        planCode: plan.code,
+        planName: plan.name,
+        planExpiredAt: expireAt
+      },
+      'Nâng cấp gói thành công'
+    )
+  } catch (error) {
+    responseHelper.error(res, error.message)
   }
 }

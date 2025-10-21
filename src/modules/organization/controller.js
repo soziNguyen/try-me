@@ -1,8 +1,11 @@
 import User from '../user/model.js'
 import Organization from './model.js'
+import Plan from '../plan/model.js'
 import { deleteFile } from '../upload/helper.js'
 import withTransaction from '../../helpers/withTransaction.js'
 import responseHelper from '../../helpers/responseHelper.js'
+import BusinessError from '../../modules/error/BusinessError.js'
+import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import validator from 'validator'
 import {
   isValidUsername,
@@ -93,13 +96,13 @@ export const createOrganization = async (req, res) => {
 
       if (existingOrg) {
         if (existingOrg.email === cleanOrgEmail) {
-          throw new Error('Email tổ chức đã tồn tại')
+          throw new BusinessError('Email tổ chức đã tồn tại', 400)
         }
         if (existingOrg.phone === processedPhone) {
-          throw new Error('Số điện thoại đã tồn tại')
+          throw new BusinessError('Số điện thoại đã tồn tại', 400)
         }
         if (existingOrg.taxCode === cleanTaxCode) {
-          throw new Error('Mã số thuế đã tồn tại')
+          throw new BusinessError('Mã số thuế đã tồn tại', 400)
         }
       }
 
@@ -109,7 +112,7 @@ export const createOrganization = async (req, res) => {
       }).session(session)
 
       if (existingUserEmail) {
-        throw new Error('Email quản trị viên đã tồn tại trong hệ thống')
+        throw new BusinessError('Email quản trị viên đã tồn tại trong hệ thống', 400)
       }
 
       // Check admin username (globally unique)
@@ -118,8 +121,10 @@ export const createOrganization = async (req, res) => {
       }).session(session)
 
       if (existingUsername) {
-        throw new Error('Tên đăng nhập quản trị viên đã tồn tại')
+        throw new BusinessError('Tên đăng nhập quản trị viên đã tồn tại', 400)
       }
+
+      const freePlan = await Plan.findOne({ code: 'FREE' }).session(session)
 
       // Create organization
       const orgData = {
@@ -128,7 +133,8 @@ export const createOrganization = async (req, res) => {
         phone: processedPhone, // Always 84xxxxxxxx format
         province: orgProvince,
         commune: orgCommune,
-        street: orgStreet
+        street: orgStreet,
+        plan: freePlan ? freePlan._id : null
       }
       if (cleanTaxCode) {
         orgData.taxCode = cleanTaxCode
@@ -199,6 +205,22 @@ export const getActiveOrganizations = async (req, res) => {
 
     responseHelper.success(res, organizations, 'Lấy danh sách tổ chức thành công')
   } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
+export const getCurrentOrganization = async (req, res) => {
+  try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const org = await Organization.findById(organizationId)
+      .populate('plan', 'code name') // chỉ lấy code, name của Plan
+      .lean()
+
+    responseHelper.success(res, org, 'Success')
+  } catch (error) {
+    console.log(error)
     responseHelper.error(res, error.message)
   }
 }

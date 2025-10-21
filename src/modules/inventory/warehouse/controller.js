@@ -1,5 +1,6 @@
 import responseHelper from '../../../helpers/responseHelper.js'
 import Warehouse from './model.js'
+import Organization from '../../organization/model.js'
 import { lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 
@@ -125,6 +126,26 @@ export const createWareHouse = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    // Lấy thông tin tổ chức + gói dịch vụ
+    const org = await Organization.findById(organizationId).populate('plan')
+    if (!org) {
+      return responseHelper.error(res, 'Không tìm thấy tổ chức', 404)
+    }
+
+    const plan = org.plan
+
+    //  Đếm số kho hiện có
+    const currentWarehouseCount = await Warehouse.countDocuments({ organization: organizationId })
+
+    // Kiểm tra giới hạn gói
+    if (plan?.warehouseLimit !== null && currentWarehouseCount >= plan.warehouseLimit) {
+      return responseHelper.error(
+        res,
+        `Gói ${plan.name} chỉ cho phép tối đa ${plan.warehouseLimit} kho. Nâng cấp gói để mở khóa thêm tính năng.`,
+        400
+      )
+    }
 
     const data = {
       ...req.body,

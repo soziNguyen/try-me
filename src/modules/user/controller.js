@@ -3,6 +3,7 @@ import SMTP from '../../configs/smtp.js'
 import User from './model.js'
 import Attendance from '../attendance/model.js'
 import { Schedule } from '../schedule/model.js'
+import Organization from '../organization/model.js'
 import bcrypt from 'bcryptjs'
 import passport from 'passport'
 import responseHelper from '../../helpers/responseHelper.js'
@@ -16,8 +17,34 @@ export const createUser = async (req, res) => {
   try {
     const { username, email, warehouse, password } = req.body
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) {
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    }
 
+    // Lấy thông tin tổ chức + gói dịch vụ
+    const org = await Organization.findById(organizationId).populate('plan')
+    if (!org) {
+      return responseHelper.error(res, 'Không tìm thấy tổ chức', 404)
+    }
+
+    const plan = org.plan
+
+    // Đếm số nhân viên hiện có (trừ tài khoản quản trị Org)
+    const currentStaffCount = await User.countDocuments({
+      organization: organizationId,
+      role: { $ne: 'Org' }
+    })
+
+    // Kiểm tra giới hạn gói
+    if (plan?.staffLimit !== null && currentStaffCount >= plan.staffLimit) {
+      return responseHelper.error(
+        res,
+        `Gói ${plan.name} chỉ cho phép tối đa ${plan.staffLimit} nhân viên. Nâng cấp gói để mở khóa thêm tính năng.`,
+        400
+      )
+    }
+
+    // Kiểm tra trùng username/email trong tổ chức
     const exist = await User.findOne({
       organization: organizationId,
       $or: [{ username }, { email }]
@@ -27,18 +54,19 @@ export const createUser = async (req, res) => {
       return responseHelper.error(res, 'Tên đăng nhập hoặc email đã tồn tại.', 400)
     }
 
-    if (warehouse !== undefined) {
-      warehouse === '' ? null : warehouse
-    }
+    // Chuẩn hóa warehouse
+    const assignedWarehouse = warehouse === '' ? null : warehouse
 
+    //  Tạo nhân viên mới
     const newUser = await User.create({
       username,
       email,
-      warehouse,
+      warehouse: assignedWarehouse,
       password,
       organization: organizationId
     })
-    responseHelper.success(res, newUser)
+
+    responseHelper.success(res, newUser, 'Tạo nhân viên thành công')
   } catch (error) {
     if (error.code === 11000) {
       return responseHelper.error(res, 'Username hoặc email đã tồn tại', 400)

@@ -1,0 +1,73 @@
+<%- include('../partials/header.html') %>
+
+  <div class="plan__detail container mt120">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">CHI TIẾT GÓI DỊCH VỤ</h5>
+      </div>
+      <div class="card-body">
+        <form id="planForm">
+          <input type="hidden" id="planId">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="code" class="form-label fw-bold">Mã gói (code)</label>
+              <input type="text" class="form-control" id="code" placeholder="VD: PRO" required>
+            </div>
+
+            <div class="col-md-6">
+              <label for="name" class="form-label fw-bold">Tên gói</label>
+              <input type="text" class="form-control" id="name" placeholder="VD: PRO" required>
+            </div>
+
+            <div class="col-md-4">
+              <label for="monthlyPrice" class="form-label fw-bold">Giá tháng (VND)</label>
+              <input type="number" class="form-control" id="monthlyPrice" min="0" placeholder="0" required>
+            </div>
+
+            <div class="col-md-4">
+              <label for="annualPrice" class="form-label fw-bold">Giá năm (VND)</label>
+              <input type="number" class="form-control" id="annualPrice" min="0" placeholder="0" required>
+            </div>
+
+            <div class="col-md-4">
+              <label for="originalPrice" class="form-label fw-bold">Giá gốc (VND)</label>
+              <input type="number" class="form-control" id="originalPrice" min="0" placeholder="0">
+            </div>
+
+            <div class="col-md-6">
+              <label for="warehouseLimit" class="form-label fw-bold">Giới hạn kho</label>
+              <input type="number" class="form-control" id="warehouseLimit" min="0"
+                placeholder="Để trống nếu không giới hạn">
+            </div>
+
+            <div class="col-md-6">
+              <label for="staffLimit" class="form-label fw-bold">Giới hạn nhân viên</label>
+              <input type="number" class="form-control" id="staffLimit" min="0"
+                placeholder="Để trống nếu không giới hạn">
+            </div>
+
+            <div class="col-12">
+              <label for="description" class="form-label fw-bold">Mô tả</label>
+              <textarea class="form-control" id="description" rows="3" placeholder="Nội dung gói dịch vụ"></textarea>
+            </div>
+
+            <div class="col-12 form-check">
+              <input type="checkbox" class="form-check-input" id="isActive" checked>
+              <label class="form-check-label fw-bold" for="isActive">Hoạt động</label>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <a href="/plans" class="btn btn-outline-secondary">Hủy</a>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/commonjs.html') %>
+    <script src="/js/data-table.js"></script>
+    <script src="/js/admin/plan-detail.js"></script>
+    <%- include('../partials/footer.html') %>

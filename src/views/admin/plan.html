@@ -11,6 +11,7 @@
             <th>
               <input type="checkbox" id="selectAll">
             </th>
+            <th>Mã gói</th>
             <th>Tên gói</th>
             <th>Giá tháng</th>
             <th>Giá năm</th>
@@ -42,6 +43,10 @@
           <form id="planForm">
             <div class="modal-body">
               <input type="hidden" id="planId">
+              <div class="mb-3">
+                <label class="fw-bold">Mã gói (code)</label>
+                <input type="text" class="form-control" id="code" required>
+              </div>
               <div class="mb-3">
                 <label class="fw-bold">Tên gói</label>
                 <input type="text" class="form-control" id="name" required>
@@ -91,5 +96,6 @@
     <%- include('../partials/commonjs.html') %>
       <script src="/js/sidebar-toggle.js"></script>
       <script src="/js/data-table.js"></script>
+      <script src="/js/admin/admin-org.js"></script>
       <script src="/js/admin/plan.js"></script>
       <%- include('../partials/footer.html') %>
