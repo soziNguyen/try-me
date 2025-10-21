@@ -461,6 +461,124 @@ input[type=number]::-webkit-inner-spin-button {
   margin: 0;
 }
 
+/* Liquid Morphing Toggle */
+.price-toggle .toggle-liquid {
+  display: -webkit-inline-box;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+  border-radius: 50px;
+  padding: 6px;
+  position: relative;
+  -webkit-box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.price-toggle .toggle-liquid::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #198754, #20c997, #0dcaf0);
+  background-size: 300% 300%;
+  -webkit-animation: gradientShift 3s ease infinite;
+          animation: gradientShift 3s ease infinite;
+  opacity: 0;
+  -webkit-transition: opacity 0.5s;
+  transition: opacity 0.5s;
+  border-radius: 50px;
+}
+
+.price-toggle .toggle-liquid:hover::before {
+  opacity: 0.1;
+}
+
+@-webkit-keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+.price-toggle .toggle-liquid .option {
+  padding: 12px 36px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6c757d;
+  cursor: pointer;
+  -webkit-transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 2;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  position: relative;
+}
+
+.price-toggle .toggle-liquid .option.active {
+  color: white;
+  -webkit-transform: scale(1.05);
+          transform: scale(1.05);
+}
+
+.price-toggle .toggle-liquid .option:hover:not(.active) {
+  color: #495057;
+}
+
+.price-toggle .toggle-liquid .blob {
+  position: absolute;
+  background: linear-gradient(135deg, #198754, #20c997);
+  border-radius: 50px;
+  -webkit-transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 1;
+  -webkit-box-shadow: 0 4px 16px rgba(25, 135, 84, 0.4);
+          box-shadow: 0 4px 16px rgba(25, 135, 84, 0.4);
+  -webkit-filter: blur(0.5px);
+          filter: blur(0.5px);
+}
+
+.list-group-item {
+  border: none !important;
+}
+
+.plan__detail #isActive {
+  margin-left: -0.5rem;
+  margin-right: 0.5rem;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
+  cursor: pointer;
+}
+
+#planDiscountCode {
+  border-bottom: 1px solid var(--gray-light) !important;
+}
+
+input[type=password]::-ms-reveal,
+input[type=password]::-ms-clear,
+input[type=text]::-ms-reveal,
+input[type=text]::-ms-clear {
+  display: none;
+}
+
 @media (max-width: 767px) {
   #imageCropModal .modal-body {
     max-height: 150px;

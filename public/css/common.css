@@ -12416,31 +12416,31 @@
   width: 100px;
 }
 .w-200 {
-  width: 120px !important;
+  width: 200px !important;
 }
 .w-300 {
-  width: 120px !important;
+  width: 300px !important;
 }
 .w-400 {
-  width: 120px !important;
+  width: 400px !important;
 }
 .w-500 {
-  width: 120px !important;
+  width: 500px !important;
 }
 .w-600 {
-  width: 120px !important;
+  width: 600px !important;
 }
 .w-700 {
-  width: 120px !important;
+  width: 700px !important;
 }
 .w-800 {
-  width: 120px !important;
+  width: 800px !important;
 }
 .w-900 {
-  width: 120px !important;
+  width: 900px !important;
 }
 .w-1000 {
-  width: 120px !important;
+  width: 1000px !important;
 }
 
 .w-120 {
@@ -12561,38 +12561,32 @@
   font-size: 11px;
 }
 .nWarning {
-  background: #ffe9ad
-    /* url(../images/icons/notifications/error.png) no-repeat 15px center*/;
+  background: #ffe9ad /* url(../images/icons/notifications/error.png) no-repeat 15px center*/;
   border: 1px solid #eac572;
   color: #826200;
 }
 .nSuccess {
-  background: #effeb9
-    /* url(../images/icons/notifications/accept.png) no-repeat 15px center*/;
+  background: #effeb9 /* url(../images/icons/notifications/accept.png) no-repeat 15px center*/;
   border: 1px solid #c1d779;
   color: #3c5a01;
 }
 .nFailure {
-  background: #fccac1
-    /* url(../images/icons/notifications/exclamation.png) no-repeat 15px center*/;
+  background: #fccac1 /* url(../images/icons/notifications/exclamation.png) no-repeat 15px center*/;
   border: 1px solid #e18b7c;
   color: #ac260f;
 }
 .nInformation {
-  background: #deeefa
-    /* url(../images/icons/notifications/information.png) no-repeat 15px center*/;
+  background: #deeefa /* url(../images/icons/notifications/information.png) no-repeat 15px center*/;
   border: 1px solid #afd3f2;
   color: #235685;
 }
 .nLightbulb {
-  background: #fef0cb
-    /* url(../images/icons/notifications/lightbulb.png) no-repeat 15px center*/;
+  background: #fef0cb /* url(../images/icons/notifications/lightbulb.png) no-repeat 15px center*/;
   border: 1px solid #d3a350;
   color: #835f21;
 }
 .nMessages {
-  background: #9ddfff
-    /* url(../images/icons/notifications/email.png) no-repeat 15px center*/;
+  background: #9ddfff /* url(../images/icons/notifications/email.png) no-repeat 15px center*/;
   border: 1px solid #42b4ff;
   color: #835f21;
 }

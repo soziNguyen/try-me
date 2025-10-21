@@ -40,6 +40,10 @@ $(function () {
           `<input type="checkbox" class="planCheckbox" data-id="${row._id}">`
       },
       {
+        data: 'code',
+        render: (data) => `<span class="text text-uppercase">${data || ''}</span>`
+      },
+      {
         data: 'name',
         render: (data) => `<span class="text text-uppercase fw-bold">${data}</span>`
       },
@@ -61,12 +65,12 @@ $(function () {
       {
         data: 'warehouseLimit',
         className: 'text-center',
-        render: (d) => (d === null ? '<span class="text-muted">Không giới hạn</span>' : d)
+        render: (d) => (d === null ? '<span class="number">0</span>' : d)
       },
       {
         data: 'staffLimit',
         className: 'text-center',
-        render: (d) => (d === null ? '<span class="text-muted">Không giới hạn</span>' : d)
+        render: (d) => (d === null ? '<span class="number">0</span>' : d)
       },
       {
         data: 'isActive',
@@ -104,68 +108,17 @@ $(function () {
           </button>
         </div>
       `)
+      $('#addPlanBtn').on('click', () => {
+        createNewRecord('admin/plan', {}, (data) => {
+          window.location.href = `/plan/${data._id}?mode=new`
+        })
+      })
+
+      $('.editBtn').on('click', function () {
+        const id = $(this).data('id')
+        window.location.href = `/plan/${id}`
+      })
     }
-  })
-
-  // ========= Modal thêm ==========
-  $(document).on('click', '#addPlanBtn', () => {
-    $('#planForm')[0].reset()
-    $('#planId').val('')
-    $('#planModalLabel').text('Thêm gói mới')
-    $('#planModal').modal('show')
-  })
-
-  // ========= Mở modal sửa ==========
-  $(document).on('click', '.editBtn', async function () {
-    const id = $(this).data('id')
-    const res = await fetch(`/api/admin/plan/${id}`)
-
-    const result = await res.json()
-    const data = result.data
-
-    $('#planModalLabel').text('Cập nhật gói')
-    $('#planId').val(data._id)
-    $('#name').val(data.name)
-    $('#monthlyPrice').val(data.priceMonth)
-    $('#annualPrice').val(data.priceYear)
-    $('#originalPrice').val(data.originalPrice)
-    $('#warehouseLimit').val(data.warehouseLimit ?? '')
-    $('#staffLimit').val(data.staffLimit ?? '')
-    $('#description').val(data.description ?? '')
-    $('#isActive').prop('checked', data.isActive)
-    $('#planModal').modal('show')
-  })
-
-  // ========= Lưu gói (thêm/sửa) ==========
-  $('#planForm').on('submit', async (e) => {
-    e.preventDefault()
-    const id = $('#planId').val()
-    const payload = {
-      name: $('#name').val(),
-      priceMonth: +$('#monthlyPrice').val(),
-      priceYear: +$('#annualPrice').val(),
-      originalPrice: +$('#originalPrice').val(),
-      warehouseLimit: $('#warehouseLimit').val() || null,
-      staffLimit: $('#staffLimit').val() || null,
-      description: $('#description').val(),
-      isActive: $('#isActive').is(':checked')
-    }
-
-    const method = id ? 'PUT' : 'POST'
-    const url = id ? `/api/admin/plan/update/${id}` : '/api/admin/plan/create'
-
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
-      body: JSON.stringify(payload)
-    })
-    const data = await res.json()
-
-    if (data.success) {
-      $('#planModal').modal('hide')
-      toastr.success(id ? 'Đã cập nhật gói!' : 'Đã thêm gói mới!')
-      table.ajax.reload(null, false)
-    } else toastr.error(data.message || 'Đã có lỗi xảy ra, vui lòng thử lại!')
   })
 
   handlerDeleteEvent('#planTable', '#deletePlansBtn', 'planCheckbox', 'admin/plan')

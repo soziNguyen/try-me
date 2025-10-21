@@ -4,7 +4,8 @@ const Schema = mongoose.Schema
 
 const PlanSchema = new Schema(
   {
-    name: { type: String, required: true, trim: true }, // Tên gói: FREE / STARTUP / PRO / ENTERPRISE
+    code: { type: String, unique: true, uppercase: true, default: '' }, // Mã gói: free / startup / pro / enterprise
+    name: { type: String, default: '' }, // Tên gói: FREE / STARTUP / PRO / ENTERPRISE
     priceMonth: { type: Number, default: 0 }, // Giá tháng (VNĐ)
     priceYear: { type: Number, default: 0 }, // Giá năm (VNĐ)
     originalPrice: { type: Number, default: 0 }, // Giá gốc (VNĐ)
@@ -18,6 +19,17 @@ const PlanSchema = new Schema(
   {
     collection: 'Plans',
     timestamps: true
+  }
+)
+
+PlanSchema.index(
+  { code: 1, name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      code: { $ne: '' },
+      name: { $ne: '' }
+    }
   }
 )
 

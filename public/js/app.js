@@ -230,32 +230,32 @@ function isValidPassword(input, confirm = null) {
 // validate loginField (username, email)
 function isValidUserAccountName(username, email) {
   if (!username || !email) {
-    return 'Username and Email are required.'
+    return 'Tên tài khoản và Email là bắt buộc.'
   }
   if (!/^[a-zA-Z0-9_]{3,15}$/.test(username)) {
-    return 'Username must be 3-15 characters long and contain only letters, numbers, and underscores.'
+    return 'Tên tài khoản phải có độ dài từ 3-15 ký tự và chỉ chứa ký tự, số và dấu gạch dưới.'
   }
   if (!/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-    return 'Invalid email format.'
+    return 'Định dạng Email không hợp lệ.'
   }
   return null
 }
 // function check input
 function validateUserInput(username, email, password, confirmPassword) {
   if (!username || !email || !password || !confirmPassword) {
-    return 'All fields are required.'
+    return 'Tất cả các trường là bắt buộc.'
   }
   if (!/^[a-zA-Z0-9_]{3,15}$/.test(username)) {
-    return 'Username must be 3-15 characters long and contain only letters, numbers, and underscores.'
+    return 'Tên tài khoản phải có độ dài từ 3-15 ký tự và chỉ chứa ký tự, số và dấu gạch dưới.'
   }
   if (!/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-    return 'Invalid email format.'
+    return 'Định dạng Email không hợp lệ.'
   }
   if (!isValidPassword(password)) {
-    return 'Password must be at least 8 characters long and include an uppercase letter, a number, and a special character.'
+    return 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, số và ký tự đặc biệt.'
   }
   if (!isValidPassword(password, confirmPassword)) {
-    return 'Passwords do not match.'
+    return 'Mật khẩu không khớp.'
   }
   return null
 }
