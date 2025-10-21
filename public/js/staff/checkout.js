@@ -39,6 +39,7 @@ function calculateTotals() {
   const pointsInput = document.getElementById('pointsInput')
   const pointsDiscountInput = document.getElementById('pointsDiscountInput')
   const serviceChargeInput = document.getElementById('serviceChargeInput')
+  const trietKhauInput = document.getElementById('trietKhauInput') // TRIẾT KHẤU
   const vatInput = document.getElementById('vatInput')
   const totalPayableEl = document.getElementById('totalPayable')
   const totalEl = document.getElementById('total')
@@ -49,6 +50,7 @@ function calculateTotals() {
     !pointsInput ||
     !pointsDiscountInput ||
     !serviceChargeInput ||
+    !trietKhauInput || // TRIẾT KHẤU
     !vatInput ||
     !totalPayableEl ||
     !totalEl
@@ -63,12 +65,13 @@ function calculateTotals() {
   const pointsDiscount = pointsUsed * POINT_VALUE
 
   const serviceCharge = parseCurrency(serviceChargeInput.value)
+  const trietKhau = parseCurrency(trietKhauInput.value) // TRIẾT KHẤU
   const vatRate = Number(vatInput.value) || 0
 
   // Cập nhật hiển thị pointsDiscount
   pointsDiscountInput.value = pointsDiscount
 
-  const totalPayable = totalAmount - discount - pointsDiscount + serviceCharge
+  const totalPayable = totalAmount - discount - pointsDiscount - trietKhau + serviceCharge
   const totalWithVAT = Math.round(totalPayable + (totalPayable * vatRate) / 100)
 
   totalPayableEl.value = totalPayable.toLocaleString('vi-VN')
@@ -333,6 +336,7 @@ function getCurrentOrderFormData() {
     serviceCharge: Number(
       document.getElementById('serviceChargeInput')?.value.replace(/[^\d]/g, '') || 0
     ),
+    trietKhau: Number(document.getElementById('trietKhauInput')?.value.replace(/[^\d]/g, '') || 0), // TRIẾT KHẤU
     vatRate: Number(document.getElementById('vatInput')?.value || 0),
     customerPaid: Number(
       document.getElementById('customerPaidInput')?.value.replace(/[^\d]/g, '') || 0
@@ -564,6 +568,7 @@ function initCheckoutConfirm() {
     const discountInput = document.getElementById('discountInput')
     const pointsInput = document.getElementById('pointsInput')
     const serviceChargeInput = document.getElementById('serviceChargeInput')
+    const trietKhauInput = document.getElementById('trietKhauInput') // TRIẾT KHẤU
     const vatInput = document.getElementById('vatInput')
     const paymentMethodValueEl = document.getElementById('paymentMethodValue')
     const customerPaidInput = document.getElementById('customerPaidInput')
@@ -572,6 +577,7 @@ function initCheckoutConfirm() {
       !discountInput ||
       !pointsInput ||
       !serviceChargeInput ||
+      !trietKhauInput ||
       !vatInput ||
       !paymentMethodValueEl ||
       !customerPaidInput
@@ -583,6 +589,7 @@ function initCheckoutConfirm() {
     const discount = parseCurrency(discountInput.value)
     const pointsUsed = parseInt(pointsInput.value) || 0
     const serviceCharge = parseCurrency(serviceChargeInput.value)
+    const trietKhau = parseCurrency(trietKhauInput.value) // TRIẾT KHẤU
     const vatRate = Number(vatInput.value) || 0
     const paymentMethod = paymentMethodValueEl.value
     const customerPaid = parseCurrency(customerPaidInput.value)
@@ -630,6 +637,7 @@ function initCheckoutConfirm() {
           discount,
           pointsUsed, // Chỉ gửi số điểm, backend sẽ tự tính pointsDiscount
           serviceCharge,
+          trietKhau,
           vatRate,
           paymentMethodId: paymentMethod,
           customerPaid
@@ -757,6 +765,9 @@ async function loadOrderData(orderId) {
     document.getElementById('pointsInput').value = data.pointsUsed || '0'
     document.getElementById('serviceChargeInput').value =
       data.serviceCharge.toLocaleString('vi-VN') || '0'
+    document.getElementById('trietKhauInput').value = Number(data?.trietKhau ?? 0).toLocaleString(
+      'vi-VN'
+    )
     document.getElementById('vatInput').value = data.vatRate || '0'
     document.getElementById('customerPaidInput').value =
       data.customerPaid.toLocaleString('vi-VN') || '0'
@@ -815,6 +826,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Bind events cho các input tính toán
   const discountInput = document.getElementById('discountInput')
   const serviceChargeInput = document.getElementById('serviceChargeInput')
+  const trietKhauInput = document.getElementById('trietKhauInput') // TRIẾT KHẤU
   const vatInput = document.getElementById('vatInput')
 
   if (discountInput) {
@@ -823,6 +835,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (serviceChargeInput) {
     serviceChargeInput.addEventListener('input', calculateTotals)
+  }
+
+  if (trietKhauInput) {
+    trietKhauInput.addEventListener('input', calculateTotals) // TRIẾT KHẤU
   }
 
   serviceChargeInput.addEventListener('change', async () => {
@@ -841,6 +857,30 @@ document.addEventListener('DOMContentLoaded', async () => {
       const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
       if (result) {
         toastr.success('Cập nhật phí dịch vụ thành công!')
+      }
+    } catch (error) {
+      console.error('Lỗi khi gọi API:', error)
+      toastr.error('Lỗi mạng hoặc server')
+    }
+  })
+
+  // TRIẾT KHẤU
+  trietKhauInput.addEventListener('change', async () => {
+    let val = trietKhauInput.value.replace(/[^\d]/g, '')
+    if (val === '') val = '0'
+
+    const orderId = window.currentOrderId
+    if (!orderId) {
+      toastr.error('Không xác định được đơn hàng!')
+      return
+    }
+
+    const data = getCurrentOrderFormData()
+
+    try {
+      const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+      if (result) {
+        toastr.success('Cập nhật triết khấu thành công!')
       }
     } catch (error) {
       console.error('Lỗi khi gọi API:', error)
