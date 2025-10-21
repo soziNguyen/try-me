@@ -1,66 +1,156 @@
 <%- include('../partials/header.html') %>
 
-  <div class="plan__detail container mt120">
-    <div class="card shadow-sm">
-      <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">CHI TIẾT GÓI DỊCH VỤ</h5>
+  <div class="container plan__detail py-5">
+    <div class="card shadow-lg border-0 rounded-4">
+      <!-- Header -->
+      <div class="card-header bg-primary text-white py-4">
+        <div class="d-flex align-items-center gap-3">
+          <div class="rounded-3 p-3">
+            <i class="bi bi-box-seam fs-4"></i>
+          </div>
+          <h4 class="mb-0 fw-bold">Chi Tiết Gói Dịch Vụ</h4>
+        </div>
       </div>
-      <div class="card-body">
+
+      <div class="card-body p-4 p-md-5">
+        <!-- Info Alert -->
+        <div class="alert alert-info d-flex align-items-center gap-3 mb-4" role="alert">
+          <i class="bi bi-info-circle-fill fs-5"></i>
+          <div>
+            <strong>Hướng dẫn:</strong> Điền đầy đủ thông tin để tạo hoặc cập nhật gói dịch vụ. Các trường có dấu sao
+            (*) là bắt buộc.
+          </div>
+        </div>
+
         <form id="planForm">
           <input type="hidden" id="planId">
 
-          <div class="row g-3">
+          <!-- Thông tin cơ bản -->
+          <h5 class="fw-bold text-primary border-bottom border-primary border-3 pb-2 mb-4">
+            <i class="bi bi-info-circle me-2"></i>Thông Tin Cơ Bản
+          </h5>
+
+          <div class="row g-3 mb-5">
             <div class="col-md-6">
-              <label for="code" class="form-label fw-bold">Mã gói (code)</label>
+              <label for="code" class="form-label fw-semibold">
+                <i class="bi bi-upc text-primary me-1"></i>
+                Mã gói (code) <span class="text-danger">*</span>
+              </label>
               <input type="text" class="form-control" id="code" placeholder="VD: PRO" required>
+              <div class="form-text">Mã định danh duy nhất cho gói</div>
             </div>
 
             <div class="col-md-6">
-              <label for="name" class="form-label fw-bold">Tên gói</label>
-              <input type="text" class="form-control" id="name" placeholder="VD: PRO" required>
-            </div>
-
-            <div class="col-md-4">
-              <label for="monthlyPrice" class="form-label fw-bold">Giá tháng (VND)</label>
-              <input type="number" class="form-control" id="monthlyPrice" min="0" placeholder="0" required>
-            </div>
-
-            <div class="col-md-4">
-              <label for="annualPrice" class="form-label fw-bold">Giá năm (VND)</label>
-              <input type="number" class="form-control" id="annualPrice" min="0" placeholder="0" required>
-            </div>
-
-            <div class="col-md-4">
-              <label for="originalPrice" class="form-label fw-bold">Giá gốc (VND)</label>
-              <input type="number" class="form-control" id="originalPrice" min="0" placeholder="0">
-            </div>
-
-            <div class="col-md-6">
-              <label for="warehouseLimit" class="form-label fw-bold">Giới hạn kho</label>
-              <input type="number" class="form-control" id="warehouseLimit" min="0"
-                placeholder="Để trống nếu không giới hạn">
-            </div>
-
-            <div class="col-md-6">
-              <label for="staffLimit" class="form-label fw-bold">Giới hạn nhân viên</label>
-              <input type="number" class="form-control" id="staffLimit" min="0"
-                placeholder="Để trống nếu không giới hạn">
-            </div>
-
-            <div class="col-12">
-              <label for="description" class="form-label fw-bold">Mô tả</label>
-              <textarea class="form-control" id="description" rows="3" placeholder="Nội dung gói dịch vụ"></textarea>
-            </div>
-
-            <div class="col-12 form-check">
-              <input type="checkbox" class="form-check-input" id="isActive" checked>
-              <label class="form-check-label fw-bold" for="isActive">Hoạt động</label>
+              <label for="name" class="form-label fw-semibold">
+                <i class="bi bi-tag text-primary me-1"></i>
+                Tên gói <span class="text-danger">*</span>
+              </label>
+              <input type="text" class="form-control" id="name" placeholder="VD: Gói Professional" required>
+              <div class="form-text">Tên hiển thị của gói dịch vụ</div>
             </div>
           </div>
 
-          <div class="d-flex justify-content-end gap-2 mt-4">
-            <a href="/plans" class="btn btn-outline-secondary">Hủy</a>
-            <button type="submit" class="btn btn-primary">Lưu</button>
+          <!-- Thông tin giá -->
+          <h5 class="fw-bold text-primary border-bottom border-primary border-3 pb-2 mb-4">
+            <i class="bi bi-cash-coin me-2"></i>Thông Tin Giá Cả
+          </h5>
+
+          <div class="row g-3 mb-5">
+            <div class="col-md-4">
+              <label for="monthlyPrice" class="form-label fw-semibold">
+                <i class="bi bi-calendar-month text-primary me-1"></i>
+                Giá tháng
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-primary text-white">VND</span>
+                <input type="number" class="form-control" id="monthlyPrice" min="0" placeholder="0" required>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label for="annualPrice" class="form-label fw-semibold">
+                <i class="bi bi-calendar-year text-primary me-1"></i>
+                Giá năm
+                <span class="badge bg-info text-white ms-2">TIẾT KIỆM</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-primary text-white">VND</span>
+                <input type="number" class="form-control" id="annualPrice" min="0" placeholder="0" required>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label for="originalPrice" class="form-label fw-semibold">
+                <i class="bi bi-tags text-primary me-1"></i>
+                Giá gốc
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-primary text-white">VND</span>
+                <input type="number" class="form-control" id="originalPrice" min="0" placeholder="0">
+              </div>
+            </div>
+          </div>
+
+          <!-- Giới hạn -->
+          <h5 class="fw-bold text-primary border-bottom border-primary border-3 pb-2 mb-4">
+            <i class="bi bi-sliders me-2"></i>Giới Hạn Sử Dụng
+          </h5>
+
+          <div class="row g-3 mb-5">
+            <div class="col-md-6">
+              <label for="warehouseLimit" class="form-label fw-semibold">
+                <i class="bi bi-building text-primary me-1"></i>
+                Giới hạn kho
+              </label>
+              <input type="number" class="form-control" id="warehouseLimit" min="0" placeholder="Không giới hạn">
+              <div class="form-text">Để trống để không giới hạn số lượng kho</div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="staffLimit" class="form-label fw-semibold">
+                <i class="bi bi-people text-primary me-1"></i>
+                Giới hạn nhân viên
+              </label>
+              <input type="number" class="form-control" id="staffLimit" min="0" placeholder="Không giới hạn">
+              <div class="form-text">Để trống để không giới hạn số lượng nhân viên</div>
+            </div>
+          </div>
+
+          <!-- Mô tả -->
+          <h5 class="fw-bold text-primary border-bottom border-primary border-3 pb-2 mb-4">
+            <i class="bi bi-file-text me-2"></i>Mô Tả Chi Tiết
+          </h5>
+
+          <div class="mb-5">
+            <label for="description" class="form-label fw-semibold">
+              <i class="bi bi-card-text text-primary me-1"></i>
+              Nội dung mô tả
+            </label>
+            <textarea class="form-control" id="description" rows="4"
+              placeholder="Nhập mô tả chi tiết về các tính năng và lợi ích của gói dịch vụ..."></textarea>
+            <div class="form-text">Mô tả sẽ hiển thị cho khách hàng khi chọn gói</div>
+          </div>
+
+          <!-- Trạng thái -->
+          <h5 class="fw-bold text-primary border-bottom border-primary border-3 pb-2 mb-4">
+            <i class="bi bi-toggle-on me-2"></i>Trạng Thái
+          </h5>
+
+          <div class="form-check mb-4 p-3 bg-light rounded">
+            <input type="checkbox" class="form-check-input" id="isActive" checked>
+            <label class="form-check-label fw-semibold" for="isActive">
+              Kích hoạt gói dịch vụ
+            </label>
+          </div>
+
+          <!-- Nút hành động -->
+          <div class="d-flex justify-content-end gap-3 mt-5">
+            <a href="/plans" class="btn btn-outline-secondary btn-lg">
+              <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+            </a>
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="bi bi-check-circle me-2"></i>Lưu thay đổi
+            </button>
           </div>
         </form>
       </div>
