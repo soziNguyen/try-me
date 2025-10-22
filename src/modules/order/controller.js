@@ -493,7 +493,7 @@ export const checkoutOrder = async (req, res) => {
       discount = 0,
       pointsUsed = 0,
       serviceCharge = 0,
-      trietKhau = 0,
+      extraDiscount = 0,
       vatRate = 0,
       paymentMethodId,
       customerPaid
@@ -506,7 +506,7 @@ export const checkoutOrder = async (req, res) => {
     const parsedDiscount = Number(discount) || 0
     const parsedPointsUsed = Number(pointsUsed) || 0
     const parsedServiceCharge = Number(serviceCharge) || 0
-    const parsedtrietKhau = Number(trietKhau) || 0
+    const parsedextraDiscount = Number(extraDiscount) || 0
     const parsedVatRate = Number(vatRate) || 0
     const parsedCustomerPaid = Number(customerPaid) || 0
 
@@ -515,7 +515,7 @@ export const checkoutOrder = async (req, res) => {
       parsedPointsUsed < 0 ||
       parsedServiceCharge < 0 ||
       parsedVatRate < 0 ||
-      parsedtrietKhau < 0
+      parsedextraDiscount < 0
     )
       return responseHelper.error(res, 'Các giá trị không được âm', 400)
 
@@ -568,7 +568,7 @@ export const checkoutOrder = async (req, res) => {
         totalAmount -
         parsedDiscount -
         calculatedPointsDiscount -
-        parsedtrietKhau +
+        parsedextraDiscount +
         parsedServiceCharge
       const total = Math.round(totalPayable + (totalPayable * parsedVatRate) / 100)
 
@@ -657,7 +657,7 @@ export const checkoutOrder = async (req, res) => {
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = calculatedPointsDiscount
       order.serviceCharge = parsedServiceCharge
-      order.trietKhau = parsedtrietKhau
+      order.extraDiscount = parsedextraDiscount
       order.vatRate = parsedVatRate
       order.totalAmount = totalAmount
       order.totalPayable = totalPayable
@@ -687,7 +687,7 @@ export const checkoutOrder = async (req, res) => {
         pointsDiscount: calculatedPointsDiscount,
         pointsEarned,
         serviceCharge: parsedServiceCharge,
-        trietKhau: parsedtrietKhau,
+        extraDiscount: parsedextraDiscount,
         vatRate: parsedVatRate,
         totalPayable,
         total,
@@ -717,7 +717,7 @@ export const updateOrderDraft = async (req, res) => {
       discount = 0,
       pointsUsed = 0,
       serviceCharge = 0,
-      trietKhau = 0,
+      extraDiscount = 0,
       vatRate = 0,
       paymentMethodId = null,
       customerPaid = 0
@@ -728,7 +728,7 @@ export const updateOrderDraft = async (req, res) => {
     const parsedDiscount = Number(discount) || 0
     const parsedPointsUsed = Number(pointsUsed) || 0
     const parsedServiceCharge = Number(serviceCharge) || 0
-    const parsedtrietKhau = Number(trietKhau) || 0
+    const parsedextraDiscount = Number(extraDiscount) || 0
     const parsedVatRate = Number(vatRate) || 0
     const parsedCustomerPaid = Number(customerPaid) || 0
 
@@ -736,7 +736,7 @@ export const updateOrderDraft = async (req, res) => {
       parsedDiscount < 0 ||
       parsedPointsUsed < 0 ||
       parsedServiceCharge < 0 ||
-      parsedtrietKhau < 0 ||
+      parsedextraDiscount < 0 ||
       parsedVatRate < 0 ||
       parsedCustomerPaid < 0
     )
@@ -780,7 +780,7 @@ export const updateOrderDraft = async (req, res) => {
       const pointsDiscount = parsedPointsUsed * POINT_VALUE
 
       const totalPayable =
-        totalAmount - parsedDiscount - pointsDiscount - parsedtrietKhau + parsedServiceCharge
+        totalAmount - parsedDiscount - pointsDiscount - parsedextraDiscount + parsedServiceCharge
       const total = Math.round(totalPayable + (totalPayable * parsedVatRate) / 100)
 
       if (parsedCustomerPaid < 0) throw new BusinessError('Số tiền khách trả không hợp lệ', 400)
@@ -792,7 +792,7 @@ export const updateOrderDraft = async (req, res) => {
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = pointsDiscount
       order.serviceCharge = parsedServiceCharge
-      order.trietKhau = parsedtrietKhau
+      order.extraDiscount = parsedextraDiscount
       order.vatRate = parsedVatRate
       order.totalAmount = totalAmount
       order.totalPayable = totalPayable
@@ -809,7 +809,7 @@ export const updateOrderDraft = async (req, res) => {
         pointsUsed: parsedPointsUsed,
         pointsDiscount,
         serviceCharge: parsedServiceCharge,
-        trietKhau: parsedtrietKhau,
+        extraDiscount: parsedextraDiscount,
         vatRate: parsedVatRate,
         totalAmount,
         totalPayable,
