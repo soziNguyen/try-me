@@ -584,6 +584,18 @@ input[type=text]::-ms-clear {
   width: 100% !important;
 }
 
+#orgForm .select2-selection {
+  border: none !important;
+  -webkit-box-shadow: none !important;
+          box-shadow: none !important;
+}
+#orgForm .input-group-text {
+  background-color: var(--white) !important;
+}
+#orgForm .form-control:focus {
+  border-color: var(--bs-border-color) !important;
+}
+
 @media (max-width: 767px) {
   #imageCropModal .modal-body {
     max-height: 150px;

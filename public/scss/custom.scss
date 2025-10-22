@@ -553,6 +553,22 @@ input[type='text']::-ms-clear {
   }
 }
 
+#orgForm {
+  .select2-selection {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .input-group-text {
+    background-color: var(--white) !important;
+  }
+
+  .form-control {
+    &:focus {
+      border-color: var(--bs-border-color) !important;
+    }
+  }
+}
+
 //================= Responsive =================//
 
 @media (max-width: 767px) {
