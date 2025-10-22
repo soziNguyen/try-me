@@ -2,6 +2,7 @@ import * as page from './index.js'
 import express from 'express'
 import isAuthenticated from '../helpers/isAuthenticated.js'
 import { isPermit } from '../helpers/isPermit.js'
+import isAdmin from '../helpers/isAdmin.js'
 
 const router = express.Router()
 
@@ -99,7 +100,9 @@ router.get('/product/stocks', isAuthenticated, page.productStockPage)
 router.get('/payment-receipts', isAuthenticated, page.receiptsPage)
 router.get('/payment-expenses', isAuthenticated, page.expensesPage)
 router.get('/upgrade', isAuthenticated, page.upgradePage)
-router.get('/plans', isAuthenticated, page.planPage)
+router.get('/plans', isAuthenticated, isAdmin, page.planPage)
 router.get('/checkout/:id', isAuthenticated, page.checkoutPlan)
 router.get('/plan/:id', isAuthenticated, page.planInfoPage)
+router.get('/coupons', isAuthenticated, isAdmin, page.couponPlanPage)
+router.get('/coupon/:id', isAuthenticated, isAdmin, page.couponPlanDetailPage)
 export default router

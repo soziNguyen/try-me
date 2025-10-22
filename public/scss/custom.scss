@@ -440,31 +440,64 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 /* Liquid Morphing Toggle */
-.price-toggle .toggle-liquid {
-  display: inline-flex;
-  background: linear-gradient(145deg, #f8f9fa, #e9ecef);
-  border-radius: 50px;
-  padding: 6px;
-  position: relative;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  overflow: hidden;
-}
+.price-toggle {
+  .toggle-liquid {
+    display: inline-flex;
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    border-radius: 50px;
+    padding: 6px;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
 
-.price-toggle .toggle-liquid::before {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(45deg, #198754, #20c997, #0dcaf0);
-  background-size: 300% 300%;
-  animation: gradientShift 3s ease infinite;
-  opacity: 0;
-  transition: opacity 0.5s;
-  border-radius: 50px;
-}
+    &::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #198754, #20c997, #0dcaf0);
+      background-size: 300% 300%;
+      animation: gradientShift 3s ease infinite;
+      opacity: 0;
+      transition: opacity 0.5s;
+      border-radius: 50px;
+    }
 
-.price-toggle .toggle-liquid:hover::before {
-  opacity: 0.1;
+    &:hover::before {
+      opacity: 0.1;
+    }
+
+    .option {
+      padding: 12px 36px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #6c757d;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 2;
+      user-select: none;
+      position: relative;
+
+      &.active {
+        color: white;
+        transform: scale(1.05);
+      }
+
+      &:hover:not(.active) {
+        color: #495057;
+      }
+    }
+
+    .blob {
+      position: absolute;
+      background: linear-gradient(135deg, #198754, #20c997);
+      border-radius: 50px;
+      transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 1;
+      box-shadow: 0 4px 16px rgba(25, 135, 84, 0.4);
+      filter: blur(0.5px);
+    }
+  }
 }
 
 @keyframes gradientShift {
@@ -475,37 +508,6 @@ input[type='number']::-webkit-inner-spin-button {
   50% {
     background-position: 100% 50%;
   }
-}
-
-.price-toggle .toggle-liquid .option {
-  padding: 12px 36px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #6c757d;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  z-index: 2;
-  user-select: none;
-  position: relative;
-}
-
-.price-toggle .toggle-liquid .option.active {
-  color: white;
-  transform: scale(1.05);
-}
-
-.price-toggle .toggle-liquid .option:hover:not(.active) {
-  color: #495057;
-}
-
-.price-toggle .toggle-liquid .blob {
-  position: absolute;
-  background: linear-gradient(135deg, #198754, #20c997);
-  border-radius: 50px;
-  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  z-index: 1;
-  box-shadow: 0 4px 16px rgba(25, 135, 84, 0.4);
-  filter: blur(0.5px);
 }
 
 .list-group-item {
@@ -534,6 +536,21 @@ input[type='password']::-ms-clear,
 input[type='text']::-ms-reveal,
 input[type='text']::-ms-clear {
   display: none;
+}
+
+#couponTableBody {
+  .select2-selection__choice__remove {
+    margin-top: 4px;
+    margin-right: 16px;
+  }
+
+  ul {
+    list-style: none !important;
+  }
+
+  .select2-search__field {
+    width: 100% !important;
+  }
 }
 
 //================= Responsive =================//

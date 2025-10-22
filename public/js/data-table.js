@@ -136,7 +136,7 @@ function initTableCheckboxEvents(tableSelector, checkboxClass) {
   $table.on('click', 'tbody tr', function (e) {
     if (
       $(e.target).is(`
-      input[type=checkbox], img, input[type=text], input[type=number], select, button, span, .dataInput, .select2-search__field, i, td:nth-child(n+2)
+      input[type=checkbox], img, input[type=text], input[type=number], select, button, span, option, .dataInput, .select2-search__field, i, td:nth-child(n+2)
       `) ||
       $(e.target).closest('.image-cell').length
     )

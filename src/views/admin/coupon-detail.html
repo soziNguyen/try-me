@@ -1,0 +1,128 @@
+<%- include('../partials/header.html') %>
+  <%- include('../partials/admin_sidebar.html') %>
+    <div class="admin__content">
+      <h2 class="mb-3 bold semi-bold">
+        <%= pageTitle %>
+      </h2>
+
+      <div class="container-fluid py-4">
+        <div class="row">
+          <div class="col-12">
+            <div class="card shadow-sm">
+              <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold">Chi tiết mã giảm giá</h5>
+              </div>
+              <div class="card-body p-4">
+                <form id="couponForm">
+                  <input type="hidden" id="couponId" name="id">
+
+                  <div class="row g-3">
+                    <!-- Mã giảm giá -->
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold">Mã giảm giá</label>
+                      <input type="text" class="form-control" id="code" name="code" placeholder="Nhập mã giảm giá">
+                    </div>
+
+                    <!-- Loại giảm giá -->
+                    <div class="col-md-3">
+                      <label class="form-label fw-semibold">Loại giảm giá</label>
+                      <select class="form-select" id="discountType" name="discountType">
+                        <!-- Options will be loaded by JS -->
+                      </select>
+                    </div>
+
+                    <!-- Giá trị giảm -->
+                    <div class="col-md-3">
+                      <label class="form-label fw-semibold">Giá trị giảm</label>
+                      <input type="number" class="form-control" id="discountValue" name="discountValue" min="0"
+                        step="0.01" placeholder="Nhập giá trị">
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-2">
+                    <!-- Áp dụng cho gói -->
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold">Áp dụng cho gói</label>
+                      <select class="form-select" id="applicablePlans" name="applicablePlans" multiple>
+                        <!-- Options will be loaded dynamically -->
+                      </select>
+                      <div class="form-text">Để trống để áp dụng cho tất cả các gói</div>
+                    </div>
+
+                    <!-- Mô tả -->
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold">Mô tả</label>
+                      <textarea type="text" class="form-control" id="description" name="description"
+                        placeholder="Mô tả ngắn gọn về mã giảm giá"></textarea>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-2">
+                    <!-- Ngày bắt đầu -->
+                    <div class="col-md-3">
+                      <label class="form-label fw-semibold">Ngày bắt đầu</label>
+                      <input type="date" class="form-control" id="startDate" name="startDate">
+                    </div>
+
+                    <!-- Ngày kết thúc -->
+                    <div class="col-md-3">
+                      <label class="form-label fw-semibold">Ngày kết thúc</label>
+                      <input type="date" class="form-control" id="endDate" name="endDate">
+                    </div>
+
+                    <!-- Giới hạn sử dụng -->
+                    <div class="col-md-3">
+                      <label class="form-label fw-semibold">Giới hạn sử dụng</label>
+                      <input type="number" class="form-control" id="usageLimit" name="usageLimit" min="0"
+                        placeholder="Không giới hạn">
+                      <div class="form-text">Để trống = không giới hạn</div>
+                    </div>
+
+                    <!-- Đã sử dụng -->
+                    <div class="col-md-3">
+                      <label class="form-label fw-semibold">Đã sử dụng</label>
+                      <input type="number" class="form-control bg-light" id="usedCount" name="usedCount" readonly
+                        disabled>
+                    </div>
+                  </div>
+
+                  <!-- Trạng thái kích hoạt -->
+                  <div class="row g-3 mt-2">
+                    <div class="col-12">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="isActive" name="isActive">
+                        <label class="form-check-label fw-semibold" for="isActive">
+                          Kích hoạt mã giảm giá
+                        </label>
+                      </div>
+                      <div class="form-text">Tắt để tạm dừng mã giảm giá mà không cần xóa</div>
+                    </div>
+                  </div>
+
+                  <!-- Buttons -->
+                  <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4">
+                      <i class="bi bi-save me-1"></i> Lưu thay đổi
+                    </button>
+                    <a href="/coupons" class="btn btn-secondary px-4">
+                      <i class="bi bi-x-circle me-1"></i> Hủy
+                    </a>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    </div>
+    </div>
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <%- include('../partials/commonjs.html') %>
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/data-table.js"></script>
+      <script src="/js/admin/admin-org.js"></script>
+      <script src="/js/admin/coupon-detail.js"></script>
+      <%- include('../partials/footer.html') %>

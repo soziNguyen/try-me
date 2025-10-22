@@ -8,7 +8,7 @@
         <p class="text-muted">Vui lòng kiểm tra thông tin gói trước khi xác nhận</p>
       </div>
 
-      <div id="checkoutCard" class="card shadow-sm mx-auto rounded-4" style="max-width: 600px;">
+      <div id="checkoutCard" class="card shadow-sm mx-auto rounded-4 mw-600">
         <div class="card-body">
           <div class="mb-3">
             <h4 id="planName" class="fw-bold"></h4>
@@ -29,17 +29,38 @@
 
           <hr>
 
-          <div class="d-flex justify-content-between align-items-end">
-            <span>Mã giảm giá:</span>
-            <input id="planDiscountCode" class="text-primary border-0 fs-5" placeholder="Nhập mã giảm giá">
+          <div class="row align-items-end">
+            <div class="col-md-4">
+              <span>Mã giảm giá:</span>
+            </div>
+            <div class="col-md-8">
+              <form id="couponForm" class="input-group justify-content-end">
+                <input id="planDiscountCode" class="form-control text-primary border-0 fs-5"
+                  placeholder="Nhập mã giảm giá" autocomplete="off">
+                <button type="submit" class="btn btn-primary btn-apply-coupon">
+                  Áp dụng
+                </button>
+              </form>
+            </div>
           </div>
 
-          <div class="d-flex justify-content-between align-items-end my-2">
+
+          <div class="d-flex justify-content-between align-items-end my-3">
             <span>Số tiền giảm:</span>
             <strong id="planDiscountPrice" class="text-primary fs-5"></strong>
           </div>
 
           <hr>
+
+          <div class="d-flex justify-content-between align-items-end">
+            <span>Tổng tiền trước thuế:</span>
+            <strong id="planTotalPriceBeforeVAT" class="text-primary fs-5"></strong>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-end">
+            <span>VAT(8%):</span>
+            <strong id="planVAT" class="text-primary fs-5"></strong>
+          </div>
 
           <div class="d-flex justify-content-between align-items-end">
             <span>Tổng tiền:</span>

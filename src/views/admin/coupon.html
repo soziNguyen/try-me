@@ -1,0 +1,39 @@
+<%- include('../partials/header.html') %>
+  <%- include('../partials/admin_sidebar.html') %>
+    <div class="admin__content">
+      <h2 class="mb-3 bold semi-bold">
+        <%= pageTitle %>
+      </h2>
+
+      <table class="table table-bordered" id="couponTable">
+        <thead>
+          <tr>
+            <th>
+              <input type="checkbox" id="selectAll">
+            </th>
+            <th>Mã</th>
+            <th>Loại giảm</th>
+            <th>Giá trị</th>
+            <th>Gói áp dụng</th>
+            <th>Ngày bắt đầu</th>
+            <th>Ngày kết thúc</th>
+            <th>Giới hạn</th>
+            <th>Lượt đã sử dụng</th>
+            <th>Mô tả</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="couponTableBody"></tbody>
+      </table>
+    </div>
+
+    </div>
+    </div>
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <%- include('../partials/commonjs.html') %>
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/data-table.js"></script>
+      <script src="/js/admin/admin-org.js"></script>
+      <script src="/js/admin/coupon-plan.js"></script>
+      <%- include('../partials/footer.html') %>
