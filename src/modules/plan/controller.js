@@ -220,18 +220,18 @@ export const hardDeletePlan = async (req, res) => {
 export const upgradePlan = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    const { planCode, mode } = req.body // mode: 'month' | 'year'
+    const { planId, mode } = req.body // mode: 'month' | 'year'
 
     if (!organizationId) {
       return responseHelper.error(res, 'Không tìm thấy tổ chức hiện tại', 400)
     }
 
-    if (!planCode) {
-      return responseHelper.error(res, 'Thiếu mã gói dịch vụ', 400)
+    if (!planId) {
+      return responseHelper.error(res, 'Thiếu ID gói dịch vụ', 400)
     }
 
     // Tìm gói dịch vụ đang hoạt động
-    const plan = await Plan.findOne({ code: planCode, isActive: true })
+    const plan = await Plan.findOne({ _id: planId, isActive: true })
     if (!plan) {
       return responseHelper.error(res, 'Gói dịch vụ không hợp lệ hoặc đã ngừng hoạt động', 404)
     }
@@ -266,7 +266,7 @@ export const upgradePlan = async (req, res) => {
     responseHelper.success(
       res,
       {
-        planCode: plan.code,
+        planId: plan._id,
         planName: plan.name,
         planExpiredAt: expireAt
       },

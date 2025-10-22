@@ -249,6 +249,7 @@ if (logInForm) {
 
     if (newUser && newUserModal) {
       newUser.addEventListener('click', function () {
+        warehouse.innerHTML = '<option value="">Chọn kho</option>'
         warehouses.forEach((wh) => {
           const option = document.createElement('option')
           option.value = wh._id

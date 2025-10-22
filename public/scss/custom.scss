@@ -512,21 +512,28 @@ input[type='number']::-webkit-inner-spin-button {
   border: none !important;
 }
 
-.plan__detail .card {
-  border-radius: 16px;
+.plan__detail #isActive {
+  margin-left: -0.5rem;
+  margin-right: 0.5rem;
 }
 
-.plan__detail .card-header {
-  border-radius: 16px 16px 0 0;
-  padding: 16px 48px;
-}
-
-.plan__detail .card-body {
-  padding: 24px 48px;
+.toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
 }
 
 #planDiscountCode {
   border-bottom: 1px solid var(--gray-light) !important;
+}
+
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear,
+input[type='text']::-ms-reveal,
+input[type='text']::-ms-clear {
+  display: none;
 }
 
 //================= Responsive =================//
