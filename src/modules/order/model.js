@@ -31,7 +31,7 @@ const OrderSchema = new Schema(
     pointsDiscount: { type: Number, default: 0 }, // Số tiền giảm theo điểm
     serviceCharge: { type: Number, default: 0 }, // Phí dịch vụ (nếu có)
     totalPayable: { type: Number, default: 0 }, // Tổng tiền trước thuế
-    trietKhau: { type: Number, default: 0 }, //trietkhau
+    extraDiscount: { type: Number, default: 0 }, //chietkhau
     vatRate: { type: Number, default: 0 }, // VAT %
     total: { type: Number, default: 0 }, // Tổng cuối, phải trả
     paymentMethodId: {

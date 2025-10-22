@@ -127,7 +127,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 7. Tổng hợp tiền
-    const totalDiscount = (order.discount || 0) + (order.pointsDiscount || 0)
+    const totalDiscount =
+      (order.discount || 0) + (order.pointsDiscount || 0) + (order.extraDiscount || 0)
 
     document.getElementById('totalAmount').textContent = formatCurrency(order.totalAmount)
     document.getElementById('discount').textContent = formatCurrencyWithSign(
@@ -141,6 +142,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('serviceCharge').textContent = formatCurrencyWithSign(
       order.serviceCharge || 0,
       order.serviceCharge > 0 ? '+' : ''
+    )
+
+    document.getElementById('extraDiscount').textContent = formatCurrencyWithSign(
+      order.extraDiscount || 0,
+      order.extraDiscount > 0 ? '-' : ''
     )
 
     const vatAmount = Math.round(
