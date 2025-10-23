@@ -105,4 +105,5 @@ router.get('/checkout/:id', isAuthenticated, page.checkoutPlan)
 router.get('/plan/:id', isAuthenticated, page.planInfoPage)
 router.get('/coupons', isAuthenticated, isAdmin, page.couponPlanPage)
 router.get('/coupon/:id', isAuthenticated, isAdmin, page.couponPlanDetailPage)
+router.get('/organization/:id', isAuthenticated, isAdmin, page.orgDetailPage)
 export default router

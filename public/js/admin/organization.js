@@ -56,15 +56,45 @@ $(function () {
         render: (data, type, row) =>
           `<input type="checkbox" class="orgCheckbox" data-id="${row._id}">`
       },
-      ...editableFields.map((field) => ({
-        data: field,
+      {
+        data: 'name',
+        className: 'text-center',
         render: (data, type, row) => {
-          if (field === 'phone') {
-            return inputRenderer(field)(formatToInternational(data), type, row)
+          if (type === 'display') {
+            return `<input type="text" class="dataInput form-control w-100 border-0" data-field="name" value="${data || ''}">`
           }
-          return inputRenderer(field)(data, type, row)
+          return data
         }
-      })),
+      },
+      {
+        data: 'email',
+        className: 'text-center',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<input type="text" class="dataInput form-control w-100 border-0" data-field="email" value="${data || ''}">`
+          }
+          return data
+        }
+      },
+      {
+        data: 'plan',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<span class="text">${data || ''}</span>`
+          }
+          return data
+        }
+      },
+      {
+        data: 'phone',
+        className: 'text-end',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<input type="text" class="dataInput form-control number w-100 border-0" data-field="phone" value="${formatToInternational(data) || ''}">`
+          }
+          return data
+        }
+      },
       {
         data: 'province',
         className: 'text-start px-1',
@@ -104,6 +134,16 @@ $(function () {
           }
           return data
         }
+      },
+      {
+        data: null,
+        className: 'text-center',
+        orderable: false,
+        render: (_, __, row) => `
+          <button class="btn btn-sm btn-primary me-1 editBtn" data-id="${row._id}">
+            <i class="bi bi-pencil-square"></i>
+          </button>
+          `
       }
     ],
     rowCallback: function (row, data) {
@@ -129,6 +169,11 @@ $(function () {
       $('#orgTable').on('blur', 'input[data-field="phone"]', function () {
         const val = $(this).val()
         $(this).val(formatToInternational(val))
+      })
+
+      $('.editBtn').on('click', function () {
+        const id = $(this).data('id')
+        window.location.href = `/organization/${id}`
       })
     }
   })

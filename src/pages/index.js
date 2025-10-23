@@ -770,3 +770,17 @@ export const couponPlanDetailPage = async (req, res) => {
     })
   )
 }
+
+export const orgDetailPage = async (req, res) => {
+  const orgId = req.params.id
+  console.log(orgId)
+
+  res.render(
+    'admin/org_detail',
+    getPageData(req, 'Chi tiết tổ chức', 'Organization Detail', {
+      headerClass: 'admin__header',
+      pageTitle: 'CHI TIẾT TỔ CHỨC',
+      orgId
+    })
+  )
+}

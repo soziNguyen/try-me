@@ -230,7 +230,9 @@ export const getOrgById = async (req, res) => {
     const { id } = req.params
     if (!id) return responseHelper.error(res, 'Id tổ chức không hợp lệ', 400)
 
-    const org = await Organization.findById(id).populate('defaultWarehouse', '_id name location')
+    const org = await Organization.findById(id)
+      .populate('defaultWarehouse', '_id name location')
+      .populate('plan', '_id code name')
     if (!org) return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
 
     const responseData = {
@@ -283,18 +285,26 @@ export const getAllOrganizations = async (req, res) => {
     sortObj[sortField] = sortDir
 
     // Lấy dữ liệu với paginate + sort
-    const data = await Organization.find(filter).sort(sortObj).skip(start).limit(length).lean()
+    const data = await Organization.find(filter)
+      .sort(sortObj)
+      .skip(start)
+      .limit(length)
+      .lean()
+      .populate('plan', '_id code name')
 
     const cleanData = data.map((row) => ({
+      _id: row._id || null,
       name: row.name || '',
       email: row.email || '',
+      plan: row.plan?.name || '',
       phone: row.phone || '',
       province: row.province || '',
       commune: row.commune || '',
       street: row.street || '',
-      isActive: row.isActive ?? false,
-      _id: row._id || null
+      isActive: row.isActive ?? false
     }))
+
+    console.log(cleanData)
 
     return res.json({
       draw,
@@ -331,6 +341,7 @@ export const updateOrg = async (req, res) => {
       name,
       email,
       phone,
+      plan,
       province,
       commune,
       defaultWarehouse,
@@ -399,6 +410,7 @@ export const updateOrg = async (req, res) => {
     if (name !== undefined && name.trim()) data.name = name.trim()
     if (email !== undefined && email.trim()) data.email = email.trim().toLowerCase()
     if (phone !== undefined) data.phone = processedPhone
+    if (plan !== undefined) data.plan = plan
     if (province !== undefined) data.province = province
     if (commune !== undefined) data.commune = commune
     if (street !== undefined) data.street = street
