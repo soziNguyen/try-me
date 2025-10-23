@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', async function () {
   const orgRes = await ajax('/api/organization/current', {}, 'GET')
   const currentPlanCode = orgRes?.plan?.code || 'FREE'
+  let allPlans = []
 
   // Mặc định hiển thị giá theo tháng
   let currentMode = 'month'
@@ -57,42 +58,77 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 async function fillPlans(currentPlanCode, mode = 'month') {
   const plans = await ajax('/api/admin/plan/active', {}, 'GET')
+  allPlans = plans // Lưu để dùng ở phần submit
+
   const container = document.querySelector('.package__container')
   container.innerHTML = ''
 
+  const currentPlan = plans.find((p) => p.code === currentPlanCode)
+
   plans.forEach((plan) => {
     const isCurrent = plan.code === currentPlanCode
+    const isLowerLevel = currentPlan && plan.level < currentPlan.level
+
     const badgeText = isCurrent ? 'Gói hiện tại' : ''
     const badgeClass = isCurrent ? 'bg-danger fst-italic' : 'bg-primary'
 
-    // Giá hiển thị theo mode
     const price =
       mode === 'month' ? plan.priceMonth.toLocaleString() : plan.priceYear.toLocaleString()
-
     const label = mode === 'month' ? 'đ/ tháng' : 'đ/ năm'
 
     const planCard = document.createElement('div')
     planCard.classList.add('col-md-4', 'col-lg-3', 'mb-4')
+
+    let features = ''
+    if (plan.description && plan.description.trim() !== '') {
+      features = plan.description
+        .split('\n')
+        .filter((line) => line.trim() !== '')
+        .map(
+          (line) => `
+            <li class="d-flex align-items-start mb-1">
+              <i class="bi bi-check2 text-success me-2 fs-5"></i>
+              <span>${line.trim()}</span>
+            </li>`
+        )
+        .join('')
+    } else {
+      features = `
+        <li class="d-flex align-items-start mb-1">
+          <i class="bi bi-check2 text-success me-2 fs-5"></i>
+          <span>Giới hạn kho: ${
+            plan.warehouseLimit === null ? '<b>Không giới hạn</b>' : `<b>${plan.warehouseLimit}</b>`
+          }</span>
+        </li>
+        <li class="d-flex align-items-start mb-1">
+          <i class="bi bi-check2 text-success me-2 fs-5"></i>
+          <span>Giới hạn nhân viên: ${
+            plan.staffLimit === null ? '<b>Không giới hạn</b>' : `<b>${plan.staffLimit}</b>`
+          }</span>
+        </li>`
+    }
+
     planCard.innerHTML = `
-      <form class="card h-100 rounded-4 shadow-sm position-relative plan-form" data-id=${plan._id} data-code="${plan.code}">
+      <form class="card h-100 rounded-4 shadow-sm position-relative plan-form" 
+        data-id=${plan._id} data-code="${plan.code}">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title text-center fw-bold mt-4 fs-2">${plan.name}</h5>
-          <div class="text-center fs-1 fw-bold text-success mb-2">${price} <span class="fs-6 text-muted">${label}</span></div>
-          <div class="my-3 fw-bold fs-5">Thông tin gói</div>
-          <p class="card-text">${plan.description || ''}</p>
-          <ul class="list-group list-group-flush mb-3">
-            <li class="list-group-item"><i class="bi bi-check text-success me-2"></i>Giới hạn kho: ${
-              plan.warehouseLimit === null
-                ? '<span class="fw-bold">Không giới hạn</span>'
-                : `<span class="fw-bold">${plan.warehouseLimit}</span>`
-            }</li>
-            <li class="list-group-item"><i class="bi bi-check text-success me-2"></i>Giới hạn nhân viên: ${
-              plan.staffLimit === null
-                ? '<span class="fw-bold">Không giới hạn</span>'
-                : `<span class="fw-bold">${plan.staffLimit}</span>`
-            }</li>
-          </ul>
-          <button type="submit" class="btn ${isCurrent ? 'btn-secondary disabled' : 'btn-success'} mt-auto">${isCurrent ? 'Đang sử dụng' : 'Chọn gói'}</button>
+          <div class="text-center fs-1 fw-bold text-success mb-2">${price} 
+            <span class="fs-6 text-muted">${label}</span></div>
+          <div class="my-3 fw-bold fs-5">Tính năng gói</div>
+
+          <ul class="list-unstyled mb-3">${features}</ul>
+
+          <button type="submit" 
+            class="btn mt-auto ${
+              isCurrent
+                ? 'btn-secondary disabled'
+                : isLowerLevel
+                  ? 'btn-outline-secondary disabled'
+                  : 'btn-success'
+            }">
+            ${isCurrent ? 'Đang sử dụng' : isLowerLevel ? 'Không khả dụng' : 'Chọn gói'}
+          </button>
         </div>
         <span class="badge ${badgeClass} position-absolute top-0 end-0 rounded-4 m-2 py-2 px-3">${badgeText}</span>
       </form>

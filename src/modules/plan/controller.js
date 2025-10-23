@@ -126,17 +126,7 @@ export const getPlanById = async (req, res) => {
 // Tạo gói mới (dành cho admin)
 export const createPlan = async (req, res) => {
   try {
-    const newPlan = new Plan({
-      code: '',
-      name: '',
-      priceMonth: 0,
-      priceYear: 0,
-      originalPrice: 0,
-      warehouseLimit: '',
-      staffLimit: '',
-      description: '',
-      isActive: false // draft
-    })
+    const newPlan = new Plan(req.body)
 
     await newPlan.save()
     return responseHelper.success(res, newPlan)
@@ -150,6 +140,7 @@ export const updatePlan = async (req, res) => {
   try {
     const { id } = req.params
     const {
+      level,
       code,
       name,
       priceMonth,
@@ -181,7 +172,8 @@ export const updatePlan = async (req, res) => {
       }
     }
 
-    // Cập nhật các trường
+    // Cập nhật các
+    if (level) plan.level = level
     if (code) plan.code = code.trim().toUpperCase()
     if (name) plan.name = name.trim().toUpperCase()
     if (priceMonth !== undefined) plan.priceMonth = priceMonth
@@ -207,6 +199,12 @@ export const hardDeletePlan = async (req, res) => {
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return responseHelper.error(res, 'Không có gói nào được chọn để xóa', 400)
+    }
+
+    const inUse = await Organization.exists({ plan: { $in: ids } })
+
+    if (inUse) {
+      return responseHelper.error(res, 'Không thể xóa vì có tổ chức đang sử dụng gói này', 400)
     }
 
     const result = await Plan.deleteMany({ _id: { $in: ids } })
@@ -245,6 +243,10 @@ export const upgradePlan = async (req, res) => {
     // Nếu đang dùng cùng gói thì báo lại
     if (org.plan && org.plan.code === plan.code) {
       return responseHelper.error(res, 'Bạn đang sử dụng gói này rồi', 400)
+    }
+
+    if (org.plan && org.plan.level >= plan.level) {
+      return responseHelper.error(res, 'Không thể hạ cấp sang gói thấp hơn', 400)
     }
 
     // === Xác định hạn sử dụng ===

@@ -12,7 +12,7 @@ $(function () {
   })
 
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#orgTableBody').offset().top - 100) / 45)
+  const numRows = Math.floor(($(window).height() - $('#orgTableBody').offset().top - 100) / 48)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -170,11 +170,10 @@ $(function () {
         const val = $(this).val()
         $(this).val(formatToInternational(val))
       })
-
-      $('.editBtn').on('click', function () {
-        const id = $(this).data('id')
-        window.location.href = `/organization/${id}`
-      })
     }
+  })
+  $('#orgTable').on('click', '.editBtn', function () {
+    const id = $(this).data('id')
+    window.location.href = `/organization/${id}`
   })
 })
