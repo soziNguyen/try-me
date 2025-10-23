@@ -12,7 +12,7 @@ $(function () {
 
   const dataFields = ['username', 'email', 'role']
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#userTableBody').offset().top - 100) / 45)
+  const numRows = Math.floor(($(window).height() - $('#userTableBody').offset().top - 100) / 60)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }

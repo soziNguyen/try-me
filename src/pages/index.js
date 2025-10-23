@@ -748,3 +748,39 @@ export const planInfoPage = (req, res) => {
     })
   )
 }
+
+export const couponPlanPage = async (req, res) => {
+  res.render(
+    'admin/coupon',
+    getPageData(req, 'Mã giảm giá', 'Coupon Plan', {
+      headerClass: 'admin__header',
+      pageTitle: 'MÃ GIẢM GIÁ'
+    })
+  )
+}
+
+export const couponPlanDetailPage = async (req, res) => {
+  const couponId = req.params.id
+  res.render(
+    'admin/coupon-detail',
+    getPageData(req, 'Chi tiết mã giảm giá', 'Coupon Detail', {
+      headerClass: 'admin__header',
+      pageTitle: 'MÃ GIẢM GIÁ',
+      couponId
+    })
+  )
+}
+
+export const orgDetailPage = async (req, res) => {
+  const orgId = req.params.id
+  console.log(orgId)
+
+  res.render(
+    'admin/org_detail',
+    getPageData(req, 'Chi tiết tổ chức', 'Organization Detail', {
+      headerClass: 'admin__header',
+      pageTitle: 'CHI TIẾT TỔ CHỨC',
+      orgId
+    })
+  )
+}

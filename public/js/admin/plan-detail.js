@@ -5,6 +5,7 @@ $(function () {
     if (data.success) {
       const plan = data.data
       $('#planId').val(plan._id)
+      $('#level').val(plan.level)
       $('#code').val(plan.code)
       $('#name').val(plan.name)
       $('#monthlyPrice').val(plan.priceMonth)
@@ -24,6 +25,7 @@ $(function () {
     e.preventDefault()
     const id = $('#planId').val()
     const payload = {
+      level: $('#level').val(),
       code: $('#code').val(),
       name: $('#name').val(),
       priceMonth: +$('#monthlyPrice').val(),
@@ -39,7 +41,6 @@ $(function () {
     if (res) {
       toastr.remove()
       toastr.success('Lưu gói thành công!')
-      table.ajax.reload(null, false)
     }
   })
 })

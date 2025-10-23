@@ -1,39 +1,39 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/admin_sidebar.html') %>
     <div class="admin__content">
-      <h3 class="fw-bold mb-4">
+      <h2 class="mb-3 bold semi-bold">
         <%= pageTitle %>
-      </h3>
+      </h2>
 
-      <table id="orgTable" class="table">
+      <table class="table table-bordered" id="couponTable">
         <thead>
           <tr>
             <th>
               <input type="checkbox" id="selectAll">
             </th>
-            <th>Tên</th>
-            <th>Email</th>
-            <th>Gói sử dụng</th>
-            <th>Điện Thoại</th>
-            <th>Tỉnh/ Thành</th>
-            <th>Xã/ Phường</th>
-            <th>Đường</th>
+            <th>Mã</th>
+            <th>Loại giảm</th>
+            <th>Giá trị</th>
+            <th>Gói áp dụng</th>
+            <th>Ngày bắt đầu</th>
+            <th>Ngày kết thúc</th>
+            <th>Giới hạn</th>
+            <th>Lượt đã sử dụng</th>
+            <th>Mô tả</th>
             <th>Trạng thái</th>
             <th>Thao tác</th>
           </tr>
         </thead>
-
-        <tbody id="orgTableBody">
-
-        </tbody>
+        <tbody id="couponTableBody"></tbody>
       </table>
     </div>
+
     </div>
     </div>
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
     <%- include('../partials/commonjs.html') %>
-      <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
       <script src="/js/sidebar-toggle.js"></script>
       <script src="/js/data-table.js"></script>
       <script src="/js/admin/admin-org.js"></script>
-      <script src="/js/admin/organization.js"></script>
+      <script src="/js/admin/coupon-plan.js"></script>
       <%- include('../partials/footer.html') %>

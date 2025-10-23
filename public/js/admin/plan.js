@@ -1,6 +1,6 @@
 $(function () {
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#planTableBody').offset().top - 100) / 45)
+  const numRows = Math.floor(($(window).height() - $('#planTableBody').offset().top - 100) / 48)
   if (!showList.includes(numRows)) showList.push(numRows)
   showList.sort((a, b) => a - b)
   const csrfToken = $('#_csrf').val()
@@ -113,12 +113,12 @@ $(function () {
           window.location.href = `/plan/${data._id}?mode=new`
         })
       })
-
-      $('.editBtn').on('click', function () {
-        const id = $(this).data('id')
-        window.location.href = `/plan/${id}`
-      })
     }
+  })
+
+  $('#planTable').on('click', '.editBtn', function () {
+    const id = $(this).data('id')
+    window.location.href = `/plan/${id}`
   })
 
   handlerDeleteEvent('#planTable', '#deletePlansBtn', 'planCheckbox', 'admin/plan')

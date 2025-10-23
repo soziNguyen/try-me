@@ -1,0 +1,173 @@
+<%- include('../partials/header.html') %>
+  <%- include('../partials/admin_sidebar.html') %>
+
+    <div class="admin__content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">
+          <i class="bi bi-pencil-square me-2"></i>
+          <%= pageTitle %>
+        </h3>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-info-circle me-2"></i>
+            Thông tin tổ chức
+          </h5>
+        </div>
+        <div class="card-body p-4">
+          <form id="updateOrgForm">
+            <input type="hidden" id="orgId" name="orgId" value="<%= orgId || '' %>">
+
+            <!-- Thông tin cơ bản -->
+            <div class="mb-4">
+              <h6 class="text-primary border-bottom pb-2 mb-3">
+                <i class="bi bi-building me-2"></i>
+                Thông Tin Cơ Bản
+              </h6>
+
+              <div class="row mb-3">
+                <label for="orgName" class="col-sm-3 col-form-label fw-semibold">
+                  Tên tổ chức
+                </label>
+                <div class="col-sm-9">
+                  <input type="text" class="org-update form-control" id="orgName" name="name" data-field="name">
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="taxCode" class="col-sm-3 col-form-label fw-semibold">
+                  Mã số thuế
+                </label>
+                <div class="col-sm-9">
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-receipt"></i></span>
+                    <input type="text" class="org-update form-control" id="taxCode" name="taxCode" data-field="taxCode"
+                      placeholder="Nhập mã số thuế">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="orgEmail" class="col-sm-3 col-form-label fw-semibold">
+                  Email
+                </label>
+                <div class="col-sm-9">
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" class="org-update form-control" id="orgEmail" name="email" data-field="email">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="orgPhone" class="col-sm-3 col-form-label fw-semibold">
+                  Số điện thoại
+                </label>
+                <div class="col-sm-9">
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                    <input type="text" class="org-update form-control" id="orgPhone" name="phone" data-field="phone">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="orgPlan" class="col-sm-3 col-form-label fw-semibold">
+                  Gói dịch vụ
+                </label>
+                <div class="col-sm-9">
+                  <select class="org-update form-select" id="orgPlan" name="plan" data-field="plan">
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Địa chỉ -->
+            <div class="mb-4">
+              <h6 class="text-primary border-bottom pb-2 mb-3">
+                <i class="bi bi-geo-alt me-2"></i>
+                Địa Chỉ
+              </h6>
+
+              <div class="row mb-3">
+                <label for="orgProvince" class="col-sm-3 col-form-label fw-semibold">
+                  Tỉnh/Thành phố
+                </label>
+                <div class="col-sm-9">
+                  <select class="org-update form-select" id="orgProvince" name="province" data-field="province">
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="orgCommune" class="col-sm-3 col-form-label fw-semibold">
+                  Quận/Huyện/Xã
+                </label>
+                <div class="col-sm-9">
+                  <select class="org-update form-select" id="orgCommune" name="commune" data-field="commune">
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="orgStreet" class="col-sm-3 col-form-label fw-semibold">
+                  Địa chỉ chi tiết
+                </label>
+                <div class="col-sm-9">
+                  <textarea class="org-update form-control" id="orgStreet" name="street" data-field="street" rows="3"
+                    placeholder="Số nhà, tên đường..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trạng thái -->
+            <div class="mb-4">
+              <h6 class="text-primary border-bottom pb-2 mb-3">
+                <i class="bi bi-toggle-on me-2"></i>
+                Trạng Thái
+              </h6>
+
+              <div class="row">
+                <div class="col-sm-9 offset-sm-3">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input org-update" type="checkbox" id="orgIsActive" name="isActive"
+                      data-field="isActive">
+                    <label class="form-check-label fw-semibold" for="orgIsActive">
+                      Kích hoạt tổ chức
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="row">
+              <div class="col-sm-9 offset-sm-3">
+                <a href="/organizations" class="btn btn-secondary me-2">
+                  <i class="bi bi-x-circle me-1"></i>
+                  Hủy
+                </a>
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-check-circle me-1"></i>
+                  Lưu thay đổi
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+    </div>
+    </div>
+
+    <%- include('../partials/commonjs.html') %>
+      <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/data-table.js"></script>
+      <script src="/js/admin/admin-org.js"></script>
+      <script src="/js/admin/org-detail.js"></script>
+      <%- include('../partials/footer.html') %>

@@ -474,7 +474,6 @@ input[type=number]::-webkit-inner-spin-button {
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   overflow: hidden;
 }
-
 .price-toggle .toggle-liquid::before {
   content: "";
   position: absolute;
@@ -489,9 +488,43 @@ input[type=number]::-webkit-inner-spin-button {
   transition: opacity 0.5s;
   border-radius: 50px;
 }
-
 .price-toggle .toggle-liquid:hover::before {
   opacity: 0.1;
+}
+.price-toggle .toggle-liquid .option {
+  padding: 12px 36px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6c757d;
+  cursor: pointer;
+  -webkit-transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 2;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  position: relative;
+}
+.price-toggle .toggle-liquid .option.active {
+  color: white;
+  -webkit-transform: scale(1.05);
+          transform: scale(1.05);
+}
+.price-toggle .toggle-liquid .option:hover:not(.active) {
+  color: #495057;
+}
+.price-toggle .toggle-liquid .blob {
+  position: absolute;
+  background: linear-gradient(135deg, #198754, #20c997);
+  border-radius: 50px;
+  -webkit-transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 1;
+  -webkit-box-shadow: 0 4px 16px rgba(25, 135, 84, 0.4);
+          box-shadow: 0 4px 16px rgba(25, 135, 84, 0.4);
+  -webkit-filter: blur(0.5px);
+          filter: blur(0.5px);
 }
 
 @-webkit-keyframes gradientShift {
@@ -511,45 +544,6 @@ input[type=number]::-webkit-inner-spin-button {
     background-position: 100% 50%;
   }
 }
-.price-toggle .toggle-liquid .option {
-  padding: 12px 36px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #6c757d;
-  cursor: pointer;
-  -webkit-transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  z-index: 2;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
-  position: relative;
-}
-
-.price-toggle .toggle-liquid .option.active {
-  color: white;
-  -webkit-transform: scale(1.05);
-          transform: scale(1.05);
-}
-
-.price-toggle .toggle-liquid .option:hover:not(.active) {
-  color: #495057;
-}
-
-.price-toggle .toggle-liquid .blob {
-  position: absolute;
-  background: linear-gradient(135deg, #198754, #20c997);
-  border-radius: 50px;
-  -webkit-transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  z-index: 1;
-  -webkit-box-shadow: 0 4px 16px rgba(25, 135, 84, 0.4);
-          box-shadow: 0 4px 16px rgba(25, 135, 84, 0.4);
-  -webkit-filter: blur(0.5px);
-          filter: blur(0.5px);
-}
-
 .list-group-item {
   border: none !important;
 }
@@ -577,6 +571,29 @@ input[type=password]::-ms-clear,
 input[type=text]::-ms-reveal,
 input[type=text]::-ms-clear {
   display: none;
+}
+
+#couponTableBody .select2-selection__choice__remove {
+  margin-top: 4px;
+  margin-right: 16px;
+}
+#couponTableBody ul {
+  list-style: none !important;
+}
+#couponTableBody .select2-search__field {
+  width: 100% !important;
+}
+
+#orgForm .select2-selection {
+  border: none !important;
+  -webkit-box-shadow: none !important;
+          box-shadow: none !important;
+}
+#orgForm .input-group-text {
+  background-color: var(--white) !important;
+}
+#orgForm .form-control:focus {
+  border-color: var(--bs-border-color) !important;
 }
 
 @media (max-width: 767px) {
