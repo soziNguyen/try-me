@@ -967,6 +967,8 @@ export const getOrders = async (req, res) => {
           customer: { $first: '$customer' },
           table: { $first: '$table' },
           total: { $first: '$total' },
+          totalPayable: { $first: '$totalPayable' },
+          vatRate: { $first: '$vatRate' },
           items: {
             $push: {
               quantity: '$items.quantity',
@@ -1057,6 +1059,8 @@ export const getOrders = async (req, res) => {
           _id: 1,
           code: 1,
           total: 1,
+          totalPayable: 1,
+          vatRate: 1,
           customer: { _id: 1, name: 1 },
           table: { _id: 1, name: 1 },
           items: 1,
