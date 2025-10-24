@@ -692,6 +692,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })
 
+// Xử lý click button%
+document.addEventListener('DOMContentLoaded', () => {
+  const totalAmountEl = document.getElementById('totalAmount')
+  const extraDiscountInput = document.getElementById('extraDiscountInput')
+  const discountButtons = document.querySelectorAll('.discount-btn')
+
+  function parseCurrency(value) {
+    if (!value) return 0
+    const cleaned = value
+      .toString()
+      .replace(/\./g, '')
+      .replace(/[^\d-]/g, '')
+    return Number(cleaned) || 0
+  }
+
+  discountButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      discountButtons.forEach((b) => b.classList.remove('active'))
+      btn.classList.add('active')
+
+      const percent = Number(btn.getAttribute('data-percent'))
+      const totalAmount = parseCurrency(totalAmountEl.textContent)
+
+      const discountAmount = Math.round(totalAmount * (percent / 100))
+
+      extraDiscountInput.value = discountAmount.toLocaleString('vi-VN')
+
+      calculateTotals()
+      extraDiscountInput.dispatchEvent(new Event('change'))
+    })
+  })
+})
+
 // MAIN CLICK EVENT HANDLER
 document.addEventListener('click', (e) => {
   // Xử lý click gợi ý tiền mặt (bao gồm cả dynamic suggestions)
