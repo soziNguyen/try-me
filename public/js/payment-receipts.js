@@ -29,7 +29,6 @@ $(function () {
           const summary = response.summary || {}
           $('#summary-total-orders').text(summary.totalOrders || 0)
           $('#summary-total-amount').text((summary.totalAmount || 0).toLocaleString('vi-VN'))
-          $('#summary-avg-amount').text((summary.avgAmount || 0).toFixed(0).toLocaleString('vi-VN'))
           return response.data
         }
       },
@@ -52,7 +51,7 @@ $(function () {
           render: (data, type, row) => {
             const tableName = data ? data.name || '' : 'Mang về'
             if (type === 'display') {
-              return `<span class="number form-control border-0">${tableName}</span>`
+              return `<span class="number form-control border-0 text-start">${tableName}</span>`
             }
             return data ?? ''
           }
@@ -83,11 +82,31 @@ $(function () {
           }
         },
         {
+          data: 'totalPayable',
+          title: 'Tổng tiền trước thuế',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `<span class="number form-control border-0">${Number(data || 0).toLocaleString('vi-VN')}</span>`
+            }
+            return data
+          }
+        },
+        {
+          data: 'vatRate',
+          title: 'VAT',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `<span class="text form-control border-0 text-end">${data ?? 0} %</span>`
+            }
+            return data ?? 0
+          }
+        },
+        {
           data: 'total',
           title: 'Tổng tiền',
           render: (data, type, row) => {
             if (type === 'display') {
-              return `<span class="number form-control border-0">${data ?? ''}</span>`
+              return `<span class="number form-control border-0">${Number(data || 0).toLocaleString('vi-VN')}</span>`
             }
             return data
           }
