@@ -1,11 +1,8 @@
 export const units = [
   'kg',
-  'món',
-  'suất',
   'l',
   'cái',
   'quả',
-  'miếng',
   'gói',
   'hộp',
   'chai',

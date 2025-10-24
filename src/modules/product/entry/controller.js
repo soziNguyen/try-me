@@ -1,6 +1,6 @@
+import mongoose from 'mongoose'
 import { ProductEntry, units } from './model.js'
 import ProductStock from '../stock/model.js'
-import mongoose from 'mongoose'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import { generateDocumentCode } from '../../../helpers/common.js'

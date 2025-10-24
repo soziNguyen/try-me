@@ -689,7 +689,7 @@ export const productStockPage = (req, res) => {
 export const receiptsPage = (req, res) => {
   res.render(
     'revenue-expenditure/payment-receipts',
-    getPageData(req, 'Phiếu Thu', 'payment receipts', {
+    getPageData(req, 'Phiếu Thu', 'PaymentReceipts', {
       headerClass: 'admin__header',
       pageTitle: 'Phiếu Thu'
     })
@@ -699,7 +699,7 @@ export const receiptsPage = (req, res) => {
 export const expensesPage = (req, res) => {
   res.render(
     'revenue-expenditure/payment-expenses',
-    getPageData(req, 'Phiếu Chi', 'payment expenses', {
+    getPageData(req, 'Phiếu Chi', 'PaymentExpenses', {
       headerClass: 'admin__header',
       pageTitle: 'Phiếu Chi'
     })
@@ -773,7 +773,6 @@ export const couponPlanDetailPage = async (req, res) => {
 
 export const orgDetailPage = async (req, res) => {
   const orgId = req.params.id
-  console.log(orgId)
 
   res.render(
     'admin/org_detail',
@@ -781,6 +780,16 @@ export const orgDetailPage = async (req, res) => {
       headerClass: 'admin__header',
       pageTitle: 'CHI TIẾT TỔ CHỨC',
       orgId
+    })
+  )
+}
+
+export const planTransactionPage = async (req, res) => {
+  res.render(
+    'admin/plan_transaction',
+    getPageData(req, 'Lịch sử thanh toán', 'Plan Transaction', {
+      headerClass: 'admin__header',
+      pageTitle: 'LỊCH SỬ THANH TOÁN'
     })
   )
 }

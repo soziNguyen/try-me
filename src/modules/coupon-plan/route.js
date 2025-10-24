@@ -7,8 +7,7 @@ import {
   createCouponPlan,
   updateCouponPlan,
   deleteCouponPlan,
-  applyCouponPlan,
-  confirmCouponPlanUsage
+  applyCouponPlan
 } from './controller.js'
 
 const router = express.Router()
@@ -19,5 +18,4 @@ router.post('/api/admin/coupon/create', isAuthenticated, isPermit('Admin'), crea
 router.post('/api/admin/coupon/update/:id', isAuthenticated, isPermit('Admin'), updateCouponPlan)
 router.post('/api/admin/coupon/deletes', isAuthenticated, isPermit('Admin'), deleteCouponPlan)
 router.post('/api/admin/coupon/apply', isAuthenticated, applyCouponPlan)
-router.post('/api/admin/coupon/confirm', isAuthenticated, confirmCouponPlanUsage)
 export default router

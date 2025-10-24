@@ -9,7 +9,6 @@ router.get('/staff/shifts', isAuthenticated, isPermit('Admin', 'Org'), page.shif
 router.get('/staff/schedule', isAuthenticated, isPermit('Admin', 'Org'), page.schedulePage)
 router.get('/my-schedule', isAuthenticated, page.mySchedulePage)
 router.get('/staff/attendance', isAuthenticated, isPermit('Admin', 'Org'), page.attendancePage)
-router.get('/staff/payroll', isAuthenticated, isPermit('Admin', 'Org'), page.payrollPage)
 router.get(
   '/staff/attendance/:id',
   isAuthenticated,

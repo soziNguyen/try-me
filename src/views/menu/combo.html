@@ -1,90 +1,145 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/org_sidebar.html') %>
     <div class="admin__content">
-      <h2 class="mb-3 bold semi-bold">
-        <%= pageTitle %>
-      </h2>
-      <div class="row">
-        <!-- Cột DataTable -->
-        <div class="col-md-7" id="tableContainer">
-          <table id="comboTable" class="table table-bordered">
-            <thead>
-              <tr>
-                <th>
-                  <input type="checkbox" id="selectAll">
-                </th>
-                <th>SKU</th>
-                <th>Tên</th>
-                <th>Ảnh</th>
-                <th>Items</th>
-                <th>Giá</th>
-                <th>Ghi chú</th>
-                <th>Người tạo</th>
-                <th>Ngày tạo</th>
-              </tr>
-            </thead>
-            <tbody id="comboTableBody"></tbody>
-          </table>
+      <div class="container-fluid py-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+          <div class="col">
+            <h2 class="fw-bold text-primary mb-1">
+              <%= pageTitle %>
+            </h2>
+            <p class="text-muted mb-0">Quản lý các combo món ăn của bạn</p>
+          </div>
         </div>
 
-        <!-- Cột Form -->
-        <div class="col-md-5" id="formContainer">
-          <div id="comboFormContainer" class="card d-none">
-            <div class="card-header">
-              <h5 id="formTitle">Thêm Combo mới</h5>
-            </div>
-            <div class="card-body">
-              <form id="comboForm">
-                <div class="mb-3">
-                  <label class="form-label">SKU <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" name="sku">
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Tên <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" name="name">
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Ảnh</label>
-                  <input type="file" class="form-control" name="image">
-                </div>
-                <div class="mb-3">
-                  <div class="d-flex justify-content-between mb-2">
-                    <label class="form-label m-0">Danh sách món <span class="text-danger">*</span></label>
-                    <button type="button" class="btn btn-outline-primary btn-sm" id="addItemRow">
-                      <i class="bi bi-plus-circle"></i> Thêm món
-                    </button>
-                  </div>
-                  <table class="table table-bordered" id="itemsTable">
-                    <thead>
+        <div class="row g-4">
+          <!-- Cột DataTable -->
+          <div class="col-md-7" id="tableContainer">
+            <div class="card shadow-sm border-0">
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table id="comboTable" class="table table-hover mb-0">
+                    <thead class="bg-light">
                       <tr>
-                        <th>Món ăn</th>
-                        <th>Số lượng</th>
-                        <th class="text-center"><i class="bi bi-pencil"></i></th>
+                        <th class="text-center">
+                          <input type="checkbox" id="selectAll" class="form-check-input">
+                        </th>
+                        <th>SKU</th>
+                        <th>Tên</th>
+                        <th class="text-center">Ảnh</th>
+                        <th class="text-center">Items</th>
+                        <th class="text-end">Giá</th>
+                        <th>Ghi chú</th>
+                        <th>Người tạo</th>
+                        <th>Ngày tạo</th>
                       </tr>
                     </thead>
-                    <tbody id="itemTableBody">
-                    </tbody>
+                    <tbody id="comboTableBody"></tbody>
                   </table>
                 </div>
-                <div class="mb-3">
-                  <label class="form-label">Giá <span class="text-danger">*</span></label>
-                  <input type="number" class="form-control" name="price">
+              </div>
+            </div>
+          </div>
+
+          <!-- Cột Form -->
+          <div class="col-md-5" id="formContainer">
+            <div id="comboFormContainer" class="card shadow-sm border-0 d-none">
+              <div class="card-header bg-primary bg-opacity-10 border-0 py-3">
+                <div class="d-flex align-items-center">
+                  <div class="bg-primary bg-opacity-25 rounded-circle px-2 py-1 me-3">
+                    <i class="bi bi-box-seam text-primary fs-5"></i>
+                  </div>
+                  <h5 id="formTitle" class="mb-0 fw-semibold text-dark">Thêm Combo mới</h5>
                 </div>
-                <div class="mb-3">
-                  <label class="form-label">Ghi chú</label>
-                  <textarea type="text" class="form-control" name="note"></textarea>
-                </div>
-                <div class="text-end">
-                  <button type="button" class="btn btn-outline-secondary me-2" id="btnCancel"><i
-                      class="las la-times me-1"></i>Hủy</button>
-                  <button type="submit" class="btn btn-outline-success"><i class="las la-save me-1"></i>Lưu</button>
-                </div>
-              </form>
+              </div>
+              <div class="card-body p-4">
+                <form id="comboForm">
+                  <!-- SKU -->
+                  <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">
+                      SKU <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" name="sku" placeholder="Nhập mã SKU">
+                  </div>
+
+                  <!-- Tên -->
+                  <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">
+                      Tên combo <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" name="name" placeholder="Nhập tên combo">
+                  </div>
+
+                  <!-- Ảnh -->
+                  <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">Ảnh combo</label>
+                    <input type="file" class="form-control" name="image" accept="image/*">
+                    <div class="form-text">
+                      <i class="bi bi-info-circle me-1"></i>Định dạng: JPG, PNG
+                    </div>
+                  </div>
+
+                  <!-- Danh sách món -->
+                  <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <label class="form-label text-muted small fw-semibold m-0">
+                        Danh sách món <span class="text-danger">*</span>
+                      </label>
+                      <button type="button" class="btn btn-primary btn-sm" id="addItemRow">
+                        <i class="bi bi-plus-circle me-1"></i> Thêm món
+                      </button>
+                    </div>
+                    <div class="border rounded overflow-hidden">
+                      <table class="table table-sm mb-0" id="itemsTable">
+                        <thead class="bg-light">
+                          <tr>
+                            <th class="border-0">Món ăn</th>
+                            <th class="border-0">Số lượng</th>
+                            <th class="border-0 text-center">
+                              <i class="bi bi-gear"></i>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody id="itemTableBody">
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <!-- Giá -->
+                  <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">
+                      Giá bán <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                      <input type="number" class="form-control" name="price" placeholder="0" min="0">
+                      <span class="input-group-text bg-light">₫</span>
+                    </div>
+                  </div>
+
+                  <!-- Ghi chú -->
+                  <div class="mb-4">
+                    <label class="form-label text-muted small fw-semibold">Ghi chú</label>
+                    <textarea class="form-control" name="note" rows="3"
+                      placeholder="Nhập ghi chú (tùy chọn)"></textarea>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-outline-secondary" id="btnCancel">
+                      <i class="bi bi-x-circle me-1"></i>Hủy
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                      <i class="bi bi-check-circle me-1"></i>Lưu combo
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
 
     </div>

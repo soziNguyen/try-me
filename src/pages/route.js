@@ -82,7 +82,7 @@ router.get('/staff/shifts', isAuthenticated, isPermit('Admin', 'Org'), page.shif
 router.get('/staff/schedule', isAuthenticated, isPermit('Admin', 'Org'), page.schedulePage)
 router.get('/my-schedule', isAuthenticated, page.mySchedulePage)
 router.get('/staff/attendance', isAuthenticated, isPermit('Admin', 'Org'), page.attendancePage)
-router.get('/staff/payroll', isAuthenticated, isPermit('Admin', 'Org'), page.payrollPage)
+router.get('/staff/payrolls', isAuthenticated, isPermit('Admin', 'Org'), page.payrollPage)
 router.get(
   '/staff/attendance/:id',
   isAuthenticated,
@@ -106,4 +106,5 @@ router.get('/plan/:id', isAuthenticated, page.planInfoPage)
 router.get('/coupons', isAuthenticated, isAdmin, page.couponPlanPage)
 router.get('/coupon/:id', isAuthenticated, isAdmin, page.couponPlanDetailPage)
 router.get('/organization/:id', isAuthenticated, isAdmin, page.orgDetailPage)
+router.get('/plan-transactions', isAuthenticated, isAdmin, page.planTransactionPage)
 export default router

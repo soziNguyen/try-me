@@ -177,7 +177,7 @@
                             <span>Chấm công</span>
                           </a>
                           <a class="<%= (page === 'Payroll' || page === 'Payroll Detail') ? 'accordion-active' : '' %>"
-                            href="/staff/payroll">
+                            href="/staff/payrolls">
                             <i class="bi bi-cash-stack me-2 text-warning"></i>
                             <span>Bảng lương</span>
                           </a>
@@ -259,14 +259,14 @@
                           class="accordion-collapse collapse <%= ['Payment Method', 'Receiving'].includes(page) ? 'show' : '' %>"
                           data-bs-parent="#accordionMethods">
                           <div class="accordion-body">
+                            <a class="<%= page === 'Receiving' ? 'accordion-active' : '' %>" href="/receiving-accounts">
+                              <i class="bi bi-bank text-info me-2"></i>
+                              <span>Ngân hàng</span>
+                            </a>
                             <a class="<%= page === 'Payment Method' ? 'accordion-active' : '' %>"
                               href="/payment-methods">
                               <i class="bi bi-wallet2 text-white-emphasis me-2"></i>
                               <span>Phương thức thanh toán</span>
-                            </a>
-                            <a class="<%= page === 'Receiving' ? 'accordion-active' : '' %>" href="/receiving-accounts">
-                              <i class="bi bi-bank text-info me-2"></i>
-                              <span>Ngân hàng</span>
                             </a>
                           </div>
                         </div>
@@ -293,7 +293,7 @@
                             aria-expanded="<%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'true' : 'false' %>"
                             aria-controls="collapseRevenue">
                             <i class="bi bi-cash-stack text-success me-2"></i>
-                            <span>Theo dõi Doanh thu</span>
+                            <span>Theo dõi doanh thu</span>
                           </button>
                         </h2>
                         <div id="collapseRevenue"
@@ -324,8 +324,8 @@
                     </a>
                   </li>
 
-                  <li>
-                    <a class="<%= page === 'ActivityLog' ? 'active' : '' %>" href="/activity-logs">
+                  <li class="<%= page === 'ActivityLog' ? 'active' : '' %>">
+                    <a class="w-100" href="/activity-logs">
                       <i class="bi bi-activity text-secondary me-2"></i>
                       <span>Nhật ký hoạt động</span>
                     </a>
@@ -358,8 +358,8 @@
                     </div>
                   </li>
 
-                  <li>
-                    <a class="<%= page === 'Upgrade' ? 'active' : '' %>" href="/upgrade">
+                  <li class="<%= page === 'Upgrade' ? 'active' : '' %>">
+                    <a class="w-100" href="/upgrade">
                       <i class="bi bi-gem me-2 text-info"></i>
                       <span>Nâng cấp</span>
                     </a>

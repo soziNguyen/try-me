@@ -24,13 +24,19 @@ async function fillPlanInfoAndSetupConfirm(planId, mode) {
     // Giá gốc
     document.getElementById('planPrice').textContent = `${price.toLocaleString()} ₫`
 
-    // Cập nhật giá mặc định (chưa áp dụng coupon)
+    // Cập nhật giá mặc định
     updatePriceDisplay(price, 0, price, Math.round(price * 0.08), Math.round(price * 1.08))
+
+    // Biến tạm để lưu couponCode đang áp dụng
+    let appliedCouponCode = null
 
     // Xác nhận đăng ký
     document.getElementById('confirmBtn').addEventListener('click', async () => {
       try {
-        const res = await ajax('/api/admin/plan/upgrade', { planId, mode })
+        const body = { planId, mode }
+        if (appliedCouponCode) body.couponCode = appliedCouponCode // Gửi kèm coupon nếu có
+
+        const res = await ajax('/api/admin/plan/upgrade', body, 'POST')
         if (res) {
           toastr.success('Đăng ký gói thành công!')
           setTimeout(() => (window.location.href = '/upgrade'), 1500)
@@ -43,12 +49,14 @@ async function fillPlanInfoAndSetupConfirm(planId, mode) {
     // Áp dụng / hủy mã giảm giá
     const couponForm = document.getElementById('couponForm')
     const applyBtn = couponForm.querySelector('.btn-apply-coupon')
+
     couponForm.addEventListener('submit', async (e) => {
       e.preventDefault()
       const codeInput = document.getElementById('planDiscountCode')
 
       // Nếu đang ở trạng thái "X" => reset
       if (applyBtn.dataset.applied === 'true') {
+        appliedCouponCode = null // reset coupon
         codeInput.disabled = false
         codeInput.value = ''
         applyBtn.textContent = 'Áp dụng'
@@ -61,6 +69,7 @@ async function fillPlanInfoAndSetupConfirm(planId, mode) {
 
       const code = codeInput.value.trim()
       if (!code) {
+        toastr.remove()
         toastr.warning('Vui lòng nhập mã giảm giá.')
         return
       }
@@ -71,6 +80,7 @@ async function fillPlanInfoAndSetupConfirm(planId, mode) {
           totalAmount: price,
           planId: plan._id
         })
+
         if (res) {
           updatePriceDisplay(
             price,
@@ -79,12 +89,14 @@ async function fillPlanInfoAndSetupConfirm(planId, mode) {
             res.vatAmount,
             res.totalAfterVAT
           )
+
+          appliedCouponCode = code // ✅ lưu lại mã đã áp dụng
           applyBtn.textContent = 'X'
           applyBtn.classList.remove('btn-primary')
           applyBtn.classList.add('btn-danger')
           applyBtn.dataset.applied = 'true'
           codeInput.disabled = true
-          toastr.success(`Áp dụng mã "${code}" thành công!`)
+          toastr.success(`Áp dụng mã giảm giá thành công!`)
         }
       } catch (err) {
         toastr.error(err.message || 'Lỗi khi áp dụng mã giảm giá')

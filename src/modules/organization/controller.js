@@ -76,12 +76,6 @@ export const createOrganization = async (req, res) => {
     const cleanTaxCode = taxCode?.trim()
     const processedPhone = formatPhoneNumber(orgPhone)
 
-    console.log('Phone processing:', {
-      original: orgPhone,
-      processed: processedPhone,
-      type: getPhoneType(processedPhone)
-    })
-
     const result = await withTransaction(async (session) => {
       // Build duplicate check conditions
       const duplicateConditions = [{ email: cleanOrgEmail }, { phone: processedPhone }]
@@ -220,7 +214,6 @@ export const getCurrentOrganization = async (req, res) => {
 
     responseHelper.success(res, org, 'Success')
   } catch (error) {
-    console.log(error)
     responseHelper.error(res, error.message)
   }
 }
@@ -303,8 +296,6 @@ export const getAllOrganizations = async (req, res) => {
       street: row.street || '',
       isActive: row.isActive ?? false
     }))
-
-    console.log(cleanData)
 
     return res.json({
       draw,

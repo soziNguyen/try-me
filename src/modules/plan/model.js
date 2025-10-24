@@ -5,7 +5,7 @@ const Schema = mongoose.Schema
 const PlanSchema = new Schema(
   {
     level: { type: Number, default: 1 }, // Cấp độ của gói, FREE=1, STARTER=2, ... dùng cho việc up/down plan
-    code: { type: String, unique: true, uppercase: true, default: '' }, // Mã gói: free / startup / pro / enterprise
+    code: { type: String, uppercase: true, default: '' }, // Mã gói: free / startup / pro / enterprise
     name: { type: String, default: '' }, // Tên gói: FREE / STARTUP / PRO / ENTERPRISE
     priceMonth: { type: Number, default: 0 }, // Giá tháng (VNĐ)
     priceYear: { type: Number, default: 0 }, // Giá năm (VNĐ)

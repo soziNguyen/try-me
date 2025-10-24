@@ -39,6 +39,7 @@ $(function () {
     columns: [
       {
         data: 'name',
+        className: 'py-1',
         title: 'Tên',
         render: (data, type, row) => {
           if (type === 'display') {
@@ -103,7 +104,8 @@ $(function () {
               minute: '2-digit',
               second: '2-digit'
             })
-            return `<span class="number">${dateStr} ${timeStr}</span>`
+            const lastOrderDate = dateStr + ' ' + timeStr
+            return `<span class="number">${lastOrderDate || ''}</span>`
           }
           return data
         }
