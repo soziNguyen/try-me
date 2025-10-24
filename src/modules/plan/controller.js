@@ -307,7 +307,6 @@ export const upgradePlan = async (req, res) => {
     org.planExpiredAt = expireAt
     org.lastUpgradedAt = now
     await org.save()
-    console.log(plan)
 
     // Lưu lịch sử giao dịch
     await PlanTransaction.create({

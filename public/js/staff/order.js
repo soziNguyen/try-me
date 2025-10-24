@@ -163,7 +163,8 @@ function renderEmptyOrders(orders) {
                   data-order-id="${order._id}" 
                   type="button" 
                   role="tab" 
-                  aria-selected="${isActive}">
+                  aria-selected="${isActive}"
+                  ${isActive ? 'disabled' : ''}>
             ${order.code}
           </button>
         `
@@ -195,8 +196,10 @@ function renderEmptyOrders(orders) {
     btnCreateNewOrder.addEventListener('click', () => handleCreateNewOrder(btnCreateNewOrder))
   }
 
-  // Gán sự kiện click cho các tab hóa đơn
-  const tabButtons = emptyOrdersContainer.querySelectorAll('.nav-link[data-order-id]')
+  // Gán sự kiện click cho các tab hóa đơn (chỉ cho các tab không bị disabled)
+  const tabButtons = emptyOrdersContainer.querySelectorAll(
+    '.nav-link[data-order-id]:not([disabled])'
+  )
   tabButtons.forEach((tab) => {
     tab.addEventListener('click', () => {
       const orderId = tab.getAttribute('data-order-id')

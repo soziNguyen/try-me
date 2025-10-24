@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { units } from '../../../helpers/unitHelper.js'
+import { units } from '../../../helpers/productUnitHelper.js'
 
 // Khai báo schema cho ProductEntry
 const productEntrySchema = new mongoose.Schema(

@@ -205,14 +205,25 @@ export const updateMenu = async (req, res) => {
       organization: organizationId
     })
 
-    if (!menu) return responseHelper.error(res, 'Thực đơn không tồn tại', 404)
-    const existing = await MenuItem.findOne({
+    const existingName = await MenuItem.findOne({
       _id: { $ne: id },
       name,
       organization: organizationId
     })
 
-    if (existing) return responseHelper.error(res, 'Thực đơn đã tồn tại', 400)
+    const existingSku = await MenuItem.findOne({
+      _id: { $ne: id },
+      sku,
+      organization: organizationId
+    })
+
+    if (existingName) {
+      return responseHelper.error(res, 'Tên món đã tồn tại', 400)
+    }
+
+    if (existingSku) {
+      return responseHelper.error(res, 'SKU đã tồn tại', 400)
+    }
 
     const dataUpdate = { updatedBy: req.user._id }
 

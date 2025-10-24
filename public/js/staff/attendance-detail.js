@@ -21,27 +21,21 @@ $(function () {
 
         $tbody.append(`
           <tr>
-              <td class="text-center">${shiftName}</td>
-              <td class="text-center">${shiftStart}</td>
-              <td class="text-center">${shiftEnd}</td>
-              <td class="text-center">${formatTime(s.checkIn)}</td>
-              <td class="text-center">${formatTime(s.checkOut)}</td>
-              <td class="text-center">${formatDuration(s.duration)}</td>
+              <td class="text-center py-1">${shiftName}</td>
+              <td class="text-center py-1">${shiftStart}</td>
+              <td class="text-center py-1">${shiftEnd}</td>
+              <td class="text-center py-1">${formatTime(s.checkIn)}</td>
+              <td class="text-center py-1">${formatTime(s.checkOut)}</td>
+              <td class="text-center py-1">${formatDuration(s.duration)}</td>
           </tr>
         `)
       })
     } else {
-      $tbody.append(
-        '<tr><td colspan="6" class="text-center">Không có ca làm việc</td></tr>'
-      )
+      $tbody.append('<tr><td colspan="6" class="text-center">Không có ca làm việc</td></tr>')
     }
   }
 
-  Promise.all([
-    attendanceId
-      ? fetchData(`attendance/${attendanceId}`)
-      : Promise.resolve(null)
-  ])
+  Promise.all([attendanceId ? fetchData(`attendance/${attendanceId}`) : Promise.resolve(null)])
     .then(([att]) => fillData(att))
     .catch((err) => console.log(err))
 })

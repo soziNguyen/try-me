@@ -69,6 +69,7 @@ async function fillPlanInfoAndSetupConfirm(planId, mode) {
 
       const code = codeInput.value.trim()
       if (!code) {
+        toastr.remove()
         toastr.warning('Vui lòng nhập mã giảm giá.')
         return
       }

@@ -689,7 +689,7 @@ export const productStockPage = (req, res) => {
 export const receiptsPage = (req, res) => {
   res.render(
     'revenue-expenditure/payment-receipts',
-    getPageData(req, 'Phiếu Thu', 'payment receipts', {
+    getPageData(req, 'Phiếu Thu', 'PaymentReceipts', {
       headerClass: 'admin__header',
       pageTitle: 'Phiếu Thu'
     })
@@ -699,7 +699,7 @@ export const receiptsPage = (req, res) => {
 export const expensesPage = (req, res) => {
   res.render(
     'revenue-expenditure/payment-expenses',
-    getPageData(req, 'Phiếu Chi', 'payment expenses', {
+    getPageData(req, 'Phiếu Chi', 'PaymentExpenses', {
       headerClass: 'admin__header',
       pageTitle: 'Phiếu Chi'
     })

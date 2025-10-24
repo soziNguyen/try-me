@@ -59,38 +59,37 @@ $(function () {
         },
         {
           data: 'attendance.date',
-          className: 'text-center',
+          className: 'text-center py-2',
           render: (d) => (d ? new Date(d).toISOString().slice(0, 10) : '')
         },
         {
           data: 'attendance.status',
-          className: 'text-center',
           render: (s) => {
-            if (s === 'present') return 'Có mặt'
-            if (s === 'absent') return 'Vắng'
-            if (s === 'late') return 'Đi muộn'
-            return 'Nghỉ phép'
+            if (s === 'present') return '<span class="text">Có mặt</span>'
+            if (s === 'absent') return '<span class="text">Vắng</span>'
+            if (s === 'late') return '<span class="text">Đi muộn</span>'
+            return '<span class="text">Nghỉ phép</span>'
           }
         },
         {
           data: 'attendance.sessions',
           className: 'text-center',
-          render: (s) => (Array.isArray(s) ? s.length : 0)
+          render: (s) => `<span class="number">${Array.isArray(s) ? s.length : 0}</span>`
         },
         {
           data: 'workingMinutes',
-          className: 'text-end',
-          render: (w) => (w / 60).toFixed(1) + 'h'
+          className: 'text-center',
+          render: (w) => `<span>${(w / 60).toFixed(1) + 'h' || 0}</span>`
         },
         {
           data: 'dailySalary',
-          className: 'text-end',
-          render: (s) => s.toLocaleString('vi-VN') + ' đ'
+          className: 'text-center',
+          render: (s) => `<span>${s.toLocaleString('vi-VN') + ' đ'}</span>`
         },
         {
           data: 'attendance.note',
           className: 'text-center',
-          render: (n) => n || ''
+          render: (n) => `<span>${n || ''}</span>`
         }
       ],
       rowCallback: function (row, data) {

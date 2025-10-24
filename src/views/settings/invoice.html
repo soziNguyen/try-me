@@ -1,63 +1,135 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/org_sidebar.html') %>
     <div class="admin__content">
-      <h2>
-        <%= pageTitle %>
-      </h2>
-      <div class="invoiceOptions">
-        <form id="invoiceOptionsForm">
-          <h5>Logo</h5>
-          <div class="mb-3 col-md-6">
-            <label>Logo</label>
-            <div class="input-group">
-              <input type="file" class="invoice-field form-control" name="logo" id="logoInput">
-              <button class="btn btn-outline-secondary" type="button" id="previewLogoBtn" disabled>
-                <i class="bi bi-eye"></i>
-              </button>
-              <button class="btn btn-outline-danger" type="button" id="removeLogoBtn" disabled>
-                <i class="bi bi-trash"></i>
-              </button>
+      <div class="container-fluid py-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+          <div class="col">
+            <h2 class="fw-bold text-primary mb-1">
+              <%= pageTitle %>
+            </h2>
+            <p class="text-muted mb-0">Tùy chỉnh thông tin xuất hiện trên hóa đơn của bạn</p>
+          </div>
+        </div>
+
+        <div class="invoiceOptions">
+          <form id="invoiceOptionsForm">
+            <!-- Logo Section -->
+            <div class="card shadow-sm mb-4 border-0">
+              <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="bg-primary bg-opacity-10 rounded-circle px-2 py-1 me-3">
+                    <i class="bi bi-image text-primary fs-5"></i>
+                  </div>
+                  <h5 class="mb-0 fw-semibold">Logo</h5>
+                </div>
+
+                <div class="row">
+                  <div class="col-lg-8">
+                    <label class="form-label text-muted small">Tải lên logo của bạn</label>
+                    <div class="input-group mb-3">
+                      <input type="file" class="invoice-field form-control" name="logo" id="logoInput">
+                      <button class="btn btn-outline-primary" type="button" id="previewLogoBtn" disabled>
+                        <i class="bi bi-eye me-1"></i> Xem
+                      </button>
+                      <button class="btn btn-outline-danger" type="button" id="removeLogoBtn" disabled>
+                        <i class="bi bi-trash me-1"></i> Xóa
+                      </button>
+                    </div>
+                    <div class="text-muted small">
+                      <i class="bi bi-info-circle me-1"></i>
+                      Định dạng khuyến nghị: PNG, JPG
+                    </div>
+                  </div>
+                  <div class="col-lg-4">
+                    <img id="logoPreview" src="" class="mt-2 img-fluid d-none border rounded mh-400 shadow-sm"
+                      alt="Preview Logo">
+                  </div>
+                </div>
+              </div>
             </div>
-            <img id="logoPreview" src="" class="mt-2 img-fluid d-none border rounded mh-400" alt="Preview Logo">
-          </div>
 
-          <h5>Tiêu đề & Tiền tố</h5>
-          <div class="row">
-            <div class="mb-3 col-md-6">
-              <label>Tiêu đề hóa đơn</label>
-              <input type="text" class="invoice-field form-control" name="invoiceTitle">
+            <!-- Title & Prefix Section -->
+            <div class="card shadow-sm mb-4 border-0">
+              <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="bg-success bg-opacity-10 rounded-circle px-2 py-1 me-3">
+                    <i class="bi bi-pencil-square text-success fs-5"></i>
+                  </div>
+                  <h5 class="mb-0 fw-semibold">Tiêu đề & Tiền tố</h5>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label text-muted small">Tiêu đề hóa đơn</label>
+                    <input type="text" class="invoice-field form-control" name="invoiceTitle"
+                      placeholder="VD: HÓA ĐƠN BÁN HÀNG">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-muted small">Tiền tố hóa đơn</label>
+                    <input type="text" class="invoice-field form-control" name="prefix" placeholder="VD: INV, HD">
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="mb-3 col-md-6">
-              <label>Tiền tố hóa đơn</label>
-              <input type="text" class="invoice-field form-control" name="prefix">
+
+            <!-- Header Section -->
+            <div class="card shadow-sm mb-4 border-0">
+              <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="bg-info bg-opacity-10 rounded-circle px-2 py-1 me-3">
+                    <i class="bi bi-layout-text-window-reverse text-info fs-5"></i>
+                  </div>
+                  <div>
+                    <h5 class="mb-0 fw-semibold">Header hóa đơn</h5>
+                    <small class="text-muted">Thông tin hiển thị ở đầu hóa đơn</small>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <textarea id="headerEditor" name="header" class="invoice-field"></textarea>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <h5>Header</h5>
-          <div class="mb-3">
-            <textarea id="headerEditor" name="header" class="invoice-field"></textarea>
-          </div>
+            <!-- Footer Section -->
+            <div class="card shadow-sm mb-4 border-0">
+              <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="bg-warning bg-opacity-10 rounded-circle px-2 py-1 me-3">
+                    <i class="bi bi-layout-text-window text-warning fs-5"></i>
+                  </div>
+                  <div>
+                    <h5 class="mb-0 fw-semibold">Footer hóa đơn</h5>
+                    <small class="text-muted">Thông tin hiển thị ở cuối hóa đơn</small>
+                  </div>
+                </div>
 
-          <h5>Footer</h5>
-          <div class="mb-3">
-            <textarea id="footerEditor" name="footer" class="invoice-field"></textarea>
-          </div>
-        </form>
-
+                <div class="mb-3">
+                  <textarea id="footerEditor" name="footer" class="invoice-field"></textarea>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
-
     </div>
     </div>
 
+    <!-- Logo Preview Modal -->
     <div class="modal fade" id="logoPreviewModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Xem logo</h5>
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-light border-0">
+            <h5 class="modal-title fw-semibold">
+              <i class="bi bi-eye me-2"></i>Xem trước logo
+            </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body text-center">
-            <img id="logoPreviewImg" src="" class="img-fluid">
+          <div class="modal-body text-center p-4 bg-light">
+            <div class="bg-white rounded p-3 d-inline-block">
+              <img id="logoPreviewImg" src="" class="img-fluid">
+            </div>
           </div>
         </div>
       </div>

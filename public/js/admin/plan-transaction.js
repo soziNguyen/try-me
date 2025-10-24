@@ -138,23 +138,6 @@ $(function () {
       ],
       rowCallback: function (row, data) {
         $(row).attr('data-id', data._id)
-      },
-      initComplete: function () {
-        $('.right-group').html(`
-          <div class="btn-group flex-wrap mb-2">
-            <button class="btn btn-outline-danger me-2" id="deleteCouponBtn">
-              <i class="bi bi-trash"></i> Xóa
-            </button>
-            <button class="btn btn-outline-success" id="addCouponBtn">
-              <i class="bi bi-plus-circle"></i> Thêm
-            </button>
-          </div>
-        `)
-
-        $('.editBtn').on('click', function () {
-          const couponId = $(this).data('id')
-          window.location.href = `/coupon/${couponId}`
-        })
       }
     })
 
