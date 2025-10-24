@@ -1,0 +1,38 @@
+<%- include('../partials/header.html') %>
+  <%- include('../partials/admin_sidebar.html') %>
+    <div class="admin__content">
+      <h2 class="mb-3 bold">
+        <%= pageTitle %>
+      </h2>
+
+      <table id="planTransactionTable" class="table">
+        <thead>
+          <tr>
+            <th>Tổ chức</th>
+            <th>Gói đăng ký</th>
+            <th>Chu kì</th>
+            <th>Giá gốc</th>
+            <th>Giảm</th>
+            <th>Tổng trước thuế</th>
+            <th>Vat (8%)</th>
+            <th>Tổng sau thuế</th>
+            <th>Ngày đăng ký</th>
+            <th>Ngày hết hạn</th>
+          </tr>
+        </thead>
+        <tbody id="planTransactionTableBody">
+        </tbody>
+      </table>
+
+    </div>
+
+    </div>
+    </div>
+
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+    <%- include('../partials/commonjs.html') %>
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/data-table.js"></script>
+      <script src="/js/admin/admin-org.js"></script>
+      <script src="/js/admin/plan-transaction.js"></script>
+      <%- include('../partials/footer.html') %>

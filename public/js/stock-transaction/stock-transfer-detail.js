@@ -30,7 +30,6 @@ $(function () {
       warehouses = whs
 
       initForm()
-      console.log(stockTransfer)
 
       if (stockTransfer) {
         populateForm(stockTransfer, stockTransfer.fromWarehouse?.name)

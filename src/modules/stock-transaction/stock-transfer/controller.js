@@ -609,8 +609,6 @@ export const deleteStockTransfers = async (req, res) => {
         throw new BusinessError('Một số phiếu chuyển kho không tồn tại', 404)
       }
 
-      console.log(transfers)
-
       // Kiểm tra phiếu đã khóa
       const lockedTransfers = transfers.filter((t) => t.isLocked)
       if (lockedTransfers.length > 0) {

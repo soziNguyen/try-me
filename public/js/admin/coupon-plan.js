@@ -104,33 +104,11 @@ $(function () {
           data: 'applicablePlans',
           orderable: false,
           render: (data, type, row) => {
-            if (type === 'display') {
-              // Chỉ fill những option được chọn
-              if (Array.isArray(data) && data.length > 0) {
-                const options = data
-                  .map((p) => `<option value="${p._id}" selected>${p.name}</option>`)
-                  .join('')
-
-                return `
-                  <select class="dataInput form-select border-0" multiple>
-                    ${options}
-                  </select>
-                `
-              }
-
-              // Nếu không có gói cụ thể => "Tất cả các gói"
-              return `
-                <select class="dataInput form-select border-0" multiple>
-                  <option selected value="">Tất cả các gói</option>
-                </select>
-              `
-            }
-
-            // Export text
+            // Khi hiển thị (display/export)
             if (Array.isArray(data) && data.length > 0) {
-              return data.map((p) => p.name).join(', ')
+              return data.map((p) => `<span class="text">${p.name}</span>`).join('<br>')
             }
-            return 'Tất cả các gói'
+            return `<span class="text">Tất cả các gói</span>`
           }
         },
         {
@@ -167,20 +145,15 @@ $(function () {
             return data ? new Date(data).toLocaleDateString('vi-VN') : ''
           }
         },
+
         {
           data: 'usageLimit',
           className: 'text-center',
           render: (data, type) => {
             if (type === 'display') {
-              return `
-                <input type="number"
-                  class="dataInput form-control w-100 border-0 text-center" 
-                  placeholder="Không giới hạn" 
-                  data-field="usageLimit"
-                  value="${data !== null && data !== undefined ? data : ''}"
-                  min="0"
-                >
-              `
+              return data !== null && data !== undefined
+                ? `<span>${data}</span>`
+                : `<span class="text-muted">0</span>`
             }
             return data !== null && data !== undefined ? data : 'Không giới hạn'
           }

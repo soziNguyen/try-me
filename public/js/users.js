@@ -114,7 +114,6 @@ if (logInForm) {
 
     try {
       const result = await ajax('/api/organization/create', data)
-      console.log(result)
 
       if (result) {
         toastr.success(

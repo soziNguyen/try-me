@@ -773,7 +773,6 @@ export const couponPlanDetailPage = async (req, res) => {
 
 export const orgDetailPage = async (req, res) => {
   const orgId = req.params.id
-  console.log(orgId)
 
   res.render(
     'admin/org_detail',
@@ -781,6 +780,16 @@ export const orgDetailPage = async (req, res) => {
       headerClass: 'admin__header',
       pageTitle: 'CHI TIẾT TỔ CHỨC',
       orgId
+    })
+  )
+}
+
+export const planTransactionPage = async (req, res) => {
+  res.render(
+    'admin/plan_transaction',
+    getPageData(req, 'Lịch sử thanh toán', 'Plan Transaction', {
+      headerClass: 'admin__header',
+      pageTitle: 'LỊCH SỬ THANH TOÁN'
     })
   )
 }

@@ -251,7 +251,6 @@ export const deleteCouponPlan = async (req, res) => {
 export const applyCouponPlan = async (req, res) => {
   try {
     const { code, totalAmount, planId } = req.body
-    console.log(code, totalAmount, planId)
 
     if (!code) return responseHelper.error(res, 'Vui lòng nhập mã giảm giá', 400)
     if (!totalAmount) return responseHelper.error(res, 'Thiếu tổng tiền để áp dụng', 400)
@@ -279,7 +278,7 @@ export const applyCouponPlan = async (req, res) => {
       const planIdStr = String(planId)
       const isApplicable = coupon.applicablePlans.some((p) => String(p) === planIdStr)
       if (!isApplicable) {
-        return responseHelper.error(res, 'Mã giảm giá không áp dụng cho gói này', 400)
+        return responseHelper.error(res, 'Mã giảm giá không hợp lệ hoặc đã hết hạn sử dụng', 400)
       }
     }
 
@@ -310,41 +309,6 @@ export const applyCouponPlan = async (req, res) => {
       vatAmount,
       totalAfterVAT
     })
-  } catch (error) {
-    responseHelper.error(res, error.message)
-  }
-}
-
-export const confirmCouponPlanUsage = async (req, res) => {
-  try {
-    const { couponId } = req.body
-    if (!couponId) return responseHelper.error(res, 'Thiếu mã giảm giá', 400)
-
-    const now = new Date()
-
-    const coupon = await CouponPlan.findOneAndUpdate(
-      {
-        _id: couponId,
-        isActive: true,
-        startDate: { $lte: now },
-        endDate: { $gte: now },
-        $expr: {
-          $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
-        }
-      },
-      { $inc: { usedCount: 1 } },
-      { new: true }
-    )
-
-    if (!coupon) {
-      return responseHelper.error(
-        res,
-        'Mã giảm giá không còn hợp lệ hoặc đã vượt quá lượt sử dụng',
-        400
-      )
-    }
-
-    responseHelper.success(res, coupon, 'Xác nhận sử dụng mã giảm giá thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }

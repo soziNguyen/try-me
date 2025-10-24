@@ -2,6 +2,8 @@ import responseHelper from '../../helpers/responseHelper.js'
 import Plan from './model.js'
 import Organization from '../organization/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
+import CouponPlan from '../coupon-plan/model.js'
+import PlanTransaction from '../plan-transaction/model.js'
 
 // Lấy tất cả các gói (chỉ hiển thị gói active)
 export const getActivePlans = async (req, res) => {
@@ -218,7 +220,8 @@ export const hardDeletePlan = async (req, res) => {
 export const upgradePlan = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    const { planId, mode } = req.body // mode: 'month' | 'year'
+    const { planId, mode, couponCode } = req.body // mode: 'month' | 'year'
+    const now = new Date()
 
     if (!organizationId) {
       return responseHelper.error(res, 'Không tìm thấy tổ chức hiện tại', 400)
@@ -240,7 +243,7 @@ export const upgradePlan = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy tổ chức', 404)
     }
 
-    // Nếu đang dùng cùng gói thì báo lại
+    // Kiểm tra nếu cùng gói hoặc hạ cấp
     if (org.plan && org.plan.code === plan.code) {
       return responseHelper.error(res, 'Bạn đang sử dụng gói này rồi', 400)
     }
@@ -249,8 +252,49 @@ export const upgradePlan = async (req, res) => {
       return responseHelper.error(res, 'Không thể hạ cấp sang gói thấp hơn', 400)
     }
 
-    // === Xác định hạn sử dụng ===
-    const now = new Date()
+    // Tính giá
+    const basePrice = mode === 'year' ? plan.priceYear : plan.priceMonth
+    let discountAmount = 0
+    let couponUsed = null
+
+    if (couponCode) {
+      const coupon = await CouponPlan.findOneAndUpdate(
+        {
+          isActive: true,
+          code: couponCode,
+          startDate: { $lte: now },
+          endDate: { $gte: now },
+          $expr: {
+            $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
+          }
+        },
+        { $inc: { usedCount: 1 } },
+        { new: true }
+      )
+
+      if (!coupon) {
+        return responseHelper.error(
+          res,
+          'Mã giảm giá không còn hợp lệ hoặc đã hết lượt sử dụng',
+          400
+        )
+      }
+
+      if (coupon.discountType === 'percent') {
+        discountAmount = (basePrice * coupon.discountValue) / 100
+      } else if (coupon.discountType === 'amount') {
+        discountAmount = coupon.discountValue
+      }
+
+      couponUsed = coupon
+    }
+
+    const subtotal = Math.max(basePrice - discountAmount, 0)
+    const vatRate = 0.08 // VAT 8%
+    const vat = subtotal * vatRate
+    const total = subtotal + vat
+
+    // Xác định hạn sử dụng
     const expireAt = new Date()
     if (mode === 'year') {
       expireAt.setFullYear(expireAt.getFullYear() + 1)
@@ -258,19 +302,37 @@ export const upgradePlan = async (req, res) => {
       expireAt.setMonth(expireAt.getMonth() + 1)
     }
 
-    // === Cập nhật tổ chức ===
+    // Cập nhật tổ chức
     org.plan = plan._id
     org.planExpiredAt = expireAt
     org.lastUpgradedAt = now
     await org.save()
+    console.log(plan)
 
-    // === Phản hồi về frontend ===
+    // Lưu lịch sử giao dịch
+    await PlanTransaction.create({
+      organization: organizationId,
+      plan: plan._id,
+      mode,
+      amount: basePrice,
+      discountAmount,
+      couponCode: couponUsed?.code || null,
+      subtotal,
+      vat,
+      total,
+      paidAt: now,
+      expiredAt: expireAt,
+      note: `Tổ chức ${org.name} nâng cấp gói ${plan.name}`
+    })
+
+    // Trả về
     responseHelper.success(
       res,
       {
         planId: plan._id,
         planName: plan.name,
-        planExpiredAt: expireAt
+        planExpiredAt: expireAt,
+        total
       },
       'Nâng cấp gói thành công'
     )
