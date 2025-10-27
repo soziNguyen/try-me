@@ -126,9 +126,8 @@ export const searchCustomers = async (req, res) => {
       .select('name phone totalPoints')
       .lean()
 
-    res.json({ data: customers })
+    responseHelper.success(res, customers)
   } catch (error) {
-    console.error('Error in searchCustomers:', error)
     responseHelper.error(res, error.message)
   }
 }
@@ -155,13 +154,11 @@ export const createCustomer = async (req, res) => {
     if (!customer) {
       try {
         customer = await Customer.create({
-          name,
-          phone,
           organization: organizationId,
-          totalPoints: 0
+          name,
+          phone
         })
       } catch (e) {
-        // Duplicate key hoặc lỗi khác
         return responseHelper.error(res, 'Khách hàng đã tồn tại', 409)
       }
     }
@@ -173,7 +170,6 @@ export const createCustomer = async (req, res) => {
       totalPoints: customer.totalPoints || 0
     })
   } catch (error) {
-    console.error('Error in createCustomer:', error)
     return responseHelper.error(res, 'Không thể tạo khách hàng')
   }
 }

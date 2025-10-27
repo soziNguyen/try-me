@@ -93,19 +93,23 @@ $(function () {
         title: 'Đơn hàng cuối',
         render: (data, type, row) => {
           if (type === 'display') {
-            const dt = new Date(data)
-            const dateStr = dt.toLocaleDateString('vi-VN', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric'
-            })
-            const timeStr = dt.toLocaleTimeString('vi-VN', {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit'
-            })
-            const lastOrderDate = dateStr + ' ' + timeStr
-            return `<span class="number">${lastOrderDate || ''}</span>`
+            if (data !== null) {
+              const dt = new Date(data)
+              const dateStr = dt.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })
+              const timeStr = dt.toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+              })
+              const lastOrderDate = dateStr + ' ' + timeStr
+              console.log(lastOrderDate)
+
+              return `<span class="number">${lastOrderDate ?? ''}</span>`
+            }
           }
           return data
         }

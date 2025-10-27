@@ -841,10 +841,11 @@ $(async () => {
       const customer = order.customerId
 
       initSelect2()
-      const $select = $('#customer-select') // giả sử select khách hàng có id này
+      const $select = $('#customerSelect') // giả sử select khách hàng có id này
 
       if (customer?._id) {
         const option = new Option(`${customer.name} - ${customer.phone}`, customer._id, true, true)
+
         $(option).data('points', customer.totalPoints || 0)
         $select.append(option).trigger('change')
         updatePoints(customer.totalPoints)
