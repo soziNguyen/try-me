@@ -12,6 +12,36 @@
     </div>
     </div>
     </div>
+
+    <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addCustomerModalLabel">Thêm khách hàng mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addCustomerForm">
+              <div class="mb-3">
+                <label for="newCustomerName" class="form-label">Tên khách hàng</label>
+                <input type="text" class="form-control" id="customerName">
+              </div>
+              <div class="mb-3">
+                <label for="newCustomerPhone" class="form-label">Số điện thoại</label>
+                <input type="text" class="form-control" id="customerPhone">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" id="addCustomerBtn" form="addCustomerForm" class="btn btn-primary"
+              id="addCustomerBtn">Thêm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <%- include('../partials/commonjs.html') %>
       <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
       <script src="/js/sidebar-toggle.js"></script>

@@ -173,3 +173,28 @@ export const createCustomer = async (req, res) => {
     return responseHelper.error(res, 'Không thể tạo khách hàng')
   }
 }
+
+export const deleteCustomers = async (req, res) => {
+  try {
+    const { ids } = req.body
+
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return responseHelper.error(res, 'Vui lòng chọn ít nhất 1 bản ghi để xóa', 400)
+    }
+    const result = await Customer.deleteMany({
+      _id: { $in: ids },
+      organization: organizationId
+    })
+
+    responseHelper.success(
+      res,
+      { deletedCount: result.deletedCount },
+      `Đã xóa ${result.deletedCount} bản ghi`
+    )
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}

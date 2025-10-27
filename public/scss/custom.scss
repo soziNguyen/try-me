@@ -2,6 +2,7 @@ $tables: ingredient, menu, combo;
 
 @each $name in $tables {
   ##{$name}Table_wrapper {
+    padding: 0.5rem;
     .dt-search {
       .dt-input {
         margin-right: 0 !important;
@@ -259,8 +260,8 @@ table {
       padding-left: 4px;
 
       &:hover {
-        background-color: var(--link) !important;
-        color: var(--white);
+        // background-color: var(--link) !important;
+        // color: var(--white);
         cursor: pointer;
       }
 

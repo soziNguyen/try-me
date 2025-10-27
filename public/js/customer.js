@@ -38,6 +38,14 @@ $(function () {
     pageLength: numRows,
     columns: [
       {
+        data: null,
+        orderable: false,
+        title: '<input type="checkbox" id="selectAll">',
+        className: 'text-center',
+        render: (data, type, row) =>
+          `<input type="checkbox" class="customerCheckbox" data-id="${row._id}">`
+      },
+      {
         data: 'name',
         className: 'py-1',
         title: 'Tên',
@@ -118,6 +126,69 @@ $(function () {
     rowCallback: function (row, data) {
       // Tag row with data-id for update
       $(row).attr('data-id', data._id)
+    },
+    initComplete: function () {
+      $('.right-group').html(
+        `
+          <div class="btn-group flex-wrap">
+            <button class="btn btn-outline-danger me-2" id="deleteCustomerBtn">
+              <i class="bi bi-trash"></i> Xóa
+            </button>
+            <button class="btn btn-outline-success" id="addCustomerBtn">
+              <i class="bi bi-plus-circle"></i> Thêm
+            </button>
+          </div>
+        `
+      )
     }
   })
+
+  // show modal
+  addCustomerHandler()
+
+  const csrfToken = $('#_csrf').val()
+  const inputs = ['customerName', 'customerPhone']
+
+  // submit form
+  $('#addCustomerForm').on('submit', function (e) {
+    e.preventDefault()
+    const data = {
+      name: $('#customerName').val(),
+      phone: $('#customerPhone').val()
+    }
+
+    $.ajax({
+      url: '/api/customers/create',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      headers: { 'x-csrf-token': csrfToken },
+      success: function (res) {
+        if (res.success) {
+          toastr.remove()
+          hideModal('addCustomerModal')
+          toastr.success(res.message)
+
+          //reset input
+          inputs.forEach((id) => {
+            const el = document.getElementById(id)
+            if (el) el.value = ''
+          })
+          table.ajax.reload()
+        }
+      },
+      error: function (xhr) {
+        console.error(xhr.responseJSON?.message || 'Có lỗi xảy ra!!')
+      }
+    })
+  })
+  handlerDeleteEvent('#customerTable', '#deleteCustomerBtn', 'customerCheckbox', 'customer')
+  initTableCheckboxEvents('#customerTable', 'customerCheckbox')
 })
+
+function addCustomerHandler() {
+  $('#customerTable_wrapper').on('click', '#addCustomerBtn', function () {
+    const modal = showModal('addCustomerModal')
+    modal.show()
+  })
+}
