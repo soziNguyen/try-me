@@ -107,7 +107,37 @@ export const getProductEntries = async (req, res) => {
       { $match: matchCondition },
       ...lookupRef('warehouse', 'Warehouses'),
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
-      ...lookupRef('items.product', 'MenuItems', { as: 'product' }),
+
+      // Lookup cho cả MenuItem và Combo
+      {
+        $lookup: {
+          from: 'MenuItems',
+          localField: 'items.product',
+          foreignField: '_id',
+          as: 'menuItemProduct'
+        }
+      },
+      {
+        $lookup: {
+          from: 'Combos',
+          localField: 'items.product',
+          foreignField: '_id',
+          as: 'comboProduct'
+        }
+      },
+      // Gộp kết quả từ cả 2 collection
+      {
+        $addFields: {
+          product: {
+            $cond: {
+              if: { $eq: ['$items.productType', 'MenuItem'] },
+              then: { $arrayElemAt: ['$menuItemProduct', 0] },
+              else: { $arrayElemAt: ['$comboProduct', 0] }
+            }
+          }
+        }
+      },
+
       ...lookupUser('createdBy')
     ]
 
@@ -159,6 +189,7 @@ export const getProductEntries = async (req, res) => {
             $cond: {
               if: { $ifNull: ['$items', false] },
               then: {
+                productType: '$items.productType',
                 product: '$product',
                 quantity: '$items.quantity',
                 unit: '$items.unit',
@@ -239,9 +270,15 @@ export const updateProductEntry = async (req, res) => {
       const items = []
 
       for (const item of rawItems) {
+        // Validate productType
+        if (!item.productType || !['MenuItem', 'Combo'].includes(item.productType)) {
+          throw new BusinessError('Loại sản phẩm không hợp lệ', 400)
+        }
+
         if (!mongoose.isValidObjectId(item.product)) {
           throw new BusinessError('ID sản phẩm không hợp lệ', 400)
         }
+
         const quantity = parseInt(item.quantity) || 0
         if (quantity <= 0) {
           throw new BusinessError('Số lượng phải lớn hơn 0', 400)
@@ -256,6 +293,7 @@ export const updateProductEntry = async (req, res) => {
         subTotal += itemTotal
 
         items.push({
+          productType: item.productType,
           product: item.product,
           quantity,
           unit: item.unit || null,
@@ -268,11 +306,19 @@ export const updateProductEntry = async (req, res) => {
       for (const item of oldEntry.items) {
         if (item.product && item.quantity > 0) {
           // Kiểm tra tồn kho hiện tại trước khi trừ
-          const currentStock = await ProductStock.findOne({
-            product: item.product,
+          const stockQuery = {
             warehouse: warehouse,
             organization: organizationId
-          }).session(session)
+          }
+
+          // Xác định trường product dựa vào productType
+          if (item.productType === 'Combo') {
+            stockQuery.combo = item.product
+          } else {
+            stockQuery.product = item.product
+          }
+
+          const currentStock = await ProductStock.findOne(stockQuery).session(session)
 
           if (currentStock && currentStock.quantity < item.quantity) {
             throw new BusinessError(
@@ -282,11 +328,7 @@ export const updateProductEntry = async (req, res) => {
           }
 
           await ProductStock.updateOne(
-            {
-              product: item.product,
-              warehouse: warehouse,
-              organization: organizationId
-            },
+            stockQuery,
             { $inc: { quantity: -item.quantity } },
             { session }
           )
@@ -315,12 +357,20 @@ export const updateProductEntry = async (req, res) => {
       // Cộng tồn kho mới
       for (const item of newEntry.items) {
         if (item.product && item.quantity > 0) {
+          const stockQuery = {
+            warehouse: warehouse,
+            organization: organizationId
+          }
+
+          // Xác định trường product dựa vào productType
+          if (item.productType === 'Combo') {
+            stockQuery.combo = item.product
+          } else {
+            stockQuery.product = item.product
+          }
+
           await ProductStock.updateOne(
-            {
-              product: item.product,
-              warehouse: warehouse,
-              organization: organizationId
-            },
+            stockQuery,
             {
               $inc: { quantity: item.quantity }
             },
@@ -332,7 +382,7 @@ export const updateProductEntry = async (req, res) => {
       await newEntry.populate([
         { path: 'warehouse', select: 'name location' },
         { path: 'createdBy updatedBy lockedBy', select: 'username' },
-        { path: 'items.product', select: 'name' }
+        { path: 'items.product', select: 'name' } // refPath tự động populate đúng model
       ])
 
       return newEntry
@@ -387,12 +437,20 @@ export const deleteProductEntries = async (req, res) => {
         if (entry.warehouse) {
           for (const item of entry.items) {
             if (item.product && item.quantity > 0) {
-              // Kiểm tra tồn kho hiện tại trước khi trừ
-              const currentStock = await ProductStock.findOne({
-                product: item.product,
+              const stockQuery = {
                 warehouse: entry.warehouse,
                 organization: organizationId
-              }).session(session)
+              }
+
+              // Xác định trường product dựa vào productType
+              if (item.productType === 'Combo') {
+                stockQuery.combo = item.product
+              } else {
+                stockQuery.product = item.product
+              }
+
+              // Kiểm tra tồn kho hiện tại trước khi trừ
+              const currentStock = await ProductStock.findOne(stockQuery).session(session)
 
               if (currentStock && currentStock.quantity < item.quantity) {
                 throw new BusinessError(
@@ -410,12 +468,20 @@ export const deleteProductEntries = async (req, res) => {
         if (entry.warehouse) {
           for (const item of entry.items) {
             if (item.product && item.quantity > 0) {
+              const stockQuery = {
+                warehouse: entry.warehouse,
+                organization: organizationId
+              }
+
+              // Xác định trường product dựa vào productType
+              if (item.productType === 'Combo') {
+                stockQuery.combo = item.product
+              } else {
+                stockQuery.product = item.product
+              }
+
               await ProductStock.updateOne(
-                {
-                  product: item.product,
-                  warehouse: entry.warehouse,
-                  organization: organizationId
-                },
+                stockQuery,
                 { $inc: { quantity: -item.quantity } },
                 { session }
               )
