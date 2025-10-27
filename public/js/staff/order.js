@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const orderRes = await fetch(`/api/orders/${orderId}`)
       searchInput.focus()
       const orderData = await orderRes.json()
-      if (orderRes.ok) updateOrderUI(orderData)
+      if (orderRes.ok) updateOrderUI(orderData.data)
     } else {
       const warningDiv = document.getElementById('orderWarning')
       if (warningDiv) {
@@ -835,7 +835,9 @@ $(async () => {
       const res = await fetch(`/api/orders/${orderId}`)
 
       if (!res.ok) throw new Error('Không lấy được dữ liệu hóa đơn')
-      const order = await res.json()
+      const data = await res.json()
+      const order = data.data
+
       const customer = order.customerId
 
       initSelect2()
