@@ -97,8 +97,11 @@ router.get('/product/entries', isAuthenticated, page.productEntryPage)
 router.get('/product/entry/:id', isAuthenticated, page.newProductEntryPage)
 router.get('/product/stocks', isAuthenticated, page.productStockPage)
 
+//payment
+router.get('/payment-expenses/:id', isAuthenticated, page.newExpensesPage)
 router.get('/payment-receipts', isAuthenticated, page.receiptsPage)
 router.get('/payment-expenses', isAuthenticated, page.expensesPage)
+
 router.get('/upgrade', isAuthenticated, page.upgradePage)
 router.get('/plans', isAuthenticated, isAdmin, page.planPage)
 router.get('/checkout/:id', isAuthenticated, page.checkoutPlan)

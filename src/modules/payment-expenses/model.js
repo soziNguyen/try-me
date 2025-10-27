@@ -1,39 +1,47 @@
 import mongoose from 'mongoose'
+import { units } from '../../helpers/productUnitHelper.js'
 
-const expenseEntrySchema = new mongoose.Schema(
+// Khai báo schema cho ProductExpense (phiếu chi)
+const productExpenseSchema = new mongoose.Schema(
   {
-    code: { type: String, required: true }, // Mã phiếu chi
+    code: { type: String, default: '' }, // Mã phiếu
     date: { type: Date, default: Date.now }, // Ngày chi
-    createdBy: {
+    warehouse: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    }, // Người tạo
-    supplier: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Supplier',
+      ref: 'Warehouse',
       default: null
-    }, // Nhà cung cấp
+    },
+    // Danh sách các mặt hàng trong phiếu chi
     items: [
       {
         product: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'Product', // Hoặc 'Ingredient'
-          required: true
-        }, // Sản phẩm
-        quantity: { type: Number, required: true }, // Số lượng
-        unitPrice: { type: Number, required: true }, // Giá
-        total: { type: Number, default: 0 } // Tính tự động: quantity * unitPrice
+          ref: 'MenuItem',
+          default: null
+        },
+        quantity: { type: Number, default: 0 },
+        unit: { type: String, enum: units, default: 'cái' },
+        unitPrice: { type: Number, default: 0 },
+        total: { type: Number, default: 0 } // Tổng theo item
       }
     ],
-    note: { type: String, default: '' } // Ghi chú
+    total: { type: Number, default: 0 }, // Tổng tiền của phiếu chi
+    reason: { type: String, default: '' },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
+    isLocked: { type: Boolean, default: false },
+    lockedAt: { type: Date, default: null },
+    lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   },
   {
-    collection: 'ExpenseEntries',
-    timestamps: true // Tạo createdAt, updatedAt tự động
+    collection: 'ProductExpenses', // Tên collection mới
+    timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
   }
 )
 
-const ExpenseEntry = mongoose.model('ExpenseEntry', expenseEntrySchema)
+productExpenseSchema.index({ organization: 1, code: 1 }, { unique: true })
 
-export { ExpenseEntry }
+const ProductExpense = mongoose.model('ProductExpense', productExpenseSchema)
+
+export { ProductExpense, units }
