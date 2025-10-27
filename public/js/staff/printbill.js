@@ -163,26 +163,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('totalInWords').textContent = numberToVietnameseWords(order.total)
 
     // 8. QR CODE
-    const qrContainer = document.getElementById('qrCodeContainer')
-    if (order.qrCode?.trim()) {
-      const img = new Image()
-      img.onload = () => {
-        qrContainer.innerHTML = `<img src="${order.qrCode}" alt="QR Code thanh toán" class="qr-code" />`
-      }
-      img.onerror = () => {
-        qrContainer.innerHTML = '<p>Không thể tải QR Code</p>'
-      }
-      img.src = order.qrCode
-    } else {
-      qrContainer.innerHTML = ''
-    }
+    await waitForQrToLoad(order)
 
-    // 9. In sau khi render xong
     if (window.location.href.includes('print')) {
-      setTimeout(() => window.print(), 500)
+      window.print()
     }
 
-    // 10. Back button
+    // 9. Back button
     const aElement = document.querySelector('.btn-back a')
 
     if (aElement) {
@@ -200,3 +187,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('Lỗi lấy dữ liệu đơn hàng:', error)
   }
 })
+
+async function waitForQrToLoad(order) {
+  return new Promise((resolve) => {
+    const qrContainer = document.getElementById('qrCodeContainer')
+
+    if (!order.qrCode?.trim()) return resolve() // Không có QR thì resolve ngay
+
+    const img = new Image()
+    img.onload = () => {
+      qrContainer.innerHTML = `<img src="${order.qrCode}" alt="QR Code thanh toán" class="qr-code" />`
+      resolve()
+    }
+    img.onerror = () => {
+      qrContainer.innerHTML = '<p>Không thể tải QR Code</p>'
+      resolve()
+    }
+    img.src = order.qrCode
+  })
+}

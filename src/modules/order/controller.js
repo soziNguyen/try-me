@@ -307,9 +307,25 @@ export const addItemToOrder = async (req, res) => {
       return responseHelper.error(res, 'Thông tin món/combo không hợp lệ', 400)
     }
 
-    const order = await Order.findById(orderId)
-    if (!order) return responseHelper.error(res, 'Order không tồn tại', 404)
-    if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400)
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const warehouse = await getWarehouse(req, organizationId)
+
+    // Build match condition với warehouse filter
+    const matchCondition = {
+      _id: orderId,
+      organization: organizationId,
+      warehouse
+    }
+
+    const order = await Order.findOne(matchCondition)
+    if (!order) {
+      return responseHelper.error(res, 'Order không tồn tại hoặc không có quyền truy cập', 404)
+    }
+    if (order.status !== 'open') {
+      return responseHelper.error(res, 'Order đã đóng', 400)
+    }
 
     // Nếu là combo
     if (comboId) {
@@ -355,10 +371,7 @@ export const addItemToOrder = async (req, res) => {
         await Table.findByIdAndUpdate(order.tableId, {
           totalAmount: order.totalAmount
         })
-      } catch (e) {
-        // không block flow nếu cập nhật table lỗi
-        console.warn('Warning: không cập nhật được table.totalAmount', e)
-      }
+      } catch {}
     }
 
     const populatedOrder = await Order.findById(orderId)
@@ -368,7 +381,10 @@ export const addItemToOrder = async (req, res) => {
 
     responseHelper.success(res, populatedOrder)
   } catch (error) {
-    responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    if (error instanceof BusinessError) {
+      return responseHelper.error(res, error.message, error.statusCode)
+    }
+    responseHelper.error(res, error.message)
   }
 }
 
@@ -377,7 +393,19 @@ export const updateItemQuantity = async (req, res) => {
     const { orderId } = req.params
     const { itemId, quantity, type } = req.body
 
-    if (!itemId || !quantity || quantity <= 0) {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const warehouse = await getWarehouse(req, organizationId)
+
+    // Build match condition với warehouse filter
+    const matchCondition = {
+      _id: orderId,
+      organization: organizationId,
+      warehouse
+    }
+
+    if (!itemId || typeof quantity !== 'number' || quantity <= 0) {
       return responseHelper.error(res, 'Thông tin không hợp lệ', 400)
     }
 
@@ -385,7 +413,7 @@ export const updateItemQuantity = async (req, res) => {
       return responseHelper.error(res, 'Loại item không hợp lệ', 400)
     }
 
-    const order = await Order.findById(orderId)
+    const order = await Order.findOne(matchCondition)
     if (!order) return responseHelper.error(res, 'Order không tồn tại', 404)
     if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400)
 
@@ -408,13 +436,9 @@ export const updateItemQuantity = async (req, res) => {
     await order.save()
 
     if (order.tableId) {
-      try {
-        await Table.findByIdAndUpdate(order.tableId, {
-          totalAmount: order.totalAmount
-        })
-      } catch (e) {
-        console.warn('Warning: không cập nhật được table.totalAmount', e)
-      }
+      await Table.findByIdAndUpdate(order.tableId, {
+        totalAmount: order.totalAmount
+      }).catch(() => {})
     }
 
     const populatedOrder = await Order.findById(orderId)
@@ -433,11 +457,23 @@ export const removeItemFromOrder = async (req, res) => {
     const { orderId, itemId } = req.params
     const { type } = req.query
 
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const warehouse = await getWarehouse(req, organizationId)
+
+    // Build match condition với warehouse filter
+    const matchCondition = {
+      _id: orderId,
+      organization: organizationId,
+      warehouse
+    }
+
     if (!['food', 'combo'].includes(type)) {
       return responseHelper.error(res, 'Loại item không hợp lệ', 400)
     }
 
-    const order = await Order.findById(orderId)
+    const order = await Order.findOne(matchCondition)
     if (!order) return responseHelper.error(res, 'Order không tồn tại', 404)
     if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400)
 
@@ -462,9 +498,7 @@ export const removeItemFromOrder = async (req, res) => {
         await Table.findByIdAndUpdate(order.tableId, {
           totalAmount: order.totalAmount
         })
-      } catch (e) {
-        console.warn('Warning: không cập nhật được table.totalAmount', e)
-      }
+      } catch {}
     }
 
     const populatedOrder = await Order.findById(orderId)
@@ -474,7 +508,7 @@ export const removeItemFromOrder = async (req, res) => {
 
     responseHelper.success(res, populatedOrder)
   } catch (error) {
-    responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    responseHelper.error(res, error.message)
   }
 }
 
@@ -696,8 +730,7 @@ export const checkoutOrder = async (req, res) => {
       return responseHelper.error(res, error.message, error.statusCode)
     } else {
       // Unexpected system errors - log with full details
-      console.error('Lỗi hệ thống thanh toán:', error)
-      return responseHelper.error(res, 'Lỗi server nội bộ', 500)
+      return responseHelper.error(res, error.message)
     }
   }
 }
@@ -893,7 +926,6 @@ export const printInvoice = async (req, res) => {
       orderDate
     })
   } catch (error) {
-    console.error('Lỗi khi in hóa đơn:', error)
     responseHelper.error(res, error.message)
   }
 }
@@ -988,8 +1020,19 @@ export const getOrders = async (req, res) => {
     if (searchValue) {
       const maybeNum = Number(searchValue)
       const orConditions = [
+        { code: { $regex: searchValue, $options: 'i' } },
         { 'customer.name': { $regex: searchValue, $options: 'i' } },
-        { 'table.name': { $regex: searchValue, $options: 'i' } },
+        {
+          $or: [
+            { 'table.name': { $regex: searchValue, $options: 'i' } },
+            {
+              $and: [
+                { table: { $eq: null } },
+                { $expr: { $regexMatch: { input: 'Mang về', regex: searchValue, options: 'i' } } }
+              ]
+            }
+          ]
+        },
         { 'items.foodName': { $regex: searchValue, $options: 'i' } },
         { 'items.comboName': { $regex: searchValue, $options: 'i' } },
         {

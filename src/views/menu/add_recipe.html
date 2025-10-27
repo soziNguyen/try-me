@@ -1,60 +1,107 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/org_sidebar.html') %>
     <div class="admin__content">
-      <h2 class="mb-3 bold semi-bold">
-        <%= pageTitle %>
-      </h2>
+      <!-- Header Section -->
+      <div class="mb-4">
+        <h2 class="fw-bold text-dark mb-1">
+          <%= pageTitle %>
+        </h2>
+        <p class="text-muted mb-0">Tạo công thức mới cho món ăn của bạn</p>
+      </div>
 
-      <div class="col-lg-6 col-md-8 border-">
-        <h3 class="pb-2 pb-md-4">Tạo công thức</h3>
-        <form id="recipe-form">
-          <!-- Chọn món -->
-          <div class="mb-3">
-            <label for="menuItem" class="form-label">Món ăn <span class="text-danger">*</span></label>
-            <select id="menuItem" name="menuItem" class="form-select">
-              <option value="">— Chọn món —</option>
-            </select>
-          </div>
+      <div class="row">
+        <div class="col-lg-8 col-xl-7">
+          <!-- Main Card -->
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                  <i class="bi bi-journal-text fs-2 text-primary"></i>
+                </div>
+                <div>
+                  <h4 class="mb-0 fw-semibold">Tạo công thức</h4>
+                  <small class="text-muted">Điền thông tin chi tiết bên dưới</small>
+                </div>
+              </div>
 
-          <!-- Ingredients -->
-          <div class="mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-1 mb-md-2">
-              <label class="form-label">Nguyên liệu</label>
-              <button type="button" class="btn btn-outline-success btn-sm" id="add-ingredient">
-                + Thêm nguyên liệu
-              </button>
+              <form id="recipe-form">
+                <!-- Chọn món -->
+                <div class="mb-4">
+                  <label for="menuItem" class="form-label fw-semibold text-dark">
+                    Món ăn <span class="text-danger">*</span>
+                  </label>
+                  <select id="menuItem" name="menuItem" class="form-select form-select-lg">
+                    <option value="">— Chọn món —</option>
+                  </select>
+                  <div class="form-text">Chọn món ăn cần tạo công thức</div>
+                </div>
+
+                <!-- Ingredients -->
+                <div class="mb-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <label class="form-label fw-semibold text-dark mb-0">Nguyên liệu</label>
+                    <button type="button" class="btn btn-success btn-sm d-flex align-items-center gap-2"
+                      id="add-ingredient">
+                      <i class="bi bi-plus-circle"></i>
+                      Thêm nguyên liệu
+                    </button>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table align-middle" id="ingredients-table">
+                      <thead class="table-light">
+                        <tr>
+                          <th class="fw-semibold">Nguyên liệu</th>
+                          <th class="fw-semibold" width="150">Số lượng</th>
+                          <th class="fw-semibold" width="150">Đơn vị</th>
+                          <th width="60"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="itemsTableBody">
+                        <!-- Dynamic rows will be added here -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Note -->
+                <div class="mb-4">
+                  <label for="note" class="form-label fw-semibold text-dark">Ghi chú</label>
+                  <textarea id="note" name="note" class="form-control" rows="4"
+                    placeholder="Thêm ghi chú về công thức (tùy chọn)..."></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2 pt-3 border-top">
+                  <button type="submit" id="recipeForm" class="btn btn-primary px-4">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Lưu công thức
+                  </button>
+                  <a href="/menu/recipes" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Hủy
+                  </a>
+                </div>
+              </form>
             </div>
-            <table class="table table-bordered align-middle" id="ingredients-table">
-              <thead>
-                <tr>
-                  <th>Nguyên liệu</th>
-                  <th>Số lượng</th>
-                  <th>Đơn vị</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="itemsTableBody">
-
-              </tbody>
-            </table>
           </div>
 
-          <!-- Note -->
-          <div class="mb-3">
-            <label for="note" class="form-label">Ghi chú</label>
-            <textarea id="note" name="note" class="form-control"></textarea>
+          <!-- Helper Card -->
+          <div class="card border-0 bg-light mt-3">
+            <div class="card-body">
+              <div class="d-flex align-items-start">
+                <i class="bi bi-info-circle text-primary fs-5 me-2 mt-1 flex-shrink-0"></i>
+                <div>
+                  <h6 class="fw-semibold mb-1">Mẹo nhỏ</h6>
+                  <small class="text-muted">
+                    Hãy đảm bảo rằng số lượng nguyên liệu chính xác để món ăn có chất lượng tốt nhất.
+                    Bạn có thể thêm nhiều nguyên liệu tùy ý bằng cách nhấn nút "Thêm nguyên liệu".
+                  </small>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <!-- Active -->
-          <!-- <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" id="isActive" checked>
-            <label class="form-check-label" for="isActive">Kích hoạt</label>
-          </div> -->
-
-          <!-- Action -->
-          <button type="submit" id="recipeForm" class="btn btn-outline-primary">Lưu</button>
-          <a href="/menu/recipes" class="btn btn-outline-danger">Hủy</a>
-        </form>
+        </div>
       </div>
 
     </div>

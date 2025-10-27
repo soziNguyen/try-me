@@ -179,20 +179,20 @@ $(function () {
           }
         },
         {
-          data: 'isActive',
-          className: 'text-center',
+          data: 'note',
           render: (data, type, row) => {
             if (type === 'display') {
-              return `<input type="checkbox" class="dataInput form-check-input" data-field="isActive" data-id="${row._id}" ${data ? 'checked' : ''}>`
+              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="note" value="${data ?? ''}">`
             }
             return data
           }
         },
         {
-          data: 'note',
+          data: 'isActive',
+          className: 'text-center',
           render: (data, type, row) => {
             if (type === 'display') {
-              return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="note" value="${data ?? ''}">`
+              return `<input type="checkbox" class="dataInput form-check-input" data-field="isActive" data-id="${row._id}" ${data ? 'checked' : ''}>`
             }
             return data
           }
