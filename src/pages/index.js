@@ -706,6 +706,23 @@ export const expensesPage = (req, res) => {
   )
 }
 
+export const newExpensesPage = async (req, res) => {
+  const paymentExpenseId = req.params.id
+  const mode = req.query.mode || ''
+  const isNew = mode === 'new' ? 'Thêm Phiếu Chi' : 'Chi Tiết Phiếu Chi'
+
+  res.render(
+    'revenue-expenditure/payment-expenses-detail',
+    getPageData(req, isNew, 'Payment Expense Detail', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ PHIẾU CHI',
+      paymentExpenseId,
+      userRole: req.user.role,
+      currentOrgId: req.user.organization
+    })
+  )
+}
+
 export const planPage = (req, res) => {
   res.render(
     'admin/plan',
