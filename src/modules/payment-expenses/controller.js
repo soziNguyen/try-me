@@ -13,12 +13,11 @@ export const createPaymentExpense = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-    const { reason } = req.body
+    const { reason, name } = req.body
     const expense = await withTransaction(async (session) => {
       const code = await generateDocumentCode(ProductExpense, 'NQC')
       const date = new Date()
 
-      // Lấy kho mặc định hoặc filter từ request
       const warehouse = await getWarehouse(req, organizationId)
 
       const docData = {
@@ -27,7 +26,8 @@ export const createPaymentExpense = async (req, res) => {
         createdBy: req.user._id,
         organization: organizationId,
         warehouse: warehouse,
-        reason
+        reason,
+        name
       }
 
       const doc = new ProductExpense(docData)
@@ -56,7 +56,6 @@ export const getPaymentExpensesById = async (req, res) => {
       organization: organizationId
     }
 
-    // Staff chỉ xem được phiếu của kho mình
     if (req.warehouseFilter) {
       matchCondition.warehouse = req.warehouseFilter
     }
@@ -66,10 +65,9 @@ export const getPaymentExpensesById = async (req, res) => {
       .populate('createdBy', 'username')
       .populate('updatedBy', 'username')
       .populate('lockedBy', 'username')
-      .populate('items.product', 'sku name')
 
     if (!productExpense) {
-      return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
+      return responseHelper.error(res, 'Không tìm thấy phiếu chi', 404)
     }
     responseHelper.success(res, { productExpense, units })
   } catch (error) {
@@ -92,7 +90,6 @@ export const getPaymentExpenses = async (req, res) => {
 
     const matchCondition = { organization: organizationId }
 
-    // Lọc kho mặc định hoặc từ filter
     if (req.warehouseFilter) {
       matchCondition.warehouse = req.warehouseFilter
     } else {
@@ -100,14 +97,12 @@ export const getPaymentExpenses = async (req, res) => {
       if (org?.defaultWarehouse) {
         matchCondition.warehouse = org.defaultWarehouse
       }
-      // null -> xem tất cả kho
     }
 
     const basePipeline = [
       { $match: matchCondition },
       ...lookupRef('warehouse', 'Warehouses'),
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
-      ...lookupRef('items.product', 'MenuItems', { as: 'product' }),
       ...lookupUser('createdBy')
     ]
 
@@ -118,7 +113,7 @@ export const getPaymentExpenses = async (req, res) => {
             { code: { $regex: searchValue, $options: 'i' } },
             { 'warehouse.name': { $regex: searchValue, $options: 'i' } },
             { reason: { $regex: searchValue, $options: 'i' } },
-            { 'product.name': { $regex: searchValue, $options: 'i' } },
+            { 'items.name': { $regex: searchValue, $options: 'i' } },
             {
               $expr: {
                 $regexMatch: {
@@ -143,7 +138,6 @@ export const getPaymentExpenses = async (req, res) => {
       })
     }
 
-    // Group lại theo phiếu chi
     basePipeline.push({
       $group: {
         _id: '$_id',
@@ -158,9 +152,8 @@ export const getPaymentExpenses = async (req, res) => {
             $cond: {
               if: { $ifNull: ['$items', false] },
               then: {
-                product: '$product',
+                name: '$items.name',
                 quantity: '$items.quantity',
-                unit: '$items.unit',
                 unitPrice: '$items.unitPrice',
                 total: '$items.total'
               },
@@ -173,16 +166,13 @@ export const getPaymentExpenses = async (req, res) => {
 
     basePipeline.push({ $sort: { [sortField]: sortDir } })
 
-    // Count tổng bản ghi
     const countPipeline = [...basePipeline, { $count: 'totalCount' }]
     const totalData = await ProductExpense.aggregate(countPipeline)
     const recordsTotal = totalData.length > 0 ? totalData[0].totalCount : 0
 
-    // Phân trang
     basePipeline.push({ $skip: start })
     basePipeline.push({ $limit: length })
 
-    // Query dữ liệu
     const data = await ProductExpense.aggregate(basePipeline)
 
     return res.json({
@@ -226,18 +216,18 @@ export const updatePaymentExpenses = async (req, res) => {
       const { items: rawItems = [], reason } = req.body
 
       // Validation đầu vào
-      if (!Array.isArray(rawItems) || rawItems.length === 0) {
-        throw new BusinessError('Phiếu chi phải có ít nhất 1 sản phẩm', 400)
-      }
+      // if (!Array.isArray(rawItems) || rawItems.length === 0) {
+      //   throw new BusinessError('Phiếu chi phải có ít nhất 1 sản phẩm', 400)
+      // }
 
       // Validate và parse items
       let subTotal = 0
       const items = []
 
       for (const item of rawItems) {
-        if (!mongoose.isValidObjectId(item.product)) {
-          throw new BusinessError('ID sản phẩm không hợp lệ', 400)
-        }
+        // if (!mongoose.isValidObjectId(item.product)) {
+        //   throw new BusinessError('ID sản phẩm không hợp lệ', 400)
+        // }
 
         const quantity = parseInt(item.quantity) || 0
         if (quantity <= 0) {
@@ -253,7 +243,7 @@ export const updatePaymentExpenses = async (req, res) => {
         subTotal += itemTotal
 
         items.push({
-          product: item.product,
+          name: item.name,
           quantity,
           unit: item.unit || null,
           unitPrice,
@@ -279,8 +269,7 @@ export const updatePaymentExpenses = async (req, res) => {
 
       await updatedExpense.populate([
         { path: 'warehouse', select: 'name location' },
-        { path: 'createdBy updatedBy lockedBy', select: 'username' },
-        { path: 'items.product', select: 'name sku' }
+        { path: 'createdBy updatedBy lockedBy', select: 'username' }
       ])
 
       return updatedExpense

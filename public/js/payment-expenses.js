@@ -76,15 +76,14 @@ $(function () {
         {
           data: 'items',
           className: 'text-start px-1',
-          title: 'Sản phẩm',
+          title: 'Tên sản phẩm',
           render: (items) => {
             if (!Array.isArray(items) || items.length === 0) return ''
-            const names = items.map((it) => it.product?.name).filter(Boolean)
-            const uniqueNames = new Set(names)
-            if (uniqueNames.size === 0) return ''
-            const nameLengths = [...uniqueNames]
-            const firstThree = nameLengths.slice(0, 3).join(', ')
-            const more = nameLengths.length > 3 ? '...' : ''
+            const names = items.map((it) => it.name).filter(Boolean) // sửa ở đây
+            const uniqueNames = [...new Set(names)]
+            if (uniqueNames.length === 0) return ''
+            const firstThree = uniqueNames.slice(0, 3).join(', ')
+            const more = uniqueNames.length > 3 ? '...' : ''
             return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`
           }
         },
