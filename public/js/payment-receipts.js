@@ -138,4 +138,9 @@ $(function () {
   $('#filterDateBtn').on('click', function () {
     table.ajax.reload()
   })
+
+  $('#filterDateBtn').on('click', function () {
+    table.ajax.reload()
+    $('#toggleFilterBtn').dropdown('hide')
+  })
 })

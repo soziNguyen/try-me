@@ -37,9 +37,9 @@
                     <label for="createdBy" class="form-label">Người tạo</label>
                     <input type="text" class="form-control" id="createdBy" readonly>
                   </div>
-                  <div class="col-md-6">
+                  <div>
                     <label for="reason" class="form-label">Lý do</label>
-                    <input type="text" class="form-control" id="reason" readonly>
+                    <textarea class="form-control" id="reason" name="reason" placeholder="Lý do chi..."></textarea>
                   </div>
                 </div>
               </div>
@@ -59,9 +59,10 @@
                   <table class="table table-bordered" id="expenses-detail-table">
                     <thead class="table-primary">
                       <tr>
-                        <th width="25%">Sản phẩm</th>
-                        <th>Số lượng</th>
+                        <th>Tên Sản phẩm</th>
                         <th>Giá tiền</th>
+                        <th>Số lượng</th>
+                        <th>Thành tiền</th>
                         <th class="no-print">Xóa</th>
                       </tr>
                     </thead>
