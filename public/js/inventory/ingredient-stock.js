@@ -32,8 +32,6 @@ $(function () {
         className: 'text-start px-1',
         render: (data, type, row) => {
           if (type === 'display') {
-            console.log(row)
-
             return data ? `<span>${row.warehouse.name} - ${row.warehouse.location}</span>` : ''
           }
           return row.warehouse.name
