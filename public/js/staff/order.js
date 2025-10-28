@@ -901,17 +901,18 @@ $(async () => {
   })
 
   // trong modal
-  $('#saveCustomerBtn').on('click', async () => {
+  $('#addCustomerForm').on('submit', async (e) => {
+    e.preventDefault()
     const name = $('#newCustomerName').val().trim()
     const phone = $('#newCustomerPhone').val().trim()
 
-    if (!name || !phone) {
-      toastr.warning('Tên và số điện thoại không được để trống')
+    if (!phone) {
+      toastr.warning('Số điện thoại không được để trống')
       return
     }
 
     try {
-      const data = await ajax('/api/customers/create', { name, phone }, 'POST')
+      const data = await ajax('/api/customer/create', { name, phone }, 'POST')
       if (!data) return
 
       const newOption = new Option(`${data.name} - ${data.phone}`, data._id, true, true)
