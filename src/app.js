@@ -1,4 +1,5 @@
 import express from 'express'
+import { performance, PerformanceObserver } from 'perf_hooks'
 import connectDB from './configs/db.js'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
@@ -42,6 +43,16 @@ app.use(compression()) // Compress responses
 app.use(helmet()) // Security middleware
 app.use(cors()) // Allow API requests from different origins (CORS)
 app.use(express.json()) // Parse incoming JSON requests (req.body)
+// app.use((req, res, next) => {
+//   const start = performance.now()
+
+//   res.on('finish', () => {
+//     const duration = performance.now() - start
+//     console.log(`[PERF] ${req.method} ${req.originalUrl} - ${duration.toFixed(2)}ms`)
+//   })
+
+//   next()
+// })
 app.use(express.urlencoded({ extended: true })) // Parse URL-encoded form data, supports nested objects
 app.use(cookieParser()) // Read & parse cookie from req.cookies
 

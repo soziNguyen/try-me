@@ -59,7 +59,7 @@ export const getProductStockLists = async (req, res) => {
                 then: {
                   _id: '$combo._id',
                   name: '$combo.name',
-                  sku: '$combo.code',
+                  sku: '$combo.sku',
                   price: '$combo.price',
                   type: 'combo'
                 },

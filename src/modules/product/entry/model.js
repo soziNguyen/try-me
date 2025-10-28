@@ -14,9 +14,14 @@ const productEntrySchema = new mongoose.Schema(
     // Danh sách các mặt hàng trong phiếu nhập
     items: [
       {
+        productType: {
+          type: String,
+          enum: ['MenuItem', 'Combo'],
+          required: true
+        },
         product: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'MenuItem',
+          refPath: 'items.productType',
           default: null
         },
         quantity: { type: Number, default: 0 },

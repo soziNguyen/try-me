@@ -12515,6 +12515,10 @@
 .min-160 {
   min-width: 160px !important;
 }
+
+.min-width-280 {
+  min-width: 280px !important;
+}
 .w-80 {
   width: 80px !important;
 }

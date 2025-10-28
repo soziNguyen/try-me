@@ -11,6 +11,7 @@ import StockHistory from '../stock-history/model.js'
 import Organization from '../../organization/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import BusinessError from '../../error/BusinessError.js'
+import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 
 // DATATABLE SERVER-SIDE
 export const getStockTransfers = async (req, res) => {
@@ -201,6 +202,10 @@ export const createStockTransfer = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    // Lấy warehouse trước khi vào transaction
+    const fromWarehouse = await getWarehouse(req, organizationId)
+
     const transfer = await withTransaction(async (session) => {
       const code = await generateDocumentCode(StockTransfer, 'ST')
       const date = new Date()
@@ -208,35 +213,24 @@ export const createStockTransfer = async (req, res) => {
         code: code,
         date: date,
         createdBy: req.user._id,
-        organization: organizationId
-      }
-
-      // Xác định kho xuất (fromWarehouse)
-      if (req.warehouseFilter) {
-        // Nếu là nhân viên thì chỉ được phép dùng kho đã gán
-        docData.fromWarehouse = req.warehouseFilter
-      } else {
-        // Nếu là admin/org thì lấy kho mặc định của tổ chức
-        const org = await Organization.findById(organizationId).select('defaultWarehouse')
-        if (!org?.defaultWarehouse) {
-          throw new BusinessError(
-            'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật trong profile.',
-            400
-          )
-        }
-        docData.fromWarehouse = org.defaultWarehouse
+        organization: organizationId,
+        fromWarehouse
       }
 
       const doc = new StockTransfer(docData)
-      await doc.save(session ? { session } : {})
+      await doc.save({ session })
       return doc
     })
+
     responseHelper.success(
       res,
       { id: transfer._id, code: transfer.code },
       'Khởi tạo phiếu chuyển kho thành công'
     )
   } catch (err) {
+    if (err instanceof BusinessError) {
+      return responseHelper.error(res, err.message, err.statusCode)
+    }
     responseHelper.error(res, err.message)
   }
 }

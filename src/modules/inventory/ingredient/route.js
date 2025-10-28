@@ -1,6 +1,7 @@
 import express from 'express'
 import {
   getActiveIngredients,
+  getActiveIngredientsForRecipe,
   ingredientDataAPI,
   createIngredient,
   updateIngredient,
@@ -11,6 +12,7 @@ import { checkWarehouseAccess } from '../../../helpers/warehouseHelper.js'
 
 const router = express.Router()
 
+router.get('/api/inventory/ingredient/active', isAuthenticated, getActiveIngredientsForRecipe)
 router.get(
   '/api/inventory/ingredient/all',
   isAuthenticated,

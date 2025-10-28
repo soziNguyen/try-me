@@ -3,16 +3,31 @@ import { deleteFile } from '../../upload/helper.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import Organization from '../../organization/model.js'
+import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 
 export const getActiveCombos = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const combo = await Combo.find({
+    const matchCondition = {
       isActive: true,
       organization: organizationId
-    }).populate('items.menuItem', '_id name')
+    }
+
+    // Warehouse filtering logic
+    if (req.warehouseFilter) {
+      // Staff user - chỉ thấy kho được gán
+      matchCondition.warehouse = req.warehouseFilter
+    } else {
+      // Admin/Org - sử dụng defaultWarehouse
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        matchCondition.warehouse = org.defaultWarehouse
+      }
+    }
+    const combo = await Combo.find(matchCondition).populate('items.menuItem', '_id name')
     responseHelper.success(res, combo)
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -32,9 +47,22 @@ export const getCombos = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    const baseMatch = { organization: organizationId }
+
+    if (req.warehouseFilter) {
+      // Staff user - chỉ thấy kho được gán
+      baseMatch.warehouse = req.warehouseFilter
+    } else {
+      // Admin/Org - sử dụng defaultWarehouse
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        baseMatch.warehouse = org.defaultWarehouse
+      }
+    }
+
     // base pipeline
     let pipeline = [
-      { $match: { organization: organizationId } },
+      { $match: baseMatch },
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
       ...lookupRef('items.menuItem', 'MenuItems', { as: 'menuItem' }),
       ...lookupUser('createdBy')
@@ -75,15 +103,14 @@ export const getCombos = async (req, res) => {
           createdBy: { $first: '$createdBy.username' },
           note: { $first: '$note' },
           items: { $push: '$items' },
+          isActive: { $first: '$isActive' },
           createdAt: { $first: '$createdAt' }
         }
       }
     )
 
     // tổng số record
-    const recordsTotal = await Combo.countDocuments({
-      organization: organizationId
-    })
+    const recordsTotal = await Combo.countDocuments(baseMatch)
 
     // tổng số record sau filter
     const countFiltered = await Combo.aggregate(pipeline.concat([{ $count: 'count' }]))
@@ -111,10 +138,13 @@ export const getCombos = async (req, res) => {
 
 export const createCombo = async (req, res) => {
   try {
+    const { sku, name, image, items, price, note } = req.body
+
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const { sku, name, image, items, price, note } = req.body
+    const warehouse = await getWarehouse(req, organizationId)
+
     if (!name || !price) return responseHelper.error(res, 'Tên combo và giá bán là bắt buộc', 400)
 
     if (!Array.isArray(items) || items.length === 0)
@@ -128,6 +158,7 @@ export const createCombo = async (req, res) => {
 
     const existing = await Combo.findOne({
       organization: organizationId,
+      warehouse,
       $or: [{ name }, { sku }]
     })
     if (existing) return responseHelper.error(res, 'SKU hoặc name đã tồn tại', 400)
@@ -140,7 +171,8 @@ export const createCombo = async (req, res) => {
       price,
       note,
       organization: organizationId,
-      createdBy: req.user._id
+      createdBy: req.user._id,
+      warehouse
     })
 
     await combo.save()
@@ -155,15 +187,27 @@ export const createCombo = async (req, res) => {
 export const updateCombo = async (req, res) => {
   try {
     const { id } = req.params
-    const { sku, name, image, items, price, note } = req.body
+    const { sku, name, image, items, price, note, isActive } = req.body
+    console.log(req.body)
+
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!id) return responseHelper.error(res, 'Thiếu ID công thức', 400)
 
+    const warehouse = await getWarehouse(req, organizationId)
+
+    // Build match condition với warehouse
+    const matchCondition = {
+      _id: id,
+      organization: organizationId,
+      warehouse
+    }
+
     const existing = await Combo.findOne({
       _id: { $ne: id },
       organization: organizationId,
+      warehouse,
       $or: [{ name }, { sku }]
     })
 
@@ -177,16 +221,13 @@ export const updateCombo = async (req, res) => {
       if (!it.menuItem || !it.quantity) {
         return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin', 400)
       }
-      if (it.quantity <= 0) {
+      if (Number(it.quantity) <= 0) {
         return responseHelper.error(res, 'Số lượng phải lớn hơn 0', 400)
       }
     }
 
     // Lấy combo cũ để so sánh ảnh
-    const combo = await Combo.findOne({
-      _id: id,
-      organization: organizationId
-    })
+    const combo = await Combo.findOne(matchCondition)
     if (!combo) return responseHelper.error(res, 'Không tìm thấy công thức', 404)
 
     // Xóa file cũ nếu có và khác file mới
@@ -198,9 +239,12 @@ export const updateCombo = async (req, res) => {
       }
     }
 
+    console.log('warehouse from req:', warehouse)
+    console.log('matchCondition:', matchCondition)
+
     const updated = await Combo.findOneAndUpdate(
-      { _id: id, organization: organizationId },
-      { sku, name, image, items, price, note },
+      matchCondition,
+      { sku, name, image, items, price, note, isActive },
       { new: true }
     ).populate('items.menuItem', '_id name')
 
@@ -217,18 +261,40 @@ export const deleteCombos = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    if (!Array.isArray(ids) || ids.length === 0) {
+    if (!Array.isArray(ids) || ids.length === 0)
       return responseHelper.error(res, 'Không có combo nào được chọn để xóa', 400)
+
+    const warehouse = await getWarehouse(req, organizationId)
+
+    const matchCondition = {
+      _id: { $in: ids },
+      organization: organizationId,
+      warehouse
     }
 
-    const result = await Combo.deleteMany({
-      _id: { $in: ids },
-      organization: organizationId
-    })
+    // Tìm trước danh sách combo cần xóa để xóa ảnh
+    const combosToDelete = await Combo.find(matchCondition).lean()
+
+    if (combosToDelete.length === 0)
+      return responseHelper.error(res, 'Không tìm thấy combo hợp lệ để xóa', 404)
+
+    // Xóa combo theo đúng kho và tổ chức
+    const result = await Combo.deleteMany(matchCondition)
+
+    // Xóa ảnh liên quan
+    for (const combo of combosToDelete) {
+      if (combo.image) {
+        try {
+          await deleteFile(combo.image)
+        } catch (err) {
+          console.error(`Không xóa được ảnh của ${combo.name}:`, err)
+        }
+      }
+    }
 
     responseHelper.success(res, result.deletedCount, 'Xóa thành công')
   } catch (err) {
-    return responseHelper.error(res, err.message)
+    responseHelper.error(res, err.message)
   }
 }
 
@@ -238,34 +304,37 @@ export const searchCombos = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    if (!keyword) {
-      return responseHelper.success(res, [])
-    }
+    if (!keyword) return responseHelper.success(res, [])
 
+    // Lấy kho hiện tại
+    const warehouse = await getWarehouse(req, organizationId)
+
+    // Tìm combo theo tổ chức + kho + keyword
     const combos = await Combo.find({
       organization: organizationId,
+      warehouse,
       $or: [
         { name: { $regex: keyword, $options: 'i' } },
         { sku: { $regex: keyword, $options: 'i' } }
       ]
-    }).populate('items.menuItem', '_id name')
+    })
+      .populate('items.menuItem', '_id name')
+      .lean()
 
-    // ✅ Format lại dữ liệu combo cho đúng định dạng frontend cần
+    // Format kết quả
     const formattedCombos = combos.map((combo) => ({
       _id: combo._id,
       sku: combo.sku || '',
       name: combo.name || 'Combo không rõ tên',
       image: combo.image || '',
-      price: typeof combo.price === 'number' ? combo.price : 0,
+      price: Number(combo.price) || 0,
       isCombo: true,
-      items: Array.isArray(combo.items)
-        ? combo.items.map((i) => ({
-            menuItem: {
-              _id: i.menuItem?._id || '',
-              name: i.menuItem?.name || 'Không rõ món'
-            }
-          }))
-        : []
+      items: (combo.items || []).map((i) => ({
+        menuItem: {
+          _id: i.menuItem?._id || '',
+          name: i.menuItem?.name || 'Không rõ món'
+        }
+      }))
     }))
 
     responseHelper.success(res, formattedCombos)

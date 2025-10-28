@@ -82,14 +82,23 @@ body {
       color: inherit;
     }
 
-    .info {
-      .info__icon {
-        color: var(--header-text);
-      }
+    .dropdown {
+      &.info {
+        .info__icon {
+          color: var(--header-text);
+        }
 
-      ul li a {
-        cursor: pointer;
-        color: inherit;
+        .dropdown-menu {
+          .dropdown-item {
+            cursor: pointer;
+            color: inherit;
+          }
+
+          .avatar {
+            width: 48px;
+            height: 48px;
+          }
+        }
       }
     }
   }
@@ -325,6 +334,23 @@ body {
   display: flex;
   flex-direction: column;
   @include panel-layout(staff);
+}
+
+#themeModal {
+  .modal-dialog {
+    position: fixed;
+    top: 60px;
+    right: 8px;
+    margin: 0;
+    max-width: 300px;
+
+    .modal-body {
+      .icon {
+        height: 40px;
+        width: 40px;
+      }
+    }
+  }
 }
 
 /* Mobile (<992px) */

@@ -11,18 +11,29 @@ $(function () {
   if (url) recipeId = url
 
   Promise.all([
-    fetchData('menu/get/active'),
-    fetchData('inventory/ingredient/all'),
+    fetchData('menus/active'),
+    fetchData('inventory/ingredient/active'),
     recipeId ? fetchData(`menu/recipe/${recipeId}`) : Promise.resolve(null)
   ])
     .then(([menus, ings, recipeRes]) => {
-      menuItems = menus
-      ingredients = ings
+      const uniqueMenus = Array.from(
+        new Map(menus.map((m) => [m.name.trim().toLowerCase(), m])).values()
+      )
+
+      const uniqueIngs = Array.from(
+        new Map(ings.map((i) => [i.name.trim().toLowerCase(), i])).values()
+      )
+
+      menuItems = uniqueMenus
+      ingredients = uniqueIngs
+
       const menuOptions = menuItems
         .map((m) => `<option value="${m._id}">${m.name}</option>`)
         .join('')
+
       $('#menuItem').html('<option value="">— Chọn món —</option>' + menuOptions)
       initSelect2($('#menuItem'), '— Chọn món —')
+
       if (recipeRes) {
         recipe = recipeRes.recipe
         units = recipeRes.units || []
