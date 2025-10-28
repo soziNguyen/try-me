@@ -103,6 +103,7 @@ export const getCombos = async (req, res) => {
           createdBy: { $first: '$createdBy.username' },
           note: { $first: '$note' },
           items: { $push: '$items' },
+          isActive: { $first: '$isActive' },
           createdAt: { $first: '$createdAt' }
         }
       }
@@ -186,7 +187,9 @@ export const createCombo = async (req, res) => {
 export const updateCombo = async (req, res) => {
   try {
     const { id } = req.params
-    const { sku, name, image, items, price, note } = req.body
+    const { sku, name, image, items, price, note, isActive } = req.body
+    console.log(req.body)
+
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
@@ -236,9 +239,12 @@ export const updateCombo = async (req, res) => {
       }
     }
 
+    console.log('warehouse from req:', warehouse)
+    console.log('matchCondition:', matchCondition)
+
     const updated = await Combo.findOneAndUpdate(
       matchCondition,
-      { sku, name, image, items, price, note },
+      { sku, name, image, items, price, note, isActive },
       { new: true }
     ).populate('items.menuItem', '_id name')
 

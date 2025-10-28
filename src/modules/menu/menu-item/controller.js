@@ -6,6 +6,44 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import Organization from '../../organization/model.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 
+export const getActiveMenusForRecipe = async (req, res) => {
+  try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const matchCondition = {
+      isActive: true,
+      organization: organizationId
+    }
+
+    const pipeline = [
+      ...lookupRef('category', 'MenuCategories', { as: 'category' }),
+      { $match: matchCondition },
+      { $sort: { name: 1 } },
+      {
+        $project: {
+          _id: 1,
+          sku: 1,
+          name: 1,
+          image: 1,
+          price: 1,
+          description: 1,
+          isActive: 1,
+          category: {
+            _id: '$category._id',
+            name: '$category.name'
+          }
+        }
+      }
+    ]
+
+    const menu = await MenuItem.aggregate(pipeline)
+    responseHelper.success(res, menu)
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
 export const getActiveMenus = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)

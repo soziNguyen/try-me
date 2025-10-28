@@ -8,6 +8,35 @@ import { normalizeValue } from '../../../helpers/common.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 import { logActivity } from '../../activity-logs/service.js'
 
+export const getActiveIngredientsForRecipe = async (req, res) => {
+  try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const matchCondition = {
+      isActive: true,
+      organization: organizationId
+    }
+
+    const pipeline = [
+      { $match: matchCondition },
+      { $sort: { name: 1 } },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          unit: 1
+        }
+      }
+    ]
+
+    const ings = await Ingredient.aggregate(pipeline)
+    responseHelper.success(res, ings)
+  } catch (err) {
+    responseHelper.error(res, err.message)
+  }
+}
+
 export const getActiveIngredients = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)

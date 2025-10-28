@@ -22,7 +22,7 @@
                     <thead class="bg-light">
                       <tr>
                         <th class="text-center">
-                          <input type="checkbox" id="selectAll" class="form-check-input">
+                          <input type="checkbox" id="selectAll">
                         </th>
                         <th>SKU</th>
                         <th>Tên</th>
@@ -119,6 +119,16 @@
                     <label class="form-label text-muted small fw-semibold">Ghi chú</label>
                     <textarea class="form-control" name="note" rows="3"
                       placeholder="Nhập ghi chú (tùy chọn)"></textarea>
+                  </div>
+                  <!-- Kích hoạt -->
+                  <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">
+                      Kích hoạt Combo<span class="text-danger">*</span>
+                    </label>
+                    <div class="form-check form-switch">
+                      <input type="checkbox" id="isActive" class="form-check-input me-2" name="isActive" role="switch">
+                      <label for="isActive" class="form-check-label">Kích hoạt</label>
+                    </div>
                   </div>
 
                   <!-- Action Buttons -->

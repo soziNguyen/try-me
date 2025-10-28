@@ -202,7 +202,7 @@ $(function () {
         // Tag row with data-id for update
         $(row).attr('data-id', data._id)
       },
-      drawCallback: function (settings) {
+      drawCallback: function () {
         $('#ingredientTable select[data-field]').each(function () {
           const field = $(this).data('field')
           const placeholders = {

@@ -15,6 +15,7 @@ import BusinessError from '../error/BusinessError.js'
 import { constants } from '../../configs/constants.js'
 import { getWarehouse } from '../../helpers/warehouseHelper.js'
 import Organization from '../organization/model.js'
+import ProductStock from '../product/stock/model.js'
 
 const { POINT_VALUE, POINTS_EARN_RATE } = constants
 
@@ -312,7 +313,6 @@ export const addItemToOrder = async (req, res) => {
 
     const warehouse = await getWarehouse(req, organizationId)
 
-    // Build match condition với warehouse filter
     const matchCondition = {
       _id: orderId,
       organization: organizationId,
@@ -329,10 +329,42 @@ export const addItemToOrder = async (req, res) => {
 
     // Nếu là combo
     if (comboId) {
-      const combo = await Combo.findById(comboId)
-      if (!combo) return responseHelper.error(res, 'Combo không tồn tại', 404)
+      // 1. Check combo tồn tại và active
+      const combo = await Combo.findOne({
+        _id: comboId,
+        organization: organizationId,
+        isActive: true
+      })
+      if (!combo) {
+        return responseHelper.error(res, 'Combo không tồn tại hoặc đã bị vô hiệu hóa', 404)
+      }
 
+      // 2. Check tồn kho
+      const comboStock = await ProductStock.findOne({
+        combo: comboId,
+        warehouse,
+        organization: organizationId
+      })
+
+      // Nếu không có record hoặc quantity = 0
+      if (!comboStock || comboStock.quantity <= 0) {
+        return responseHelper.error(res, `Combo "${combo.name}" hiện đã hết hàng`, 400)
+      }
+
+      // 3. Check số lượng yêu cầu
       const existingCombo = order.items.find((item) => item.comboId?.toString() === comboId)
+      const currentOrderQuantity = existingCombo ? existingCombo.quantity : 0
+      const totalQuantity = currentOrderQuantity + quantity
+
+      if (comboStock.quantity < totalQuantity) {
+        return responseHelper.error(
+          res,
+          `Combo "${combo.name}" không đủ số lượng. Còn lại: ${comboStock.quantity}${currentOrderQuantity > 0 ? `, đang có trong order: ${currentOrderQuantity}` : ''}`,
+          400
+        )
+      }
+
+      // 4. Add to order
       if (existingCombo) {
         existingCombo.quantity += quantity
       } else {
@@ -346,10 +378,42 @@ export const addItemToOrder = async (req, res) => {
 
     // Nếu là món ăn
     if (foodId) {
-      const menuItem = await MenuItem.findById(foodId)
-      if (!menuItem) return responseHelper.error(res, 'Món ăn không tồn tại', 404)
+      // 1. Check món ăn tồn tại và active
+      const menuItem = await MenuItem.findOne({
+        _id: foodId,
+        organization: organizationId,
+        isActive: true
+      })
+      if (!menuItem) {
+        return responseHelper.error(res, 'Món ăn không tồn tại hoặc đã bị vô hiệu hóa', 404)
+      }
 
+      // 2. Check tồn kho
+      const productStock = await ProductStock.findOne({
+        product: foodId,
+        warehouse,
+        organization: organizationId
+      })
+
+      // Nếu không có record hoặc quantity = 0
+      if (!productStock || productStock.quantity <= 0) {
+        return responseHelper.error(res, `Món ăn "${menuItem.name}" hiện đã hết hàng`, 400)
+      }
+
+      // 3. Check số lượng yêu cầu
       const existingItem = order.items.find((item) => item.foodId?.toString() === foodId)
+      const currentOrderQuantity = existingItem ? existingItem.quantity : 0
+      const totalQuantity = currentOrderQuantity + quantity
+
+      if (productStock.quantity < totalQuantity) {
+        return responseHelper.error(
+          res,
+          `Món ăn "${menuItem.name}" không đủ số lượng. Còn lại: ${productStock.quantity}${currentOrderQuantity > 0 ? `, đang có trong order: ${currentOrderQuantity}` : ''}`,
+          400
+        )
+      }
+
+      // 4. Add to order
       if (existingItem) {
         existingItem.quantity += quantity
       } else {
@@ -393,6 +457,14 @@ export const updateItemQuantity = async (req, res) => {
     const { orderId } = req.params
     const { itemId, quantity, type } = req.body
 
+    if (!itemId || typeof quantity !== 'number' || quantity <= 0) {
+      return responseHelper.error(res, 'Thông tin không hợp lệ', 400)
+    }
+
+    if (!['food', 'combo'].includes(type)) {
+      return responseHelper.error(res, 'Loại item không hợp lệ', 400)
+    }
+
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
@@ -405,29 +477,90 @@ export const updateItemQuantity = async (req, res) => {
       warehouse
     }
 
-    if (!itemId || typeof quantity !== 'number' || quantity <= 0) {
-      return responseHelper.error(res, 'Thông tin không hợp lệ', 400)
-    }
-
-    if (!['food', 'combo'].includes(type)) {
-      return responseHelper.error(res, 'Loại item không hợp lệ', 400)
-    }
-
     const order = await Order.findOne(matchCondition)
-    if (!order) return responseHelper.error(res, 'Order không tồn tại', 404)
-    if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400)
+    if (!order) {
+      return responseHelper.error(res, 'Order không tồn tại hoặc không có quyền truy cập', 404)
+    }
+    if (order.status !== 'open') {
+      return responseHelper.error(res, 'Order đã đóng', 400)
+    }
 
+    // Tìm item trong order
     const item = order.items.find((item) => {
       if (type === 'food') return item.foodId?.toString() === itemId
       if (type === 'combo') return item.comboId?.toString() === itemId
     })
 
-    if (!item)
+    if (!item) {
       return responseHelper.error(
         res,
         `${type === 'food' ? 'Món ăn' : 'Combo'} không có trong order`,
         404
       )
+    }
+
+    // Check ProductStock trước khi update
+    if (type === 'combo') {
+      const combo = await Combo.findOne({
+        _id: itemId,
+        organization: organizationId,
+        isActive: true
+      })
+      if (!combo) {
+        return responseHelper.error(res, 'Combo không tồn tại hoặc đã bị vô hiệu hóa', 404)
+      }
+
+      const comboStock = await ProductStock.findOne({
+        combo: itemId,
+        warehouse,
+        organization: organizationId
+      })
+
+      if (!comboStock || comboStock.quantity <= 0) {
+        return responseHelper.error(res, `Combo "${combo.name}" hiện đã hết hàng tại kho này`, 400)
+      }
+
+      if (comboStock.quantity < quantity) {
+        return responseHelper.error(
+          res,
+          `Combo "${combo.name}" không đủ số lượng. Còn lại: ${comboStock.quantity}`,
+          400
+        )
+      }
+    }
+
+    if (type === 'food') {
+      const menuItem = await MenuItem.findOne({
+        _id: itemId,
+        organization: organizationId,
+        isActive: true
+      })
+      if (!menuItem) {
+        return responseHelper.error(res, 'Món ăn không tồn tại hoặc đã bị vô hiệu hóa', 404)
+      }
+
+      const productStock = await ProductStock.findOne({
+        product: itemId,
+        warehouse,
+        organization: organizationId
+      })
+
+      if (!productStock || productStock.quantity <= 0) {
+        return responseHelper.error(
+          res,
+          `Món ăn "${menuItem.name}" hiện đã hết hàng tại kho này`,
+          400
+        )
+      }
+
+      if (productStock.quantity < quantity) {
+        return responseHelper.error(
+          res,
+          `Món ăn "${menuItem.name}" không đủ số lượng. Còn lại: ${productStock.quantity}`,
+          400
+        )
+      }
+    }
 
     item.quantity = quantity
 
@@ -448,7 +581,10 @@ export const updateItemQuantity = async (req, res) => {
 
     responseHelper.success(res, populatedOrder)
   } catch (error) {
-    responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    if (error instanceof BusinessError) {
+      return responseHelper.error(res, error.message, error.statusCode)
+    }
+    responseHelper.error(res, error.message)
   }
 }
 
@@ -604,7 +740,90 @@ export const checkoutOrder = async (req, res) => {
           400
         )
 
-      // 4. Handle customer points and updates
+      // 4. VALIDATE & DEDUCT PRODUCT STOCK (BEFORE completing order)
+      for (const item of order.items) {
+        if (item.foodId) {
+          // Validate MenuItem stock
+          const productStock = await ProductStock.findOne({
+            product: item.foodId,
+            warehouse: order.warehouse,
+            organization: order.organization
+          }).session(session)
+
+          if (!productStock || productStock.quantity < item.quantity) {
+            const menuItem = await MenuItem.findById(item.foodId)
+            throw new BusinessError(
+              `Món ăn "${menuItem?.name || 'Unknown'}" không đủ số lượng trong kho. Còn lại: ${productStock?.quantity || 0}, cần: ${item.quantity}`,
+              400
+            )
+          }
+
+          // Deduct stock atomically
+          const stockUpdateResult = await ProductStock.findOneAndUpdate(
+            {
+              product: item.foodId,
+              warehouse: order.warehouse,
+              organization: order.organization,
+              quantity: { $gte: item.quantity } // Ensure quantity is still enough
+            },
+            {
+              $inc: { quantity: -item.quantity },
+              $set: { updatedAt: new Date() }
+            },
+            { session, new: true }
+          )
+
+          if (!stockUpdateResult) {
+            const menuItem = await MenuItem.findById(item.foodId)
+            throw new BusinessError(
+              `Tồn kho của "${menuItem?.name || 'Unknown'}" đã thay đổi, vui lòng thử lại`,
+              409
+            )
+          }
+        }
+
+        if (item.comboId) {
+          // Validate Combo stock
+          const comboStock = await ProductStock.findOne({
+            combo: item.comboId,
+            warehouse: order.warehouse,
+            organization: order.organization
+          }).session(session)
+
+          if (!comboStock || comboStock.quantity < item.quantity) {
+            const combo = await Combo.findById(item.comboId)
+            throw new BusinessError(
+              `Combo "${combo?.name || 'Unknown'}" không đủ số lượng trong kho. Còn lại: ${comboStock?.quantity || 0}, cần: ${item.quantity}`,
+              400
+            )
+          }
+
+          // Deduct stock atomically
+          const stockUpdateResult = await ProductStock.findOneAndUpdate(
+            {
+              combo: item.comboId,
+              warehouse: order.warehouse,
+              organization: order.organization,
+              quantity: { $gte: item.quantity }
+            },
+            {
+              $inc: { quantity: -item.quantity },
+              $set: { updatedAt: new Date() }
+            },
+            { session, new: true }
+          )
+
+          if (!stockUpdateResult) {
+            const combo = await Combo.findById(item.comboId)
+            throw new BusinessError(
+              `Tồn kho của "${combo?.name || 'Unknown'}" đã thay đổi, vui lòng thử lại`,
+              409
+            )
+          }
+        }
+      }
+
+      // 5. Handle customer points and updates
       let customer = null
       let pointsEarned = 0
 
@@ -649,23 +868,20 @@ export const checkoutOrder = async (req, res) => {
           throw new BusinessError('Điểm khách hàng đã thay đổi, vui lòng thử lại', 409)
         }
       } else if (parsedPointsUsed > 0) {
-        // Double check (though early validation should catch this)
         throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
       }
 
-      // 5. Generate VietQR URL
+      // 6. Generate VietQR URL
       let qrCodeUrl = null
       if (['bank', 'e-wallet'].includes(paymentType) && receivingAccountId) {
         const receivingAccount = receivingAccountId
 
-        const bankCode = receivingAccount.bankCode || 'MB' // Default to MB
+        const bankCode = receivingAccount.bankCode || 'MB'
         const accountNumber = receivingAccount.accountNumber
 
         if (accountNumber && bankCode) {
-          // Use order code directly as description
           const description = order.code
 
-          // Generate VietQR URL with hardcoded "VIETQR.CO"
           const baseUrl = 'https://vietqr.co/api/generate'
           const params = new URLSearchParams({
             style: '2',
@@ -678,7 +894,7 @@ export const checkoutOrder = async (req, res) => {
         }
       }
 
-      // 6. UPDATE ORDER
+      // 7. UPDATE ORDER
       order.discount = parsedDiscount
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = calculatedPointsDiscount
@@ -697,7 +913,7 @@ export const checkoutOrder = async (req, res) => {
 
       await order.save({ session })
 
-      // 7. RELEASE TABLE
+      // 8. RELEASE TABLE
       if (order.tableId) {
         await Table.findByIdAndUpdate(
           order.tableId,
@@ -724,12 +940,9 @@ export const checkoutOrder = async (req, res) => {
 
     return responseHelper.success(res, result, 'Thanh toán thành công')
   } catch (error) {
-    // Clean error handling with BusinessError
     if (error instanceof BusinessError) {
-      // Expected business errors - no logging to reduce terminal noise
       return responseHelper.error(res, error.message, error.statusCode)
     } else {
-      // Unexpected system errors - log with full details
       return responseHelper.error(res, error.message)
     }
   }

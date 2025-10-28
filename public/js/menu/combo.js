@@ -139,6 +139,20 @@ $(function () {
             }
             return data
           }
+        },
+        {
+          data: 'isActive',
+          className: 'text-center',
+          title: 'Trạng thái',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              const active = data === true || data === 'true'
+              const badgeClass = active ? 'bg-success' : 'bg-danger'
+              const text = active ? 'Kích hoạt' : 'Ẩn'
+              return `<span class="badge ${badgeClass}">${text}</span>`
+            }
+            return data
+          }
         }
       ],
       columnDefs: [{ width: '70px', target: 3 }],
@@ -193,6 +207,8 @@ $(function () {
     $('#comboTable tbody').on('click', 'tr', function (e) {
       if ($(e.target).is('input[type="checkbox"], tbody td:first-child')) return
       const data = table.row(this).data()
+      console.log(data)
+
       if (!data) return
 
       const $form = $('#comboForm')
@@ -204,6 +220,7 @@ $(function () {
       $form.find('[name="name"]').val(data.name || '')
       $form.find('[name="price"]').val(data.price || '')
       $form.find('[name="note"]').val(data.note || '')
+      $form.find('[name="isActive"]').prop('checked', data.isActive)
 
       // Set image: url server
       croppedImageUrl = data.image || null
@@ -345,6 +362,7 @@ $(function () {
       const name = $form.find('[name="name"]').val()
       const price = parseFloat($form.find('[name="price"]').val())
       const note = $form.find('[name="note"]').val()
+      const isActive = $form.find('[name="isActive"]').is(':checked')
       let image = croppedImageUrl || ''
 
       // Lấy items
@@ -387,7 +405,7 @@ $(function () {
         let url = '/api/menu/combo/create'
         if (mode === 'update') url = `/api/menu/combo/update/${comboId}`
 
-        const payload = { sku, name, items, price, note, image }
+        const payload = { sku, name, items, price, note, image, isActive }
 
         // Gửi tạo/cập nhật combo
         const res = await $.ajax({

@@ -603,6 +603,20 @@ input[type=text]::-ms-clear {
   border-color: var(--bs-border-color) !important;
 }
 
+.tox.tox-tinymce .tox-promotion {
+  display: none;
+}
+.tox.tox-tinymce .tox-statusbar__branding {
+  display: none;
+}
+.tox.tox-tinymce .tox-statusbar__path-item {
+  display: none;
+}
+
+.tox-dialog__body-nav-item:last-child {
+  display: none !important;
+}
+
 @media (max-width: 767px) {
   #imageCropModal .modal-body {
     max-height: 150px;

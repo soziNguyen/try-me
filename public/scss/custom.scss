@@ -570,6 +570,24 @@ input[type='text']::-ms-clear {
   }
 }
 
+.tox.tox-tinymce {
+  .tox-promotion {
+    display: none;
+  }
+
+  .tox-statusbar__branding {
+    display: none;
+  }
+
+  .tox-statusbar__path-item {
+    display: none;
+  }
+}
+
+.tox-dialog__body-nav-item:last-child {
+  display: none !important;
+}
+
 //================= Responsive =================//
 
 @media (max-width: 767px) {

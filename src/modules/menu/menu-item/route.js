@@ -1,6 +1,7 @@
 import express from 'express'
 import {
   getActiveMenus,
+  getActiveMenusForRecipe,
   getMenus,
   createMenu,
   updateMenu,
@@ -14,6 +15,7 @@ import { checkWarehouseAccess } from '../../../helpers/warehouseHelper.js'
 const router = express.Router()
 router.use(checkWarehouseAccess)
 
+router.get('/api/menus/active', isAuthenticated, getActiveMenusForRecipe)
 router.get('/api/menu/get/active', isAuthenticated, getActiveMenus)
 router.get('/api/menu/get/', isAuthenticated, isPermit('Admin', 'Org'), getMenus)
 router.get('/api/menu/search', isAuthenticated, searchMenus)
