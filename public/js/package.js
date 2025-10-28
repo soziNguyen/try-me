@@ -127,7 +127,7 @@ async function fillPlans(currentPlanCode, mode = 'month') {
                   ? 'btn-outline-secondary disabled'
                   : 'btn-success'
             }">
-            ${isCurrent ? 'Đang sử dụng' : isLowerLevel ? 'Không khả dụng' : 'Chọn gói'}
+            ${isCurrent ? 'Đang sử dụng' : isLowerLevel ? 'Không khả dụng' : 'Nâng cấp'}
           </button>
         </div>
         <span class="badge ${badgeClass} position-absolute top-0 end-0 rounded-4 m-2 py-2 px-3">${badgeText}</span>

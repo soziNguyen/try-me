@@ -810,3 +810,13 @@ export const planTransactionPage = async (req, res) => {
     })
   )
 }
+
+export const planInvoicePage = async (req, res) => {
+  res.render(
+    'package/invoice',
+    getPageData(req, 'Hóa đơn', 'Plan Invoice', {
+      headerClass: 'admin__header',
+      pageTitle: 'HÓA ĐƠN'
+    })
+  )
+}
