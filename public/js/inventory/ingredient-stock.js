@@ -1,8 +1,7 @@
 $(function () {
   let showList = [10, 25, 50, 100]
   const numRows = Math.floor(
-    ($(window).height() - $('#ingredientStockTableBody').offset().top - 100) /
-      45
+    ($(window).height() - $('#ingredientStockTableBody').offset().top - 100) / 45
   )
   if (!showList.includes(numRows)) {
     showList.push(numRows)
@@ -26,17 +25,16 @@ $(function () {
       },
       {
         data: 'ingredient.name',
-        render: (data, type, row) =>
-          `<span class="text">${row.ingredient?.name || ''}</span>`
+        render: (data, type, row) => `<span class="text">${row.ingredient?.name || ''}</span>`
       },
       {
         data: 'warehouse.name',
         className: 'text-start px-1',
         render: (data, type, row) => {
           if (type === 'display') {
-            return data
-              ? `<span>${row.warehouse.name} - ${row.warehouse.location}</span>`
-              : ''
+            console.log(row)
+
+            return data ? `<span>${row.warehouse.name} - ${row.warehouse.location}</span>` : ''
           }
           return row.warehouse.name
         }
@@ -47,14 +45,13 @@ $(function () {
       },
       {
         data: 'ingredient.unit',
-        render: (data, type, row) =>
-          `<span class="text">${row.ingredient?.unit || ''}</span>`
+        render: (data, type, row) => `<span class="text">${row.ingredient?.unit || ''}</span>`
       },
       {
         data: 'supplier.name',
         render: (data, type, row) => {
           if (row.supplier?.name) {
-            return `<span class="badge bg-success">${row.supplier.name}</span>`
+            return `<span class="badge bg-success">${row.supplier.name || ''}</span>`
           }
           return `<span class="badge bg-info">Chuyển kho</span>`
         }

@@ -82,17 +82,18 @@
                     <form id="addCustomerForm">
                       <div class="mb-3">
                         <label for="newCustomerName" class="form-label">Tên khách hàng</label>
-                        <input type="text" class="form-control" id="newCustomerName" required>
+                        <input type="text" class="form-control" id="newCustomerName">
                       </div>
                       <div class="mb-3">
                         <label for="newCustomerPhone" class="form-label">Số điện thoại</label>
-                        <input type="text" class="form-control" id="newCustomerPhone" required>
+                        <input type="text" class="form-control" id="newCustomerPhone">
                       </div>
                     </form>
                   </div>
                   <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn btn-primary" id="saveCustomerBtn">Lưu</button>
+                    <button type="submit" form="addCustomerForm" class="btn btn-primary"
+                      id="saveCustomerBtn">Lưu</button>
                   </div>
                 </div>
               </div>

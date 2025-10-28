@@ -47,12 +47,12 @@ const OrderSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Organization',
       required: true
+    },
+    warehouse: {
+      type: Schema.Types.ObjectId,
+      ref: 'Warehouse',
+      required: true
     }
-    // warehouse: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: 'Warehouse',
-    //   required: true
-    // }
   },
   {
     collection: 'Orders',

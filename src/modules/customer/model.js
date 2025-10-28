@@ -7,7 +7,7 @@ const customerSchema = new mongoose.Schema(
     totalPoints: { type: Number, default: 0 }, // tổng điểm hiện có
     totalOrders: { type: Number, default: 0 }, // tổng số đơn đã mua
     totalSpent: { type: Number, default: 0 }, // tổng tiền đã chi
-    lastOrderDate: { type: Date }, // đơn gần nhất
+    lastOrderDate: { type: Date, default: null }, // đơn gần nhất
     organization: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Organization',

@@ -141,9 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest(
-      '[id$="__sidebar"].collapsed .accordion-button'
-    )
+    const btn = e.target.closest('[id$="__sidebar"].collapsed .accordion-button')
     if (!btn) return
 
     e.preventDefault() // chặn bootstrap collapse mặc định

@@ -13,6 +13,9 @@ import InvoiceOption from '../invoice/model.js'
 import ReceivingAccount from '../receiving-account/model.js'
 import BusinessError from '../error/BusinessError.js'
 import { constants } from '../../configs/constants.js'
+import { getWarehouse } from '../../helpers/warehouseHelper.js'
+import Organization from '../organization/model.js'
+import ProductStock from '../product/stock/model.js'
 
 const { POINT_VALUE, POINTS_EARN_RATE } = constants
 
@@ -21,13 +24,12 @@ export const createOrder = async (req, res) => {
     const result = await withTransaction(async (session) => {
       const organizationId = getCurrentOrg(req)
       if (!organizationId) {
-        throw new Error('Thiếu thông tin tổ chức')
+        throw new BusinessError('Thiếu thông tin tổ chức', 400)
       }
 
-      // const { warehouseId } = req.body
-      // if (!warehouseId) {
-      //   throw new Error('Thiếu thông tin kho hàng')
-      // }
+      // Lấy warehouse dựa trên role
+      const warehouse = await getWarehouse(req, organizationId)
+
       const { tableId, isTakeaway, customerName, customerPhone } = req.body
       let prefix = 'INV'
 
@@ -89,13 +91,22 @@ export const createOrder = async (req, res) => {
       // Generate order code
       const orderCode = await generateInvoiceCode(Order, prefix)
 
+      // Base order data
+      const baseOrderData = {
+        status: 'open',
+        organization: organizationId,
+        warehouse,
+        customerId: customer?._id || null,
+        code: orderCode
+      }
+
       // 2. Đơn mang đi
       if (isTakeaway) {
         const existingOrder = await Order.findOne({
           isTakeaway: true,
           status: 'open',
-          organization: organizationId
-          // warehouse: warehouseId
+          organization: organizationId,
+          warehouse
         })[session ? 'session' : 'exec'](session || undefined)
 
         if (existingOrder) {
@@ -112,13 +123,9 @@ export const createOrder = async (req, res) => {
           const [createdOrder] = await Order.create(
             [
               {
+                ...baseOrderData,
                 tableId: null,
-                isTakeaway: true,
-                status: 'open',
-                organization: organizationId,
-                // warehouse: warehouseId,
-                customerId: customer?._id || null,
-                code: orderCode
+                isTakeaway: true
               }
             ],
             { session }
@@ -126,13 +133,9 @@ export const createOrder = async (req, res) => {
           newOrder = createdOrder
         } else {
           newOrder = await Order.create({
+            ...baseOrderData,
             tableId: null,
-            isTakeaway: true,
-            status: 'open',
-            organization: organizationId,
-            // warehouse: warehouseId,
-            customerId: customer?._id || null,
-            code: orderCode
+            isTakeaway: true
           })
         }
 
@@ -144,21 +147,16 @@ export const createOrder = async (req, res) => {
         }
       }
 
-      // 3. Đơn tại bàn
+      // 3. Đơn tại bàn - không có tableId
       if (!tableId) {
-        // Nếu không có tableId, tạo hóa đơn trống (chưa gán bàn)
         let newOrder
         if (session) {
           const [createdOrder] = await Order.create(
             [
               {
+                ...baseOrderData,
                 tableId: null,
-                isTakeaway: false,
-                status: 'open',
-                organization: organizationId,
-                // warehouse: warehouseId,
-                customerId: customer?._id || null,
-                code: orderCode
+                isTakeaway: false
               }
             ],
             { session }
@@ -166,13 +164,9 @@ export const createOrder = async (req, res) => {
           newOrder = createdOrder
         } else {
           newOrder = await Order.create({
+            ...baseOrderData,
             tableId: null,
-            isTakeaway: false,
-            status: 'open',
-            organization: organizationId,
-            // warehouse: warehouseId,
-            customerId: customer?._id || null,
-            code: orderCode
+            isTakeaway: false
           })
         }
 
@@ -183,26 +177,21 @@ export const createOrder = async (req, res) => {
         }
       }
 
-      // Nếu có tableId thì xử lý tạo order gán bàn như trước:
+      // 4. Đơn tại bàn - có tableId
       const table = await Table.findById(tableId)[session ? 'session' : 'exec'](
         session || undefined
       )
-      if (!table) throw new Error('Bàn không tồn tại')
-      if (table.status === 'occupied') throw new Error('Bàn đã có khách')
+      if (!table) throw new BusinessError('Bàn không tồn tại', 404)
+      if (table.status === 'occupied') throw new BusinessError('Bàn đã có khách', 409)
 
-      // Tạo order mới với bàn cụ thể
       let newOrder
       if (session) {
         const [createdOrder] = await Order.create(
           [
             {
+              ...baseOrderData,
               tableId,
-              isTakeaway: false,
-              status: 'open',
-              organization: organizationId,
-              // warehouse: warehouseId,
-              customerId: customer?._id || null,
-              code: orderCode
+              isTakeaway: false
             }
           ],
           { session }
@@ -210,17 +199,12 @@ export const createOrder = async (req, res) => {
         newOrder = createdOrder
       } else {
         newOrder = await Order.create({
+          ...baseOrderData,
           tableId,
-          isTakeaway: false,
-          status: 'open',
-          organization: organizationId,
-          // warehouse: warehouseId,
-          customerId: customer?._id || null,
-          code: orderCode
+          isTakeaway: false
         })
       }
 
-      // Cập nhật trạng thái bàn
       const updateOptions = {}
       if (session) updateOptions.session = session
 
@@ -248,21 +232,9 @@ export const createOrder = async (req, res) => {
     responseHelper.success(res, result)
   } catch (error) {
     console.error('Create order error:', error)
-
-    // Handle specific error messages
-    if (error.message === 'Thiếu thông tin tổ chức') {
-      return responseHelper.error(res, error.message, 400)
+    if (error instanceof BusinessError) {
+      return responseHelper.error(res, error.message, error.statusCode)
     }
-    if (error.message === 'Thiếu thông tin bàn') {
-      return responseHelper.error(res, error.message, 400)
-    }
-    if (error.message === 'Bàn không tồn tại') {
-      return responseHelper.error(res, error.message, 404)
-    }
-    if (error.message === 'Bàn đã có khách') {
-      return responseHelper.error(res, error.message, 400)
-    }
-
     responseHelper.error(res, error.message)
   }
 }
@@ -270,12 +242,34 @@ export const createOrder = async (req, res) => {
 export const getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params
-    const order = await Order.findById(orderId)
+
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    // Build match condition với warehouse filter
+    const matchCondition = {
+      _id: orderId,
+      organization: organizationId
+    }
+
+    if (req.warehouseFilter) {
+      // Staff user - chỉ thấy kho được gán
+      matchCondition.warehouse = req.warehouseFilter
+    } else {
+      // Admin/Org - sử dụng defaultWarehouse
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        matchCondition.warehouse = org.defaultWarehouse
+      }
+    }
+
+    const order = await Order.findOne(matchCondition)
       .populate('tableId', 'name area')
       .populate('items.foodId', 'name price')
       .populate('items.comboId', 'name price')
       .populate('customerId', 'name phone totalPoints')
       .populate('organization', 'name phone province commune street logo')
+      .populate('warehouse', 'name location')
       .populate({
         path: 'paymentMethodId',
         populate: {
@@ -286,11 +280,13 @@ export const getOrderById = async (req, res) => {
       })
       .lean()
 
-    if (!order) return res.status(404).json({ message: 'Order không tồn tại' })
+    if (!order) {
+      return responseHelper.error(res, 'Order không tồn tại hoặc không có quyền truy cập', 404)
+    }
 
-    res.json(order)
+    responseHelper.success(res, order)
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    responseHelper.error(res, error.message)
   }
 }
 
@@ -312,16 +308,63 @@ export const addItemToOrder = async (req, res) => {
       return responseHelper.error(res, 'Thông tin món/combo không hợp lệ', 400)
     }
 
-    const order = await Order.findById(orderId)
-    if (!order) return responseHelper.error(res, 'Order không tồn tại', 404)
-    if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400)
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const warehouse = await getWarehouse(req, organizationId)
+
+    const matchCondition = {
+      _id: orderId,
+      organization: organizationId,
+      warehouse
+    }
+
+    const order = await Order.findOne(matchCondition)
+    if (!order) {
+      return responseHelper.error(res, 'Order không tồn tại hoặc không có quyền truy cập', 404)
+    }
+    if (order.status !== 'open') {
+      return responseHelper.error(res, 'Order đã đóng', 400)
+    }
 
     // Nếu là combo
     if (comboId) {
-      const combo = await Combo.findById(comboId)
-      if (!combo) return responseHelper.error(res, 'Combo không tồn tại', 404)
+      // 1. Check combo tồn tại và active
+      const combo = await Combo.findOne({
+        _id: comboId,
+        organization: organizationId,
+        isActive: true
+      })
+      if (!combo) {
+        return responseHelper.error(res, 'Combo không tồn tại hoặc đã bị vô hiệu hóa', 404)
+      }
 
+      // 2. Check tồn kho
+      const comboStock = await ProductStock.findOne({
+        combo: comboId,
+        warehouse,
+        organization: organizationId
+      })
+
+      // Nếu không có record hoặc quantity = 0
+      if (!comboStock || comboStock.quantity <= 0) {
+        return responseHelper.error(res, `Combo "${combo.name}" hiện đã hết hàng`, 400)
+      }
+
+      // 3. Check số lượng yêu cầu
       const existingCombo = order.items.find((item) => item.comboId?.toString() === comboId)
+      const currentOrderQuantity = existingCombo ? existingCombo.quantity : 0
+      const totalQuantity = currentOrderQuantity + quantity
+
+      if (comboStock.quantity < totalQuantity) {
+        return responseHelper.error(
+          res,
+          `Combo "${combo.name}" không đủ số lượng. Còn lại: ${comboStock.quantity}${currentOrderQuantity > 0 ? `, đang có trong order: ${currentOrderQuantity}` : ''}`,
+          400
+        )
+      }
+
+      // 4. Add to order
       if (existingCombo) {
         existingCombo.quantity += quantity
       } else {
@@ -335,10 +378,42 @@ export const addItemToOrder = async (req, res) => {
 
     // Nếu là món ăn
     if (foodId) {
-      const menuItem = await MenuItem.findById(foodId)
-      if (!menuItem) return responseHelper.error(res, 'Món ăn không tồn tại', 404)
+      // 1. Check món ăn tồn tại và active
+      const menuItem = await MenuItem.findOne({
+        _id: foodId,
+        organization: organizationId,
+        isActive: true
+      })
+      if (!menuItem) {
+        return responseHelper.error(res, 'Món ăn không tồn tại hoặc đã bị vô hiệu hóa', 404)
+      }
 
+      // 2. Check tồn kho
+      const productStock = await ProductStock.findOne({
+        product: foodId,
+        warehouse,
+        organization: organizationId
+      })
+
+      // Nếu không có record hoặc quantity = 0
+      if (!productStock || productStock.quantity <= 0) {
+        return responseHelper.error(res, `Món ăn "${menuItem.name}" hiện đã hết hàng`, 400)
+      }
+
+      // 3. Check số lượng yêu cầu
       const existingItem = order.items.find((item) => item.foodId?.toString() === foodId)
+      const currentOrderQuantity = existingItem ? existingItem.quantity : 0
+      const totalQuantity = currentOrderQuantity + quantity
+
+      if (productStock.quantity < totalQuantity) {
+        return responseHelper.error(
+          res,
+          `Món ăn "${menuItem.name}" không đủ số lượng. Còn lại: ${productStock.quantity}${currentOrderQuantity > 0 ? `, đang có trong order: ${currentOrderQuantity}` : ''}`,
+          400
+        )
+      }
+
+      // 4. Add to order
       if (existingItem) {
         existingItem.quantity += quantity
       } else {
@@ -360,10 +435,7 @@ export const addItemToOrder = async (req, res) => {
         await Table.findByIdAndUpdate(order.tableId, {
           totalAmount: order.totalAmount
         })
-      } catch (e) {
-        // không block flow nếu cập nhật table lỗi
-        console.warn('Warning: không cập nhật được table.totalAmount', e)
-      }
+      } catch {}
     }
 
     const populatedOrder = await Order.findById(orderId)
@@ -373,8 +445,10 @@ export const addItemToOrder = async (req, res) => {
 
     responseHelper.success(res, populatedOrder)
   } catch (error) {
-    console.error('Lỗi khi thêm món/combo:', error)
-    responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    if (error instanceof BusinessError) {
+      return responseHelper.error(res, error.message, error.statusCode)
+    }
+    responseHelper.error(res, error.message)
   }
 }
 
@@ -383,7 +457,7 @@ export const updateItemQuantity = async (req, res) => {
     const { orderId } = req.params
     const { itemId, quantity, type } = req.body
 
-    if (!itemId || !quantity || quantity <= 0) {
+    if (!itemId || typeof quantity !== 'number' || quantity <= 0) {
       return responseHelper.error(res, 'Thông tin không hợp lệ', 400)
     }
 
@@ -391,21 +465,102 @@ export const updateItemQuantity = async (req, res) => {
       return responseHelper.error(res, 'Loại item không hợp lệ', 400)
     }
 
-    const order = await Order.findById(orderId)
-    if (!order) return responseHelper.error(res, 'Order không tồn tại', 404)
-    if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400)
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    const warehouse = await getWarehouse(req, organizationId)
+
+    // Build match condition với warehouse filter
+    const matchCondition = {
+      _id: orderId,
+      organization: organizationId,
+      warehouse
+    }
+
+    const order = await Order.findOne(matchCondition)
+    if (!order) {
+      return responseHelper.error(res, 'Order không tồn tại hoặc không có quyền truy cập', 404)
+    }
+    if (order.status !== 'open') {
+      return responseHelper.error(res, 'Order đã đóng', 400)
+    }
+
+    // Tìm item trong order
     const item = order.items.find((item) => {
       if (type === 'food') return item.foodId?.toString() === itemId
       if (type === 'combo') return item.comboId?.toString() === itemId
     })
 
-    if (!item)
+    if (!item) {
       return responseHelper.error(
         res,
         `${type === 'food' ? 'Món ăn' : 'Combo'} không có trong order`,
         404
       )
+    }
+
+    // Check ProductStock trước khi update
+    if (type === 'combo') {
+      const combo = await Combo.findOne({
+        _id: itemId,
+        organization: organizationId,
+        isActive: true
+      })
+      if (!combo) {
+        return responseHelper.error(res, 'Combo không tồn tại hoặc đã bị vô hiệu hóa', 404)
+      }
+
+      const comboStock = await ProductStock.findOne({
+        combo: itemId,
+        warehouse,
+        organization: organizationId
+      })
+
+      if (!comboStock || comboStock.quantity <= 0) {
+        return responseHelper.error(res, `Combo "${combo.name}" hiện đã hết hàng tại kho này`, 400)
+      }
+
+      if (comboStock.quantity < quantity) {
+        return responseHelper.error(
+          res,
+          `Combo "${combo.name}" không đủ số lượng. Còn lại: ${comboStock.quantity}`,
+          400
+        )
+      }
+    }
+
+    if (type === 'food') {
+      const menuItem = await MenuItem.findOne({
+        _id: itemId,
+        organization: organizationId,
+        isActive: true
+      })
+      if (!menuItem) {
+        return responseHelper.error(res, 'Món ăn không tồn tại hoặc đã bị vô hiệu hóa', 404)
+      }
+
+      const productStock = await ProductStock.findOne({
+        product: itemId,
+        warehouse,
+        organization: organizationId
+      })
+
+      if (!productStock || productStock.quantity <= 0) {
+        return responseHelper.error(
+          res,
+          `Món ăn "${menuItem.name}" hiện đã hết hàng tại kho này`,
+          400
+        )
+      }
+
+      if (productStock.quantity < quantity) {
+        return responseHelper.error(
+          res,
+          `Món ăn "${menuItem.name}" không đủ số lượng. Còn lại: ${productStock.quantity}`,
+          400
+        )
+      }
+    }
 
     item.quantity = quantity
 
@@ -414,13 +569,9 @@ export const updateItemQuantity = async (req, res) => {
     await order.save()
 
     if (order.tableId) {
-      try {
-        await Table.findByIdAndUpdate(order.tableId, {
-          totalAmount: order.totalAmount
-        })
-      } catch (e) {
-        console.warn('Warning: không cập nhật được table.totalAmount', e)
-      }
+      await Table.findByIdAndUpdate(order.tableId, {
+        totalAmount: order.totalAmount
+      }).catch(() => {})
     }
 
     const populatedOrder = await Order.findById(orderId)
@@ -430,8 +581,10 @@ export const updateItemQuantity = async (req, res) => {
 
     responseHelper.success(res, populatedOrder)
   } catch (error) {
-    console.error('Lỗi khi cập nhật số lượng:', error)
-    responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    if (error instanceof BusinessError) {
+      return responseHelper.error(res, error.message, error.statusCode)
+    }
+    responseHelper.error(res, error.message)
   }
 }
 
@@ -440,11 +593,23 @@ export const removeItemFromOrder = async (req, res) => {
     const { orderId, itemId } = req.params
     const { type } = req.query
 
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const warehouse = await getWarehouse(req, organizationId)
+
+    // Build match condition với warehouse filter
+    const matchCondition = {
+      _id: orderId,
+      organization: organizationId,
+      warehouse
+    }
+
     if (!['food', 'combo'].includes(type)) {
       return responseHelper.error(res, 'Loại item không hợp lệ', 400)
     }
 
-    const order = await Order.findById(orderId)
+    const order = await Order.findOne(matchCondition)
     if (!order) return responseHelper.error(res, 'Order không tồn tại', 404)
     if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400)
 
@@ -469,9 +634,7 @@ export const removeItemFromOrder = async (req, res) => {
         await Table.findByIdAndUpdate(order.tableId, {
           totalAmount: order.totalAmount
         })
-      } catch (e) {
-        console.warn('Warning: không cập nhật được table.totalAmount', e)
-      }
+      } catch {}
     }
 
     const populatedOrder = await Order.findById(orderId)
@@ -481,8 +644,7 @@ export const removeItemFromOrder = async (req, res) => {
 
     responseHelper.success(res, populatedOrder)
   } catch (error) {
-    console.error('Lỗi khi xóa item:', error)
-    responseHelper.error(res, 'Lỗi server nội bộ', 500)
+    responseHelper.error(res, error.message)
   }
 }
 
@@ -578,7 +740,90 @@ export const checkoutOrder = async (req, res) => {
           400
         )
 
-      // 4. Handle customer points and updates
+      // 4. VALIDATE & DEDUCT PRODUCT STOCK (BEFORE completing order)
+      for (const item of order.items) {
+        if (item.foodId) {
+          // Validate MenuItem stock
+          const productStock = await ProductStock.findOne({
+            product: item.foodId,
+            warehouse: order.warehouse,
+            organization: order.organization
+          }).session(session)
+
+          if (!productStock || productStock.quantity < item.quantity) {
+            const menuItem = await MenuItem.findById(item.foodId)
+            throw new BusinessError(
+              `Món ăn "${menuItem?.name || 'Unknown'}" không đủ số lượng trong kho. Còn lại: ${productStock?.quantity || 0}, cần: ${item.quantity}`,
+              400
+            )
+          }
+
+          // Deduct stock atomically
+          const stockUpdateResult = await ProductStock.findOneAndUpdate(
+            {
+              product: item.foodId,
+              warehouse: order.warehouse,
+              organization: order.organization,
+              quantity: { $gte: item.quantity } // Ensure quantity is still enough
+            },
+            {
+              $inc: { quantity: -item.quantity },
+              $set: { updatedAt: new Date() }
+            },
+            { session, new: true }
+          )
+
+          if (!stockUpdateResult) {
+            const menuItem = await MenuItem.findById(item.foodId)
+            throw new BusinessError(
+              `Tồn kho của "${menuItem?.name || 'Unknown'}" đã thay đổi, vui lòng thử lại`,
+              409
+            )
+          }
+        }
+
+        if (item.comboId) {
+          // Validate Combo stock
+          const comboStock = await ProductStock.findOne({
+            combo: item.comboId,
+            warehouse: order.warehouse,
+            organization: order.organization
+          }).session(session)
+
+          if (!comboStock || comboStock.quantity < item.quantity) {
+            const combo = await Combo.findById(item.comboId)
+            throw new BusinessError(
+              `Combo "${combo?.name || 'Unknown'}" không đủ số lượng trong kho. Còn lại: ${comboStock?.quantity || 0}, cần: ${item.quantity}`,
+              400
+            )
+          }
+
+          // Deduct stock atomically
+          const stockUpdateResult = await ProductStock.findOneAndUpdate(
+            {
+              combo: item.comboId,
+              warehouse: order.warehouse,
+              organization: order.organization,
+              quantity: { $gte: item.quantity }
+            },
+            {
+              $inc: { quantity: -item.quantity },
+              $set: { updatedAt: new Date() }
+            },
+            { session, new: true }
+          )
+
+          if (!stockUpdateResult) {
+            const combo = await Combo.findById(item.comboId)
+            throw new BusinessError(
+              `Tồn kho của "${combo?.name || 'Unknown'}" đã thay đổi, vui lòng thử lại`,
+              409
+            )
+          }
+        }
+      }
+
+      // 5. Handle customer points and updates
       let customer = null
       let pointsEarned = 0
 
@@ -623,23 +868,20 @@ export const checkoutOrder = async (req, res) => {
           throw new BusinessError('Điểm khách hàng đã thay đổi, vui lòng thử lại', 409)
         }
       } else if (parsedPointsUsed > 0) {
-        // Double check (though early validation should catch this)
         throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
       }
 
-      // 5. Generate VietQR URL
+      // 6. Generate VietQR URL
       let qrCodeUrl = null
       if (['bank', 'e-wallet'].includes(paymentType) && receivingAccountId) {
         const receivingAccount = receivingAccountId
 
-        const bankCode = receivingAccount.bankCode || 'MB' // Default to MB
+        const bankCode = receivingAccount.bankCode || 'MB'
         const accountNumber = receivingAccount.accountNumber
 
         if (accountNumber && bankCode) {
-          // Use order code directly as description
           const description = order.code
 
-          // Generate VietQR URL with hardcoded "VIETQR.CO"
           const baseUrl = 'https://vietqr.co/api/generate'
           const params = new URLSearchParams({
             style: '2',
@@ -652,7 +894,7 @@ export const checkoutOrder = async (req, res) => {
         }
       }
 
-      // 6. UPDATE ORDER
+      // 7. UPDATE ORDER
       order.discount = parsedDiscount
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = calculatedPointsDiscount
@@ -671,7 +913,7 @@ export const checkoutOrder = async (req, res) => {
 
       await order.save({ session })
 
-      // 7. RELEASE TABLE
+      // 8. RELEASE TABLE
       if (order.tableId) {
         await Table.findByIdAndUpdate(
           order.tableId,
@@ -698,14 +940,10 @@ export const checkoutOrder = async (req, res) => {
 
     return responseHelper.success(res, result, 'Thanh toán thành công')
   } catch (error) {
-    // Clean error handling with BusinessError
     if (error instanceof BusinessError) {
-      // Expected business errors - no logging to reduce terminal noise
       return responseHelper.error(res, error.message, error.statusCode)
     } else {
-      // Unexpected system errors - log with full details
-      console.error('Lỗi hệ thống thanh toán:', error)
-      return responseHelper.error(res, 'Lỗi server nội bộ', 500)
+      return responseHelper.error(res, error.message)
     }
   }
 }
@@ -901,7 +1139,6 @@ export const printInvoice = async (req, res) => {
       orderDate
     })
   } catch (error) {
-    console.error('Lỗi khi in hóa đơn:', error)
     responseHelper.error(res, error.message)
   }
 }
@@ -924,9 +1161,18 @@ export const getOrders = async (req, res) => {
 
     // Base match object
     const match = { organization: organizationId }
-    if (req.query.warehouseId) {
-      match.warehouse = new mongoose.Types.ObjectId(req.query.warehouseId)
+
+    if (req.warehouseFilter) {
+      // Staff user - chỉ thấy kho được gán
+      match.warehouse = req.warehouseFilter
+    } else {
+      // Admin/Org - sử dụng defaultWarehouse
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        match.warehouse = org.defaultWarehouse
+      }
     }
+
     if (empty) {
       match.tableId = null
       match.status = 'open'
@@ -987,8 +1233,19 @@ export const getOrders = async (req, res) => {
     if (searchValue) {
       const maybeNum = Number(searchValue)
       const orConditions = [
+        { code: { $regex: searchValue, $options: 'i' } },
         { 'customer.name': { $regex: searchValue, $options: 'i' } },
-        { 'table.name': { $regex: searchValue, $options: 'i' } },
+        {
+          $or: [
+            { 'table.name': { $regex: searchValue, $options: 'i' } },
+            {
+              $and: [
+                { table: { $eq: null } },
+                { $expr: { $regexMatch: { input: 'Mang về', regex: searchValue, options: 'i' } } }
+              ]
+            }
+          ]
+        },
         { 'items.foodName': { $regex: searchValue, $options: 'i' } },
         { 'items.comboName': { $regex: searchValue, $options: 'i' } },
         {
@@ -1150,11 +1407,11 @@ export const assignTableToOrder = async (req, res) => {
   try {
     const result = await withTransaction(async (session) => {
       const organizationId = getCurrentOrg(req)
-      if (!organizationId) throw new Error('Thiếu thông tin tổ chức')
+      if (!organizationId) throw new BusinessError('Thiếu thông tin tổ chức', 400)
 
       const { orderId } = req.params
       const { tableId } = req.body
-      if (!orderId || !tableId) throw new Error('Thiếu orderId hoặc tableId')
+      if (!orderId || !tableId) throw new BusinessError('Thiếu orderId hoặc tableId', 400)
 
       // Tìm order trống
       const order = await Order.findOne({
@@ -1162,12 +1419,12 @@ export const assignTableToOrder = async (req, res) => {
         organization: organizationId,
         status: 'open'
       }).session(session)
-      if (!order) throw new Error('Order không tồn tại hoặc không hợp lệ')
+      if (!order) throw new BusinessError('Order không tồn tại hoặc không hợp lệ', 404)
 
       // Kiểm tra bàn
       const table = await Table.findById(tableId).session(session)
-      if (!table) throw new Error('Bàn không tồn tại')
-      if (table.status === 'occupied') throw new Error('Bàn đã có khách')
+      if (!table) throw new BusinessError('Bàn không tồn tại')
+      if (table.status === 'occupied') throw new BusinessError('Bàn đã có khách', 409)
 
       await Promise.all([
         Order.updateOne({ _id: orderId }, { tableId, isTakeaway: false }, { session }),

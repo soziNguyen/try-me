@@ -797,24 +797,26 @@ async function loadOrderData(orderId) {
   try {
     const response = await fetch(`/api/orders/${orderId}`)
     if (!response.ok) throw new Error('Failed to fetch order data')
+
     const data = await response.json()
+    const result = data.data
 
-    document.getElementById('discountInput').value = data.discount.toLocaleString('vi-VN') || '0'
-    document.getElementById('pointsInput').value = data.pointsUsed || '0'
+    document.getElementById('discountInput').value = result.discount.toLocaleString('vi-VN') || '0'
+    document.getElementById('pointsInput').value = result.pointsUsed || '0'
     document.getElementById('serviceChargeInput').value =
-      data.serviceCharge.toLocaleString('vi-VN') || '0'
+      result.serviceCharge.toLocaleString('vi-VN') || '0'
     document.getElementById('extraDiscountInput').value = Number(
-      data?.extraDiscount ?? 0
+      result?.extraDiscount ?? 0
     ).toLocaleString('vi-VN')
-    document.getElementById('vatInput').value = data.vatRate || '0'
+    document.getElementById('vatInput').value = result.vatRate || '0'
     document.getElementById('customerPaidInput').value =
-      data.customerPaid.toLocaleString('vi-VN') || '0'
-    document.getElementById('paymentMethodValue').value = data.paymentMethodId || ''
+      result.customerPaid.toLocaleString('vi-VN') || '0'
+    document.getElementById('paymentMethodValue').value = result.paymentMethodId || ''
 
-    if (data.paymentMethodId) {
+    if (result.paymentMethodId) {
       const buttons = document.querySelectorAll('#paymentMethod button')
       buttons.forEach((btn) => {
-        if (btn.getAttribute('data-value') === data.paymentMethodId) {
+        if (btn.getAttribute('data-value') === result.paymentMethodId) {
           btn.classList.add('active')
         } else {
           btn.classList.remove('active')
@@ -822,7 +824,7 @@ async function loadOrderData(orderId) {
       })
     }
 
-    window.appliedCouponId = data.couponId || localStorage.getItem('appliedCouponId') || null
+    window.appliedCouponId = result.couponId || localStorage.getItem('appliedCouponId') || null
 
     if (window.appliedCouponId) {
       localStorage.setItem('appliedCouponId', window.appliedCouponId)

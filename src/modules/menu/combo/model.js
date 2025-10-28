@@ -19,7 +19,11 @@ const comboSchema = new mongoose.Schema(
     price: { type: Number, required: true }, // giá bán hiện tại
     isActive: { type: Boolean, default: true }, // còn bán hay không
     note: { type: String, default: '' }, // ghi chú nội bộ
-
+    warehouse: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Warehouse',
+      required: true
+    },
     organization: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Organization',

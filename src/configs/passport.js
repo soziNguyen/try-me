@@ -36,8 +36,20 @@ passport.serializeUser((user, done) => done(null, user.id))
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await User.findById(id)
+    const user = await User.findById(id).lean()
     if (!user) return done(null, false)
+
+    const currentUser = await User.findById(id)
+      .populate({
+        path: 'organization',
+        populate: { path: 'plan', model: 'Plan', select: 'name' },
+        select: 'logo'
+      })
+      .lean()
+
+    user.orgPlan = currentUser.organization?.plan?.name || null
+    user.orgLogo = currentUser.organization?.logo || ''
+
     done(null, user)
   } catch (error) {
     done(error)

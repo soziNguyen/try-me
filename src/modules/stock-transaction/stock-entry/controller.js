@@ -11,6 +11,7 @@ import Organization from '../../organization/model.js'
 import Supplier from '../../inventory/supplier/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import BusinessError from '../../error/BusinessError.js'
+import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 
 // GET ALL
 export const getAllStockEntries = async (req, res) => {
@@ -258,6 +259,9 @@ export const createStockEntry = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    // Lấy warehouse trước khi vào transaction
+    const warehouse = await getWarehouse(req, organizationId)
+
     const entry = await withTransaction(async (session) => {
       const code = await generateDocumentCode(StockEntry, 'SE')
       const date = new Date()
@@ -266,23 +270,8 @@ export const createStockEntry = async (req, res) => {
         code: code,
         date: date,
         createdBy: req.user._id,
-        organization: organizationId
-      }
-
-      // Warehouse logic
-      if (req.warehouseFilter) {
-        // Staff - bắt buộc dùng kho được gán
-        docData.warehouse = req.warehouseFilter
-      } else {
-        // Admin/Org - dùng defaultWarehouse
-        const org = await Organization.findById(organizationId).select('defaultWarehouse')
-        if (!org?.defaultWarehouse) {
-          throw new BusinessError(
-            'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật trong profile.',
-            400
-          )
-        }
-        docData.warehouse = org.defaultWarehouse
+        organization: organizationId,
+        warehouse
       }
 
       const doc = new StockEntry(docData)

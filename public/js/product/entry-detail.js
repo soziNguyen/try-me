@@ -1,5 +1,6 @@
 $(function () {
-  let products = []
+  let menuItems = []
+  let combos = []
   let units = []
   let productEntryId = null
   let itemCounter = 0
@@ -13,10 +14,12 @@ $(function () {
   // Load dữ liệu ban đầu
   Promise.all([
     fetchData('menu/get/active'),
+    fetchData('menu/combos/active'),
     productEntryId ? fetchData(`product/entry/${productEntryId}`) : Promise.resolve(null)
   ])
-    .then(([pros, productEntryRes]) => {
-      products = pros || []
+    .then(([menuRes, comboRes, productEntryRes]) => {
+      menuItems = menuRes || []
+      combos = comboRes || []
       units = productEntryRes?.units || []
 
       initForm()
@@ -109,13 +112,27 @@ $(function () {
   function updateRowDropdowns(rowIndex) {
     const $select = $(`select[name="items[${rowIndex}][product]"]`)
 
-    const productOptions = products
-      .map((pro) => `<option value="${pro._id}">${pro.name}</option>`)
+    // Tạo optgroup cho MenuItem
+    const menuItemOptions = menuItems
+      .map((item) => `<option value="${item._id}" data-type="MenuItem">${item.name}</option>`)
       .join('')
 
-    $select
-      .empty()
-      .html('<option value="" class="text-center">— Chọn sản phẩm —</option>' + productOptions)
+    // Tạo optgroup cho Combo
+    const comboOptions = combos
+      .map((combo) => `<option value="${combo._id}" data-type="Combo">${combo.name}</option>`)
+      .join('')
+
+    const allOptions = `
+      <option value="" class="text-center">— Chọn sản phẩm —</option>
+      <optgroup label="Món ăn">
+        ${menuItemOptions}
+      </optgroup>
+      <optgroup label="Combo">
+        ${comboOptions}
+      </optgroup>
+    `
+
+    $select.empty().html(allOptions)
 
     const $unitSelect = $(`select[name="items[${rowIndex}][unit]"]`)
     if ($unitSelect.length) {
@@ -245,6 +262,10 @@ $(function () {
 
         const $sel = $(`select[name="items[${index}][product]"]`)
         const productVal = item.product?._id || item.product || ''
+        const productType = item.productType || 'MenuItem'
+
+        // Set data-type attribute cho option được chọn
+        $sel.find(`option[value="${productVal}"]`).attr('data-type', productType)
         $sel.val(productVal).trigger('change')
         initSelect2($sel, '— Chọn sản phẩm —')
 
@@ -336,7 +357,8 @@ $(function () {
 
     let subTotal = 0
     $('#itemsTableBody tr').each(function () {
-      const productId = $(this).find('select[name*="[product]"]').val()
+      const $select = $(this).find('select[name*="[product]"]')
+      const productId = $select.val()
       const quantity = parseFloat($(this).find('input[name*="[quantity]"]').val())
       const unit = $(this).find('select[name*="[unit]"]').val()
       const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val())
@@ -345,7 +367,11 @@ $(function () {
         const itemTotal = quantity * unitPrice
         subTotal += itemTotal
 
+        // Lấy productType từ data-type của option được chọn
+        const productType = $select.find('option:selected').data('type') || 'MenuItem'
+
         productEntryData.items.push({
+          productType,
           product: productId,
           quantity,
           unit,
@@ -392,6 +418,7 @@ $(function () {
       }
     })
   }
+
   $('#btn-back').on('click', function (e) {
     e.preventDefault()
     e.stopPropagation()

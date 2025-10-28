@@ -1,6 +1,7 @@
 import Customer from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
+import { formatPhoneNumber, validatePhoneNumber } from '../../helpers/validator.js'
 
 export const getCustomers = async (req, res) => {
   try {
@@ -126,9 +127,8 @@ export const searchCustomers = async (req, res) => {
       .select('name phone totalPoints')
       .lean()
 
-    res.json({ data: customers })
+    responseHelper.success(res, customers)
   } catch (error) {
-    console.error('Error in searchCustomers:', error)
     responseHelper.error(res, error.message)
   }
 }
@@ -145,35 +145,136 @@ export const createCustomer = async (req, res) => {
     name = name?.trim()
     phone = phone?.trim()
 
-    if (!name || !phone) {
-      return responseHelper.error(res, 'Vui lòng nhập tên và số điện thoại', 400)
+    if (!phone) {
+      return responseHelper.error(res, 'Vui lòng nhập số điện thoại', 400)
     }
+
+    // Validate phone
+    const phoneError = validatePhoneNumber(phone)
+    if (phoneError) {
+      return responseHelper.error(res, phoneError, 400)
+    }
+
+    // Format phone sang chuẩn 84xxx
+    phone = formatPhoneNumber(phone)
 
     // Tìm khách hàng đã tồn tại
     let customer = await Customer.findOne({ phone, organization: organizationId })
 
-    if (!customer) {
-      try {
-        customer = await Customer.create({
-          name,
-          phone,
-          organization: organizationId,
-          totalPoints: 0
-        })
-      } catch (e) {
-        // Duplicate key hoặc lỗi khác
-        return responseHelper.error(res, 'Khách hàng đã tồn tại', 409)
+    if (customer)
+      return responseHelper.error(res, 'Khách hàng với số điện thoại này đã tồn tại', 409)
+
+    customer = await Customer.create({
+      organization: organizationId,
+      name,
+      phone
+    })
+
+    return responseHelper.success(
+      res,
+      {
+        _id: customer._id,
+        name: customer.name,
+        phone: customer.phone,
+        totalPoints: customer.totalPoints || 0
+      },
+      'Thêm mới khách hàng thành công'
+    )
+  } catch (error) {
+    return responseHelper.error(res, 'Không thể tạo khách hàng')
+  }
+}
+
+export const getCustomerById = async (req, res) => {
+  const { id } = req.params
+  if (!id) return responseHelper.error(res, 'ID không hợp lệ', 400)
+
+  const organizationId = getCurrentOrg(req)
+  if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+  const customer = await Customer.findOne({
+    _id: id,
+    organization: organizationId
+  })
+
+  if (!customer) return responseHelper.error(res, 'Khách hàng không tồn tại', 404)
+  responseHelper.success(res, customer)
+}
+
+export const updateCustomer = async (req, res) => {
+  try {
+    const { id } = req.params
+    let { name, phone } = req.body
+
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    if (!id) return responseHelper.error(res, 'Khách hàng không tồn tại', 404)
+
+    // Trim dữ liệu
+    name = name?.trim()
+    phone = phone?.trim()
+
+    // Validate phone nếu có
+    if (phone) {
+      const phoneError = validatePhoneNumber(phone)
+      if (phoneError) {
+        return responseHelper.error(res, phoneError, 400)
       }
+      // Format phone sang chuẩn 84xxx
+      phone = formatPhoneNumber(phone)
     }
 
-    return responseHelper.success(res, {
-      _id: customer._id,
-      name: customer.name,
-      phone: customer.phone,
-      totalPoints: customer.totalPoints || 0
+    // Kiểm tra phone trùng (nếu có phone mới)
+    if (phone) {
+      const phoneExisting = await Customer.findOne({
+        phone,
+        organization: organizationId,
+        _id: { $ne: id }
+      })
+
+      if (phoneExisting) return responseHelper.error(res, 'Số điện thoại đã tồn tại', 409)
+    }
+
+    // Chuẩn bị data update
+    const dataUpdate = {}
+    if (name !== undefined) dataUpdate.name = name
+    if (phone !== undefined) dataUpdate.phone = phone
+
+    const updated = await Customer.findOneAndUpdate({ _id: id }, dataUpdate, {
+      new: true,
+      runValidators: true
     })
+
+    if (!updated) return responseHelper.error(res, 'Khách hàng không tồn tại', 404)
+
+    return responseHelper.success(res, updated, 'Cập nhật thông tin khách hàng thành công')
   } catch (error) {
-    console.error('Error in createCustomer:', error)
-    return responseHelper.error(res, 'Không thể tạo khách hàng')
+    return responseHelper.error(res, error.message)
+  }
+}
+
+export const deleteCustomers = async (req, res) => {
+  try {
+    const { ids } = req.body
+
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return responseHelper.error(res, 'Vui lòng chọn ít nhất 1 bản ghi để xóa', 400)
+    }
+    const result = await Customer.deleteMany({
+      _id: { $in: ids },
+      organization: organizationId
+    })
+
+    responseHelper.success(
+      res,
+      { deletedCount: result.deletedCount },
+      `Đã xóa ${result.deletedCount} bản ghi`
+    )
+  } catch (error) {
+    responseHelper.error(res, error.message)
   }
 }

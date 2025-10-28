@@ -34,6 +34,16 @@ $(function () {
       pageLength: numRows,
       columns: [
         {
+          data: 'code',
+          title: 'Mã HD',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `<span class="text form-control border-0">${data ?? ''}</span>`
+            }
+            return data ?? ''
+          }
+        },
+        {
           data: 'table',
           title: 'Bàn',
           render: (data, type, row) => {
@@ -41,7 +51,7 @@ $(function () {
             if (type === 'display') {
               return `<span class="number form-control border-0">${tableName}</span>`
             }
-            return data ?? ''
+            return tableName
           }
         },
         {
@@ -49,7 +59,7 @@ $(function () {
           title: 'Khách hàng',
           render: (data, type, row) => {
             if (type === 'display') {
-              return `<span class="text form-control border-0">${data ?? ''}</span>`
+              return `<span class="text form-control border-0">${data ?? 'Khách lẻ'}</span>`
             }
             return data ?? ''
           }

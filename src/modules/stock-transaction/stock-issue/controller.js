@@ -11,6 +11,7 @@ import StockHistory from '../stock-history/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import Organization from '../../organization/model.js'
 import BusinessError from '../../error/BusinessError.js'
+import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 
 // DATATABLE SERVER-SIDE
 export const getStockIssues = async (req, res) => {
@@ -225,6 +226,9 @@ export const createStockIssue = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    // Lấy warehouse trước khi vào transaction
+    const warehouse = await getWarehouse(req, organizationId)
+
     const issue = await withTransaction(async (session) => {
       const code = await generateDocumentCode(StockIssue, 'SI')
       const date = new Date()
@@ -232,35 +236,24 @@ export const createStockIssue = async (req, res) => {
         code: code,
         date: date,
         createdBy: req.user._id,
-        organization: organizationId
-      }
-
-      // Warehouse logic
-      if (req.warehouseFilter) {
-        // Staff - bắt buộc dùng kho được gán
-        docData.warehouse = req.warehouseFilter
-      } else {
-        // Admin/Org - dùng defaultWarehouse
-        const org = await Organization.findById(organizationId).select('defaultWarehouse')
-        if (!org?.defaultWarehouse) {
-          throw new BusinessError(
-            'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật trong profile.',
-            400
-          )
-        }
-        docData.warehouse = org.defaultWarehouse
+        organization: organizationId,
+        warehouse
       }
 
       const doc = new StockIssue(docData)
       await doc.save({ session })
       return doc
     })
+
     responseHelper.success(
       res,
       { id: issue._id, code: issue.code },
       'Khởi tạo phiếu xuất thành công'
     )
   } catch (err) {
+    if (err instanceof BusinessError) {
+      return responseHelper.error(res, err.message, err.statusCode)
+    }
     responseHelper.error(res, err.message)
   }
 }

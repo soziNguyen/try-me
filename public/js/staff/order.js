@@ -1,8 +1,6 @@
 // ======== Biến toàn cục ========
 const urlParams = new URLSearchParams(window.location.search)
 const orderId = urlParams.get('orderId')
-let allFoods = []
-let allCombos = []
 let allItems = []
 const csrfToken = document.getElementById('_csrf').value
 
@@ -17,16 +15,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const [foods, combos] = await Promise.all([
       ajax('/api/menu/get/active', {}, 'GET'),
-      fetchCombos()
+      ajax('/api/menu/combos/active', {}, 'GET')
     ])
 
     if (!Array.isArray(foods)) {
       return
     }
 
-    allFoods = foods
-    allCombos = combos
-    allItems = mergeMenus(allFoods, allCombos)
+    allItems = mergeMenus(foods, combos)
 
     renderMenu(allItems)
     renderCategories(extractCategories(allItems))
@@ -36,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const orderRes = await fetch(`/api/orders/${orderId}`)
       searchInput.focus()
       const orderData = await orderRes.json()
-      if (orderRes.ok) updateOrderUI(orderData)
+      if (orderRes.ok) updateOrderUI(orderData.data)
     } else {
       const warningDiv = document.getElementById('orderWarning')
       if (warningDiv) {
@@ -590,22 +586,6 @@ function updateOrderSectionVisibility() {
   }
 }
 
-// ======== Fetch combos ========
-
-async function fetchCombos() {
-  try {
-    const combos = await ajax('/api/menu/combos/active', {}, 'GET')
-    if (!Array.isArray(combos)) {
-      console.error('combos không phải là mảng:', combos)
-      return []
-    }
-    return combos
-  } catch (error) {
-    console.error('Lỗi khi tải combo:', error)
-    return []
-  }
-}
-
 // ======== Cập nhật UI Hóa đơn ========
 
 function updateOrderUI(order) {
@@ -835,14 +815,17 @@ $(async () => {
       const res = await fetch(`/api/orders/${orderId}`)
 
       if (!res.ok) throw new Error('Không lấy được dữ liệu hóa đơn')
-      const order = await res.json()
+      const data = await res.json()
+      const order = data.data
+
       const customer = order.customerId
 
       initSelect2()
-      const $select = $('#customer-select') // giả sử select khách hàng có id này
+      const $select = $('#customerSelect') // giả sử select khách hàng có id này
 
       if (customer?._id) {
         const option = new Option(`${customer.name} - ${customer.phone}`, customer._id, true, true)
+
         $(option).data('points', customer.totalPoints || 0)
         $select.append(option).trigger('change')
         updatePoints(customer.totalPoints)
@@ -898,17 +881,18 @@ $(async () => {
   })
 
   // trong modal
-  $('#saveCustomerBtn').on('click', async () => {
+  $('#addCustomerForm').on('submit', async (e) => {
+    e.preventDefault()
     const name = $('#newCustomerName').val().trim()
     const phone = $('#newCustomerPhone').val().trim()
 
-    if (!name || !phone) {
-      toastr.warning('Tên và số điện thoại không được để trống')
+    if (!phone) {
+      toastr.warning('Số điện thoại không được để trống')
       return
     }
 
     try {
-      const data = await ajax('/api/customers/create', { name, phone }, 'POST')
+      const data = await ajax('/api/customer/create', { name, phone }, 'POST')
       if (!data) return
 
       const newOption = new Option(`${data.name} - ${data.phone}`, data._id, true, true)

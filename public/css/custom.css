@@ -1,3 +1,6 @@
+#ingredientTable_wrapper {
+  padding: 0.5rem;
+}
 #ingredientTable_wrapper .dt-search .dt-input {
   margin-right: 0 !important;
 }
@@ -35,6 +38,9 @@
   padding: 0.375rem 0.5rem;
 }
 
+#menuTable_wrapper {
+  padding: 0.5rem;
+}
 #menuTable_wrapper .dt-search .dt-input {
   margin-right: 0 !important;
 }
@@ -72,6 +78,9 @@
   padding: 0.375rem 0.5rem;
 }
 
+#comboTable_wrapper {
+  padding: 0.5rem;
+}
 #comboTable_wrapper .dt-search .dt-input {
   margin-right: 0 !important;
 }
@@ -286,8 +295,6 @@ table tbody td .editBtn {
   padding-left: 4px;
 }
 .select2-container--default .select2-results__options .select2-results__option:hover {
-  background-color: var(--link) !important;
-  color: var(--white);
   cursor: pointer;
 }
 .select2-container--default .select2-results__options .select2-results__option--highlighted {
@@ -594,6 +601,20 @@ input[type=text]::-ms-clear {
 }
 #orgForm .form-control:focus {
   border-color: var(--bs-border-color) !important;
+}
+
+.tox.tox-tinymce .tox-promotion {
+  display: none;
+}
+.tox.tox-tinymce .tox-statusbar__branding {
+  display: none;
+}
+.tox.tox-tinymce .tox-statusbar__path-item {
+  display: none;
+}
+
+.tox-dialog__body-nav-item:last-child {
+  display: none !important;
 }
 
 @media (max-width: 767px) {
