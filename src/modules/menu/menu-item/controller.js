@@ -3,15 +3,34 @@ import responseHelper from '../../../helpers/responseHelper.js'
 import { deleteFile } from '../../upload/helper.js'
 import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import Organization from '../../organization/model.js'
+import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 
 export const getActiveMenus = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    const matchCondition = {
+      isActive: true,
+      organization: organizationId
+    }
+
+    // Warehouse filtering logic
+    if (req.warehouseFilter) {
+      // Staff user - chỉ thấy kho được gán
+      matchCondition.warehouse = req.warehouseFilter
+    } else {
+      // Admin/Org - sử dụng defaultWarehouse
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        matchCondition.warehouse = org.defaultWarehouse
+      }
+    }
+
     const pipeline = [
       ...lookupRef('category', 'MenuCategories', { as: 'category' }),
-      { $match: { isActive: true, organization: organizationId } },
+      { $match: matchCondition },
       { $sort: { name: 1 } },
       {
         $project: {
@@ -50,9 +69,22 @@ export const getMenus = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    const baseMatch = { organization: organizationId }
+
+    if (req.warehouseFilter) {
+      // Staff user - chỉ thấy kho được gán
+      baseMatch.warehouse = req.warehouseFilter
+    } else {
+      // Admin/Org - sử dụng defaultWarehouse
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        baseMatch.warehouse = org.defaultWarehouse
+      }
+    }
+
     // Base pipeline
     const pipeline = [
-      { $match: { organization: organizationId } },
+      { $match: baseMatch },
       ...lookupRef('category', 'MenuCategories', { as: 'category' }),
       ...lookupUser('createdBy'),
       ...lookupUser('updatedBy')
@@ -76,9 +108,7 @@ export const getMenus = async (req, res) => {
     }
 
     // Get total count
-    const recordsTotal = await MenuItem.countDocuments({
-      organization: organizationId
-    })
+    const recordsTotal = await MenuItem.countDocuments(baseMatch)
 
     // Get filtered count
     const countPipeline = [...pipeline, { $count: 'count' }]
@@ -173,10 +203,13 @@ export const createMenu = async (req, res) => {
       return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
     }
 
+    const warehouse = await getWarehouse(req, organizationId)
+
     const data = {
       ...req.body,
       createdBy: req.user._id,
-      organization: organizationId
+      organization: organizationId,
+      warehouse
     }
 
     const newMenu = new MenuItem(data)
@@ -200,19 +233,28 @@ export const updateMenu = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const menu = await MenuItem.findOne({
+    // Sử dụng helper function
+    const warehouse = await getWarehouse(req, organizationId)
+
+    // Build match condition với warehouse
+    const matchCondition = {
       _id: id,
-      organization: organizationId
-    })
+      organization: organizationId,
+      warehouse
+    }
+
+    const menu = await MenuItem.findOne(matchCondition)
 
     const existingName = await MenuItem.findOne({
       _id: { $ne: id },
+      warehouse,
       name,
       organization: organizationId
     })
 
     const existingSku = await MenuItem.findOne({
       _id: { $ne: id },
+      warehouse,
       sku,
       organization: organizationId
     })
@@ -238,14 +280,7 @@ export const updateMenu = async (req, res) => {
 
     if (Object.keys(dataUpdate).length === 0) return
 
-    const updated = await MenuItem.findOneAndUpdate(
-      {
-        _id: id,
-        organization: organizationId
-      },
-      dataUpdate,
-      { new: true }
-    )
+    const updated = await MenuItem.findOneAndUpdate(matchCondition, dataUpdate, { new: true })
       .populate('category', 'name')
       .populate('createdBy', 'username -_id')
       .populate('updatedBy', 'username -_id')
@@ -275,10 +310,30 @@ export const deleteMenus = async (req, res) => {
       return responseHelper.error(res, 'Không có thực đơn nào được chọn để xóa', 400)
     }
 
-    const result = await MenuItem.deleteMany({
+    const warehouse = await getWarehouse(req, organizationId)
+
+    // Build match condition với warehouse
+    const matchCondition = {
       _id: { $in: ids },
-      organization: organizationId
-    })
+      organization: organizationId,
+      warehouse
+    }
+
+    // Lấy danh sách để biết ảnh nào cần xóa
+    const menusToDelete = await MenuItem.find(matchCondition).lean()
+
+    const result = await MenuItem.deleteMany(matchCondition)
+
+    // Xóa ảnh (nếu có)
+    for (const menu of menusToDelete) {
+      if (menu.image) {
+        try {
+          await deleteFile(menu.image)
+        } catch (err) {
+          console.error(`Không xóa được ảnh của ${menu.name}:`, err)
+        }
+      }
+    }
 
     responseHelper.success(res, result.deletedCount, 'Xóa thực đơn thành công')
   } catch (err) {
@@ -292,6 +347,9 @@ export const searchMenus = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    if (!keyword) return responseHelper.success(res, [])
+
+    const warehouse = await getWarehouse(req, organizationId)
     const searchRegex = new RegExp(keyword, 'i')
 
     const pipeline = [
@@ -300,10 +358,12 @@ export const searchMenus = async (req, res) => {
         $match: {
           isActive: true,
           organization: organizationId,
+          warehouse, // lọc theo kho hiện tại
           $or: [{ name: { $regex: searchRegex } }, { sku: { $regex: searchRegex } }]
         }
       },
       { $sort: { name: 1 } },
+      { $limit: 50 }, // tránh query quá nặng
       {
         $project: {
           _id: 1,
@@ -322,10 +382,8 @@ export const searchMenus = async (req, res) => {
     ]
 
     const results = await MenuItem.aggregate(pipeline)
-
     responseHelper.success(res, results)
-  } catch (err) {
-    console.error('Search Menu Error:', err)
-    responseHelper.error(res, 'Tìm kiếm thất bại')
+  } catch (error) {
+    responseHelper.error(res, error.message)
   }
 }

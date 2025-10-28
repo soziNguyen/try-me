@@ -8,6 +8,11 @@ const menuItemSchema = new mongoose.Schema(
     description: { type: String, default: '' },
     price: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
+    warehouse: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Warehouse',
+      required: true
+    },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'MenuCategory',

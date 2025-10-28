@@ -1,8 +1,6 @@
 // ======== Biến toàn cục ========
 const urlParams = new URLSearchParams(window.location.search)
 const orderId = urlParams.get('orderId')
-let allFoods = []
-let allCombos = []
 let allItems = []
 const csrfToken = document.getElementById('_csrf').value
 
@@ -17,16 +15,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const [foods, combos] = await Promise.all([
       ajax('/api/menu/get/active', {}, 'GET'),
-      fetchCombos()
+      ajax('/api/menu/combos/active', {}, 'GET')
     ])
 
     if (!Array.isArray(foods)) {
       return
     }
 
-    allFoods = foods
-    allCombos = combos
-    allItems = mergeMenus(allFoods, allCombos)
+    allItems = mergeMenus(foods, combos)
 
     renderMenu(allItems)
     renderCategories(extractCategories(allItems))
@@ -587,22 +583,6 @@ function updateOrderSectionVisibility() {
     orderSection.classList.add('d-none')
     foodMenuCol.classList.remove('col-lg-8')
     foodMenuCol.classList.add('col-lg-12')
-  }
-}
-
-// ======== Fetch combos ========
-
-async function fetchCombos() {
-  try {
-    const combos = await ajax('/api/menu/combos/active', {}, 'GET')
-    if (!Array.isArray(combos)) {
-      console.error('combos không phải là mảng:', combos)
-      return []
-    }
-    return combos
-  } catch (error) {
-    console.error('Lỗi khi tải combo:', error)
-    return []
   }
 }
 

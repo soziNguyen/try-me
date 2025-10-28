@@ -9,8 +9,10 @@ import {
 } from './controller.js'
 import isAuthenticated from '../../../helpers/isAuthenticated.js'
 import { isPermit } from '../../../helpers/isPermit.js'
+import { checkWarehouseAccess } from '../../../helpers/warehouseHelper.js'
 
 const router = express.Router()
+router.use(checkWarehouseAccess)
 
 router.get('/api/menu/get/active', isAuthenticated, getActiveMenus)
 router.get('/api/menu/get/', isAuthenticated, isPermit('Admin', 'Org'), getMenus)
