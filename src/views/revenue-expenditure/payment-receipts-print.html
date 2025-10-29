@@ -1,0 +1,33 @@
+<%- include('../partials/header.html') %>
+
+  <div class="container mt-4">
+    <div class="text-center mb-4">
+      <h2>PHIẾU THU</h2>
+      <p id="print-date-range"></p>
+    </div>
+
+    <section class="mb-3">
+      <div><strong>Khoảng thời gian:</strong> <span id="print-filter-date"></span></div>
+      <div><strong>Tổng số đơn:</strong> <span id="print-total-orders">0</span></div>
+      <div><strong>Tổng tiền thu:</strong> <span id="print-total-amount">0</span> đ</div>
+    </section>
+
+    <div class="table-responsive">
+      <table class="table table-bordered" id="print-receipt-table">
+        <thead class="table-primary">
+          <tr>
+            <th>Bàn</th>
+            <th>Khách hàng</th>
+            <th>Món ăn</th>
+            <th>Tổng tiền</th>
+            <th>Thời gian</th>
+          </tr>
+        </thead>
+        <tbody id="print-receipt-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <%- include('../partials/commonjs.html') %>
+    <script src="/js/payment-receipts-print.js"></script>
+    <%- include('../partials/footer.html') %>
