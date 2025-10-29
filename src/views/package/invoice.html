@@ -1,0 +1,22 @@
+<%- include('../partials/header.html') %>
+
+  <div class="staff__content position-relative mt-3 container py-4 border border-2">
+    <div class="status fst-italic bg-warning fs-6 position-absolute top-0 end-0 badge">Pending
+    </div>
+    <h2 class="fw-bold text-center">
+      <%= pageTitle %>
+    </h2>
+    <div class="text-center">Mã hóa đơn: <span class="invoice-code">INV00000000001</span></div>
+    <div class="date fst-italic text-center">Ngày <span class="day">28</span> tháng <span class="month">10</span> năm
+      <span class="year">2025</span>
+    </div>
+
+  </div>
+  </div>
+  </div>
+  <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
+
+  <%- include('../partials/commonjs.html') %>
+    <script src="/js/sidebar-toggle.js"></script>
+    <script src="/js/receipt.js"></script>
+    <%- include('../partials/footer.html') %>
