@@ -5,33 +5,50 @@
         <%= pageTitle %>
       </h2>
 
-      <!-- Bộ lọc ngày thêm vào đây -->
-      <div class="row mb-3">
-        <div class="col-md-3">
-          <label for="startDate">Từ ngày:</label>
-          <input type="date" id="startDate" class="form-control" />
-        </div>
-        <div class="col-md-3">
-          <label for="endDate">Đến ngày:</label>
-          <input type="date" id="endDate" class="form-control" />
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-          <button id="filterDateBtn" class="btn btn-primary" title="Lọc">
-            <i class="bi bi-funnel"></i>
-          </button>
-        </div>
-      </div>
-
-      <div id="orderSummary" class="row mt-3">
-        <p>Thống kê</p>
+      <div class="row mb-3 align-items-start align-items-center">
+        <!-- Nút lọc ngày -->
         <div class="col-md-4">
-          <div class="alert alert-primary mb-2">
-            <strong>Tổng số đơn:</strong> <span id="summary-total-orders">0</span>
+          <div id="dateFilter" class="dropdown">
+            <button id="toggleFilterBtn" class="btn btn-outline-primary dropdown-toggle " type="button"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-calendar-range"></i> Lọc theo ngày
+            </button>
+
+            <div id="filetdate" class="dropdown-menu p-3">
+              <div class="d-flex align-items-end gap-5">
+                <div class="">
+                  <label for="startDate">Từ ngày:</label>
+                  <input type="date" id="startDate" class="form-control" />
+                </div>
+
+                <div class="">
+                  <label for="endDate">Đến ngày:</label>
+                  <input type="date" id="endDate" class="form-control" />
+                </div>
+
+                <div class="">
+                  <button id="filterDateBtn" class="btn btn-primary" title="Lọc">
+                    <i class="bi bi-funnel"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="alert alert-success mb-2">
-            <strong>Tổng tiền thu:</strong> <span id="summary-total-amount">0</span> đ
+
+        <!-- Thống kê -->
+        <div class="col-md-8">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="alert alert-primary mb-2">
+                <strong>Tổng số đơn:</strong> <span id="summary-total-orders">0</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="alert alert-success mb-2">
+                <strong>Tổng tiền thu:</strong> <span id="summary-total-amount">0</span> đ
+              </div>
+            </div>
           </div>
         </div>
       </div>

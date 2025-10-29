@@ -14,13 +14,8 @@ const productExpenseSchema = new mongoose.Schema(
     // Danh sách các mặt hàng trong phiếu chi
     items: [
       {
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'MenuItem',
-          default: null
-        },
+        name: { type: String, required: true },
         quantity: { type: Number, default: 0 },
-        unit: { type: String, enum: units, default: 'cái' },
         unitPrice: { type: Number, default: 0 },
         total: { type: Number, default: 0 } // Tổng theo item
       }
