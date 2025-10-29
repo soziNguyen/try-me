@@ -706,6 +706,16 @@ export const expensesPage = (req, res) => {
   )
 }
 
+export const receiptPrint = (req, res) => {
+  res.render(
+    'revenue-expenditure/payment-receipts-print',
+    getPageData(req, 'In Phiếu', 'ReceiptsPrint', {
+      headerClass: 'admin__header',
+      pageTitle: 'In Phiếu'
+    })
+  )
+}
+
 export const newExpensesPage = async (req, res) => {
   const paymentExpenseId = req.params.id
   const mode = req.query.mode || ''

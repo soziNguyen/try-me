@@ -1,32 +1,32 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/org_sidebar.html') %>
+
     <div class="admin__content">
       <h2 class="mb-3 bold semi-bold">
         <%= pageTitle %>
       </h2>
 
-      <div class="row mb-3 align-items-start align-items-center">
-        <!-- Nút lọc ngày -->
-        <div class="col-md-4">
+      <div class="row align-items-center mb-3">
+        <div class="col-12 col-md-5">
           <div id="dateFilter" class="dropdown">
-            <button id="toggleFilterBtn" class="btn btn-outline-primary dropdown-toggle " type="button"
-              data-bs-toggle="dropdown" aria-expanded="false">
+            <button id="toggleFilterBtn" class="btn btn-outline-primary w-100 dropdown-toggle" type="button"
+              style="height: 56px;" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="bi bi-calendar-range"></i> Lọc theo ngày
             </button>
 
-            <div id="filetdate" class="dropdown-menu p-3">
-              <div class="d-flex align-items-end gap-5">
-                <div class="">
+            <div id="filetdate" class="dropdown-menu p-3 w-100">
+              <div class="row g-3 align-items-end">
+                <div class="col">
                   <label for="startDate">Từ ngày:</label>
                   <input type="date" id="startDate" class="form-control" />
                 </div>
 
-                <div class="">
+                <div class="col">
                   <label for="endDate">Đến ngày:</label>
                   <input type="date" id="endDate" class="form-control" />
                 </div>
 
-                <div class="">
+                <div class="col-auto">
                   <button id="filterDateBtn" class="btn btn-primary" title="Lọc">
                     <i class="bi bi-funnel"></i>
                   </button>
@@ -36,34 +36,32 @@
           </div>
         </div>
 
-        <!-- Thống kê -->
-        <div class="col-md-8">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="alert alert-primary mb-2">
-                <strong>Tổng số đơn:</strong> <span id="summary-total-orders">0</span>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="alert alert-success mb-2">
-                <strong>Tổng tiền thu:</strong> <span id="summary-total-amount">0</span> đ
-              </div>
-            </div>
+        <div class="col-12 col-md-3">
+          <div class="alert alert-primary mb-0 text-center">
+            <strong>Tổng số đơn:</strong> <span id="summary-total-orders">0</span>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="alert alert-success mb-0 text-center">
+            <strong>Tổng tiền thu:</strong> <span id="summary-total-amount">0</span> đ
           </div>
         </div>
       </div>
 
       <table id="receiptTable" class="table table-bordered">
-        <tbody id="receiptTableBody">
-
-        </tbody>
+        <tbody id="receiptTableBody"></tbody>
       </table>
 
+      <div class="mt-3">
+        <button id="printBtn" class="btn btn-outline-secondary">
+          <i class="bi bi-printer"></i> In báo cáo
+        </button>
+      </div>
     </div>
 
-    </div>
-    </div>
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+
     <%- include('../partials/commonjs.html') %>
       <script src="/js/payment-receipts.js"></script>
       <script src="/js/sidebar-toggle.js"></script>
