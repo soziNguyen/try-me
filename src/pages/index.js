@@ -811,12 +811,25 @@ export const planTransactionPage = async (req, res) => {
   )
 }
 
+import PlanTransaction from '../modules/plan-transaction/model.js'
 export const planInvoicePage = async (req, res) => {
-  res.render(
-    'package/invoice',
-    getPageData(req, 'Hóa đơn', 'Plan Invoice', {
-      headerClass: 'admin__header',
-      pageTitle: 'HÓA ĐƠN'
+  try {
+    const { id } = req.params
+    const transaction = await PlanTransaction.findById(id).populate('organization').populate('plan')
+
+    if (!transaction)
+      return res.status(404).render('errors/error-404', {
+        title: 'Không tìm thấy trang',
+        message: 'Không tìm thấy hóa đơn'
+      })
+
+    res.render('package/invoice', {
+      title: 'Hóa đơn',
+      pageTitle: 'HÓA ĐƠN DỊCH VỤ',
+      transaction,
+      currentUserId: req.user?._id
     })
-  )
+  } catch (err) {
+    res.status(500).render(err.message)
+  }
 }

@@ -1,22 +1,98 @@
 <%- include('../partials/header.html') %>
 
-  <div class="staff__content position-relative mt-3 container py-4 border border-2">
-    <div class="status fst-italic bg-warning fs-6 position-absolute top-0 end-0 badge">Pending
-    </div>
-    <h2 class="fw-bold text-center">
-      <%= pageTitle %>
-    </h2>
-    <div class="text-center">Mã hóa đơn: <span class="invoice-code">INV00000000001</span></div>
-    <div class="date fst-italic text-center">Ngày <span class="day">28</span> tháng <span class="month">10</span> năm
-      <span class="year">2025</span>
+  <div class="admin__content position-relative mt-3 container p-4 border border-2">
+    <div class="status fst-italic fs-6 position-absolute top-0 end-0 badge">
+      <% if (transaction.status==='pending' ) { %>
+        <span class="badge bg-warning p-2 text-dark" id="status-badge">
+          <i class="bi bi-clock-history"></i> Chờ thanh toán
+        </span>
+        <% } else if (transaction.status==='paid' ) { %>
+          <span class="badge bg-success p-2">
+            <i class="bi bi-check-circle-fill"></i> Đã thanh toán
+          </span>
+          <% } %>
     </div>
 
+    <h2 class="fw-bolder text-center mb-3">
+      <%= pageTitle %>
+    </h2>
+
+    <div class="text-center">
+      Mã hóa đơn: <span class="fw-semibold text-dark">
+        <%= transaction.invoiceCode %>
+      </span>
+      <div class="text-center fst-italic mb-4">
+        Ngày <%= transaction.createdAt.getDate() %> tháng <%= transaction.createdAt.getMonth() + 1 %> năm <%=
+              transaction.createdAt.getFullYear() %>
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="fw-semibold fs-5 mb-3">Thông tin bên mua</div>
+        <div class="lh-lg">
+          <div>Tên đơn vị: <%= transaction.organization.name %>
+          </div>
+          <div>Mã số thuế: <%= transaction.organization.taxCode || '—' %>
+          </div>
+          <div>Địa chỉ: <span id="address"></span></div>
+          <div>Số điện thoại: <%= '+' + transaction.organization.phone %>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Thông tin thanh toán ===== -->
+      <div class="col-md-6 position-relative">
+        <div class="position-absolute top-0 end-0 text-end">
+          <img
+            src="https://vietqr.co/api/generate/MB/271120031127/VIETQR.CO/<%= transaction.total %>/<%= transaction.invoiceCode %>?style=2&logo=1&isMask=0&bg=7"
+            alt="QR Code Thanh toán" class="img-fluid border rounded shadow-sm w-150" />
+        </div>
+
+        <div class="fw-semibold fs-5 mb-3">Thông tin thanh toán</div>
+        <div class="lh-lg pe-4">
+          <div>Hình thức thanh toán: <strong>Chuyển khoản ngân hàng</strong></div>
+          <div>Ngân hàng: MB Bank (Ngân hàng Quân đội)</div>
+          <div>Tên tài khoản: NGUYEN SON THANH</div>
+          <div>Số tài khoản: 271120031127</div>
+          <div>Nội dung chuyển khoản: <strong>
+              <%= transaction.invoiceCode %>
+            </strong></div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <table class="table table-bordered mt-4 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 5%">STT</th>
+          <th>Tên hàng hóa, dịch vụ</th>
+          <th class="text-end" style="width: 20%">Đơn giá (VNĐ)</th>
+          <th class="text-end" style="width: 10%">Số lượng</th>
+          <th class="text-end">Thời hạn</th>
+          <th class="text-end" style="width: 20%">Thành tiền (VNĐ)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="invoice-actions my-5 d-flex justify-content-between">
+      <a href="/upgrade" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left-circle me-2 no-print"></i>Quay lại
+      </a>
+      <button id="btn-print" class="btn btn-primary">
+        <i class="bi bi-printer me-2 no-print"></i>In hóa đơn
+      </button>
+    </div>
   </div>
-  </div>
-  </div>
+
   <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
 
   <%- include('../partials/commonjs.html') %>
     <script src="/js/sidebar-toggle.js"></script>
-    <script src="/js/receipt.js"></script>
+    <script src="/js/admin/invoice-plan.js"></script>
     <%- include('../partials/footer.html') %>

@@ -12415,6 +12415,9 @@
 .w-100p {
   width: 100px;
 }
+.w-150 {
+  width: 150px !important;
+}
 .w-200 {
   width: 200px !important;
 }

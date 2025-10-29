@@ -569,10 +569,6 @@ input[type=number]::-webkit-inner-spin-button {
   cursor: pointer;
 }
 
-#planDiscountCode {
-  border-bottom: 1px solid var(--gray-light) !important;
-}
-
 input[type=password]::-ms-reveal,
 input[type=password]::-ms-clear,
 input[type=text]::-ms-reveal,

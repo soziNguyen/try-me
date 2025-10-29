@@ -4,6 +4,7 @@ import Organization from '../organization/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import CouponPlan from '../coupon-plan/model.js'
 import PlanTransaction from '../plan-transaction/model.js'
+import { generateInvoiceCode } from '../../helpers/generateInvoiceCode.js'
 
 // Lấy tất cả các gói (chỉ hiển thị gói active)
 export const getActivePlans = async (req, res) => {
@@ -220,40 +221,31 @@ export const hardDeletePlan = async (req, res) => {
 export const upgradePlan = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    const { planId, mode, couponCode } = req.body // mode: 'month' | 'year'
+    const { planId, mode, duration = 1, couponCode } = req.body // mode: month/ year
     const now = new Date()
 
-    if (!organizationId) {
-      return responseHelper.error(res, 'Không tìm thấy tổ chức hiện tại', 400)
-    }
-
-    if (!planId) {
-      return responseHelper.error(res, 'Thiếu ID gói dịch vụ', 400)
-    }
+    if (!organizationId) return responseHelper.error(res, 'Không tìm thấy tổ chức', 400)
+    if (!planId) return responseHelper.error(res, 'Thiếu ID gói dịch vụ', 400)
 
     // Tìm gói dịch vụ đang hoạt động
     const plan = await Plan.findOne({ _id: planId, isActive: true })
-    if (!plan) {
+    if (!plan)
       return responseHelper.error(res, 'Gói dịch vụ không hợp lệ hoặc đã ngừng hoạt động', 404)
-    }
 
     // Lấy tổ chức hiện tại
     const org = await Organization.findById(organizationId).populate('plan')
-    if (!org) {
-      return responseHelper.error(res, 'Không tìm thấy tổ chức', 404)
-    }
+    if (!org) return responseHelper.error(res, 'Không tìm thấy tổ chức', 404)
 
     // Kiểm tra nếu cùng gói hoặc hạ cấp
-    if (org.plan && org.plan.code === plan.code) {
+    if (org.plan && org.plan.code === plan.code)
       return responseHelper.error(res, 'Bạn đang sử dụng gói này rồi', 400)
-    }
-
-    if (org.plan && org.plan.level >= plan.level) {
+    if (org.plan && org.plan.level >= plan.level)
       return responseHelper.error(res, 'Không thể hạ cấp sang gói thấp hơn', 400)
-    }
 
     // Tính giá
     const basePrice = mode === 'year' ? plan.priceYear : plan.priceMonth
+    const totalBasePrice = basePrice * duration
+
     let discountAmount = 0
     let couponUsed = null
 
@@ -271,49 +263,35 @@ export const upgradePlan = async (req, res) => {
         { $inc: { usedCount: 1 } },
         { new: true }
       )
-
-      if (!coupon) {
-        return responseHelper.error(
-          res,
-          'Mã giảm giá không còn hợp lệ hoặc đã hết lượt sử dụng',
-          400
-        )
-      }
-
-      if (coupon.discountType === 'percent') {
-        discountAmount = (basePrice * coupon.discountValue) / 100
-      } else if (coupon.discountType === 'amount') {
-        discountAmount = coupon.discountValue
-      }
+      if (!coupon) return responseHelper.error(res, 'Mã giảm giá không hợp lệ', 400)
 
       couponUsed = coupon
+      discountAmount =
+        coupon.discountType === 'percent'
+          ? (totalBasePrice * coupon.discountValue) / 100
+          : coupon.discountValue
     }
 
-    const subtotal = Math.max(basePrice - discountAmount, 0)
-    const vatRate = 0.08 // VAT 8%
+    const subtotal = Math.max(totalBasePrice - discountAmount, 0)
+    const vatRate = 0.1
     const vat = subtotal * vatRate
     const total = subtotal + vat
 
-    // Xác định hạn sử dụng
+    // Hạn sử dụng
     const expireAt = new Date()
-    if (mode === 'year') {
-      expireAt.setFullYear(expireAt.getFullYear() + 1)
-    } else {
-      expireAt.setMonth(expireAt.getMonth() + 1)
-    }
+    if (mode === 'year') expireAt.setFullYear(expireAt.getFullYear() + duration)
+    else expireAt.setMonth(expireAt.getMonth() + duration)
 
-    // Cập nhật tổ chức
-    org.plan = plan._id
-    org.planExpiredAt = expireAt
-    org.lastUpgradedAt = now
-    await org.save()
-
-    // Lưu lịch sử giao dịch
-    await PlanTransaction.create({
+    // Tạo mã giao dịch
+    const invoiceCode = await generateInvoiceCode(PlanTransaction, 'INV')
+    // Lưu transaction
+    const transaction = await PlanTransaction.create({
+      invoiceCode,
       organization: organizationId,
       plan: plan._id,
       mode,
-      amount: basePrice,
+      duration,
+      amount: totalBasePrice,
       discountAmount,
       couponCode: couponUsed?.code || null,
       subtotal,
@@ -324,18 +302,60 @@ export const upgradePlan = async (req, res) => {
       note: `Tổ chức ${org.name} nâng cấp gói ${plan.name}`
     })
 
-    // Trả về
     responseHelper.success(
       res,
       {
+        transactionId: transaction._id,
         planId: plan._id,
         planName: plan.name,
         planExpiredAt: expireAt,
         total
       },
-      'Nâng cấp gói thành công'
+      'Tạo đơn hàng thành công. Vui lòng thanh toán để kích hoạt gói.'
     )
   } catch (error) {
     responseHelper.error(res, error.message)
+  }
+}
+
+export const approvePlanTransaction = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const transaction = await PlanTransaction.findById(id).populate('organization').populate('plan')
+
+    if (!transaction) return responseHelper.error(res, 'Không tìm thấy giao dịch', 404)
+    if (transaction.status !== 'pending')
+      return responseHelper.error(res, 'Giao dịch này đã được xử lý', 400)
+
+    transaction.status = 'paid'
+    transaction.paidAt = new Date()
+    await transaction.save()
+
+    // Áp dụng gói cho tổ chức
+    const org = transaction.organization
+    org.plan = transaction.plan._id
+    org.planExpiredAt = transaction.expiredAt
+    org.lastUpgradedAt = new Date()
+    await org.save()
+
+    responseHelper.success(res, 1, 'Duyệt thành công và gói đã được áp dụng')
+  } catch (err) {
+    responseHelper.error(res, err.message)
+  }
+}
+
+export const cancelPlanTransaction = async (req, res) => {
+  try {
+    const { id } = req.params
+    const transaction = await PlanTransaction.findById(id)
+    if (!transaction) return responseHelper.error(res, 'Không tìm thấy giao dịch', 404)
+
+    transaction.status = 'cancelled'
+    await transaction.save()
+
+    responseHelper.success(res, 1, 'Hủy giao dịch thành công')
+  } catch (err) {
+    responseHelper.error(res, err.message)
   }
 }

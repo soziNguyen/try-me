@@ -43,6 +43,13 @@ $(function () {
       pageLength: numRows,
       columns: [
         {
+          data: null,
+          orderable: false,
+          className: 'text-center',
+          render: (data, type, row) =>
+            `<input type="checkbox" class="planCheckbox" data-id="${row._id}">`
+        },
+        {
           data: 'organization',
           className: 'py-2',
           render: (data, type, row) => {
@@ -62,10 +69,12 @@ $(function () {
           }
         },
         {
-          data: 'mode',
+          data: 'duration',
           render: (data, type, row) => {
             if (type === 'display') {
-              return `<span class="text">${data === 'month' ? 'Tháng' : 'Năm' || ''}</span>`
+              const mode = row.mode === 'month' ? 'tháng' : 'năm'
+              const duration = `${data} ${mode}`
+              return `<span class="text">${duration || ''}</span>`
             }
             return data || ''
           }
@@ -125,26 +134,121 @@ $(function () {
             return data || ''
           }
         },
+        // {
+        //   data: 'expiredAt',
+        //   render: (data, type, row) => {
+        //     if (type === 'display') {
+        //       const date = new Date(data)
+        //       return `<span class="text">${
+        //         date.toLocaleString('vi-VN', {
+        //           day: '2-digit',
+        //           month: '2-digit',
+        //           year: 'numeric'
+        //         }) || ''
+        //       }</span>`
+        //     }
+        //     return data || ''
+        //   }
+        // },
         {
-          data: 'expiredAt',
+          data: 'status',
+          className: 'text-center',
           render: (data, type, row) => {
             if (type === 'display') {
-              const date = new Date(data)
-              return `<span class="text">${date.toLocaleString() || ''}</span>`
+              const status =
+                data === 'pending'
+                  ? `<span class="badge bg-warning py-2">Chờ xác nhận</span>`
+                  : data === 'paid'
+                    ? `<span class="badge bg-success py-2">Đã duyệt</span>`
+                    : `<span class="badge bg-danger py-2">Đã hủy</span>`
+              return status
             }
             return data || ''
+          }
+        },
+        {
+          data: null,
+          orderable: false,
+          searchable: false,
+          render: (data, type, row) => {
+            if (type === 'display') {
+              if (row.status === 'pending') {
+                return `
+                  <div class="btn-group d-flex justify-content-center">
+                    <button class="btn btn-sm btn-success btn-approve" title="Duyệt gói">
+                      <i class="bi bi-check-circle"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger btn-cancel" title="Hủy giao dịch">
+                      <i class="bi bi-x-circle"></i>
+                    </button>
+                  </div>
+                `
+              } else {
+                return `<span class="text-muted d-block text-center">—</span>`
+              }
+            }
+            return ''
           }
         }
       ],
       rowCallback: function (row, data) {
         $(row).attr('data-id', data._id)
+      },
+      initComplete: function () {
+        $('.right-group').html(`
+          <div class="btn-group flex-wrap mb-2">
+            <button class="btn btn-outline-danger me-2" id="deletePlanBtn">
+              <i class="bi bi-trash"></i> Xóa
+            </button>
+          </div>
+        `)
       }
     })
-
-    // Event handlers
-    handlerAddEvent('#couponTable', '#addCouponBtn', 'admin/coupon')
-    handlerDeleteEvent('#couponTable', '#deleteCouponBtn', 'couponCheckbox', 'admin/coupon')
-    initTableCheckboxEvents('#couponTable', 'couponCheckbox')
-    handlerUpdateEvent('#couponTable', 'admin/coupon')
   }
+
+  handlerDeleteEvent(
+    '#planTransactionTable',
+    '#deletePlanBtn',
+    'planCheckbox',
+    'admin/plan-transactions'
+  )
+  initTableCheckboxEvents('#planTransactionTable', 'planCheckbox')
+
+  // Approve
+  $('#planTransactionTable').on('click', '.btn-approve', async function () {
+    const id = $(this).closest('tr').data('id')
+
+    showConfirmModal({
+      title: 'Xác nhận',
+      message: 'Xác nhận duyệt gói này?',
+      okBtnColor: 'success',
+      confirmed: 'Xác nhận',
+      onConfirm: async function () {
+        const data = await ajax(`/api/admin/plan/${id}/approve`, {})
+        if (data === 1) {
+          toastr.success('Duyệt thành công')
+          reloadTable('#planTransactionTable')
+        }
+      }
+    })
+  })
+
+  // Cancel
+  $('#planTransactionTable').on('click', '.btn-cancel', async function () {
+    const id = $(this).closest('tr').data('id')
+
+    showConfirmModal({
+      title: 'Xác nhận hủy',
+      message: 'Bạn có chắc muốn hủy giao dịch này?',
+      okBtnColor: 'danger',
+      confirmed: 'Xác nhận',
+      onConfirm: async function () {
+        const data = await ajax(`/api/admin/plan/${id}/cancel`, {})
+        if (data === 1) {
+          toastr.success('Hủy giao dịch thành công')
+          reloadTable('#planTransactionTable')
+        }
+      }
+    })
+  })
 })

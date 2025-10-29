@@ -1,5 +1,10 @@
 // Handle EventListener
 
+function reloadTable(selector) {
+  const table = $(selector).DataTable()
+  if (table) table.ajax.reload(null, false)
+}
+
 function handlerAddEvent(tableSelector, btnSelector, module) {
   const $wrapper = $(`${tableSelector}_wrapper`)
   const table = $(tableSelector).DataTable()
