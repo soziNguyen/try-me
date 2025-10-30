@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', async function () {
   await loadAddressData()
   await getTransactionPlanData(transactionId)
+  await cancelPlan(transactionId)
 })
 
 let provinceLists = []
@@ -91,4 +92,43 @@ async function getTransactionPlanData(id) {
   </tr>
 `
   tbody.insertAdjacentHTML('beforeend', summaryRows)
+
+  if (data.status === 'cancelled') {
+    $('#btn-cancel-payment')
+      .prop('disabled', true)
+      .html('<i class="bi bi-x-circle-fill me-1"></i> Đã hủy')
+  } else if (data.status === 'paid') {
+    $('#btn-cancel-payment')
+      .prop('disabled', true)
+      .removeClass('btn-danger')
+      .addClass('btn-success')
+      .html('<i class="bi bi-check-circle-fill me-1"></i> Đã thanh toán')
+  }
+}
+
+async function cancelPlan(id) {
+  $('#btn-cancel-payment').on('click', async function () {
+    const btn = $(this)
+    try {
+      showConfirmModal({
+        title: 'Xác nhận hủy',
+        message: 'Bạn có chắc muốn hủy giao dịch này?',
+        okBtnColor: 'danger',
+        confirmed: 'Xác nhận',
+        onConfirm: async function () {
+          const data = await ajax(`/api/admin/plan/${id}/cancel`, {})
+          if (data) {
+            toastr.success('Hủy giao dịch thành công')
+            btn.prop('disabled', true).text('Đã hủy')
+            $('#status-badge')
+              .removeClass('bg-warning text-dark')
+              .addClass('bg-danger text-white')
+              .html('<i class="bi bi-x-circle"></i> Đã hủy')
+          }
+        }
+      })
+    } catch (error) {
+      toastr.error(error.message || 'Không thể hủy giao dịch')
+    }
+  })
 }

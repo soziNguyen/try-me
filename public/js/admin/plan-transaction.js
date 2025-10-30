@@ -244,7 +244,7 @@ $(function () {
       confirmed: 'Xác nhận',
       onConfirm: async function () {
         const data = await ajax(`/api/admin/plan/${id}/cancel`, {})
-        if (data === 1) {
+        if (data) {
           toastr.success('Hủy giao dịch thành công')
           reloadTable('#planTransactionTable')
         }

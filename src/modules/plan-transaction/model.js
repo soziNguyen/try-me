@@ -3,7 +3,7 @@ const Schema = mongoose.Schema
 
 const PlanTransactionSchema = new Schema(
   {
-    invoiceCode: { type: String, default: '' }, // mã giao dịch
+    code: { type: String, default: '' }, // mã giao dịch
     organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
     plan: { type: Schema.Types.ObjectId, ref: 'Plan', required: true },
     mode: { type: String, enum: ['month', 'year'], default: 'month' },
@@ -14,10 +14,12 @@ const PlanTransactionSchema = new Schema(
     subtotal: { type: Number, default: 0 },
     vat: { type: Number, default: 0 },
     total: { type: Number, default: 0 },
-    paidAt: { type: Date, default: Date.now },
+    paidAt: { type: Date, default: null },
     expiredAt: { type: Date },
     note: { type: String, default: '' },
-    status: { type: String, enum: ['pending', 'paid', 'cancelled'], default: 'pending' }
+    status: { type: String, enum: ['pending', 'paid', 'cancelled'], default: 'pending' },
+    cancelledAt: { type: Date, default: null },
+    cancelledBy: { type: Schema.Types.ObjectId, ref: 'User', default: null }
   },
   {
     collection: 'PlanTransactions',

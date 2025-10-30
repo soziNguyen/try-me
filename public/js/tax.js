@@ -57,7 +57,7 @@ $(function () {
                     class="dataInput form-control w-100 border-0" 
                     data-field="name" 
                     value="${value ?? ''}" 
-                    placeholder="Loại phiếu"
+                    placeholder="Loại thuế"
                 >
               `
             }

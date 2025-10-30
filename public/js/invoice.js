@@ -157,6 +157,6 @@ $(document).ready(function () {
     })
   })
 
-  // Sau đó load dữ liệu
+  // Load dữ liệu
   loadInvoiceOptions()
 })

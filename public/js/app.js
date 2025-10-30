@@ -130,12 +130,7 @@ function debounce(fn, delay) {
 }
 
 // CapitalizeFirst
-function capitalizeFirst(str) {
-  if (str.toLowerCase() === 'dpi') {
-    return 'DPI'
-  }
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
+const capitalizeFirst = (str) => str.charAt(0).toUpperCase() + str.slice(1)
 
 function renderPagination(pagination, searchParam = '') {
   const { currentPage, perPage, totalPages } = pagination

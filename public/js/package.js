@@ -140,6 +140,7 @@ async function fillPlans(currentPlanCode, mode = 'month') {
 document.addEventListener('submit', async function (event) {
   if (event.target.classList.contains('plan-form')) {
     event.preventDefault()
+    const csrfToken = $('#_csrf').val()
 
     const form = event.target
     const selectedPlanId = form.dataset.id
@@ -148,7 +149,29 @@ document.addEventListener('submit', async function (event) {
     const activeOption = document.querySelector('.toggle-liquid .option.active')
     const mode = activeOption ? activeOption.dataset.mode : 'month'
 
-    // Chuyển hướng sang trang checkout
-    window.location.href = `/checkout/${selectedPlanId}?mode=${mode}`
+    try {
+      const res = await fetch('/api/admin/plan/upgrade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken
+        },
+        body: JSON.stringify({ planId: selectedPlanId, mode })
+      })
+
+      const result = await res.json()
+      const data = result.data
+
+      if (data?.redirect) {
+        toastr.success(result.message || 'Đang chuyển hướng...')
+        setTimeout(() => {
+          window.location.href = data.redirect
+        }, 1500)
+      } else {
+        toastr.error('Không xác định được đường dẫn thanh toán')
+      }
+    } catch (error) {
+      toastr.error(error.message || 'Không thể nâng cấp gói')
+    }
   }
 })

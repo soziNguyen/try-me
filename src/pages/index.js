@@ -2,6 +2,7 @@ import { getPageData } from '../helpers/pageDataHelper.js'
 import { getCurrentOrg } from '../helpers/orgHelper.js'
 import Order from '../modules/order/model.js'
 import InvoiceOption from '../modules/invoice/model.js'
+import PlanTransaction from '../modules/plan-transaction/model.js'
 
 //=============================================
 //================= USER ======================
@@ -821,7 +822,6 @@ export const planTransactionPage = async (req, res) => {
   )
 }
 
-import PlanTransaction from '../modules/plan-transaction/model.js'
 export const planInvoicePage = async (req, res) => {
   try {
     const { id } = req.params
@@ -842,4 +842,24 @@ export const planInvoicePage = async (req, res) => {
   } catch (err) {
     res.status(500).render(err.message)
   }
+}
+
+export const paymentMethodForAdminPage = async (req, res) => {
+  res.render(
+    'admin/payment_method',
+    getPageData(req, 'Quản lý phương thức thanh toán', 'Payment Method', {
+      headerClass: 'admin__header',
+      pageTitle: 'PHƯƠNG THỨC THANH TOÁN'
+    })
+  )
+}
+
+export const receivingAccountForAdminPage = async (req, res) => {
+  res.render(
+    'admin/receiving_account',
+    getPageData(req, 'Quản lý tài khoản nhận', 'Receiving Account', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ TÀI KHOẢN NHẬN'
+    })
+  )
 }

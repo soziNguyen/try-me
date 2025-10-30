@@ -10,7 +10,11 @@
           <span class="badge bg-success p-2">
             <i class="bi bi-check-circle-fill"></i> Đã thanh toán
           </span>
-          <% } %>
+          <% } else if (transaction.status==='cancelled' ) { %>
+            <span class="badge bg-danger p-2">
+              <i class="bi bi-x-circle-fill"></i> Đã hủy
+            </span>
+            <% } %>
     </div>
 
     <h2 class="fw-bolder text-center mb-3">
@@ -19,7 +23,7 @@
 
     <div class="text-center">
       Mã hóa đơn: <span class="fw-semibold text-dark">
-        <%= transaction.invoiceCode %>
+        <%= transaction.code %>
       </span>
       <div class="text-center fst-italic mb-4">
         Ngày <%= transaction.createdAt.getDate() %> tháng <%= transaction.createdAt.getMonth() + 1 %> năm <%=
@@ -40,6 +44,8 @@
           <div>Địa chỉ: <span id="address"></span></div>
           <div>Số điện thoại: <%= '+' + transaction.organization.phone %>
           </div>
+          <div>Email: <%= transaction.organization.email %>
+          </div>
         </div>
       </div>
 
@@ -47,7 +53,7 @@
       <div class="col-md-6 position-relative">
         <div class="position-absolute top-0 end-0 text-end">
           <img
-            src="https://vietqr.co/api/generate/MB/271120031127/VIETQR.CO/<%= transaction.total %>/<%= transaction.invoiceCode %>?style=2&logo=1&isMask=0&bg=7"
+            src="https://vietqr.co/api/generate/MB/271120031127/VIETQR.CO/<%= transaction.total %>/<%= transaction.code %>?style=2&logo=1&isMask=0&bg=7"
             alt="QR Code Thanh toán" class="img-fluid border rounded shadow-sm w-150" />
         </div>
 
@@ -58,7 +64,7 @@
           <div>Tên tài khoản: NGUYEN SON THANH</div>
           <div>Số tài khoản: 271120031127</div>
           <div>Nội dung chuyển khoản: <strong>
-              <%= transaction.invoiceCode %>
+              <%= transaction.code %>
             </strong></div>
         </div>
       </div>
@@ -84,9 +90,13 @@
       <a href="/upgrade" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left-circle me-2 no-print"></i>Quay lại
       </a>
-      <button id="btn-print" class="btn btn-primary">
-        <i class="bi bi-printer me-2 no-print"></i>In hóa đơn
-      </button>
+      <div>
+        <button id="btn-cancel-payment" class="btn btn-danger"><i class="bi bi-x-circle me-1"></i> Hủy đơn
+          hàng</button>
+        <button id="btn-print" class="btn btn-primary">
+          <i class="bi bi-printer me-2 no-print"></i>In hóa đơn
+        </button>
+      </div>
     </div>
   </div>
 

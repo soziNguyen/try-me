@@ -23,8 +23,7 @@
                 <div class="row g-3">
                   <div class="col-md-6">
                     <label for="code" class="form-label">Mã phiếu</label>
-                    <input type="text" class="form-control" id="code" name="code" placeholder="Nhập mã phiếu..."
-                      readonly>
+                    <input type="text" class="form-control" id="code" name="code" placeholder="Mã phiếu" readonly>
                   </div>
                   <div class="col-md-6">
                     <label for="date" class="form-label">Ngày nhập</label>
@@ -93,7 +92,10 @@
               </div>
 
               <!-- Buttons -->
-              <div class="d-flex gap-2 justify-content-end">
+              <div class="d-flex gap-2 justify-content-between">
+                <button type="button" id="btn-lock-entry" class="btn btn-outline-primary no-print">
+                  <i class="bi bi-lock me-2 no-print"></i>Xác nhận
+                </button>
                 <div class="d-flex justify-content-end">
                   <button id="btn-back" class="btn btn-outline-secondary me-2 no-print">
                     <i class="bi bi-x-circle me-2 no-print"></i>Quay lại

@@ -58,7 +58,7 @@ $(function () {
         confirmed: 'Khóa',
         onConfirm: function () {
           $.ajax({
-            url: `/api/inventory/stock-entry/lock/${productEntryId}`,
+            url: `/api/product/entry/lock/${productEntryId}`,
             method: 'POST',
             headers: { 'x-csrf-token': csrfToken },
             beforeSend: function () {
@@ -71,14 +71,20 @@ $(function () {
                   .prop('disabled', true)
                   .html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
 
+                // Input và textarea: readonly
+                $('#productEntryForm').find('input, textarea').prop('readonly', true)
+
+                // Select và button: disabled
                 $('#productEntryForm')
-                  .find('input, select, textarea, button')
-                  .not('#btn-lock-entry, #btn-print')
-                  .add('#btn-save-entry, #addItemBtn, #supplier, #warehouse')
+                  .find('select, button')
+                  .not('#btn-lock-entry, #btn-print, #btn-back')
+                  .add('#btn-save-entry, #addItemBtn')
                   .prop('disabled', true)
               } else {
                 toastr.error(res.message || 'Có lỗi xảy ra')
-                $('#btn-lock-entry').prop('disabled', false).text('Khóa phiếu')
+                $('#btn-lock-entry')
+                  .prop('disabled', false)
+                  .html(`<i class="bi bi-lock me-1"></i>Khóa phiếu`)
               }
             },
             error(xhr) {
@@ -284,10 +290,14 @@ $(function () {
         .prop('disabled', true)
         .html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
 
+      // Input và textarea: thêm readonly
+      $('#productEntryForm').find('input, textarea').prop('readonly', true)
+
+      // Select và button: disable
       $('#productEntryForm')
-        .find('input, select, textarea, button')
-        .not('#btn-lock-entry, #btn-print')
-        .add('#btn-save-entry, #addItemBtn, #supplier, #warehouse')
+        .find('select, button')
+        .not('#btn-lock-entry, #btn-print, #btn-back')
+        .add('#btn-save-entry, #addItemBtn')
         .prop('disabled', true)
     }
   }
@@ -380,12 +390,6 @@ $(function () {
         })
       }
     })
-
-    if (!productEntryData.warehouse) {
-      toastr.remove()
-      toastr.error('Vui lòng chọn kho', 'Lỗi dữ liệu')
-      return
-    }
 
     if (productEntryData.items.length === 0) {
       toastr.remove()
