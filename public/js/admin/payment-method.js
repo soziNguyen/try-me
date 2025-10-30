@@ -23,7 +23,7 @@ $(function () {
       serverSide: true,
       processing: true,
       autoWidth: false,
-      order: [[4, 'asc']], // sắp theo sortOrder
+      order: [[1, 'asc']], // sắp theo sortOrder
       ajax: {
         url: '/api/admin/payment-methods',
         method: 'GET'
@@ -50,6 +50,15 @@ $(function () {
             `<input type="checkbox" class="paymentMethodCheckbox" data-id="${row._id}">`
         },
         {
+          data: 'sortOrder',
+          title: 'Thứ tự',
+          className: 'text-center',
+          render: (data, type) =>
+            type === 'display'
+              ? `<input type="number" class="dataInput border-0 text-center form-control" data-field="sortOrder" value="${data ?? 0}">`
+              : data
+        },
+        {
           data: 'name',
           title: 'Tên hiển thị',
           render: (data, type) =>
@@ -74,15 +83,6 @@ $(function () {
               : data
         },
         {
-          data: 'sortOrder',
-          title: 'Thứ tự',
-          className: 'text-center',
-          render: (data, type) =>
-            type === 'display'
-              ? `<input type="number" class="dataInput border-0 text-center form-control" style="width:80px" data-field="sortOrder" value="${data ?? 0}">`
-              : data
-        },
-        {
           data: 'isActive',
           title: 'Kích hoạt',
           className: 'text-center',
@@ -90,6 +90,18 @@ $(function () {
             type === 'display'
               ? `<input type="checkbox" class="dataInput form-check-input" data-field="isActive" data-id="${row._id}" ${data ? 'checked' : ''}>`
               : data
+        },
+        {
+          data: null,
+          title: 'Cấu hình',
+          className: 'text-center',
+          orderable: false,
+          render: (data, type, row) =>
+            type === 'display'
+              ? `<button class="btn btn-sm btn-outline-primary configBtn" data-id="${row._id}">
+                  <i class="bi bi-gear"></i> Cấu hình
+                </button>`
+              : ''
         }
       ],
       rowCallback: function (row, data) {
@@ -116,5 +128,6 @@ $(function () {
     'paymentMethodCheckbox',
     'payment-method'
   )
+  handlerUpdateEvent('#paymentMethodTable', 'admin')
   initTableCheckboxEvents('#paymentMethodTable', 'paymentMethodCheckbox')
 })

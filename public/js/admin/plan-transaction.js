@@ -127,11 +127,21 @@ $(function () {
         {
           data: 'paidAt',
           render: (data, type, row) => {
-            if (type === 'display') {
-              const date = new Date(data)
-              return `<span class="text">${date.toLocaleString() || ''}</span>`
+            if (!data) {
+              return `<span class="fst-italic text-muted"><i class="bi bi-hourglass-split text-danger"></i> Chưa thanh toán</span>`
             }
-            return data || ''
+
+            const date = new Date(data)
+            const formatted = date.toLocaleString('vi-VN', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            })
+
+            return `<span class="text-success fw-semibold"><i class="bi bi-check-circle"></i> ${formatted}</span>`
           }
         },
         // {
