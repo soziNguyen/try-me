@@ -11,17 +11,9 @@ const productExpenseSchema = new mongoose.Schema(
       ref: 'Warehouse',
       default: null
     },
-    // Danh sách các mặt hàng trong phiếu chi
-    items: [
-      {
-        name: { type: String, required: true },
-        quantity: { type: Number, default: 0 },
-        unitPrice: { type: Number, default: 0 },
-        total: { type: Number, default: 0 } // Tổng theo item
-      }
-    ],
-    total: { type: Number, default: 0 }, // Tổng tiền của phiếu chi
+    expenseAmount: { type: Number, default: 0 },
     reason: { type: String, default: '' },
+    note: { type: String, default: '' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },

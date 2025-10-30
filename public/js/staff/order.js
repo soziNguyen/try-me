@@ -135,14 +135,23 @@ function renderEmptyOrders(orders) {
 
   if (!orders || orders.length === 0) {
     html = `
-      <nav>
-        <div class="nav nav-tabs" id="nav-tab" role="tablist">
-          <button class="nav-link active" id="order-tab-new" type="button" role="tab" aria-selected="true">
-            <span id="btnCreateNewOrder" class="cursor-pointer"><i class="bi bi-plus"></i></span>
+      <nav class="mb-3">
+        <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
+          <button class="nav-link active border-0 border-bottom border-3 border-primary bg-white text-primary shadow-sm px-4 py-3" id="order-tab-new" type="button" role="tab" aria-selected="true">
+            <span id="btnCreateNewOrder" class="cursor-pointer d-flex align-items-center gap-2">
+              <i class="bi bi-plus-lg fw-bold"></i>
+              <span class="fw-bold">Tạo hóa đơn</span>
+            </span>
           </button>
         </div>
       </nav>
-      <p class="mt-2">Không có hóa đơn.</p>
+      <div class="alert alert-info bg-info bg-opacity-10 border-0 border-start border-4 border-info rounded-3 d-flex align-items-center gap-3 shadow-sm">
+        <i class="bi bi-info-circle-fill fs-2 text-info"></i>
+        <div>
+          <h6 class="mb-1 fw-bold text-dark">Chưa có hóa đơn nào</h6>
+          <small class="text-muted">Bắt đầu bằng cách tạo hóa đơn mới</small>
+        </div>
+      </div>
     `
   } else {
     const reversedOrders = [...orders].reverse()
@@ -154,13 +163,19 @@ function renderEmptyOrders(orders) {
           : order._id === reversedOrders[reversedOrders.length - 1]._id
 
         return `
-          <button class="nav-link ${isActive ? 'active' : ''}" 
+          <button class="nav-link ${
+            isActive
+              ? 'active border-0 border-bottom border-4 border-danger bg-white text-danger'
+              : 'border-0 border-bottom border-2 border-secondary bg-white text-secondary'
+          } shadow-sm px-4 py-3 me-2 fw-semibold"
+
                   id="order-tab-${order._id}" 
                   data-order-id="${order._id}" 
                   type="button" 
                   role="tab" 
                   aria-selected="${isActive}"
                   ${isActive ? 'disabled' : ''}>
+            <i class="bi bi-receipt${isActive ? '-cutoff' : ''} me-2"></i>
             ${order.code}
           </button>
         `
@@ -169,14 +184,17 @@ function renderEmptyOrders(orders) {
 
     // Thêm tab cuối cho nút tạo hóa đơn mới
     const newOrderTab = `
-      <button class="nav-link " id="order-tab-new" type="button" role="tab" aria-selected="false">
-        <span id="btnCreateNewOrder" class="cursor-pointer w-100"><i class="bi bi-plus"></i></span>
+      <button class="nav-link border-0 border-bottom border-2 border-success bg-white text-success shadow-sm px-4 py-3" id="order-tab-new" type="button" role="tab" aria-selected="false">
+        <span id="btnCreateNewOrder" class="cursor-pointer w-100 d-flex align-items-center gap-2 fw-bold">
+          <i class="bi bi-plus-lg"></i>
+          Mới
+        </span>
       </button>
     `
 
     html = `
-      <nav>
-        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+      <nav class="mb-3">
+        <div class="nav nav-tabs border-0 border-bottom border-2 flex-nowrap overflow-auto pb-0" id="nav-tab" role="tablist" style="scrollbar-width: thin;">
           ${tabs}
           ${newOrderTab}
         </div>
@@ -366,11 +384,20 @@ function renderCategories(categories) {
       .join('')}
   `
 
-  categoryList.querySelectorAll('button').forEach((button) => {
+  const buttons = categoryList.querySelectorAll('button')
+
+  buttons.forEach((button) => {
     button.addEventListener('click', () => {
       const action = button.getAttribute('data-action')
       const category = button.getAttribute('data-category')
 
+      // ----- Đánh dấu nút active -----
+      buttons.forEach((btn) => {
+        btn.classList.remove('active')
+      })
+      button.classList.add('active')
+
+      // ----- Thực hiện hành động -----
       if (action === 'all') renderMenu(allItems)
       else if (action === 'combo') filterComboOnly()
       else if (category) filterMenuByCategory(category)
