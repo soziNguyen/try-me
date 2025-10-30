@@ -1,5 +1,6 @@
 import PaymentMethod from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
+import { mongoose } from 'mongoose'
 
 export const getActivePaymentMethods = async (req, res) => {
   try {
@@ -38,14 +39,37 @@ export const getPaymentMethods = async (req, res) => {
       .sort({ [sortField]: sortDir })
       .skip(start)
       .limit(length)
-      .select('name code description isActive sortOrder createdAt updatedAt')
+
+    const data = paymentMethods.map((pm) => ({
+      ...pm.toObject(),
+      bankInfo: pm.bankInfo || {
+        bankName: '',
+        accountNumber: '',
+        accountName: '',
+        branchName: ''
+      }
+    }))
 
     return res.json({
       draw,
       recordsTotal,
       recordsFiltered,
-      data: paymentMethods
+      data
     })
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
+export const getPaymentMethodById = async (req, res) => {
+  try {
+    const { id } = req.params
+    if (!mongoose.isValidObjectId(id)) {
+      return responseHelper.error(res, 'Id không hợp lệ', 400)
+    }
+
+    const data = await PaymentMethod.findById(id)
+    responseHelper.success(res, data)
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -53,7 +77,7 @@ export const getPaymentMethods = async (req, res) => {
 
 export const createPaymentMethod = async (req, res) => {
   try {
-    const { name, code, description, isActive, sortOrder, config } = req.body
+    const { name, code, description, icon, isActive, sortOrder, config, bankInfo } = req.body
 
     if (!name || !code) {
       return responseHelper.error(res, 'Thiếu tên hoặc mã phương thức thanh toán')
@@ -66,11 +90,13 @@ export const createPaymentMethod = async (req, res) => {
 
     const newMethod = await PaymentMethod.create({
       name,
+      icon,
       code,
       description: description || '',
       isActive: isActive ?? true,
       sortOrder: sortOrder ?? 0,
-      config: config || {}
+      config: config || {},
+      bankInfo: bankInfo || null // default null nếu không có
     })
 
     return responseHelper.success(res, newMethod, 'Tạo phương thức thanh toán thành công')
@@ -82,7 +108,7 @@ export const createPaymentMethod = async (req, res) => {
 export const updatePaymentMethod = async (req, res) => {
   try {
     const { id } = req.params
-    const { name, description, isActive, sortOrder, config } = req.body
+    const { name, code, description, icon, isActive, sortOrder, bankInfo, config } = req.body
 
     if (!id) {
       return responseHelper.error(res, 'Thiếu ID phương thức thanh toán')
@@ -93,13 +119,22 @@ export const updatePaymentMethod = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy phương thức thanh toán')
     }
 
+    if (code && code !== existing.code) {
+      const codeExists = await PaymentMethod.findOne({ code, _id: { $ne: id } })
+      if (codeExists) {
+        return responseHelper.error(res, 'Mã phương thức thanh toán đã tồn tại')
+      }
+      existing.code = code
+    }
+
     if (name !== undefined) existing.name = name
+    if (code !== undefined) existing.code = code
     if (description !== undefined) existing.description = description
+    if (icon !== undefined) existing.icon = icon
     if (isActive !== undefined) existing.isActive = isActive
     if (sortOrder !== undefined) existing.sortOrder = sortOrder
-    if (config !== undefined) {
-      existing.config = { ...existing.config, ...config }
-    }
+    if (bankInfo !== undefined) existing.bankInfo = bankInfo
+    if (config !== undefined) existing.config = { ...existing.config, ...config }
 
     await existing.save()
 

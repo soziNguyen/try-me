@@ -91,10 +91,17 @@ async function fillPlanInfoAndSetupConfirm(planId, mode) {
         }
         if (appliedCouponCode) body.couponCode = appliedCouponCode
 
+        console.log('Sending request with body:', body)
+
         const res = await ajax('/api/admin/plan/upgrade', body, 'POST')
-        if (res) {
+
+        if (res && res.transactionId) {
           toastr.success('Đăng ký thành công! Đang chuyển đến hóa đơn...')
-          setTimeout(() => (window.location.href = `/checkout/${res.transactionId}/invoice`), 1500)
+          setTimeout(() => {
+            window.location.href = `/checkout/${res.transactionId}/invoice`
+          }, 1500)
+        } else {
+          toastr.error('Không nhận được thông tin giao dịch')
         }
       } catch (error) {
         toastr.error(error.message || 'Không thể đăng ký gói.')
@@ -158,11 +165,6 @@ async function fillPlanInfoAndSetupConfirm(planId, mode) {
 
 /**
  * Cập nhật hiển thị giá
- * @param {number} price Giá gốc
- * @param {number} discount Số tiền giảm
- * @param {number} subtotal Tiền sau giảm, trước VAT
- * @param {number} vat VAT
- * @param {number} total Tổng tiền cuối cùng
  */
 function updatePriceDisplay(price, discount, subtotal, vat, total) {
   document.getElementById('planDiscountPrice').textContent = discount

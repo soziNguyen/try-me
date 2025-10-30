@@ -221,30 +221,95 @@ export const hardDeletePlan = async (req, res) => {
 export const upgradePlan = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    const { planId, mode, duration = 1, couponCode } = req.body // mode: month/ year
+    const { planId, mode, duration, couponCode } = req.body // mode: month/ year
     const now = new Date()
 
     if (!organizationId) return responseHelper.error(res, 'Không tìm thấy tổ chức', 400)
     if (!planId) return responseHelper.error(res, 'Thiếu ID gói dịch vụ', 400)
+    if (!mode || !['month', 'year'].includes(mode)) {
+      return responseHelper.error(res, 'Mode không hợp lệ (month/year)', 400)
+    }
 
     // Tìm gói dịch vụ đang hoạt động
     const plan = await Plan.findOne({ _id: planId, isActive: true })
-    if (!plan)
+    if (!plan) {
       return responseHelper.error(res, 'Gói dịch vụ không hợp lệ hoặc đã ngừng hoạt động', 404)
+    }
 
     // Lấy tổ chức hiện tại
     const org = await Organization.findById(organizationId).populate('plan')
     if (!org) return responseHelper.error(res, 'Không tìm thấy tổ chức', 404)
 
     // Kiểm tra nếu cùng gói hoặc hạ cấp
-    if (org.plan && org.plan.code === plan.code)
+    if (org.plan && org.plan.code === plan.code) {
       return responseHelper.error(res, 'Bạn đang sử dụng gói này rồi', 400)
-    if (org.plan && org.plan.level >= plan.level)
+    }
+    if (org.plan && org.plan.level >= plan.level) {
       return responseHelper.error(res, 'Không thể hạ cấp sang gói thấp hơn', 400)
+    }
 
-    // Tính giá
+    // PHÂN LUỒNG 1: GỌI TỪ TRANG DANH SÁCH (không có duration)
+    if (!duration) {
+      // Check có pending transaction nào không (bất kể duration)
+      const existingTransaction = await PlanTransaction.findOne({
+        organization: organizationId,
+        plan: planId,
+        status: 'pending',
+        paidAt: null
+      }).sort({ createdAt: -1 })
+
+      if (existingTransaction) {
+        return responseHelper.success(
+          res,
+          {
+            redirect: `/checkout/${existingTransaction._id}/invoice`,
+            transactionId: existingTransaction._id
+          },
+          'Bạn đã có đơn hàng chờ thanh toán cho gói này'
+        )
+      }
+
+      // Chưa có pending -> redirect sang trang confirm
+      return responseHelper.success(
+        res,
+        {
+          redirect: `/checkout/${planId}?mode=${mode}`
+        },
+        'Đang chuyển đến trang xác nhận...'
+      )
+    }
+
+    // PHÂN LUỒNG 2: GỌI TỪ TRANG CONFIRM (có duration)
+
+    // Validate duration
+    const durationNum = parseInt(duration)
+    if (isNaN(durationNum) || durationNum < 1) {
+      return responseHelper.error(res, 'Duration không hợp lệ', 400)
+    }
+
+    // Check pending với ĐÚNG plan + mode + duration
+    const existingTransactionWithDuration = await PlanTransaction.findOne({
+      organization: organizationId,
+      plan: planId,
+      mode: mode,
+      duration: durationNum,
+      status: 'pending',
+      paidAt: null
+    }).sort({ createdAt: -1 })
+
+    if (existingTransactionWithDuration) {
+      return responseHelper.success(
+        res,
+        {
+          redirect: `/checkout/${existingTransactionWithDuration._id}/invoice`,
+          transactionId: existingTransactionWithDuration._id
+        },
+        'Đơn hàng này đã tồn tại. Đang chuyển đến hóa đơn...'
+      )
+    }
+
     const basePrice = mode === 'year' ? plan.priceYear : plan.priceMonth
-    const totalBasePrice = basePrice * duration
+    const totalBasePrice = basePrice * durationNum
     let discountAmount = 0
     let couponUsed = null
 
@@ -264,52 +329,41 @@ export const upgradePlan = async (req, res) => {
         { new: true }
       )
 
-      if (!coupon) return responseHelper.error(res, 'Mã giảm giá không hợp lệ', 400)
+      if (!coupon) {
+        return responseHelper.error(res, 'Mã giảm giá không hợp lệ hoặc đã hết hạn', 400)
+      }
+
       couponUsed = coupon
       discountAmount =
         coupon.discountType === 'percent'
-          ? (totalBasePrice * coupon.discountValue) / 100
+          ? Math.round((totalBasePrice * coupon.discountValue) / 100)
           : coupon.discountValue
     }
 
+    // TÍNH GIÁ CUỐI CÙNG
     const subtotal = Math.max(totalBasePrice - discountAmount, 0)
     const vatRate = 0.1
-    const vat = subtotal * vatRate
+    const vat = Math.round(subtotal * vatRate)
     const total = subtotal + vat
 
     // NGÀY HẾT HẠN DỰ KIẾN
     const expireAt = new Date()
-    if (mode === 'year') expireAt.setFullYear(expireAt.getFullYear() + duration)
-    else expireAt.setMonth(expireAt.getMonth() + duration)
-
-    // KIỂM TRA ĐƠN HÀNG PENDING
-    const existingTransaction = await PlanTransaction.findOne({
-      organization: organizationId,
-      plan: planId,
-      status: 'pending',
-      paidAt: null
-    }).sort({ createdAt: -1 })
-
-    if (existingTransaction) {
-      return responseHelper.success(
-        res,
-        {
-          redirect: `/checkout/${existingTransaction._id}/invoice`,
-          transactionId: existingTransaction._id
-        },
-        'Bạn đã tạo đơn hàng cho gói này trước đó. Đang chuyển đến hóa đơn cũ...'
-      )
+    if (mode === 'year') {
+      expireAt.setFullYear(expireAt.getFullYear() + durationNum)
+    } else {
+      expireAt.setMonth(expireAt.getMonth() + durationNum)
     }
 
-    // TẠO MỚI TRANSACTION
+    // TẠO MÃ HÓA ĐƠN
     const invoiceCode = await generateInvoiceCode(PlanTransaction, 'INV')
 
+    // TẠO TRANSACTION
     const transaction = await PlanTransaction.create({
       code: invoiceCode,
       organization: organizationId,
       plan: plan._id,
       mode,
-      duration,
+      duration: durationNum,
       amount: totalBasePrice,
       discountAmount,
       couponCode: couponUsed?.code || '',
@@ -318,18 +372,18 @@ export const upgradePlan = async (req, res) => {
       total,
       paidAt: null,
       expiredAt: expireAt,
-      note: `Tổ chức ${org.name} nâng cấp gói ${plan.name}`,
+      note: `Tổ chức ${org.name} nâng cấp gói ${plan.name} - ${durationNum} ${mode === 'year' ? 'năm' : 'tháng'}`,
       status: 'pending'
     })
 
-    responseHelper.success(
+    return responseHelper.success(
       res,
       {
-        redirect: `/checkout/${planId}?mode=${mode}`,
+        redirect: `/checkout/${transaction._id}/invoice`,
         transactionId: transaction._id,
         total
       },
-      'Tạo đơn hàng thành công. Đang chuyển đến trang thanh toán...'
+      'Tạo đơn hàng thành công. Đang chuyển đến hóa đơn...'
     )
   } catch (error) {
     responseHelper.error(res, error.message)
