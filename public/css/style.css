@@ -56,6 +56,11 @@ body {
 }
 
 /* panel layout mixin (uses variables for colors) */
+.status {
+  -webkit-transform: translate(-10px, 10px);
+          transform: translate(-10px, 10px);
+}
+
 /* Tooltip */
 .sidebar-tooltip {
   position: fixed;

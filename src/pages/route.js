@@ -111,4 +111,6 @@ router.get('/coupons', isAuthenticated, isAdmin, page.couponPlanPage)
 router.get('/coupon/:id', isAuthenticated, isAdmin, page.couponPlanDetailPage)
 router.get('/organization/:id', isAuthenticated, isAdmin, page.orgDetailPage)
 router.get('/plan-transactions', isAuthenticated, isAdmin, page.planTransactionPage)
+router.get('/checkout/:id/invoice', isAuthenticated, page.planInvoicePage)
+router.get('/admin/payment-methods', isAuthenticated, isAdmin, page.paymentMethodForAdminPage)
 export default router

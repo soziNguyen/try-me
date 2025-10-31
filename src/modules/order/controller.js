@@ -16,6 +16,7 @@ import { constants } from '../../configs/constants.js'
 import { getWarehouse } from '../../helpers/warehouseHelper.js'
 import Organization from '../organization/model.js'
 import ProductStock from '../product/stock/model.js'
+import { generateInvoiceCode } from '../../helpers/generateInvoiceCode.js'
 
 const { POINT_VALUE, POINTS_EARN_RATE } = constants
 
@@ -1090,26 +1091,28 @@ export const printInvoice = async (req, res) => {
 
     if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
 
-    // Lấy invoiceOptions
     const orgId = order.organization ? order.organization._id : null
-    let invoiceOptions = null
-    if (orgId) {
-      invoiceOptions = await InvoiceOption.findOne({ organizationId: orgId }).lean()
-    }
+    if (!orgId) return res.status(400).send('Đơn hàng không có thông tin tổ chức')
 
-    // Ưu tiên invoiceOptions -> organization -> default
+    // Lấy warehouse theo role
+    const warehouseId = await getWarehouse(req, orgId)
+
+    // Query invoice options cho warehouse cụ thể
+    const invoiceOptions = await InvoiceOption.findOne({
+      organizationId: orgId,
+      warehouseId
+    }).lean()
+
+    // Dùng giá trị từ invoiceOptions hoặc default
     const logoStore = has(invoiceOptions?.logo) ? invoiceOptions.logo : ''
-
     const invoiceHeader = has(invoiceOptions?.header) ? invoiceOptions.header : ''
     const invoiceFooter = has(invoiceOptions?.footer)
       ? invoiceOptions.footer
       : `<p class="text-center">Xin cảm ơn, hẹn gặp lại quý khách<br>
      Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ.</p>`
-
     const invoiceTitle = has(invoiceOptions?.invoiceTitle)
       ? invoiceOptions.invoiceTitle
       : 'HÓA ĐƠN BÁN HÀNG'
-
     const prefix = has(invoiceOptions?.prefix) ? invoiceOptions.prefix : 'HD'
     const orderDate = order.createdAt ? order.createdAt.toISOString() : ''
 
@@ -1139,6 +1142,9 @@ export const printInvoice = async (req, res) => {
       orderDate
     })
   } catch (error) {
+    if (error instanceof BusinessError) {
+      return res.status(error.statusCode).send(error.message)
+    }
     responseHelper.error(res, error.message)
   }
 }
@@ -1348,25 +1354,6 @@ export const getOrders = async (req, res) => {
       error: error.message
     })
   }
-}
-
-export const generateInvoiceCode = async (Model, prefix = 'INV') => {
-  // Tìm document mới nhất với prefix, sort theo code
-  const lastDoc = await Model.findOne({ code: new RegExp(`^${prefix}\\d+$`) })
-    .sort({ code: -1 }) // code lớn nhất trước
-    .lean()
-
-  let lastNumber = 0
-  if (lastDoc?.code) {
-    const match = lastDoc.code.match(new RegExp(`^${prefix}(\\d+)$`))
-    if (match) {
-      lastNumber = parseInt(match[1], 10)
-    }
-  }
-
-  const nextNumber = lastNumber + 1
-  const numberPart = String(nextNumber).padStart(12, '0')
-  return `${prefix}${numberPart}`
 }
 
 export const assignCustomerToOrder = async (req, res) => {

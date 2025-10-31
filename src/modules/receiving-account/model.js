@@ -3,12 +3,12 @@ const Schema = mongoose.Schema
 
 const ReceivingAccountSchema = new Schema(
   {
-    name: { type: String, default: '' }, // Tên tài khoản: "Momo công ty", "Vietcombank"
+    bankCode: { type: String, default: '' }, // "VCB", "TCB", "MB", etc.
+    bankName: { type: String, default: '' }, // Tên ngân hàng, nếu có
     type: { type: String, enum: ['bank', 'e-wallet'], default: 'bank' }, // Loại: ngân hàng hoặc ví điện tử
     accountNumber: { type: String, default: '' }, // Số tài khoản hoặc ID ví
-    bankName: { type: String, default: '' }, // Tên ngân hàng, nếu có
-    bankCode: { type: String, default: '' }, // "VCB", "TCB", "MB", etc.
-    isActive: { type: Boolean, default: true }, // Có sử dụng được không
+    name: { type: String, default: '' }, // Tên tài khoản
+    isActive: { type: Boolean, default: true }, // Hoạt động
     organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true } // Thuộc tổ chức nào
   },
   {

@@ -2,7 +2,9 @@ toastr.options = {
   escapeHtml: false,
   closeButton: true,
   timeOut: 2000,
-  positionClass: 'toast-top-right'
+  positionClass: 'toast-top-right',
+  // progressBar: true,
+  preventDuplicates: true
 }
 
 async function ajax(url, data = {}, method = 'POST') {
@@ -130,12 +132,7 @@ function debounce(fn, delay) {
 }
 
 // CapitalizeFirst
-function capitalizeFirst(str) {
-  if (str.toLowerCase() === 'dpi') {
-    return 'DPI'
-  }
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
+const capitalizeFirst = (str) => str.charAt(0).toUpperCase() + str.slice(1)
 
 function renderPagination(pagination, searchParam = '') {
   const { currentPage, perPage, totalPages } = pagination

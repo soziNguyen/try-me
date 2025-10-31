@@ -241,6 +241,12 @@ table {
 
       .select2-selection__rendered {
         padding: 0 !important;
+
+        .select2-selection__placeholder {
+          text-align: center !important;
+          width: 100%;
+          display: inline-block;
+        }
       }
     }
   }
@@ -526,10 +532,6 @@ input[type='number']::-webkit-inner-spin-button {
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-}
-
-#planDiscountCode {
-  border-bottom: 1px solid var(--gray-light) !important;
 }
 
 input[type='password']::-ms-reveal,

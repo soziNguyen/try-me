@@ -3,9 +3,6 @@ $(function () {
   initCustomerEvents()
 })
 
-// =======================
-// 🧩 1. Khởi tạo DataTable
-// =======================
 function initCustomerTable() {
   let showList = [10, 25, 50, 100]
   const numRows = Math.floor(($(window).height() - $('#customerTableBody').offset().top - 100) / 45)
@@ -210,12 +207,6 @@ function handleUpdateCustomer(e, csrfToken) {
     },
     error: (xhr) => toastr.error(xhr.responseJSON?.message || 'Lỗi khi cập nhật khách hàng')
   })
-}
-
-// Helper chung
-function reloadTable(selector) {
-  const table = $(selector).DataTable()
-  if (table) table.ajax.reload(null, false)
 }
 
 function resetForm(selector) {

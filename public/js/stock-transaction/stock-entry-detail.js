@@ -83,14 +83,20 @@ $(function () {
                   .prop('disabled', true)
                   .html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
 
+                // Input và textarea: readonly
+                $('#stockEntryForm').find('input, textarea').prop('readonly', true)
+
+                // Select và button: disabled
                 $('#stockEntryForm')
-                  .find('input, select, textarea, button')
-                  .not('#btn-lock-entry, #btn-print')
-                  .add('#btn-save-entry, #addItemBtn, #supplier, #warehouse')
+                  .find('select, button')
+                  .not('#btn-lock-entry, #btn-print, #btn-back')
+                  .add('#btn-save-entry, #addItemBtn')
                   .prop('disabled', true)
               } else {
                 toastr.error(res.message || 'Có lỗi xảy ra')
-                $('#btn-lock-entry').prop('disabled', false).text('Khóa phiếu')
+                $('#btn-lock-entry')
+                  .prop('disabled', false)
+                  .html(`<i class="bi bi-lock me-1"></i>Khóa phiếu`)
               }
             },
             error(xhr) {
@@ -286,10 +292,12 @@ $(function () {
         .prop('disabled', true)
         .html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
 
+      $('#stockEntryForm').find('input, textarea').prop('readonly', true)
+
       $('#stockEntryForm')
-        .find('input, select, textarea, button')
-        .not('#btn-lock-entry, #btn-print')
-        .add('#btn-save-entry, #addItemBtn, #supplier, #warehouse')
+        .find('select, button')
+        .not('#btn-lock-entry, #btn-print, #btn-back')
+        .add('#btn-save-entry, #addItemBtn, #supplier')
         .prop('disabled', true)
     }
   }

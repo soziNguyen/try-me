@@ -295,7 +295,7 @@ export const applyCouponPlan = async (req, res) => {
 
     // Tính VAT 8% trên số tiền đã giảm
     const subtotalAfterDiscount = totalAmount - discount
-    const vatAmount = Math.round(subtotalAfterDiscount * 0.08)
+    const vatAmount = Math.round(subtotalAfterDiscount * 0.1)
     const totalAfterVAT = subtotalAfterDiscount + vatAmount
 
     // Trả kết quả về client

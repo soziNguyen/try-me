@@ -1,4 +1,5 @@
 import PlanTransaction from './model.js'
+import responseHelper from '../../helpers/responseHelper.js'
 
 export const getPlanTransactions = async (req, res) => {
   try {
@@ -41,7 +42,37 @@ export const getPlanTransactions = async (req, res) => {
       data: transactions
     })
   } catch (error) {
-    console.error(error)
+    responseHelper.error(res, error.message)
+  }
+}
+
+export const getPlanTransactionById = async (req, res) => {
+  try {
+    const { id } = req.params
+    if (!id) return responseHelper.error(res, 'ID giao dịch không hợp lệ', 400)
+
+    const transaction = await PlanTransaction.findById(id)
+      .populate('organization', 'taxCode name phone plan province commune street')
+      .populate('plan', 'name priceMonth priceYear originPrice')
+
+    responseHelper.success(res, transaction)
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
+export const deletePlanTransactions = async (req, res) => {
+  try {
+    const { ids } = req.body
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return responseHelper.error(res, 'Vui lòng chọn ít nhất 1 bản ghi để xóa', 400)
+    }
+
+    const result = await PlanTransaction.deleteMany({
+      _id: { $in: ids }
+    })
+    responseHelper.success(res, `Đã xóa ${result.deletedCount} bản ghi`)
+  } catch (error) {
     responseHelper.error(res, error.message)
   }
 }

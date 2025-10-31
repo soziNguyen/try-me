@@ -71,10 +71,10 @@ $(function () {
                 $('#btn-lock-transfer')
                   .prop('disabled', true)
                   .html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
-
+                $('#stockTransferForm').find('input, textarea').prop('readonly', true)
                 $('#stockTransferForm')
-                  .find('input, select, textarea, button')
-                  .not('#btn-lock-transfer, #btn-print')
+                  .find('select, button')
+                  .not('#btn-lock-transfer, #btn-print, #btn-back')
                   .add('#btn-save-transfer, #addItemBtn')
                   .prop('disabled', true)
               } else {
@@ -224,10 +224,10 @@ $(function () {
       $('#btn-lock-transfer')
         .prop('disabled', true)
         .html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
-
+      $('#stockTransferForm').find('input, textarea').prop('readonly', true)
       $('#stockTransferForm')
-        .find('input, select, textarea, button')
-        .not('#btn-lock-transfer, #btn-print')
+        .find('select, button')
+        .not('#btn-lock-transfer, #btn-print, #btn-back')
         .add('#btn-save-transfer, #addItemBtn')
         .prop('disabled', true)
     }

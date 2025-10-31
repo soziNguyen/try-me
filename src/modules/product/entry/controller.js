@@ -244,7 +244,6 @@ export const updateProductEntry = async (req, res) => {
         organization: organizationId
       }
 
-      // Staff chỉ được update phiếu của kho mình
       if (req.warehouseFilter) {
         findCondition.warehouse = req.warehouseFilter
       }
@@ -302,40 +301,92 @@ export const updateProductEntry = async (req, res) => {
         })
       }
 
-      // Hoàn nguyên tồn kho từ phiếu cũ
-      for (const item of oldEntry.items) {
-        if (item.product && item.quantity > 0) {
-          // Kiểm tra tồn kho hiện tại trước khi trừ
+      // Tính thay đổi thực tế
+      const deltaMap = new Map() // key: productType:productId -> {old, new, delta, productType}
+
+      // Ghi nhận số lượng cũ
+      for (const oldItem of oldEntry.items) {
+        if (oldItem.product) {
+          const key = `${oldItem.productType}:${oldItem.product.toString()}`
+          deltaMap.set(key, {
+            productType: oldItem.productType,
+            productId: oldItem.product.toString(),
+            old: oldItem.quantity,
+            new: 0,
+            delta: -oldItem.quantity
+          })
+        }
+      }
+
+      // Ghi nhận số lượng mới và tính delta
+      for (const newItem of items) {
+        const key = `${newItem.productType}:${newItem.product.toString()}`
+        const existing = deltaMap.get(key)
+        if (existing) {
+          existing.new = newItem.quantity
+          existing.delta = newItem.quantity - existing.old
+        } else {
+          deltaMap.set(key, {
+            productType: newItem.productType,
+            productId: newItem.product.toString(),
+            old: 0,
+            new: newItem.quantity,
+            delta: newItem.quantity
+          })
+        }
+      }
+
+      // CHECK TỒN KHO dựa trên delta
+      for (const [key, { delta, productType, productId }] of deltaMap) {
+        if (delta < 0) {
+          // Cần GIẢM tồn kho (delta âm)
           const stockQuery = {
             warehouse: warehouse,
             organization: organizationId
           }
 
-          // Xác định trường product dựa vào productType
-          if (item.productType === 'Combo') {
-            stockQuery.combo = item.product
+          if (productType === 'Combo') {
+            stockQuery.combo = productId
           } else {
-            stockQuery.product = item.product
+            stockQuery.product = productId
           }
 
           const currentStock = await ProductStock.findOne(stockQuery).session(session)
+          const currentQty = currentStock?.quantity || 0
+          const decreaseAmount = Math.abs(delta)
 
-          if (currentStock && currentStock.quantity < item.quantity) {
+          if (currentQty < decreaseAmount) {
             throw new BusinessError(
-              `Không thể hoàn nguyên tồn kho. Tồn kho hiện tại không đủ.`,
+              `Không thể giảm số lượng. Tồn kho hiện tại không đủ để thực hiện thay đổi.`,
               400
             )
+          }
+        }
+      }
+
+      // CẬP NHẬT TỒN KHO theo delta
+      for (const [key, { delta, productType, productId }] of deltaMap) {
+        if (delta !== 0) {
+          const stockQuery = {
+            warehouse: warehouse,
+            organization: organizationId
+          }
+
+          if (productType === 'Combo') {
+            stockQuery.combo = productId
+          } else {
+            stockQuery.product = productId
           }
 
           await ProductStock.updateOne(
             stockQuery,
-            { $inc: { quantity: -item.quantity } },
-            { session }
+            { $inc: { quantity: delta } },
+            { upsert: true, session }
           )
         }
       }
 
-      // Cập nhật thông tin phiếu nhập (warehouse không đổi)
+      // Cập nhật thông tin phiếu nhập
       const updateData = {
         note,
         items,
@@ -343,46 +394,17 @@ export const updateProductEntry = async (req, res) => {
         updatedBy: req.user._id
       }
 
-      const newEntry = await ProductEntry.findOneAndUpdate(
-        {
-          _id: id,
-          organization: organizationId
-        },
-        updateData,
-        { new: true, session }
-      )
+      const newEntry = await ProductEntry.findOneAndUpdate(findCondition, updateData, {
+        new: true,
+        session
+      })
 
       if (!newEntry) throw new BusinessError('Cập nhật thất bại', 400)
-
-      // Cộng tồn kho mới
-      for (const item of newEntry.items) {
-        if (item.product && item.quantity > 0) {
-          const stockQuery = {
-            warehouse: warehouse,
-            organization: organizationId
-          }
-
-          // Xác định trường product dựa vào productType
-          if (item.productType === 'Combo') {
-            stockQuery.combo = item.product
-          } else {
-            stockQuery.product = item.product
-          }
-
-          await ProductStock.updateOne(
-            stockQuery,
-            {
-              $inc: { quantity: item.quantity }
-            },
-            { upsert: true, session }
-          )
-        }
-      }
 
       await newEntry.populate([
         { path: 'warehouse', select: 'name location' },
         { path: 'createdBy updatedBy lockedBy', select: 'username' },
-        { path: 'items.product', select: 'name' } // refPath tự động populate đúng model
+        { path: 'items.product', select: 'name' }
       ])
 
       return newEntry
@@ -500,5 +522,93 @@ export const deleteProductEntries = async (req, res) => {
       return responseHelper.error(res, error.message, error.statusCode || 400)
     }
     responseHelper.error(res, error.message)
+  }
+}
+
+export const lockProductEntry = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if (!mongoose.isValidObjectId(id)) {
+      return responseHelper.error(res, 'ID không hợp lệ', 400)
+    }
+
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    // Tìm phiếu với warehouse filter nếu là Staff
+    const findCondition = {
+      _id: id,
+      organization: organizationId
+    }
+
+    if (req.warehouseFilter) {
+      findCondition.warehouse = req.warehouseFilter
+    }
+
+    const entry = await ProductEntry.findOne(findCondition)
+
+    if (!entry) {
+      return responseHelper.error(res, 'Không tìm thấy phiếu nhập', 404)
+    }
+
+    if (entry.isLocked) {
+      return responseHelper.error(res, 'Phiếu nhập đã được khóa trước đó', 400)
+    }
+
+    if (!entry.items || entry.items.length === 0) {
+      return responseHelper.error(res, 'Phiếu nhập không có sản phẩm nào', 400)
+    }
+
+    // Validate items
+    for (const item of entry.items) {
+      if (!item.product) {
+        return responseHelper.error(res, 'Có sản phẩm thiếu thông tin product', 400)
+      }
+      if (!item.productType || !['MenuItem', 'Combo'].includes(item.productType)) {
+        return responseHelper.error(res, 'Có sản phẩm với productType không hợp lệ', 400)
+      }
+      const qty = Number(item.quantity)
+      if (!Number.isFinite(qty) || qty <= 0) {
+        return responseHelper.error(res, 'Có sản phẩm với số lượng không hợp lệ', 400)
+      }
+    }
+
+    // Update lock state
+    const updatedEntry = await ProductEntry.findOneAndUpdate(
+      {
+        _id: id,
+        organization: organizationId,
+        isLocked: false // chỉ cập nhật nếu chưa khóa
+      },
+      {
+        isLocked: true,
+        lockedAt: new Date(),
+        lockedBy: req.user._id
+      },
+      { new: true }
+    )
+
+    if (!updatedEntry) {
+      return responseHelper.error(res, 'Không thể khóa phiếu nhập', 400)
+    }
+
+    // Populate để trả về đầy đủ thông tin
+    const finalEntry = await ProductEntry.findOne({
+      _id: id,
+      organization: organizationId
+    })
+      .populate('lockedBy', 'name username')
+      .populate('items.product', 'name sku') // refPath tự động populate đúng model
+      .populate('warehouse', 'name code location')
+      .populate('createdBy updatedBy', 'username')
+
+    responseHelper.success(res, finalEntry, 'Đã khóa phiếu nhập thành công')
+  } catch (err) {
+    if (err instanceof BusinessError) {
+      return responseHelper.error(res, err.message, err.statusCode || 400)
+    }
+    console.error('Error locking product entry:', err)
+    responseHelper.error(res, err.message || 'Có lỗi xảy ra khi khóa phiếu nhập')
   }
 }

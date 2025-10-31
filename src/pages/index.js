@@ -2,6 +2,7 @@ import { getPageData } from '../helpers/pageDataHelper.js'
 import { getCurrentOrg } from '../helpers/orgHelper.js'
 import Order from '../modules/order/model.js'
 import InvoiceOption from '../modules/invoice/model.js'
+import PlanTransaction from '../modules/plan-transaction/model.js'
 
 //=============================================
 //================= USER ======================
@@ -817,6 +818,41 @@ export const planTransactionPage = async (req, res) => {
     getPageData(req, 'Lịch sử thanh toán', 'Plan Transaction', {
       headerClass: 'admin__header',
       pageTitle: 'LỊCH SỬ THANH TOÁN'
+    })
+  )
+}
+
+export const planInvoicePage = async (req, res) => {
+  try {
+    const { id } = req.params
+    const transaction = await PlanTransaction.findById(id)
+      .populate('organization')
+      .populate('plan')
+      .populate('paymentMethod', 'name code bankInfo')
+
+    if (!transaction)
+      return res.status(404).render('errors/error-404', {
+        title: 'Không tìm thấy trang',
+        message: 'Không tìm thấy hóa đơn'
+      })
+
+    res.render('package/invoice', {
+      title: 'Hóa đơn',
+      pageTitle: 'HÓA ĐƠN DỊCH VỤ',
+      transaction,
+      currentUserId: req.user?._id
+    })
+  } catch (err) {
+    res.status(500).render(err.message)
+  }
+}
+
+export const paymentMethodForAdminPage = async (req, res) => {
+  res.render(
+    'admin/payment_method',
+    getPageData(req, 'Quản lý phương thức thanh toán', 'Payment Method', {
+      headerClass: 'admin__header',
+      pageTitle: 'PHƯƠNG THỨC THANH TOÁN'
     })
   )
 }

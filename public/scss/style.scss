@@ -274,6 +274,10 @@ body {
   }
 }
 
+.status {
+  transform: translate(-10px, 10px);
+}
+
 /* Tooltip */
 .sidebar-tooltip {
   position: fixed;

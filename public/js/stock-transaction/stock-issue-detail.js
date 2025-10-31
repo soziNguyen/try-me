@@ -69,10 +69,10 @@ $(function () {
                 $('#btn-lock-issue')
                   .prop('disabled', true)
                   .html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
-
+                $('#stockIssueForm').find('input, textarea').prop('readonly', true)
                 $('#stockIssueForm')
-                  .find('input, select, textarea, button')
-                  .not('#btn-lock-issue, #btn-print')
+                  .find('select, button')
+                  .not('#btn-lock-issue, #btn-print, #btn-back')
                   .add('#btn-save-issue, #addItemBtn')
                   .prop('disabled', true)
               } else {
@@ -225,9 +225,11 @@ $(function () {
         .prop('disabled', true)
         .html(`<i class="bi bi-lock me-1"></i>Phiếu đã khóa`)
 
+      $('#stockIssueForm').find('input, textarea').prop('readonly', true)
+
       $('#stockIssueForm')
-        .find('input, select, textarea, button')
-        .not('#btn-lock-issue, #btn-print')
+        .find('select, button')
+        .not('#btn-lock-issue, #btn-print, #btn-back')
         .add('#btn-save-issue, #addItemBtn')
         .prop('disabled', true)
     }

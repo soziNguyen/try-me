@@ -207,7 +207,6 @@ $(function () {
     $('#comboTable tbody').on('click', 'tr', function (e) {
       if ($(e.target).is('input[type="checkbox"], tbody td:first-child')) return
       const data = table.row(this).data()
-      console.log(data)
 
       if (!data) return
 

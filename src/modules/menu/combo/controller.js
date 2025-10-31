@@ -188,7 +188,6 @@ export const updateCombo = async (req, res) => {
   try {
     const { id } = req.params
     const { sku, name, image, items, price, note, isActive } = req.body
-    console.log(req.body)
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -238,9 +237,6 @@ export const updateCombo = async (req, res) => {
         console.error('Không xóa được file cũ:', _err)
       }
     }
-
-    console.log('warehouse from req:', warehouse)
-    console.log('matchCondition:', matchCondition)
 
     const updated = await Combo.findOneAndUpdate(
       matchCondition,
