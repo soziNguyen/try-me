@@ -5,7 +5,22 @@
         <%= pageTitle %>
       </h2>
 
-
+      <div class="row mb-3 g-2 align-items-end">
+        <div class="col-auto">
+          <label for="fromDate" class="form-label mb-1">Từ ngày</label>
+          <input type="date" id="fromDate" class="form-control form-control-sm" />
+        </div>
+        <div class="col-auto">
+          <label for="toDate" class="form-label mb-1">Đến ngày</label>
+          <input type="date" id="toDate" class="form-control form-control-sm" />
+        </div>
+        <div class="col-auto">
+          <button id="btnLoad" class="btn btn-primary btn-sm">
+            <i class="bi bi-search"></i> Xem báo cáo
+          </button>
+        </div>
+      </div>
+      <table id="stockReportTable" class="table table-bordered table-sm table-hover w-100"></table>
     </div>
 
     </div>
@@ -14,4 +29,5 @@
     <%- include('../partials/commonjs.html') %>
       <script src="/js/sidebar-toggle.js"></script>
       <script src="/js/data-table.js"></script>
+      <script src="/js/report/stock.js"></script>
       <%- include('../partials/footer.html') %>
