@@ -50,6 +50,8 @@ export const getPaymentMethods = async (req, res) => {
       }
     }))
 
+    console.log(data)
+
     return res.json({
       draw,
       recordsTotal,

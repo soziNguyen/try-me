@@ -221,7 +221,8 @@ export const hardDeletePlan = async (req, res) => {
 export const upgradePlan = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    const { planId, mode, duration, couponCode } = req.body // mode: month/ year
+    const { planId, mode, duration, paymentMethodId, couponCode } = req.body // mode: month/ year
+
     const now = new Date()
 
     if (!organizationId) return responseHelper.error(res, 'Không tìm thấy tổ chức', 400)
@@ -372,6 +373,7 @@ export const upgradePlan = async (req, res) => {
       total,
       paidAt: null,
       expiredAt: expireAt,
+      paymentMethod: paymentMethodId,
       note: `Tổ chức ${org.name} nâng cấp gói ${plan.name} - ${durationNum} ${mode === 'year' ? 'năm' : 'tháng'}`,
       status: 'pending'
     })

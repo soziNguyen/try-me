@@ -825,7 +825,11 @@ export const planTransactionPage = async (req, res) => {
 export const planInvoicePage = async (req, res) => {
   try {
     const { id } = req.params
-    const transaction = await PlanTransaction.findById(id).populate('organization').populate('plan')
+    const transaction = await PlanTransaction.findById(id)
+      .populate('organization')
+      .populate('plan')
+      .populate('paymentMethod', 'name code bankInfo')
+    console.log(transaction)
 
     if (!transaction)
       return res.status(404).render('errors/error-404', {
@@ -850,16 +854,6 @@ export const paymentMethodForAdminPage = async (req, res) => {
     getPageData(req, 'Quản lý phương thức thanh toán', 'Payment Method', {
       headerClass: 'admin__header',
       pageTitle: 'PHƯƠNG THỨC THANH TOÁN'
-    })
-  )
-}
-
-export const receivingAccountForAdminPage = async (req, res) => {
-  res.render(
-    'admin/receiving_account',
-    getPageData(req, 'Quản lý tài khoản nhận', 'Receiving Account', {
-      headerClass: 'admin__header',
-      pageTitle: 'QUẢN LÝ TÀI KHOẢN NHẬN'
     })
   )
 }

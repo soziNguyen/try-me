@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  await loadPaymentMethods()
   const urlParams = new URLSearchParams(window.location.search)
   const planId = window.location.pathname.split('/').pop()
   const mode = urlParams.get('mode') || 'month'
@@ -83,15 +84,20 @@ async function fillPlanInfoAndSetupConfirm(planId, mode) {
 
     // Xác nhận đăng ký
     document.getElementById('confirmBtn').addEventListener('click', async (e) => {
+      const selectedBtn = document.querySelector('#paymentMethods button.active')
+      if (!selectedBtn) {
+        toastr.warning('Vui lòng chọn phương thức thanh toán')
+        return
+      }
+
       try {
         const body = {
           planId,
           mode,
-          duration: parseInt(planDurationSelect.value)
+          duration: parseInt(planDurationSelect.value),
+          paymentMethodId: selectedBtn.dataset.id
         }
         if (appliedCouponCode) body.couponCode = appliedCouponCode
-
-        console.log('Sending request with body:', body)
 
         const res = await ajax('/api/admin/plan/upgrade', body, 'POST')
 
@@ -173,4 +179,48 @@ function updatePriceDisplay(price, discount, subtotal, vat, total) {
   document.getElementById('planTotalPriceBeforeVAT').textContent = `${subtotal.toLocaleString()} ₫`
   document.getElementById('planVAT').textContent = ` + ${vat.toLocaleString()} ₫`
   document.getElementById('planTotalPrice').textContent = `${total.toLocaleString()} ₫`
+}
+
+async function loadPaymentMethods() {
+  try {
+    const result = await ajax('/api/admin/payment-method/active', {}, 'GET')
+    const container = document.getElementById('paymentMethods')
+    container.innerHTML = ''
+
+    result.forEach((pm) => {
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'btn btn-outline-primary d-flex align-items-center'
+      btn.dataset.code = pm.code
+      btn.dataset.id = pm._id
+
+      // tạo thẻ i cho icon
+      const icon = document.createElement('i')
+      if (pm.icon) {
+        icon.className = pm.icon + ' me-2'
+      } else {
+        icon.className = 'bi bi-credit-card me-2' // icon mặc định nếu không có
+      }
+
+      btn.appendChild(icon)
+      btn.appendChild(document.createTextNode(pm.name))
+
+      // click chọn
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('button').forEach((b) => b.classList.remove('active'))
+        btn.classList.add('active')
+        btn.dataset.selected = 'true'
+      })
+
+      container.appendChild(btn)
+    })
+    // mặc định chọn cái đầu tiên
+    const firstBtn = container.querySelector('button')
+    if (firstBtn) {
+      firstBtn.classList.add('active')
+      firstBtn.dataset.selected = 'true'
+    }
+  } catch (err) {
+    console.error(err)
+  }
 }

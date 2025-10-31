@@ -18,6 +18,7 @@ const PlanTransactionSchema = new Schema(
     expiredAt: { type: Date },
     note: { type: String, default: '' },
     status: { type: String, enum: ['pending', 'paid', 'cancelled'], default: 'pending' },
+    paymentMethod: { type: Schema.Types.ObjectId, ref: 'AdminPaymentMethod', default: null },
     cancelledAt: { type: Date, default: null },
     cancelledBy: { type: Schema.Types.ObjectId, ref: 'User', default: null }
   },

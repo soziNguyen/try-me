@@ -15,7 +15,7 @@
     <!-- Modal -->
     <div class="modal fade" id="paymentMethodModal" tabindex="-1" aria-labelledby="paymentMethodModalLabel"
       aria-hidden="true">
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
           <form id="paymentMethodForm">
             <div class="modal-header">
@@ -27,7 +27,7 @@
               <input type="hidden" id="paymentMethodId">
 
               <div class="row g-3">
-                <!-- 1️⃣ Thông tin cơ bản -->
+                <!-- Thông tin cơ bản -->
                 <div class="col-md-6">
                   <label class="form-label">Tên hiển thị</label>
                   <input type="text" id="pmName" class="form-control" required>
@@ -36,13 +36,6 @@
                 <div class="col-md-6">
                   <label class="form-label">Mã (Code)</label>
                   <select id="pmCode" class="form-select" required>
-                    <option value="">-- Chọn mã --</option>
-                    <option value="BANK">BANK - Chuyển khoản</option>
-                    <option value="COD">COD - Thanh toán khi nhận hàng</option>
-                    <option value="MOMO">MOMO</option>
-                    <option value="ZALOPAY">ZALOPAY</option>
-                    <option value="VNPAY">VNPAY</option>
-                    <option value="PAYOS">PAYOS</option>
                   </select>
                 </div>
 
@@ -80,20 +73,24 @@
                       <label class="form-label">Tên chủ tài khoản</label>
                       <input type="text" id="pmAccountName" class="form-control">
                     </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Chi nhánh</label>
+                      <input type="text" id="pmBranchName" class="form-control">
+                    </div>
                   </div>
                 </div>
 
-                <!-- 3️⃣ Cấu hình JSON -->
+                <!-- Cấu hình JSON -->
                 <div class="col-md-12">
                   <label class="form-label">Cấu hình (JSON)</label>
                   <textarea id="pmConfig" class="form-control" rows="3" placeholder='{"apiKey": "..."}'></textarea>
                 </div>
 
-                <!-- 4️⃣ Trạng thái kích hoạt -->
+                <!-- Trạng thái kích hoạt -->
                 <div class="col-md-12 mt-2">
                   <div class="form-check">
                     <input type="checkbox" id="pmIsActive" class="form-check-input" checked>
-                    <label class="form-check-label" for="pmIsActive">Kích hoạt (Active)</label>
+                    <label class="form-check-label" for="pmIsActive">Kích hoạt</label>
                   </div>
                 </div>
               </div>

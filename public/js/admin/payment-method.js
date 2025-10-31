@@ -6,6 +6,30 @@ $(function () {
   if (!showList.includes(numRows)) showList.push(numRows)
   showList.sort((a, b) => a - b)
 
+  const csrfToken = $('#_csrf').val()
+
+  // Danh sách phương thức thanh toán
+  const paymentCodes = [
+    { code: 'BANK', label: 'BANK - Chuyển khoản' }
+    // { code: 'COD', label: 'COD - Thanh toán khi nhận hàng' },
+    // { code: 'MOMO', label: 'MOMO' },
+    // { code: 'ZALOPAY', label: 'ZALOPAY' },
+    // { code: 'VNPAY', label: 'VNPAY' },
+    // { code: 'PAYOS', label: 'PAYOS' }
+  ]
+
+  // Hàm fill select
+  function fillPaymentCodeSelect(selected = '') {
+    const $select = $('#pmCode')
+    $select.empty()
+    $select.append('<option value="">— Chọn mã —</option>')
+    paymentCodes.forEach((pm) => {
+      const isSelected = pm.code === selected ? 'selected' : ''
+      $select.append(`<option value="${pm.code}" ${isSelected}>${pm.label}</option>`)
+    })
+  }
+
+  // Init DataTable
   const table = $('#paymentMethodTable').DataTable({
     dom:
       '<"top-bar d-flex align-items-center justify-content-between flex-wrap"l' +
@@ -88,11 +112,11 @@ $(function () {
       },
       {
         data: 'isActive',
-        title: 'Kích hoạt',
+        title: 'Trạng thái',
         className: 'text-center',
         render: (data, type, row) =>
           type === 'display'
-            ? `<input type="checkbox" class="form-check-input" data-field="isActive" data-id="${row._id}" ${data ? 'checked' : ''}>`
+            ? `<input type="checkbox" class="form-check-input dataInput" data-field="isActive" data-id="${row._id}" ${data ? 'checked' : ''}>`
             : data
       },
       {
@@ -117,16 +141,19 @@ $(function () {
         </div>
       `)
 
+      // Thêm mới
       $('#addPaymentMethodBtn').on('click', function () {
         $('#paymentMethodModalLabel').text('Thêm phương thức thanh toán')
         $('#paymentMethodForm')[0].reset()
         $('#paymentMethodId').val('')
         $('#pmCode').prop('readonly', false)
-        new bootstrap.Modal(document.getElementById('paymentMethodModal')).show()
+        fillPaymentCodeSelect() // fill select
+        showModal('paymentMethodModal').show()
       })
     }
   })
 
+  // Xử lý delete, update inline, checkbox
   handlerDeleteEvent(
     '#paymentMethodTable',
     '#deletePaymentMethodBtn',
@@ -136,9 +163,7 @@ $(function () {
   handlerUpdateEvent('#paymentMethodTable', 'admin/payment-method')
   initTableCheckboxEvents('#paymentMethodTable', 'paymentMethodCheckbox')
 
-  const csrfToken = $('#_csrf').val()
-
-  // Nút cập nhật
+  // Cập nhật modal khi nhấn update
   $('#paymentMethodTable').on('click', '.updateBtn', function () {
     const id = $(this).closest('tr').data('id')
     fetch(`/api/admin/payment-method/${id}`)
@@ -147,8 +172,11 @@ $(function () {
         const pm = res.data
         $('#paymentMethodModalLabel').text('Cập nhật phương thức thanh toán')
         $('#paymentMethodId').val(pm._id)
+        $('#pmCode').prop('readonly', true)
+
+        fillPaymentCodeSelect(pm.code) // fill select + chọn giá trị hiện tại
+
         $('#pmName').val(pm.name)
-        $('#pmCode').val(pm.code).prop('readonly', true)
         $('#pmDescription').val(pm.description)
         $('#pmIcon').val(pm.icon)
         $('#pmSortOrder').val(pm.sortOrder)
@@ -159,7 +187,7 @@ $(function () {
         $('#pmAccountName').val(pm.bankInfo?.accountName || '')
         $('#pmBranchName').val(pm.bankInfo?.branchName || '')
         $('#pmConfig').val(JSON.stringify(pm.config || {}, null, 2))
-        new bootstrap.Modal(document.getElementById('paymentMethodModal')).show()
+        showModal('paymentMethodModal').show()
       })
   })
 
@@ -203,7 +231,7 @@ $(function () {
       .then((res) => {
         if (res.success) {
           toastr.success(res.message)
-          bootstrap.Modal.getInstance(document.getElementById('paymentMethodModal')).hide()
+          hideModal('paymentMethodModal')
           table.ajax.reload()
         } else toastr.error(res.message)
       })
