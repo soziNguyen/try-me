@@ -1288,11 +1288,25 @@ export const getOrders = async (req, res) => {
     const summaryPipeline = [
       { $match: match },
       {
+        $addFields: {
+          orderTotalItems: {
+            $sum: {
+              $map: {
+                input: '$items',
+                as: 'item',
+                in: { $ifNull: ['$$item.quantity', 0] }
+              }
+            }
+          }
+        }
+      },
+      {
         $group: {
           _id: null,
           totalOrders: { $sum: 1 },
           totalAmount: { $sum: '$total' },
-          avgAmount: { $avg: '$total' }
+          avgAmount: { $avg: '$total' },
+          totalItems: { $sum: '$orderTotalItems' }
         }
       }
     ]
@@ -1342,7 +1356,8 @@ export const getOrders = async (req, res) => {
       summary: {
         totalOrders: summary.totalOrders,
         totalAmount: summary.totalAmount,
-        avgAmount: summary.avgAmount
+        avgAmount: summary.avgAmount,
+        totalItems: summary.totalItems
       }
     })
   } catch (error) {

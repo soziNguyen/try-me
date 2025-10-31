@@ -54,12 +54,14 @@ $(function () {
           }
         },
         {
-          data: 'customer.name',
+          data: 'customer',
           title: 'Khách hàng',
-          render: (data, type) =>
-            type === 'display'
-              ? `<span class="text form-control border-0">${data ?? ''}</span>`
-              : (data ?? '')
+          render: (customer, type) => {
+            const name = customer?.name?.trim() ? customer.name : 'Khách lẻ'
+            return type === 'display'
+              ? `<span class="text form-control border-0">${name}</span>`
+              : name
+          }
         },
         {
           data: 'items',
@@ -122,6 +124,14 @@ $(function () {
   $('#filterDateBtn').on('click', function () {
     table.ajax.reload()
     $('#toggleFilterBtn').dropdown('hide')
+
+    const start = $('#startDate').val()
+    const end = $('#endDate').val()
+    if (start && end) {
+      $('#toggleFilterBtn').html(`<i class="bi bi-calendar3 me-2"></i> ${start} → ${end}`)
+    } else {
+      $('#toggleFilterBtn').html(`<i class="bi bi-calendar3 me-2"></i> Chọn ngày lọc`)
+    }
   })
 
   // Print table data

@@ -129,7 +129,6 @@ function createNewOrderButton() {
 function renderEmptyOrders(orders) {
   let html = ''
 
-  // Lấy orderId từ URL
   const urlParams = new URLSearchParams(window.location.search)
   const currentOrderId = urlParams.get('orderId')
 
@@ -137,7 +136,12 @@ function renderEmptyOrders(orders) {
     html = `
       <nav class="mb-3">
         <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
-          <button class="nav-link active border-0 border-bottom border-3 border-primary bg-white text-primary shadow-sm px-4 py-3" id="order-tab-new" type="button" role="tab" aria-selected="true">
+          <button 
+            class="nav-link active border-0 border-bottom border-3 border-primary bg-white text-primary shadow-sm px-3 py-2"
+            id="order-tab-new"
+            type="button"
+            role="tab"
+            aria-selected="true">
             <span id="btnCreateNewOrder" class="cursor-pointer d-flex align-items-center gap-2">
               <i class="bi bi-plus-lg fw-bold"></i>
               <span class="fw-bold">Tạo hóa đơn</span>
@@ -163,38 +167,42 @@ function renderEmptyOrders(orders) {
           : order._id === reversedOrders[reversedOrders.length - 1]._id
 
         return `
-          <button class="nav-link ${
-            isActive
-              ? 'active border-0 border-bottom border-4 border-danger bg-white text-danger'
-              : 'border-0 border-bottom border-2 border-secondary bg-white text-secondary'
-          } shadow-sm px-4 py-3 me-2 fw-semibold"
-
-                  id="order-tab-${order._id}" 
-                  data-order-id="${order._id}" 
-                  type="button" 
-                  role="tab" 
-                  aria-selected="${isActive}"
-                  ${isActive ? 'disabled' : ''}>
-            <i class="bi bi-receipt${isActive ? '-cutoff' : ''} me-2"></i>
+          <button 
+            class="nav-link ${
+              isActive
+                ? 'active border-0 border-bottom border-4 border-danger bg-white text-danger'
+                : 'border-0 border-bottom border-2 border-secondary bg-white text-secondary'
+            } shadow-sm px-2 py-1 fw-semibold me-2"
+            id="order-tab-${order._id}" 
+            data-order-id="${order._id}" 
+            type="button" 
+            role="tab" 
+            aria-selected="${isActive}"
+            ${isActive ? 'disabled' : ''}>
             ${order.code}
           </button>
         `
       })
       .join('')
 
-    // Thêm tab cuối cho nút tạo hóa đơn mới
     const newOrderTab = `
-      <button class="nav-link border-0 border-bottom border-2 border-success bg-white text-success shadow-sm px-4 py-3" id="order-tab-new" type="button" role="tab" aria-selected="false">
-        <span id="btnCreateNewOrder" class="cursor-pointer w-100 d-flex align-items-center gap-2 fw-bold">
+      <button 
+        class="nav-link border-0 border-bottom border-2 border-success bg-white text-success shadow-sm px-2 py-1 fw-bold" 
+        id="order-tab-new"
+        type="button"
+        role="tab"
+        aria-selected="false">
+        <span id="btnCreateNewOrder" class="cursor-pointer d-flex align-items-center justify-content-center gap-2">
           <i class="bi bi-plus-lg"></i>
-          Mới
         </span>
       </button>
     `
 
     html = `
       <nav class="mb-3">
-        <div class="nav nav-tabs border-0 border-bottom border-2 flex-nowrap overflow-auto pb-0" id="nav-tab" role="tablist" style="scrollbar-width: thin;">
+        <div class="nav nav-tabs border-0 border-bottom border-2 d-flex flex-wrap gap-2"
+             id="nav-tab"
+             role="tablist">
           ${tabs}
           ${newOrderTab}
         </div>
@@ -204,13 +212,11 @@ function renderEmptyOrders(orders) {
 
   emptyOrdersContainer.innerHTML = html
 
-  // Gán sự kiện click cho nút tạo mới
   const btnCreateNewOrder = document.getElementById('order-tab-new')
   if (btnCreateNewOrder) {
     btnCreateNewOrder.addEventListener('click', () => handleCreateNewOrder(btnCreateNewOrder))
   }
 
-  // Gán sự kiện click cho các tab hóa đơn (chỉ cho các tab không bị disabled)
   const tabButtons = emptyOrdersContainer.querySelectorAll(
     '.nav-link[data-order-id]:not([disabled])'
   )
