@@ -24,7 +24,7 @@ $(function () {
 
   tableData.forEach(({ table, customer, items = [], total, updatedAt }) => {
     const tableName = table?.name || 'Mang về'
-    const customerName = customer?.name || ''
+    const customerName = customer?.name && customer.name.trim() ? customer.name : 'Khách lẻ'
     const itemText = items.length
       ? items
           .map((i) => i.foodName || i.comboName)

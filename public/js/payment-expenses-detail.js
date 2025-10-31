@@ -81,7 +81,7 @@ $(function () {
         if (res.success) {
           toastr.success(res.message || 'Lưu phiếu chi thành công')
           $btnSave.prop('disabled', true).html('<i class="bi bi-check-circle me-2"></i>Đã lưu')
-          setTimeout(() => (window.location.href = '/payment-expenses'), 800)
+          setTimeout(() => (window.location.href = '/payment-expenses'), 1500)
         } else {
           toastr.error(res.message || 'Có lỗi xảy ra khi lưu phiếu chi')
         }
