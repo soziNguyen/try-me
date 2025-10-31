@@ -266,7 +266,7 @@ export const upgradePlan = async (req, res) => {
             redirect: `/checkout/${existingTransaction._id}/invoice`,
             transactionId: existingTransaction._id
           },
-          'Bạn đã có đơn hàng chờ thanh toán cho gói này'
+          'Bạn đã có đơn hàng chờ thanh toán cho gói này. Đang chuyển hướng đến trang thanh toán.'
         )
       }
 

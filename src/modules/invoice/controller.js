@@ -2,16 +2,31 @@ import InvoiceOptions from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { deleteFile } from '../upload/helper.js'
+import Organization from '../organization/model.js'
 
 export const getInvoiceOptions = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    let options = await InvoiceOptions.findOne({ organizationId })
+    // Lấy defaultWarehouse của Org/Admin
+    const org = await Organization.findById(organizationId).select('defaultWarehouse')
+    if (!org?.defaultWarehouse) {
+      return responseHelper.error(
+        res,
+        'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật trong profile.',
+        400
+      )
+    }
+    const warehouseId = org.defaultWarehouse
+
+    let options = await InvoiceOptions.findOne({ organizationId, warehouseId })
+    console.log(options)
+
     if (!options) {
       options = await InvoiceOptions.create({
         organizationId,
+        warehouseId,
         logo: '',
         invoiceTitle: '',
         prefix: '',
@@ -19,6 +34,7 @@ export const getInvoiceOptions = async (req, res) => {
         footer: ''
       })
     }
+
     responseHelper.success(res, options)
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -30,8 +46,19 @@ export const updateInvoiceOptions = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    // Lấy warehouse mặc định của Org/Admin
+    const org = await Organization.findById(organizationId).select('defaultWarehouse')
+    if (!org?.defaultWarehouse) {
+      return responseHelper.error(
+        res,
+        'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật trong profile.',
+        400
+      )
+    }
+    const warehouseId = org.defaultWarehouse
+
     // Lấy record cũ để kiểm tra ảnh cũ
-    const oldOptions = await InvoiceOptions.findOne({ organizationId })
+    const oldOptions = await InvoiceOptions.findOne({ organizationId, warehouseId })
 
     const updateData = {}
     Object.keys(req.body).forEach((key) => {
@@ -39,7 +66,7 @@ export const updateInvoiceOptions = async (req, res) => {
     })
 
     const options = await InvoiceOptions.findOneAndUpdate(
-      { organizationId },
+      { organizationId, warehouseId },
       { $set: updateData },
       { upsert: true, new: true }
     )
@@ -52,6 +79,7 @@ export const updateInvoiceOptions = async (req, res) => {
         console.error('Không xóa được file cũ:', err)
       }
     }
+
     responseHelper.success(res, options, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)

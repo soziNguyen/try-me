@@ -829,7 +829,6 @@ export const planInvoicePage = async (req, res) => {
       .populate('organization')
       .populate('plan')
       .populate('paymentMethod', 'name code bankInfo')
-    console.log(transaction)
 
     if (!transaction)
       return res.status(404).render('errors/error-404', {

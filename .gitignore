@@ -139,4 +139,12 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 /uploads/2025/09
+# Image files
 *.webp
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.svg
+*.ico
+

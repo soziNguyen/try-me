@@ -73,6 +73,8 @@ $(document).ready(function () {
 
         initEditor('#headerEditor', 'header', headerContent)
         initEditor('#footerEditor', 'footer', footerContent)
+      } else {
+        toastr.error(result.message)
       }
     } catch (err) {
       console.error('Load invoice options error:', err)
