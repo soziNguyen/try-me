@@ -69,40 +69,17 @@ $(function () {
         },
         {
           data: 'reason',
-          title: 'Lý do',
+          title: 'Lý do chi',
           className: 'text-center',
           render: (data) => data || ''
         },
         {
-          data: 'items',
-          className: 'text-start px-1',
-          title: 'Tên sản phẩm',
-          render: (items) => {
-            if (!Array.isArray(items) || items.length === 0) return ''
-            const names = items.map((it) => it.name).filter(Boolean) // sửa ở đây
-            const uniqueNames = [...new Set(names)]
-            if (uniqueNames.length === 0) return ''
-            const firstThree = uniqueNames.slice(0, 3).join(', ')
-            const more = uniqueNames.length > 3 ? '...' : ''
-            return `<span title="${names.join('\n')}">${firstThree} ${more}</span>`
-          }
-        },
-        {
-          data: 'items',
-          className: 'text-center',
-          title: 'Số lượng',
-          render: (items) => {
-            if (!Array.isArray(items) || items.length === 0) return ''
-            const totalQty = items.reduce((acc, cur) => acc + (cur.quantity || 0), 0)
-            return totalQty
-          }
-        },
-        {
-          data: 'total',
-          title: 'Tổng giá trị (đ)',
+          data: 'expenseAmount',
+          title: 'Chi phí (đ)',
           className: 'text-center',
           render: (data) => {
-            return data.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫'
+            if (!data && data !== 0) return '0 ₫'
+            return Number(data).toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫'
           }
         },
         {
@@ -123,6 +100,12 @@ $(function () {
           render: (data) => data || ''
         },
 
+        {
+          data: 'note',
+          title: 'Ghi chú',
+          className: 'text-center',
+          render: (data) => data || ''
+        },
         {
           data: null,
           orderable: false,
