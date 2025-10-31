@@ -280,6 +280,11 @@ table tbody td .editBtn {
 .select2-container--default .selection .select2-selection .select2-selection__rendered {
   padding: 0 !important;
 }
+.select2-container--default .selection .select2-selection .select2-selection__rendered .select2-selection__placeholder {
+  text-align: center !important;
+  width: 100%;
+  display: inline-block;
+}
 .select2-container--default .select2-results__options {
   position: relative;
   background-color: var(--white);

@@ -21,7 +21,6 @@ export const getInvoiceOptions = async (req, res) => {
     const warehouseId = org.defaultWarehouse
 
     let options = await InvoiceOptions.findOne({ organizationId, warehouseId })
-    console.log(options)
 
     if (!options) {
       options = await InvoiceOptions.create({
