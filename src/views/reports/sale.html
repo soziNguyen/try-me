@@ -6,6 +6,56 @@
       </h2>
 
 
+
+      <div class="report-header mb-4 p-3 border rounded bg-light">
+
+        <!-- Bộ lọc ngày -->
+        <div class="filter-bar d-flex justify-content-center align-items-center mb-4 gap-2">
+          <input type="date" id="startDate" class="form-control form-control-sm w-auto">
+          <span class="fw-semibold">→</span>
+          <input type="date" id="endDate" class="form-control form-control-sm w-auto">
+          <button id="filterDateBtn" class="btn btn-primary btn-sm">
+            <i class="bi bi-funnel me-1"></i>
+          </button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row g-3 justify-content-center" id="summaryCards">
+          <div class="col-12 col-md-4">
+            <div class="card summary-card revenue">
+              <div class="card-body text-center">
+                <div class="card-title mb-1">
+                  <i class="bi bi-currency-dollar text-success me-1"></i> Tổng doanh thu
+                </div>
+                <div id="summary-total-revenue" class="card-value fs-5 fw-bold">0₫</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <div class="card summary-card orders">
+              <div class="card-body text-center">
+                <div class="card-title mb-1">
+                  <i class="bi bi-receipt text-primary me-1"></i> Tổng đơn hàng
+                </div>
+                <div id="summary-total-orders" class="card-value fs-5 fw-bold">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <div class="card summary-card items">
+              <div class="card-body text-center">
+                <div class="card-title mb-1">
+                  <i class="bi bi-basket text-warning me-1"></i> Tổng món đã bán
+                </div>
+                <div id="summary-total-items" class="card-value fs-5 fw-bold">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     </div>
@@ -13,5 +63,6 @@
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
     <%- include('../partials/commonjs.html') %>
       <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/sale.js"></script>
       <script src="/js/data-table.js"></script>
       <%- include('../partials/footer.html') %>
