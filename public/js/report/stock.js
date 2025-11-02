@@ -1,19 +1,17 @@
 $(function () {
-  // === Khởi tạo các input filter ===
   const today = new Date().toISOString().slice(0, 10)
   $('#fromDate').val(today)
   $('#toDate').val(today)
 
-  // === Tạo DataTable ===
   const table = $('#stockReportTable').DataTable({
     dom:
       '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
-      'l' + // length menu
-      'f' + // filter/search
+      'l' +
+      'f' +
       '<"right-group d-flex align-items-center btn-group flex-wrap">' +
       '>' +
-      'rt' + // table
-      '<"bottom-bar d-flex justify-content-between mt-3"ip>', // pagination + info
+      'rt' +
+      '<"bottom-bar d-flex justify-content-between mt-3"ip>',
     paging: true,
     searching: false,
     info: true,
@@ -52,7 +50,6 @@ $(function () {
         data: 'beginningQty',
         className: 'py-1',
         title: 'Tồn đầu kỳ',
-        className: 'text-end',
         render: (data, type) => `<span class="number">${data ?? ''}</span>`
       },
       {
@@ -116,11 +113,10 @@ $(function () {
       if (res.ok) {
         table.clear().rows.add(data.data).draw()
       } else {
-        alert(data.message || 'Lỗi tải dữ liệu')
+        toastr.error(data.message || 'Lỗi tải dữ liệu')
       }
     } catch (err) {
-      console.error(err)
-      alert('Không thể tải dữ liệu báo cáo')
+      toastr.error(err)
     } finally {
       $('#btnLoad').prop('disabled', false).text('Xem báo cáo')
     }

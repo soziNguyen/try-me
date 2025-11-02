@@ -9,8 +9,12 @@ import responseHelper from '../../../helpers/responseHelper.js'
 export const getStockReport = async (req, res) => {
   try {
     const { from, to } = req.query
+
     const startDate = new Date(from)
+    startDate.setHours(0, 0, 0, 0)
+
     const endDate = new Date(to)
+    endDate.setHours(23, 59, 59, 999)
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -72,12 +76,16 @@ export const getStockReport = async (req, res) => {
           {
             $match: {
               organization: organizationId,
-              date: { $lt: startDate },
-              toWarehouse: warehouseId
+              date: { $lt: startDate }
             }
           },
           { $unwind: '$items' },
-          { $match: { 'items.ingredient': id } },
+          {
+            $match: {
+              'items.ingredient': id,
+              'items.toWarehouse': warehouseId
+            }
+          },
           { $group: { _id: null, qty: { $sum: '$items.quantity' } } }
         ])
 
@@ -131,12 +139,16 @@ export const getStockReport = async (req, res) => {
           {
             $match: {
               organization: organizationId,
-              date: { $gte: startDate, $lte: endDate },
-              toWarehouse: warehouseId
+              date: { $gte: startDate, $lte: endDate }
             }
           },
           { $unwind: '$items' },
-          { $match: { 'items.ingredient': id } },
+          {
+            $match: {
+              'items.ingredient': id,
+              'items.toWarehouse': warehouseId
+            }
+          },
           { $group: { _id: null, qty: { $sum: '$items.quantity' } } }
         ])
 
