@@ -1,31 +1,151 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/org_sidebar.html') %>
-    <div class="admin__content">
-      <h2 class="mb-3 bold semi-bold">
-        <%= pageTitle %>
-      </h2>
 
-      <div class="row mb-3 g-2 align-items-end">
-        <div class="col-auto">
-          <label for="fromDate" class="form-label mb-1">Từ ngày</label>
-          <input type="date" id="fromDate" class="form-control form-control-sm" />
-        </div>
-        <div class="col-auto">
-          <label for="toDate" class="form-label mb-1">Đến ngày</label>
-          <input type="date" id="toDate" class="form-control form-control-sm" />
-        </div>
-        <div class="col-auto">
-          <button id="btnLoad" class="btn btn-primary btn-sm">
-            <i class="bi bi-search"></i> Xem báo cáo
-          </button>
+    <div class="admin__content">
+      <!-- Page Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="mb-1 fw-bold">
+            <%= pageTitle %>
+          </h2>
+          <p class="text-muted mb-0">Theo dõi tồn kho và biến động nguyên liệu</p>
         </div>
       </div>
-      <table id="stockReportTable" class="table table-bordered table-sm table-hover w-100"></table>
+
+      <!-- Filter Card -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <div class="row g-3 align-items-end">
+            <!-- From Date -->
+            <div class="col-lg-3 col-md-6">
+              <label for="fromDate" class="form-label fw-semibold mb-2">
+                <i class="bi bi-calendar-event text-primary me-2"></i>
+                Từ ngày
+              </label>
+              <input type="date" id="fromDate" class="form-control form-control-lg" />
+            </div>
+
+            <!-- To Date -->
+            <div class="col-lg-3 col-md-6">
+              <label for="toDate" class="form-label fw-semibold mb-2">
+                <i class="bi bi-calendar-check text-primary me-2"></i>
+                Đến ngày
+              </label>
+              <input type="date" id="toDate" class="form-control form-control-lg" />
+            </div>
+
+            <!-- Warehouse Filter -->
+            <div class="col-lg-3 col-md-6">
+              <label for="warehouseFilterMain" class="form-label fw-semibold mb-2">
+                <i class="bi bi-building text-primary me-2"></i>
+                Kho
+              </label>
+              <select id="warehouseFilterMain" class="form-select form-select-lg">
+                <option value="all">Tất cả kho</option>
+              </select>
+            </div>
+
+            <!-- Action Button -->
+            <div class="col-lg-3 col-md-6">
+              <button id="btnLoad" class="btn btn-primary btn-lg w-100 fw-semibold">
+                <i class="bi bi-search me-2"></i>
+                Xem báo cáo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="row g-3 mb-4 d-none" id="summaryCards">
+        <div class="col-lg-3 col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                  <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                    <i class="bi bi-box-seam text-primary fs-3"></i>
+                  </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <h6 class="text-muted text-uppercase mb-1 small fw-semibold">Tổng nhập</h6>
+                  <h3 class="mb-0 fw-bold" id="totalReceived">0</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                  <div class="bg-danger bg-opacity-10 rounded-3 p-3">
+                    <i class="bi bi-arrow-up-circle text-danger fs-3"></i>
+                  </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <h6 class="text-muted text-uppercase mb-1 small fw-semibold">Tổng xuất</h6>
+                  <h3 class="mb-0 fw-bold" id="totalIssued">0</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                  <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                    <i class="bi bi-arrow-left-right text-warning fs-3"></i>
+                  </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <h6 class="text-muted text-uppercase mb-1 small fw-semibold">Chuyển kho</h6>
+                  <h3 class="mb-0 fw-bold" id="totalTransferred">0</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                  <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                    <i class="bi bi-check-circle text-success fs-3"></i>
+                  </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <h6 class="text-muted text-uppercase mb-1 small fw-semibold">Tổng tồn</h6>
+                  <h3 class="mb-0 fw-bold" id="totalEnding">0</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table Card -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="table-responsive">
+            <table id="stockReportTable" class="table table-hover align-middle w-100"></table>
+          </div>
+        </div>
+      </div>
     </div>
 
     </div>
     </div>
+
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+
     <%- include('../partials/commonjs.html') %>
       <script src="/js/sidebar-toggle.js"></script>
       <script src="/js/data-table.js"></script>

@@ -2,13 +2,14 @@ import { Ingredient } from '../../inventory/ingredient/model.js'
 import { StockEntry } from '../../stock-transaction/stock-entry/model.js'
 import { StockIssue } from '../../stock-transaction/stock-issue/model.js'
 import StockTransfer from '../../stock-transaction/stock-transfer/model.js'
-import Organization from '../../organization/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import responseHelper from '../../../helpers/responseHelper.js'
+import mongoose from 'mongoose'
 
 export const getStockReport = async (req, res) => {
   try {
     const { from, to } = req.query
+    const warehouse = req.query.warehouse?.trim() || 'all'
 
     const startDate = new Date(from)
     startDate.setHours(0, 0, 0, 0)
@@ -19,52 +20,61 @@ export const getStockReport = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const org = await Organization.findById(organizationId).select('defaultWarehouse')
-    const warehouseId = org?.defaultWarehouse || null
-
     const ingredients = await Ingredient.find({
-      organization: organizationId,
-      warehouse: warehouseId
-    }).populate('warehouse category')
+      organization: organizationId
+    }).populate('category')
 
-    // --- Build report for each ingredient ---
+    // Nếu warehouse hợp lệ (không phải all)
+    const warehouseFilter =
+      warehouse !== 'all' && mongoose.Types.ObjectId.isValid(warehouse)
+        ? new mongoose.Types.ObjectId(String(warehouse))
+        : null
+
     const reportData = await Promise.all(
       ingredients.map(async (ing) => {
         const id = ing._id
 
-        // ===== Beginning Balance =====
+        // ====== Các điều kiện dùng chung ======
+        const matchCommon = {
+          organization: organizationId,
+          'items.ingredient': id
+        }
+
+        // ---- Entry & Issue (phiếu nhập / xuất) ----
+        const matchBefore = {
+          ...matchCommon,
+          date: { $lt: startDate },
+          ...(warehouseFilter && { warehouse: warehouseFilter })
+        }
+
+        const matchEntry = {
+          ...matchCommon,
+          date: { $gte: startDate, $lte: endDate },
+          ...(warehouseFilter && { warehouse: warehouseFilter })
+        }
+
+        // ====== Tồn đầu kỳ ======
         const entriesBefore = await StockEntry.aggregate([
-          {
-            $match: {
-              organization: organizationId,
-              date: { $lt: startDate },
-              warehouse: warehouseId
-            }
-          },
+          { $match: matchBefore },
           { $unwind: '$items' },
           { $match: { 'items.ingredient': id } },
           { $group: { _id: null, qty: { $sum: '$items.quantity' } } }
         ])
 
         const issuesBefore = await StockIssue.aggregate([
-          {
-            $match: {
-              organization: organizationId,
-              date: { $lt: startDate },
-              warehouse: warehouseId
-            }
-          },
+          { $match: matchBefore },
           { $unwind: '$items' },
           { $match: { 'items.ingredient': id } },
           { $group: { _id: null, qty: { $sum: '$items.quantity' } } }
         ])
 
+        // ✅ FIX: Transfers OUT - fromWarehouse ở document level
         const transfersOutBefore = await StockTransfer.aggregate([
           {
             $match: {
               organization: organizationId,
               date: { $lt: startDate },
-              fromWarehouse: warehouseId
+              ...(warehouseFilter && { fromWarehouse: warehouseFilter })
             }
           },
           { $unwind: '$items' },
@@ -72,6 +82,7 @@ export const getStockReport = async (req, res) => {
           { $group: { _id: null, qty: { $sum: '$items.quantity' } } }
         ])
 
+        // ✅ FIX: Transfers IN - toWarehouse ở item level, filter sau $unwind
         const transfersInBefore = await StockTransfer.aggregate([
           {
             $match: {
@@ -83,7 +94,7 @@ export const getStockReport = async (req, res) => {
           {
             $match: {
               'items.ingredient': id,
-              'items.toWarehouse': warehouseId
+              ...(warehouseFilter && { 'items.toWarehouse': warehouseFilter })
             }
           },
           { $group: { _id: null, qty: { $sum: '$items.quantity' } } }
@@ -95,39 +106,28 @@ export const getStockReport = async (req, res) => {
           (transfersOutBefore[0]?.qty || 0) +
           (transfersInBefore[0]?.qty || 0)
 
-        // ===== Movements During Period =====
+        // ====== Trong kỳ ======
         const entriesIn = await StockEntry.aggregate([
-          {
-            $match: {
-              organization: organizationId,
-              date: { $gte: startDate, $lte: endDate },
-              warehouse: warehouseId
-            }
-          },
+          { $match: matchEntry },
           { $unwind: '$items' },
           { $match: { 'items.ingredient': id } },
           { $group: { _id: null, qty: { $sum: '$items.quantity' } } }
         ])
 
         const issuesOut = await StockIssue.aggregate([
-          {
-            $match: {
-              organization: organizationId,
-              date: { $gte: startDate, $lte: endDate },
-              warehouse: warehouseId
-            }
-          },
+          { $match: matchEntry },
           { $unwind: '$items' },
           { $match: { 'items.ingredient': id } },
           { $group: { _id: null, qty: { $sum: '$items.quantity' } } }
         ])
 
+        // ✅ FIX: Transfers OUT - fromWarehouse ở document level
         const transfersOut = await StockTransfer.aggregate([
           {
             $match: {
               organization: organizationId,
               date: { $gte: startDate, $lte: endDate },
-              fromWarehouse: warehouseId
+              ...(warehouseFilter && { fromWarehouse: warehouseFilter })
             }
           },
           { $unwind: '$items' },
@@ -135,6 +135,7 @@ export const getStockReport = async (req, res) => {
           { $group: { _id: null, qty: { $sum: '$items.quantity' } } }
         ])
 
+        // ✅ FIX: Transfers IN - toWarehouse ở item level, filter sau $unwind
         const transfersIn = await StockTransfer.aggregate([
           {
             $match: {
@@ -146,13 +147,12 @@ export const getStockReport = async (req, res) => {
           {
             $match: {
               'items.ingredient': id,
-              'items.toWarehouse': warehouseId
+              ...(warehouseFilter && { 'items.toWarehouse': warehouseFilter })
             }
           },
           { $group: { _id: null, qty: { $sum: '$items.quantity' } } }
         ])
 
-        // ===== Ending Balance =====
         const endingQty =
           beginningQty +
           (entriesIn[0]?.qty || 0) -
@@ -177,7 +177,7 @@ export const getStockReport = async (req, res) => {
     res.json({
       from,
       to,
-      warehouse: warehouseId,
+      warehouse,
       data: reportData
     })
   } catch (error) {

@@ -12,11 +12,11 @@ const ingredientSchema = new mongoose.Schema(
       ref: 'IngredientCategory',
       default: null
     },
-    warehouse: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Warehouse',
-      required: true
-    },
+    // warehouse: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: 'Warehouse',
+    //   required: true
+    // },
     stock: { type: Number, default: 0 },
     expirationDays: { type: Number, default: null },
     isActive: { type: Boolean, default: true },

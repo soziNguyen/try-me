@@ -5,7 +5,7 @@ import { isPermit } from '../../../helpers/isPermit.js'
 
 const router = express.Router()
 
-router.get(
+router.post(
   '/api/inventory/ingredient-stock',
   isAuthenticated,
   isPermit('Admin', 'Org'),

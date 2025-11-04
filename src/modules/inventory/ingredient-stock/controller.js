@@ -2,17 +2,24 @@ import IngredientStock from './model.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
-import Organization from '../../organization/model.js'
+import mongoose from 'mongoose'
 
 export const getIngredientStockList = async (req, res) => {
   try {
-    const draw = +req.query.draw || 0
-    const start = +req.query.start || 0
-    const length = +req.query.length || 10
-    const searchValue = (req.query['search[value]'] || '').trim()
-    const colIdx = req.query['order[0][column]']
-    const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
-    const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
+    const draw = +req.body.draw || 0
+    const start = +req.body.start || 0
+    const length = +req.body.length || 10
+    const searchValue = (req.body['search[value]'] || '').trim()
+    const colIdx = req.body['order[0][column]']
+    let sortField = 'createdAt'
+    let sortDir = -1
+
+    if (req.body.order && req.body.order.length > 0) {
+      const colIdx = req.body.order[0].column
+      sortDir = req.body.order[0].dir === 'asc' ? 1 : -1
+      sortField = req.body.columns?.[colIdx]?.data || 'createdAt'
+    }
+    const warehouse = req.body.warehouse || 'all'
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -21,14 +28,8 @@ export const getIngredientStockList = async (req, res) => {
       organization: organizationId
     }
 
-    if (req.warehouseFilter) {
-      matchCondition.warehouse = req.warehouseFilter
-    } else {
-      const org = await Organization.findById(organizationId).select('defaultWarehouse').lean()
-      if (org?.defaultWarehouse) {
-        matchCondition.warehouse = org.defaultWarehouse
-      }
-      // Không có filter -> query tất cả warehouse
+    if (warehouse !== 'all') {
+      matchCondition.warehouse = new mongoose.Types.ObjectId(String(warehouse))
     }
 
     // Khởi tạo pipeline với lookup

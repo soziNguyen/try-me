@@ -18,6 +18,11 @@ const TableSchema = new Schema(
       ref: 'Order',
       default: null
     },
+    warehouse: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Warehouse',
+      required: true
+    },
     organization: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',
@@ -31,7 +36,7 @@ const TableSchema = new Schema(
 )
 
 TableSchema.index(
-  { organization: 1, name: 1 },
+  { organization: 1, warehouse: 1, name: 1 },
   {
     unique: true,
     partialFilterExpression: { name: { $ne: '' } }

@@ -80,6 +80,15 @@ function formatTime(dateStr) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
+// Format number with thousand separator
+function formatNumber(num) {
+  if (num === null || num === undefined || num === '') return '0'
+  return Number(num).toLocaleString('vi-VN', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  })
+}
+
 /**
  * Convert a duration in minutes to hours with one decimal place.
  *

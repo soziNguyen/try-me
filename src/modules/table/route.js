@@ -2,8 +2,10 @@ import express from 'express'
 import * as tableController from './controller.js'
 import { tablePage } from '../../pages/staffPages.js'
 import isAuthenticated from '../../helpers/isAuthenticated.js'
+import { checkWarehouseAccess } from '../../helpers/warehouseHelper.js'
 
 const router = express.Router()
+router.use(checkWarehouseAccess)
 
 // --- GET PAGE ---
 router.get('/tables', isAuthenticated, tablePage)
