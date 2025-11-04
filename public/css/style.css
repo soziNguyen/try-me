@@ -342,6 +342,10 @@ body {
   background: var(--bg);
   color: var(--text);
 }
+.admin__layout .admin__main .admin__content .report-header .icon {
+  width: 70px;
+  height: 70px;
+}
 
 .staff__layout {
   height: 100vh;
@@ -571,6 +575,10 @@ body {
   height: calc(100vh - 40px);
   background: var(--bg);
   color: var(--text);
+}
+.staff__layout .staff__main .staff__content .report-header .icon {
+  width: 70px;
+  height: 70px;
 }
 
 #themeModal .modal-dialog {

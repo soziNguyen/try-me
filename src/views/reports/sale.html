@@ -1,65 +1,125 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/org_sidebar.html') %>
+
     <div class="admin__content">
-      <h2 class="mb-3 bold semi-bold">
+      <h2 class="mb-4 fw-bold text-dark">
         <%= pageTitle %>
       </h2>
 
-
-
-      <div class="report-header mb-4 p-3 border rounded bg-light">
+      <div class="report-header mb-4 p-4 border-0 rounded-4 bg-white shadow">
 
         <!-- Bộ lọc ngày -->
-        <div class="filter-bar d-flex justify-content-center align-items-center mb-4 gap-2">
-          <input type="date" id="startDate" class="form-control form-control-sm w-auto">
-          <span class="fw-semibold">→</span>
-          <input type="date" id="endDate" class="form-control form-control-sm w-auto">
-          <button id="filterDateBtn" class="btn btn-primary btn-sm">
-            <i class="bi bi-funnel me-1"></i>
-          </button>
+        <div class="filter-bar bg-white border border-primary border-opacity-25 rounded-3 p-3 mb-4 shadow-sm">
+          <div class="row g-3 align-items-end justify-content-center">
+
+            <div class="col-auto">
+
+            </div>
+
+            <div class="col-auto">
+              <label class="form-label text-primary fw-semibold mb-2 small">
+                <i class="bi bi-calendar-event me-1"></i>Từ ngày
+              </label>
+              <input type="date" id="startDate" class="form-control border-primary border-opacity-50 rounded-2 w-auto">
+            </div>
+
+            <div class="col-auto d-flex align-items-center text-primary opacity-75 pb-2">
+              <i class="bi bi-arrow-right fs-5"></i>
+            </div>
+
+            <div class="col-auto">
+              <label class="form-label text-primary fw-semibold mb-2 small">
+                <i class="bi bi-calendar-check me-1"></i>Đến ngày
+              </label>
+              <input type="date" id="endDate" class="form-control border-primary border-opacity-50 rounded-2 w-auto">
+            </div>
+
+            <div class="col-auto">
+              <button id="filterDateBtn" class="btn btn-primary shadow-sm px-4 py-2">
+                <i class="bi bi-funnel me-2"></i>Lọc
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Summary Cards -->
-        <div class="row g-3 justify-content-center" id="summaryCards">
-          <div class="col-12 col-md-4">
-            <div class="card summary-card revenue">
-              <div class="card-body text-center">
-                <div class="card-title mb-1">
-                  <i class="bi bi-currency-dollar text-success me-1"></i> Tổng doanh thu
+        <div class="row g-4 mb-5" id="summaryCards">
+          <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow h-100">
+              <div class="card-body text-center p-4 bg-success bg-opacity-10 rounded">
+                <div class="mb-3">
+                  <div class="rounded-circle bg-success d-inline-flex align-items-center justify-content-center icon">
+                    <i class="bi bi-currency-dollar text-white fs-1"></i>
+                  </div>
                 </div>
-                <div id="summary-total-revenue" class="card-value fs-5 fw-bold">0₫</div>
+                <div class="fw-bold text-success mb-2">Tổng doanh thu</div>
+                <div id="summary-total-revenue" class="display-6 fw-bold text-success">0₫</div>
               </div>
             </div>
           </div>
 
-          <div class="col-12 col-md-4">
-            <div class="card summary-card orders">
-              <div class="card-body text-center">
-                <div class="card-title mb-1">
-                  <i class="bi bi-receipt text-primary me-1"></i> Tổng đơn hàng
+          <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow h-100">
+              <div class="card-body text-center p-4 bg-primary bg-opacity-10 rounded">
+                <div class="mb-3">
+                  <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center icon">
+                    <i class="bi bi-receipt text-white fs-1"></i>
+                  </div>
                 </div>
-                <div id="summary-total-orders" class="card-value fs-5 fw-bold">0</div>
+                <div class="fw-bold text-primary mb-2">Tổng đơn hàng</div>
+                <div id="summary-total-orders" class="display-6 fw-bold text-primary">0</div>
               </div>
             </div>
           </div>
 
-          <div class="col-12 col-md-4">
-            <div class="card summary-card items">
-              <div class="card-body text-center">
-                <div class="card-title mb-1">
-                  <i class="bi bi-basket text-warning me-1"></i> Tổng món đã bán
+          <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow h-100">
+              <div class="card-body text-center p-4 bg-warning bg-opacity-10 rounded">
+                <div class="mb-3">
+                  <div class="rounded-circle bg-warning d-inline-flex align-items-center justify-content-center icon">
+                    <i class="bi bi-basket text-white fs-1"></i>
+                  </div>
                 </div>
-                <div id="summary-total-items" class="card-value fs-5 fw-bold">0</div>
+                <div class="fw-bold text-warning mb-2">Tổng món đã bán</div>
+                <div id="summary-total-items" class="display-6 fw-bold text-warning">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow h-100">
+              <div class="card-body text-center p-4 bg-info bg-opacity-10 rounded">
+                <div class="mb-3">
+                  <div class="rounded-circle bg-info d-inline-flex align-items-center justify-content-center icon">
+                    <i class="bi bi-box-seam text-white fs-1"></i>
+                  </div>
+                </div>
+                <div class="fw-bold text-info mb-2">Tổng combo đã bán</div>
+                <div id="summary-total-combos" class="display-6 fw-bold text-info">0</div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Sales Report -->
+        <div class="sales-report mt-5">
+          <h4 class="mb-4 fw-bold text-dark">
+            <i class="bi bi-graph-up-arrow text-primary me-2"></i>
+            Quản lý bán hàng
+          </h4>
+          <table id="sales-dataTable" class="table table-bordered">
+            <thead>
+
+            </thead>
+            <tbody id="sales-data">
+
+            </tbody>
+          </table>
+        </div>
+
       </div>
-
     </div>
 
-    </div>
-    </div>
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
     <%- include('../partials/commonjs.html') %>
       <script src="/js/sidebar-toggle.js"></script>
