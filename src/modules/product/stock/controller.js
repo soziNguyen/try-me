@@ -2,8 +2,7 @@ import ProductStock from './model.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupRef, lookupUser } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
-import Organization from '../../organization/model.js'
-
+import mongoose from 'mongoose'
 export const getProductStockLists = async (req, res) => {
   try {
     const draw = +req.query.draw || 0
@@ -13,6 +12,8 @@ export const getProductStockLists = async (req, res) => {
     const colIdx = req.query['order[0][column]']
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
+    const warehouse = req.query.warehouse
+    console.log(warehouse)
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -21,14 +22,8 @@ export const getProductStockLists = async (req, res) => {
       organization: organizationId
     }
 
-    // Warehouse filtering
-    if (req.warehouseFilter) {
-      matchCondition.warehouse = req.warehouseFilter
-    } else {
-      const org = await Organization.findById(organizationId).select('defaultWarehouse').lean()
-      if (org?.defaultWarehouse) {
-        matchCondition.warehouse = org.defaultWarehouse
-      }
+    if (warehouse !== 'all') {
+      matchCondition.warehouse = new mongoose.Types.ObjectId(String(warehouse))
     }
 
     // Khởi tạo pipeline với match và lookup

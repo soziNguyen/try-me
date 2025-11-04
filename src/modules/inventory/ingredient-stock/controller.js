@@ -10,7 +10,6 @@ export const getIngredientStockList = async (req, res) => {
     const start = +req.body.start || 0
     const length = +req.body.length || 10
     const searchValue = (req.body['search[value]'] || '').trim()
-    const colIdx = req.body['order[0][column]']
     let sortField = 'createdAt'
     let sortDir = -1
 
