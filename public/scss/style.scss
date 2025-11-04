@@ -270,6 +270,13 @@ body {
       height: calc(100vh - 40px);
       background: var(--bg);
       color: var(--text);
+
+      .report-header {
+        .icon {
+          width: 70px;
+          height: 70px;
+        }
+      }
     }
   }
 }

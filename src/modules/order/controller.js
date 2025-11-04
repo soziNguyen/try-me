@@ -1284,17 +1284,34 @@ export const getOrders = async (req, res) => {
     const countResult = await Order.aggregate(countPipeline)
     const recordsFiltered = countResult.length > 0 ? countResult[0].count : 0
 
-    // Tính thống kê đơn hàng (số lượng đơn, tổng tiền, trung bình)
+    // Tính thống kê đơn hàng (số lượng đơn, tổng tiền, trung bình, tổng món, tổng combo)
     const summaryPipeline = [
       { $match: match },
       {
         $addFields: {
+          // Tổng số món (bao gồm food + combo)
           orderTotalItems: {
             $sum: {
               $map: {
                 input: '$items',
                 as: 'item',
                 in: { $ifNull: ['$$item.quantity', 0] }
+              }
+            }
+          },
+          // Tổng combo đã bán
+          orderTotalCombos: {
+            $sum: {
+              $map: {
+                input: '$items',
+                as: 'item',
+                in: {
+                  $cond: [
+                    { $ifNull: ['$$item.comboId', false] }, // nếu có comboId
+                    { $ifNull: ['$$item.quantity', 0] },
+                    0
+                  ]
+                }
               }
             }
           }
@@ -1306,10 +1323,12 @@ export const getOrders = async (req, res) => {
           totalOrders: { $sum: 1 },
           totalAmount: { $sum: '$total' },
           avgAmount: { $avg: '$total' },
-          totalItems: { $sum: '$orderTotalItems' }
+          totalItems: { $sum: '$orderTotalItems' },
+          totalCombos: { $sum: '$orderTotalCombos' }
         }
       }
     ]
+
     const summaryResult = await Order.aggregate(summaryPipeline)
     const summary =
       summaryResult.length > 0 ? summaryResult[0] : { totalOrders: 0, totalAmount: 0, avgAmount: 0 }
@@ -1357,7 +1376,8 @@ export const getOrders = async (req, res) => {
         totalOrders: summary.totalOrders,
         totalAmount: summary.totalAmount,
         avgAmount: summary.avgAmount,
-        totalItems: summary.totalItems
+        totalItems: summary.totalItems,
+        totalCombos: summary.totalCombos || 0
       }
     })
   } catch (error) {
@@ -1368,6 +1388,127 @@ export const getOrders = async (req, res) => {
       data: [],
       error: error.message
     })
+  }
+}
+
+export const getTopItems = async (req, res) => {
+  try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) {
+      return res.status(400).json({ error: 'Thiếu thông tin tổ chức' })
+    }
+
+    const startDate = req.query.startDate ? new Date(req.query.startDate) : null
+    const endDate = req.query.endDate ? new Date(req.query.endDate) : null
+
+    if (startDate) startDate.setHours(0, 0, 0, 0)
+    if (endDate) endDate.setHours(23, 59, 59, 999)
+
+    // ===== Base match =====
+    const match = { organization: organizationId }
+
+    // ✅ Thêm điều kiện warehouse (giống getOrders)
+    if (req.warehouseFilter) {
+      // Nếu user là staff → chỉ thấy kho được gán
+      match.warehouse = req.warehouseFilter
+    } else {
+      // Nếu admin hoặc org → dùng default warehouse
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        match.warehouse = org.defaultWarehouse
+      }
+    }
+
+    // ===== Thêm điều kiện thời gian =====
+    if (startDate || endDate) {
+      match.updatedAt = {}
+      if (startDate) match.updatedAt.$gte = startDate
+      if (endDate) match.updatedAt.$lte = endDate
+    }
+
+    // ===== Pipeline =====
+    const pipeline = [
+      { $match: match },
+      { $unwind: '$items' },
+      {
+        $lookup: {
+          from: 'MenuItems',
+          localField: 'items.foodId',
+          foreignField: '_id',
+          as: 'food'
+        }
+      },
+      {
+        $lookup: {
+          from: 'Combos',
+          localField: 'items.comboId',
+          foreignField: '_id',
+          as: 'combo'
+        }
+      },
+      {
+        $addFields: {
+          'items.name': {
+            $ifNull: [{ $arrayElemAt: ['$food.name', 0] }, { $arrayElemAt: ['$combo.name', 0] }]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            foodId: '$items.foodId',
+            comboId: '$items.comboId'
+          },
+          name: { $first: '$items.name' },
+          quantity: { $sum: { $ifNull: ['$items.quantity', 0] } },
+          total: {
+            $sum: {
+              $multiply: [{ $ifNull: ['$items.quantity', 0] }, { $ifNull: ['$items.price', 0] }]
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          $or: [{ '_id.foodId': { $ne: null } }, { '_id.comboId': { $ne: null } }]
+        }
+      }
+    ]
+
+    const items = await Order.aggregate(pipeline)
+
+    // ===== Chia món ăn / combo =====
+    const { foodItems, comboItems } = items.reduce(
+      (acc, item) => {
+        if (item._id.foodId) acc.foodItems.push(item)
+        if (item._id.comboId) acc.comboItems.push(item)
+        return acc
+      },
+      { foodItems: [], comboItems: [] }
+    )
+
+    // ===== Xử lý top / slow =====
+    const getTopAndSlow = (list, limit = 3) => {
+      if (!list.length) return { top: [], slow: [] }
+      const sorted = [...list].sort((a, b) => b.quantity - a.quantity)
+      return {
+        top: sorted.slice(0, limit),
+        slow: sorted.slice(-limit).reverse()
+      }
+    }
+
+    const { top: topSellingFoods, slow: slowSellingFoods } = getTopAndSlow(foodItems)
+    const { top: topSellingCombos, slow: slowSellingCombos } = getTopAndSlow(comboItems)
+
+    return res.json({
+      topSellingFoods,
+      slowSellingFoods,
+      topSellingCombos,
+      slowSellingCombos
+    })
+  } catch (err) {
+    console.error('getTopItems error:', err.stack)
+    return res.status(500).json({ error: err.message })
   }
 }
 

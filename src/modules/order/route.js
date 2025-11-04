@@ -12,6 +12,7 @@ router.get('/orders', isAuthenticated, ordersPage)
 
 // --- Đặt món và quản lý đơn hàng ---
 router.get('/api/orders/get', isAuthenticated, orderController.getOrders)
+router.get('/api/orders/getTopItems', isAuthenticated, orderController.getTopItems)
 router.post('/api/orders', isAuthenticated, orderController.createOrder)
 router.get('/api/orders/:orderId', isAuthenticated, orderController.getOrderById)
 router.post('/api/orders/:orderId/items', isAuthenticated, orderController.addItemToOrder)
