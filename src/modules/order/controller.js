@@ -17,6 +17,7 @@ import { getWarehouse } from '../../helpers/warehouseHelper.js'
 import Organization from '../organization/model.js'
 import ProductStock from '../product/stock/model.js'
 import { generateInvoiceCode } from '../../helpers/generateInvoiceCode.js'
+import { formatPhoneNumber, validatePhoneNumber } from '../../helpers/validator.js'
 
 const { POINT_VALUE, POINTS_EARN_RATE } = constants
 
@@ -31,12 +32,19 @@ export const createOrder = async (req, res) => {
       // Lấy warehouse dựa trên role
       const warehouse = await getWarehouse(req, organizationId)
 
-      const { tableId, isTakeaway, customerName, customerPhone } = req.body
+      let { tableId, isTakeaway, customerName, customerPhone } = req.body
       let prefix = 'INV'
 
       const invoiceOptions = await InvoiceOption.findOne({ organizationId }).lean()
       if (invoiceOptions?.prefix?.trim()) {
         prefix = invoiceOptions.prefix.trim()
+      }
+
+      // Chuẩn hóa số điện thoại
+      if (customerPhone) {
+        const phoneError = validatePhoneNumber(customerPhone)
+        if (phoneError) throw new BusinessError(phoneError, 400)
+        customerPhone = formatPhoneNumber(customerPhone)
       }
 
       // 1. Xử lý khách hàng theo organization + phone
@@ -703,6 +711,10 @@ export const checkoutOrder = async (req, res) => {
       if (order.status !== 'open')
         throw new BusinessError('Order đã được thanh toán hoặc đã đóng', 400)
 
+      if (!Array.isArray(order.items) || order.items.length == 0) {
+        throw new BusinessError('Đơn hàng phải có ít nhất 1 sản phẩm ', 400)
+      }
+
       // 2. Validate payment method and get receiving account
       const paymentMethod = await PaymentMethod.findById(paymentMethodId)
         .populate('receivingAccountId')
@@ -958,7 +970,6 @@ export const updateOrderDraft = async (req, res) => {
       serviceCharge = 0,
       extraDiscount = 0,
       vatRate = 0,
-      paymentMethodId = null,
       customerPaid = 0
     } = req.body
 
@@ -967,21 +978,23 @@ export const updateOrderDraft = async (req, res) => {
     const parsedDiscount = Number(discount) || 0
     const parsedPointsUsed = Number(pointsUsed) || 0
     const parsedServiceCharge = Number(serviceCharge) || 0
-    const parsedextraDiscount = Number(extraDiscount) || 0
+    const parsedExtraDiscount = Number(extraDiscount) || 0
     const parsedVatRate = Number(vatRate) || 0
     const parsedCustomerPaid = Number(customerPaid) || 0
 
+    // Validation: không cho phép giá trị âm
     if (
       parsedDiscount < 0 ||
       parsedPointsUsed < 0 ||
       parsedServiceCharge < 0 ||
-      parsedextraDiscount < 0 ||
+      parsedExtraDiscount < 0 ||
       parsedVatRate < 0 ||
       parsedCustomerPaid < 0
-    )
+    ) {
       return responseHelper.error(res, 'Các giá trị không được âm', 400)
+    }
 
-    // Early validation for points usage
+    // Early validation: kiểm tra nếu dùng điểm thì phải có khách hàng
     if (parsedPointsUsed > 0) {
       const orderCheck = await Order.findById(orderId).select('customerId').lean()
       if (!orderCheck) {
@@ -993,80 +1006,164 @@ export const updateOrderDraft = async (req, res) => {
     }
 
     const result = await withTransaction(async (session) => {
+      // 1. Lấy và validate order
       const order = await Order.findById(orderId).session(session)
       if (!order) throw new BusinessError('Order không tồn tại', 404)
 
-      const totalAmount = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-      if (parsedDiscount > totalAmount)
-        throw new BusinessError('Giảm giá không được vượt quá tổng tiền', 400)
+      // Kiểm tra order phải có items
+      if (!Array.isArray(order.items) || order.items.length === 0) {
+        throw new BusinessError('Đơn hàng phải có ít nhất 1 sản phẩm', 400)
+      }
 
-      // Handle customer points validation
-      if (order.customerId && parsedPointsUsed > 0) {
+      // 2. Tính tổng tiền hàng
+      const totalAmount = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+      // Validation: giảm giá không được vượt quá tổng tiền
+      if (parsedDiscount > totalAmount) {
+        throw new BusinessError('Giảm giá không được vượt quá tổng tiền', 400)
+      }
+
+      // 3. Xử lý điểm tích lũy
+      let availablePoints = 0
+      if (order.customerId) {
         const customer = await Customer.findById(order.customerId).session(session)
         if (!customer) throw new BusinessError('Khách hàng không tồn tại', 404)
 
-        if (customer.totalPoints < parsedPointsUsed) {
+        availablePoints = customer.totalPoints
+
+        // Validation: kiểm tra đủ điểm
+        if (parsedPointsUsed > 0 && customer.totalPoints < parsedPointsUsed) {
           throw new BusinessError(
             `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`,
             400
           )
         }
       } else if (parsedPointsUsed > 0) {
-        // Double check for guest orders
         throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
       }
 
+      // 4. Tính toán các khoản tiền
       const pointsDiscount = parsedPointsUsed * POINT_VALUE
-
       const totalPayable =
-        totalAmount - parsedDiscount - pointsDiscount - parsedextraDiscount + parsedServiceCharge
-      const total = Math.round(totalPayable + (totalPayable * parsedVatRate) / 100)
+        totalAmount - parsedDiscount - pointsDiscount - parsedExtraDiscount + parsedServiceCharge
 
-      if (parsedCustomerPaid < 0) throw new BusinessError('Số tiền khách trả không hợp lệ', 400)
-
+      const vatAmount = Math.round((totalPayable * parsedVatRate) / 100)
+      const total = Math.round(totalPayable + vatAmount)
       const changeAmount = parsedCustomerPaid - total
 
-      // Update order
+      // 5. Tìm/Gán payment method mặc định là Bank và Generate VietQR
+      let qrCodeUrl = null
+      let receivingAccountId = null
+      let paymentMethodId = order.paymentMethodId
+
+      // Nếu order chưa có paymentMethodId, tìm payment method Bank mặc định
+      if (!paymentMethodId) {
+        const defaultBankPayment = await PaymentMethod.findOne({
+          organization: order.organization,
+          type: 'bank',
+          isActive: true
+        })
+          .session(session)
+          .sort({ createdAt: 1 })
+
+        if (defaultBankPayment) {
+          paymentMethodId = defaultBankPayment._id
+        }
+      }
+
+      // Lấy thông tin payment method và receiving account
+      if (paymentMethodId) {
+        const paymentMethod = await PaymentMethod.findById(paymentMethodId)
+          .populate('receivingAccountId')
+          .session(session)
+
+        if (paymentMethod && paymentMethod.type === 'bank') {
+          receivingAccountId = paymentMethod.receivingAccountId
+        }
+      }
+
+      // Nếu không có receiving account, tìm bank account mặc định
+      if (!receivingAccountId) {
+        receivingAccountId = await ReceivingAccount.findOne({
+          organization: order.organization,
+          type: 'bank',
+          isActive: true
+        })
+          .session(session)
+          .sort({ createdAt: -1 })
+      }
+
+      // Generate QR code cho bank transfer
+      if (receivingAccountId) {
+        const bankCode = receivingAccountId.bankCode || 'MB'
+        const accountNumber = receivingAccountId.accountNumber
+
+        if (accountNumber && bankCode) {
+          const description = order.code || `DRAFT_${order._id}`
+          const baseUrl = 'https://vietqr.co/api/generate'
+          const params = new URLSearchParams({
+            style: '2',
+            logo: '1',
+            isMask: '0',
+            bg: '7'
+          })
+
+          qrCodeUrl = `${baseUrl}/${bankCode}/${accountNumber}/VIETQR.CO/${total}/${description}?${params.toString()}`
+        }
+      }
+
+      // 6. Cập nhật order
       order.discount = parsedDiscount
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = pointsDiscount
       order.serviceCharge = parsedServiceCharge
-      order.extraDiscount = parsedextraDiscount
+      order.extraDiscount = parsedExtraDiscount
       order.vatRate = parsedVatRate
       order.totalAmount = totalAmount
       order.totalPayable = totalPayable
       order.total = total
-      if (paymentMethodId) order.paymentMethodId = paymentMethodId
       order.customerPaid = parsedCustomerPaid
       order.changeAmount = changeAmount
+
+      if (paymentMethodId) {
+        order.paymentMethodId = paymentMethodId
+      }
+
+      if (qrCodeUrl) {
+        order.qrCode = qrCodeUrl
+      }
+
       order.updatedAt = new Date()
 
       await order.save({ session })
 
+      // 7. Trả về kết quả chi tiết
       return {
+        orderId: order._id,
+        orderCode: order.code,
+        totalAmount,
         discount: parsedDiscount,
         pointsUsed: parsedPointsUsed,
         pointsDiscount,
+        availablePoints,
         serviceCharge: parsedServiceCharge,
-        extraDiscount: parsedextraDiscount,
+        extraDiscount: parsedExtraDiscount,
         vatRate: parsedVatRate,
-        totalAmount,
+        vatAmount,
         totalPayable,
         total,
-        paymentMethodId: order.paymentMethodId,
         customerPaid: parsedCustomerPaid,
-        changeAmount
+        changeAmount,
+        paymentMethodId: order.paymentMethodId,
+        qrCodeUrl
       }
     })
 
-    return responseHelper.success(res, result, 'Cập nhật đơn hàng thành công')
+    return responseHelper.success(res, result, 'Cập nhật phiếu tạm tính thành công')
   } catch (error) {
-    // Clean error handling with BusinessError
     if (error instanceof BusinessError) {
-      // Expected business errors - no logging to reduce terminal noise
       return responseHelper.error(res, error.message, error.statusCode)
     } else {
-      // Unexpected system errors - log with full details
       console.error('Lỗi hệ thống cập nhật đơn hàng:', error)
       return responseHelper.error(res, 'Lỗi server nội bộ', 500)
     }
@@ -1358,7 +1455,7 @@ export const getOrders = async (req, res) => {
           totalPayable: 1,
           vatRate: 1,
           customer: { _id: 1, name: 1 },
-          table: { _id: 1, name: 1 },
+          table: { _id: 1, name: 1, area: 1 },
           items: 1,
           updatedAt: 1
         }

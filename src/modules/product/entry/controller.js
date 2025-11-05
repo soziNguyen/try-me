@@ -342,7 +342,9 @@ export const updateProductEntry = async (req, res) => {
           // Cần GIẢM tồn kho (delta âm)
           const stockQuery = {
             warehouse: warehouse,
-            organization: organizationId
+            organization: organizationId,
+            product: null,
+            combo: null
           }
 
           if (productType === 'Combo') {
@@ -367,20 +369,36 @@ export const updateProductEntry = async (req, res) => {
       // CẬP NHẬT TỒN KHO theo delta
       for (const [key, { delta, productType, productId }] of deltaMap) {
         if (delta !== 0) {
+          // Query phải bao gồm CẢ 4 trường trong unique index
           const stockQuery = {
             warehouse: warehouse,
-            organization: organizationId
+            organization: organizationId,
+            product: null,
+            combo: null
           }
 
+          const setOnInsert = {
+            warehouse: warehouse,
+            organization: organizationId,
+            product: null,
+            combo: null
+          }
+
+          // Set field tương ứng với productType
           if (productType === 'Combo') {
             stockQuery.combo = productId
+            setOnInsert.combo = productId
           } else {
             stockQuery.product = productId
+            setOnInsert.product = productId
           }
 
           await ProductStock.updateOne(
             stockQuery,
-            { $inc: { quantity: delta } },
+            {
+              $inc: { quantity: delta },
+              $setOnInsert: setOnInsert
+            },
             { upsert: true, session }
           )
         }

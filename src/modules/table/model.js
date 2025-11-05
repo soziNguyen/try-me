@@ -11,12 +11,17 @@ const TableSchema = new Schema(
       default: 'available'
     },
     capacity: { type: Number, default: 4 },
-    area: { type: String, enum: ['kv1', 'kv2'], default: 'kv1' },
+    area: { type: String, default: 'KV1' },
     checkInTime: { type: Date, default: null },
     currentOrderId: {
       type: Schema.Types.ObjectId,
       ref: 'Order',
       default: null
+    },
+    warehouse: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Warehouse',
+      required: true
     },
     organization: {
       type: Schema.Types.ObjectId,
@@ -31,7 +36,7 @@ const TableSchema = new Schema(
 )
 
 TableSchema.index(
-  { organization: 1, name: 1 },
+  { organization: 1, warehouse: 1, name: 1 },
   {
     unique: true,
     partialFilterExpression: { name: { $ne: '' } }

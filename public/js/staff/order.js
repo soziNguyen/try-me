@@ -172,7 +172,7 @@ function renderEmptyOrders(orders) {
               isActive
                 ? 'active border-0 border-bottom border-4 border-danger bg-white text-danger'
                 : 'border-0 border-bottom border-2 border-secondary bg-white text-secondary'
-            } shadow-sm px-2 py-1 fw-semibold me-2"
+            } shadow px-2 py-1 fw-semibold"
             id="order-tab-${order._id}" 
             data-order-id="${order._id}" 
             type="button" 

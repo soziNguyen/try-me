@@ -38,7 +38,7 @@ if (logInForm) {
     const remember = rememberCheckbox.checked
 
     if (!login || !password) {
-      toastr.warning('Please enter both username and password.')
+      toastr.warning('Vui lòng nhập đầy đủ thông tin')
       return
     }
 
