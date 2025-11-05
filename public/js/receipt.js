@@ -55,6 +55,16 @@ $(function () {
           }
         },
         {
+          data: 'table.area',
+          title: 'Khu vực',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `<span class="text form-control border-0">${data || ''}</span>`
+            }
+            return data || ''
+          }
+        },
+        {
           data: 'customer.name',
           title: 'Khách hàng',
           render: (data, type, row) => {
