@@ -1203,6 +1203,8 @@ export const getOrders = async (req, res) => {
       { $match: match },
       ...lookupRef('customerId', 'Customers', { as: 'customer' }),
       ...lookupRef('tableId', 'Tables', { as: 'table' }),
+      ...lookupRef('warehouse', 'Warehouses', { as: 'warehouse' }),
+      { $unwind: { path: '$warehouse', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
       ...lookupRef('items.foodId', 'MenuItems', { as: 'food' }),
       ...lookupRef('items.comboId', 'Combos', { as: 'combo' }),
@@ -1218,6 +1220,7 @@ export const getOrders = async (req, res) => {
           code: { $first: '$code' },
           customer: { $first: '$customer' },
           table: { $first: '$table' },
+          warehouse: { $first: '$warehouse' },
           total: { $first: '$total' },
           totalPayable: { $first: '$totalPayable' },
           vatRate: { $first: '$vatRate' },
@@ -1359,6 +1362,7 @@ export const getOrders = async (req, res) => {
           vatRate: 1,
           customer: { _id: 1, name: 1 },
           table: { _id: 1, name: 1 },
+          warehouse: { _id: 1, name: 1, location: 1 },
           items: 1,
           updatedAt: 1
         }

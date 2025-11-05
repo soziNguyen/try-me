@@ -5,6 +5,82 @@
         <%= pageTitle %>
       </h2>
 
+      <div class="filter-bar bg-white border border-primary border-opacity-25 rounded-3 p-3 mb-4 shadow-sm">
+        <div class="row g-3 align-items-end justify-content-center">
+
+          <!-- Loại kỳ báo cáo -->
+          <div class="col-auto">
+            <label class="form-label text-primary fw-semibold mb-2 small">
+              <i class="bi bi-bar-chart me-1"></i>Loại kỳ
+            </label>
+            <select id="reportType" class="form-select border-primary border-opacity-50 rounded-2 w-auto">
+              <option value="month" selected>Theo tháng</option>
+              <option value="quarter">Theo quý</option>
+              <option value="custom">Tùy chọn ngày</option>
+            </select>
+          </div>
+
+          <!-- Chọn quý (chỉ hiện khi "Theo quý") -->
+          <div class="col-auto" id="quarterGroup" style="display:none;">
+            <label class="form-label text-primary fw-semibold mb-2 small">
+              <i class="bi bi-calendar3 me-1"></i>Chọn quý
+            </label>
+            <select id="quarterSelect" class="form-select border-primary border-opacity-50 rounded-2 w-auto">
+              <option value="1">Quý 1</option>
+              <option value="2">Quý 2</option>
+              <option value="3">Quý 3</option>
+              <option value="4">Quý 4</option>
+            </select>
+          </div>
+
+          <!-- Ngày bắt đầu -->
+          <div class="col-auto" id="startDateGroup">
+            <label class="form-label text-primary fw-semibold mb-2 small">
+              <i class="bi bi-calendar-event me-1"></i>Từ ngày
+            </label>
+            <input type="date" id="startDate" class="form-control border-primary border-opacity-50 rounded-2 w-auto">
+          </div>
+
+          <!-- Mũi tên -->
+          <div class="col-auto d-flex align-items-center text-primary opacity-75 pb-2">
+            <i class="bi bi-arrow-right fs-5"></i>
+          </div>
+
+          <!-- Ngày kết thúc -->
+          <div class="col-auto" id="endDateGroup">
+            <label class="form-label text-primary fw-semibold mb-2 small">
+              <i class="bi bi-calendar-check me-1"></i>Đến ngày
+            </label>
+            <input type="date" id="endDate" class="form-control border-primary border-opacity-50 rounded-2 w-auto">
+          </div>
+
+          <!-- Nút Lọc -->
+          <div class="col-auto">
+            <button id="filterDateBtn" class="btn btn-primary shadow-sm px-4 py-2">
+              <i class="bi bi-funnel me-2"></i>Lọc
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- Sales Report -->
+      <div class="tax-report mt-5">
+        <h4 class="mb-4 fw-bold text-dark">
+          <i class="bi bi-graph-up-arrow text-primary me-2"></i>
+          Báo cáo thuế
+        </h4>
+        <table id="tax-dataTable" class="table table-bordered">
+          <thead>
+
+          </thead>
+          <tbody id="tax-data">
+
+          </tbody>
+        </table>
+      </div>
+
 
     </div>
 
@@ -13,5 +89,6 @@
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
     <%- include('../partials/commonjs.html') %>
       <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/reports-tax.js"></script>
       <script src="/js/data-table.js"></script>
       <%- include('../partials/footer.html') %>
