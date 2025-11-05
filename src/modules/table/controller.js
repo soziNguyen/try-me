@@ -37,7 +37,6 @@ export const getTables = async (req, res) => {
     }
 
     const warehouse = await getWarehouse(req, organizationId)
-
     const { status, area } = req.query
 
     const filter = { organization: organizationId, warehouse }
@@ -56,15 +55,32 @@ export const getTables = async (req, res) => {
       })
       .lean()
 
-    // Ép ObjectId về string + lấy tên khách
-    tables = tables.map((t) => {
-      if (t.currentOrderId?._id) {
-        t.currentOrderId._id = t.currentOrderId._id.toString()
+    const openOrders = await Order.find({
+      tableId: { $in: tables.map((t) => t._id) },
+      status: 'open',
+      organization: organizationId
+    })
+      .select('tableId totalAmount')
+      .lean()
+
+    // Gắn tổng tiền vào từng bàn
+    const tablesWithTotal = tables.map((t) => {
+      const order = openOrders.find((o) => o.tableId.toString() === t._id.toString())
+      return {
+        ...t,
+        totalAmount: order?.totalAmount || 0
       }
-      return t
     })
 
-    responseHelper.success(res, { tables })
+    const result = tablesWithTotal.map((t) => ({
+      ...t,
+      _id: t._id.toString(),
+      currentOrderId: t.currentOrderId?._id?.toString()
+        ? { ...t.currentOrderId, _id: t.currentOrderId._id.toString() }
+        : t.currentOrderId
+    }))
+
+    responseHelper.success(res, { tables: result })
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -250,7 +266,7 @@ export const updateTable = async (req, res) => {
       name,
       status,
       capacity,
-      area
+      area: area ? area.toUpperCase() : undefined
     }
     if (checkInTime) {
       updatedFields.checkInTime = checkInTime
