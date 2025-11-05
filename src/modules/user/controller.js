@@ -1,6 +1,7 @@
 import mailer from '../../helpers/mailer.js'
 import SMTP from '../../configs/smtp.js'
 import User from './model.js'
+import Order from '../order/model.js'
 import Attendance from '../attendance/model.js'
 import { Schedule } from '../schedule/model.js'
 import Organization from '../organization/model.js'
@@ -471,9 +472,9 @@ export const forgotPassword = async (req, res) => {
       to: user.email,
       subject: 'Password Reset Request',
       html: `
-                <h3>Reset Your Password</h3>
-                <p>Click the link below to reset your password. This link will expire in 1 hour:</p>
-                <p>Click <a href="${resetLink}"><i>here</i></a> to reset your password</p>
+              <h3>Reset Your Password</h3>
+              <p>Click the link below to reset your password. This link will expire in 1 hour:</p>
+              <p>Click <a href="${resetLink}"><i>here</i></a> to reset your password</p>
             `
     })
     responseHelper.success(res, '1', 'A password reset link has been sent to your email.')
@@ -544,6 +545,136 @@ export const updatePassword = async (req, res) => {
 
     responseHelper.success(res, 'Đổi mật khẩu thành công')
   } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
+export const getStaffSummary = async (req, res) => {
+  try {
+    const { from, to } = req.query
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu tổ chức', 400)
+
+    const fromDate = from
+      ? new Date(`${from}T00:00:00+07:00`)
+      : new Date(new Date().setHours(0, 0, 0, 0))
+
+    const toDate = to
+      ? new Date(`${to}T23:59:59.999+07:00`)
+      : new Date(new Date().setHours(23, 59, 59, 999))
+
+    const match = {
+      organization: organizationId,
+      status: { $in: ['completed'] },
+      createdAt: { $gte: fromDate, $lte: toDate }
+    }
+
+    const data = await Order.aggregate([
+      { $match: match },
+      { $match: { createdBy: { $ne: null } } },
+      {
+        $addFields: {
+          createdBy: {
+            $cond: [
+              { $eq: [{ $type: '$createdBy' }, 'objectId'] },
+              '$createdBy',
+              { $convert: { input: '$createdBy', to: 'objectId', onError: null, onNull: null } }
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$createdBy',
+          totalOrders: { $sum: 1 },
+          totalAmount: { $sum: '$totalAmount' },
+          totalDiscount: { $sum: '$discount' },
+          totalExtraDiscount: { $sum: '$extraDiscount' },
+          totalPointsDiscount: { $sum: { $ifNull: ['$pointsDiscount', 0] } },
+          totalServiceCharge: { $sum: '$serviceCharge' },
+          totalVat: { $sum: { $multiply: ['$totalPayable', { $divide: ['$vatRate', 100] }] } },
+          totalRevenue: { $sum: '$total' },
+          avgOrderValue: { $avg: '$total' },
+          totalCustomers: { $addToSet: '$customerId' }
+        }
+      },
+      { $match: { _id: { $ne: null } } },
+      {
+        $lookup: {
+          from: 'Users',
+          let: { staffId: '$_id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$_id', '$$staffId'] } } },
+            { $project: { username: 1, role: 1 } }
+          ],
+          as: 'staff'
+        }
+      },
+      { $unwind: { path: '$staff', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          name: '$staff.username',
+          role: '$staff.role',
+          totalOrders: 1,
+          totalAmount: 1,
+          totalDiscount: 1,
+          totalExtraDiscount: 1,
+          totalServiceCharge: 1,
+          totalVat: 1,
+          netRevenue: {
+            $subtract: [
+              { $add: ['$totalAmount', '$totalServiceCharge'] },
+              {
+                $add: [
+                  '$totalDiscount',
+                  '$totalExtraDiscount',
+                  { $ifNull: ['$totalPointsDiscount', 0] }
+                ]
+              }
+            ]
+          },
+          totalDiscountAll: {
+            $add: [
+              '$totalDiscount',
+              '$totalExtraDiscount',
+              { $ifNull: ['$totalPointsDiscount', 0] }
+            ]
+          },
+          totalRevenue: 1,
+          avgOrderValue: { $round: ['$avgOrderValue', 0] },
+          totalCustomers: {
+            $size: {
+              $filter: {
+                input: '$totalCustomers',
+                as: 'cust',
+                cond: { $ne: ['$$cust', null] }
+              }
+            }
+          }
+        }
+      },
+      { $sort: { totalRevenue: -1 } }
+    ])
+
+    // Tổng hợp toàn hệ thống
+    const totalSummary = data.reduce(
+      (acc, s) => {
+        acc.totalOrders += s.totalOrders
+        acc.totalRevenue += s.totalRevenue
+        acc.totalAmount += s.totalAmount
+        return acc
+      },
+      { totalOrders: 0, totalRevenue: 0, totalAmount: 0 }
+    )
+
+    return responseHelper.success(res, {
+      fromDate,
+      toDate,
+      totals: totalSummary,
+      staffs: data
+    })
+  } catch (error) {
+    console.error('Lỗi dashboard:', error)
     responseHelper.error(res, error.message)
   }
 }
