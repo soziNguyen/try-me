@@ -106,7 +106,8 @@ export const createOrder = async (req, res) => {
         organization: organizationId,
         warehouse,
         customerId: customer?._id || null,
-        code: orderCode
+        code: orderCode,
+        createdBy: req.user?._id || null
       }
 
       // 2. Đơn mang đi
@@ -434,11 +435,17 @@ export const addItemToOrder = async (req, res) => {
       }
     }
 
-    // tính tổng và lưu luôn vào order.totalAmount (cache)
+    // Tính tổng và lưu luôn vào order.totalAmount (cache)
     order.totalAmount = calcOrderTotal(order.items)
+
+    // Cập nhật updatedBy
+    if (req.user && req.user._id) {
+      order.updatedBy = req.user._id
+    }
+
     await order.save()
 
-    // nếu order gắn bàn thì cập nhật total trong bảng Table
+    // Nếu order gắn bàn thì cập nhật total trong bảng Table
     if (order.tableId) {
       try {
         await Table.findByIdAndUpdate(order.tableId, {
@@ -571,12 +578,20 @@ export const updateItemQuantity = async (req, res) => {
       }
     }
 
+    // Cập nhật quantity
     item.quantity = quantity
 
-    // cập nhật total và save
+    // Cập nhật total
     order.totalAmount = calcOrderTotal(order.items)
+
+    // Cập nhật updatedBy
+    if (req.user && req.user._id) {
+      order.updatedBy = req.user._id
+    }
+
     await order.save()
 
+    // Cập nhật bàn nếu có
     if (order.tableId) {
       await Table.findByIdAndUpdate(order.tableId, {
         totalAmount: order.totalAmount
@@ -632,10 +647,17 @@ export const removeItemFromOrder = async (req, res) => {
       return responseHelper.error(res, 'Món/combo không tồn tại trong order', 404)
     }
 
+    // Xóa item
     order.items.splice(itemIndex, 1)
 
-    // cập nhật total và lưu
+    // Cập nhật total
     order.totalAmount = calcOrderTotal(order.items)
+
+    // Cập nhật updatedBy
+    if (req.user && req.user._id) {
+      order.updatedBy = req.user._id
+    }
+
     await order.save()
 
     if (order.tableId) {
@@ -677,7 +699,7 @@ export const checkoutOrder = async (req, res) => {
     const parsedDiscount = Number(discount) || 0
     const parsedPointsUsed = Number(pointsUsed) || 0
     const parsedServiceCharge = Number(serviceCharge) || 0
-    const parsedextraDiscount = Number(extraDiscount) || 0
+    const parsedExtraDiscount = Number(extraDiscount) || 0
     const parsedVatRate = Number(vatRate) || 0
     const parsedCustomerPaid = Number(customerPaid) || 0
 
@@ -686,7 +708,7 @@ export const checkoutOrder = async (req, res) => {
       parsedPointsUsed < 0 ||
       parsedServiceCharge < 0 ||
       parsedVatRate < 0 ||
-      parsedextraDiscount < 0
+      parsedExtraDiscount < 0
     )
       return responseHelper.error(res, 'Các giá trị không được âm', 400)
 
@@ -743,7 +765,7 @@ export const checkoutOrder = async (req, res) => {
         totalAmount -
         parsedDiscount -
         calculatedPointsDiscount -
-        parsedextraDiscount +
+        parsedExtraDiscount +
         parsedServiceCharge
       const total = Math.round(totalPayable + (totalPayable * parsedVatRate) / 100)
 
@@ -912,7 +934,7 @@ export const checkoutOrder = async (req, res) => {
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = calculatedPointsDiscount
       order.serviceCharge = parsedServiceCharge
-      order.extraDiscount = parsedextraDiscount
+      order.extraDiscount = parsedExtraDiscount
       order.vatRate = parsedVatRate
       order.totalAmount = totalAmount
       order.totalPayable = totalPayable
@@ -921,7 +943,14 @@ export const checkoutOrder = async (req, res) => {
       order.customerPaid = parsedCustomerPaid
       order.changeAmount = parsedCustomerPaid - total
       order.status = 'completed'
+
+      // Thêm updatedBy
+      if (req.user && req.user._id) {
+        order.updatedBy = req.user._id
+      }
+
       order.updatedAt = new Date()
+
       if (qrCodeUrl) order.qrCode = qrCodeUrl
 
       await order.save({ session })
@@ -942,7 +971,7 @@ export const checkoutOrder = async (req, res) => {
         pointsDiscount: calculatedPointsDiscount,
         pointsEarned,
         serviceCharge: parsedServiceCharge,
-        extraDiscount: parsedextraDiscount,
+        extraDiscount: parsedExtraDiscount,
         vatRate: parsedVatRate,
         totalPayable,
         total,
@@ -1133,6 +1162,11 @@ export const updateOrderDraft = async (req, res) => {
         order.qrCode = qrCodeUrl
       }
 
+      // Thêm updatedBy
+      if (req.user && req.user._id) {
+        order.updatedBy = req.user._id
+      }
+
       order.updatedAt = new Date()
 
       await order.save({ session })
@@ -1164,7 +1198,6 @@ export const updateOrderDraft = async (req, res) => {
     if (error instanceof BusinessError) {
       return responseHelper.error(res, error.message, error.statusCode)
     } else {
-      console.error('Lỗi hệ thống cập nhật đơn hàng:', error)
       return responseHelper.error(res, 'Lỗi server nội bộ', 500)
     }
   }
@@ -1603,9 +1636,8 @@ export const getTopItems = async (req, res) => {
       topSellingCombos,
       slowSellingCombos
     })
-  } catch (err) {
-    console.error('getTopItems error:', err.stack)
-    return res.status(500).json({ error: err.message })
+  } catch (error) {
+    responseHelper.error(res, error.message)
   }
 }
 
@@ -1638,8 +1670,7 @@ export const assignCustomerToOrder = async (req, res) => {
       customer: { _id, name, phone, totalPoints }
     })
   } catch (error) {
-    console.error('assignCustomerToOrder error:', error)
-    return responseHelper.error(res, 'Có lỗi xảy ra khi gán khách hàng')
+    responseHelper.error(res, error.message)
   }
 }
 
@@ -1685,7 +1716,6 @@ export const assignTableToOrder = async (req, res) => {
 
     responseHelper.success(res, result)
   } catch (error) {
-    console.error('Assign table to order error:', error)
     responseHelper.error(res, error.message)
   }
 }

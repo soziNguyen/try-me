@@ -10,19 +10,19 @@
         <div class="logo mb-2">
           <img src="<%= logoStore %>" class="org-logo-bill" alt="logo" />
         </div>
+      <% } %>
+      <div class="header">
+        <% if (invoiceHeader) { %> <%- invoiceHeader %>
+        <% } else { %>
+          <span id="headerFallback"></span>
         <% } %>
-          <div class="header">
-            <% if (invoiceHeader) { %> <%- invoiceHeader %>
-                <% } else { %>
-                  <span id="headerFallback"></span>
-                  <% } %>
-          </div>
-          <hr class="my-1" />
-          <div><strong>
-              <%= invoiceTitle %>
-            </strong></div>
-          <div>Mã HD: <span id="orderId"></span></div>
-          <div><span id="orderDate"></span></div>
+      </div>
+      <hr class="my-1" />
+      <div><strong>
+          <%= invoiceTitle %>
+        </strong></div>
+      <div>Mã HD: <span id="orderId"></span></div>
+      <div><span id="orderDate"></span></div>
     </div>
 
     <div class="info mb-2">
@@ -78,20 +78,20 @@
             <strong>Ngân hàng:</strong>
             <%= paymentAccountInfo.bankName %>
           </p>
-          <% } %>
-            <% if (paymentAccountInfo.accountNumber) { %>
-              <p>
-                <strong>Số tài khoản:</strong>
-                <%= paymentAccountInfo.accountNumber %>
-              </p>
-              <% } %>
-                <% if (paymentAccountInfo.accountName) { %>
-                  <p>
-                    <strong>Chủ tài khoản:</strong>
-                    <%= paymentAccountInfo.accountName %>
-                  </p>
-                  <% } %>
-                    <% } %>
+        <% } %>
+        <% if (paymentAccountInfo.accountNumber) { %>
+          <p>
+            <strong>Số tài khoản:</strong>
+            <%= paymentAccountInfo.accountNumber %>
+          </p>
+        <% } %>
+        <% if (paymentAccountInfo.accountName) { %>
+          <p>
+            <strong>Chủ tài khoản:</strong>
+            <%= paymentAccountInfo.accountName %>
+          </p>
+        <% } %>
+      <% } %>
     </div>
 
     <div id="qrCodeContainer" class="text-center mt-3"></div>
@@ -107,5 +107,5 @@
   <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
 
   <%- include('../partials/commonjs.html') %>
-    <script src="/js/staff/printbill.js"></script>
-    <%- include('../partials/footer.html') %>
+  <script src="/js/staff/printbill.js"></script>
+  <%- include('../partials/footer.html') %>

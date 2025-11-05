@@ -17,6 +17,7 @@ const router = express.Router()
 
 // Staff Dashboard
 router.get('/', isAuthenticated, dashboard)
+router.get('/api/users/summary', isAuthenticated, userController.getStaffSummary)
 
 // =====================user routes==================================
 router.get('/users', isAuthenticated, isPermit('Admin', 'Org'), userPage) // render view

@@ -13,7 +13,6 @@ export const getProductStockLists = async (req, res) => {
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
     const warehouse = req.query.warehouse
-    console.log(warehouse)
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
