@@ -1,7 +1,9 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/org_sidebar.html') %>
     <div class="admin__content">
-      <h3 class="fw-bold mb-4"><%= pageTitle %></h3>
+      <h3 class="fw-bold mb-4">
+        <%= pageTitle %>
+      </h3>
 
       <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="search-form d-flex align-items-center" id="search-container">
@@ -132,6 +134,10 @@
             </div>
           </div>
         </div>
+      </div>
+      <div class="pagination-bar d-flex justify-content-between align-items-center mt-3">
+        <div id="total-records"></div>
+        <div id="pagination" class="d-flex justify-content-center m-0"></div>
       </div>
     </div>
     </div>

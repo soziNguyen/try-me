@@ -11,7 +11,7 @@ import PlanTransaction from '../modules/plan-transaction/model.js'
 export const userPage = async (req, res) => {
   res.render(
     'users/user',
-    getPageData(req, 'Dashboard', 'User', {
+    getPageData(req, 'Quản lý nhân viên', 'User', {
       headerClass: 'admin__header',
       pageTitle: 'QUẢN LÝ NHÂN VIÊN'
     })

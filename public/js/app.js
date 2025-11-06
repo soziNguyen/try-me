@@ -152,16 +152,28 @@ function renderPagination(pagination, searchParam = '') {
       .filter(Boolean)
       .join(' ')
     const href = disabled ? 'javascript:void(0)' : `?page=${page}&limit=${perPage}${searchParam}`
-    return `<li class="${classes}"><a class="page-link" href="${href}">${label}</a></li>`
+    return `
+      <li class="${classes}">
+        <a class="page-link fw-semibold rounded-pill px-3 py-2" href="${href}" style="min-width:40px">
+          ${label}
+        </a>
+      </li>
+    `
   }
 
-  items.push(li(currentPage - 1, '&laquo', false, currentPage === 1))
+  // Nút Prev
+  items.push(li(currentPage - 1, '‹', false, currentPage === 1))
+
+  // Trang đầu
   items.push(li(1, '1', currentPage === 1))
 
   if (currentPage > 4) {
-    items.push(`<li class="page-item disabled"><span class="page-link">...</span></li>`)
+    items.push(
+      `<li class="page-item disabled"><span class="page-link bg-light border-0">...</span></li>`
+    )
   }
 
+  // Giữa
   const start = Math.max(2, currentPage - 2)
   const end = Math.min(totalPages - 1, currentPage + 2)
   for (let i = start; i <= end; i++) {
@@ -169,16 +181,27 @@ function renderPagination(pagination, searchParam = '') {
   }
 
   if (currentPage < totalPages - 3) {
-    items.push(`<li class="page-item disabled"><span class="page-link">...</span></li>`)
+    items.push(
+      `<li class="page-item disabled"><span class="page-link bg-light border-0">...</span></li>`
+    )
   }
 
+  // Trang cuối
   if (totalPages > 1) {
     items.push(li(totalPages, totalPages, currentPage === totalPages))
   }
 
-  items.push(li(currentPage + 1, '&raquo', false, currentPage === totalPages))
+  // Nút Next
+  items.push(li(currentPage + 1, '›', false, currentPage === totalPages))
 
-  return `<nav aria-label="Page navigation"><ul class="pagination justify-content-center">${items.join('')}</ul></nav>`
+  const html = `
+    <nav aria-label="Page navigation" class="mt-3">
+      <ul class="pagination justify-content-center flex-wrap gap-1">
+        ${items.join('')}
+      </ul>
+    </nav>
+  `
+  document.getElementById('pagination').innerHTML = html
 }
 
 function paginationHandle(callback) {

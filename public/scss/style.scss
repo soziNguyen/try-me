@@ -277,6 +277,55 @@ body {
           height: 70px;
         }
       }
+
+      .pagination-bar {
+        position: fixed;
+        bottom: 20px;
+        left: 320px;
+        width: calc(100% - 320px);
+        background: var(--surface);
+        padding: 16px;
+        display: flex;
+        justify-content: center;
+        z-index: 100;
+        transition: all 0.3s ease;
+
+        .pagination {
+          .page-link {
+            border: 1px solid var(--card-border);
+            color: var(--text);
+            background-color: var(--surface);
+            transition: all 0.2s ease;
+
+            &:hover {
+              background-color: var(--accent-bg);
+              color: var(--primary);
+              border-color: var(--primary);
+            }
+          }
+
+          .page-item {
+            &.active .page-link {
+              background-color: var(--primary);
+              border-color: var(--primary);
+              color: var(--white) !important;
+            }
+
+            &.disabled .page-link {
+              color: var(--muted);
+              pointer-events: none;
+              background-color: var(--light);
+            }
+          }
+        }
+      }
+    }
+
+    ##{$role}__sidebar.collapsed ~ .#{$role}__content {
+      .pagination-bar {
+        left: 60px;
+        width: calc(100% - 60px);
+      }
     }
   }
 }
