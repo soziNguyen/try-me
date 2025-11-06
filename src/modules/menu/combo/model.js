@@ -17,7 +17,7 @@ const comboSchema = new mongoose.Schema(
       }
     ],
     price: { type: Number, required: true }, // giá bán hiện tại
-    isActive: { type: Boolean, default: true }, // còn bán hay không
+    isActive: { type: Boolean, default: false }, // còn bán hay không
     note: { type: String, default: '' }, // ghi chú nội bộ
     warehouse: {
       type: mongoose.Schema.Types.ObjectId,

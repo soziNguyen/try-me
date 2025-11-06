@@ -1,17 +1,133 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/org_sidebar.html') %>
-    <div class="admin__content">
-      <h2 class="mb-3 bold semi-bold">
-        <%= pageTitle %>
-      </h2>
 
+    <div class="admin__content container-fluid py-4">
+      <!-- Header -->
+      <div class="mb-4">
+        <h3 class="fw-bold text-dark">
+          <%= pageTitle %>
+        </h3>
+        <p class="text-muted mb-0">Theo dõi hiệu suất và doanh thu của từng nhân viên</p>
+      </div>
 
+      <!-- Bộ lọc ngày -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4 col-sm-6">
+              <label for="fromDate" class="form-label fw-semibold text-secondary small mb-2">Từ ngày</label>
+              <input type="date" id="fromDate" class="form-control">
+            </div>
+            <div class="col-md-4 col-sm-6">
+              <label for="toDate" class="form-label fw-semibold text-secondary small mb-2">Đến ngày</label>
+              <input type="date" id="toDate" class="form-control">
+            </div>
+            <div class="col-md-4 col-sm-6">
+              <button id="btnFilter" class="btn btn-primary w-100">
+                <i class="bi bi-funnel me-2"></i>Áp dụng lọc
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tổng quan thống kê -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-4 col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="flex-grow-1 text-center">
+                  <div class="small text-uppercase fw-semibold mb-1">Tổng đơn hàng</div>
+                  <div id="totalOrders" class="fs-3 fw-bold text-dark">0</div>
+                </div>
+              </div>
+              <div class="progress" role="progressbar" aria-label="Orders progress" aria-valuenow="0" aria-valuemin="0"
+                aria-valuemax="100">
+                <div class="progress-bar bg-primary"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="flex-grow-1 text-center">
+                  <div class="small text-uppercase fw-semibold mb-1">Doanh thu ròng</div>
+                  <div id="totalRevenue" class="fs-3 fw-bold text-success">0₫</div>
+                </div>
+              </div>
+              <div class="progress" role="progressbar" aria-label="Revenue progress" aria-valuenow="0" aria-valuemin="0"
+                aria-valuemax="100">
+                <div class="progress-bar bg-success"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="flex-grow-1 text-center">
+                  <div class="small text-uppercase fw-semibold mb-1">Tổng tiền</div>
+                  <div id="totalAmount" class="fs-3 fw-bold text-info">0₫</div>
+                </div>
+              </div>
+              <div class="progress" role="progressbar" aria-label="Amount progress" aria-valuenow="0" aria-valuemin="0"
+                aria-valuemax="100">
+                <div class="progress-bar bg-info"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng chi tiết nhân viên -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3">
+          <h5 class="mb-0 fw-semibold">Chi tiết theo nhân viên</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table id="staffReportTable" class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="py-3 px-4 fw-semibold text-secondary small text-uppercase">Nhân viên</th>
+                  <th class="py-3 px-4 fw-semibold text-secondary small text-uppercase text-center">Số đơn</th>
+                  <th class="py-3 px-4 fw-semibold text-secondary small text-uppercase text-end">Doanh thu</th>
+                  <th class="py-3 px-4 fw-semibold text-secondary small text-uppercase text-end">Chiết khấu</th>
+                  <th class="py-3 px-4 fw-semibold text-secondary small text-uppercase text-end">Phụ phí</th>
+                  <th class="py-3 px-4 fw-semibold text-secondary small text-uppercase text-end">VAT</th>
+                  <th class="py-3 px-4 fw-semibold text-secondary small text-uppercase text-end">Doanh thu ròng</th>
+                  <th class="py-3 px-4 fw-semibold text-secondary small text-uppercase text-end">TB/Đơn</th>
+                </tr>
+              </thead>
+              <tbody class="border-top-0">
+                <!-- Dữ liệu sẽ được load từ JavaScript -->
+              </tbody>
+              <tfoot class="table-light border-top">
+                <tr class="fw-bold">
+                  <td class="py-3 px-4">Tổng cộng</td>
+                  <td class="py-3 px-4 text-center" id="footerTotalOrders">0</td>
+                  <td class="py-3 px-4 text-end" id="footerTotalRevenue">0₫</td>
+                  <td class="py-3 px-4 text-end" id="footerTotalDiscount">0₫</td>
+                  <td class="py-3 px-4 text-end" id="footerTotalFee">0₫</td>
+                  <td class="py-3 px-4 text-end" id="footerTotalVAT">0₫</td>
+                  <td class="py-3 px-4 text-end text-success" id="footerNetRevenue">0₫</td>
+                  <td class="py-3 px-4 text-end" id="footerAvgPerOrder">0₫</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
-    </div>
-    </div>
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
     <%- include('../partials/commonjs.html') %>
       <script src="/js/sidebar-toggle.js"></script>
       <script src="/js/data-table.js"></script>
-      <%- include('../partials/footer.html') %>
+      <script src="/js/report/staff.js"></script>

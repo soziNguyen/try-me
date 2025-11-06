@@ -3,6 +3,8 @@ import responseHelper from '../../helpers/responseHelper.js'
 import Order from '../order/model.js'
 import Customer from '../customer/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
+import { getWarehouse } from '../../helpers/warehouseHelper.js'
+import Organization from '../organization/model.js'
 
 // [CREATE] / table
 export const createTable = async (req, res) => {
@@ -10,9 +12,12 @@ export const createTable = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    const warehouse = await getWarehouse(req, organizationId)
+
     const data = {
       ...req.body,
-      organization: organizationId
+      organization: organizationId,
+      warehouse
     }
 
     const newTable = new Table(data)
@@ -31,9 +36,10 @@ export const getTables = async (req, res) => {
       return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     }
 
+    const warehouse = await getWarehouse(req, organizationId)
     const { status, area } = req.query
 
-    const filter = { organization: organizationId }
+    const filter = { organization: organizationId, warehouse }
     if (status) filter.status = status
     if (area) filter.area = new RegExp(`^${area}$`, 'i')
 
@@ -49,15 +55,32 @@ export const getTables = async (req, res) => {
       })
       .lean()
 
-    // Ép ObjectId về string + lấy tên khách
-    tables = tables.map((t) => {
-      if (t.currentOrderId?._id) {
-        t.currentOrderId._id = t.currentOrderId._id.toString()
+    const openOrders = await Order.find({
+      tableId: { $in: tables.map((t) => t._id) },
+      status: 'open',
+      organization: organizationId
+    })
+      .select('tableId totalAmount')
+      .lean()
+
+    // Gắn tổng tiền vào từng bàn
+    const tablesWithTotal = tables.map((t) => {
+      const order = openOrders.find((o) => o.tableId.toString() === t._id.toString())
+      return {
+        ...t,
+        totalAmount: order?.totalAmount || 0
       }
-      return t
     })
 
-    responseHelper.success(res, { tables })
+    const result = tablesWithTotal.map((t) => ({
+      ...t,
+      _id: t._id.toString(),
+      currentOrderId: t.currentOrderId?._id?.toString()
+        ? { ...t.currentOrderId, _id: t.currentOrderId._id.toString() }
+        : t.currentOrderId
+    }))
+
+    responseHelper.success(res, { tables: result })
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -76,8 +99,21 @@ export const getDataTables = async (req, res) => {
 
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    const baseMatch = { organization: organizationId }
+
+    if (req.warehouseFilter) {
+      // Staff user - chỉ thấy kho được gán
+      baseMatch.warehouse = req.warehouseFilter
+    } else {
+      // Admin/Org - sử dụng defaultWarehouse
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        baseMatch.warehouse = org.defaultWarehouse
+      }
+    }
+
     const pipeline = [
-      { $match: { organization: organizationId } },
+      { $match: baseMatch },
       // Tạo virtual field để search
       {
         $addFields: {
@@ -123,9 +159,7 @@ export const getDataTables = async (req, res) => {
     const countPipeline = [...pipeline, { $count: 'count' }]
     const countResult = await Table.aggregate(countPipeline)
     const recordsFiltered = countResult[0]?.count || 0
-    const recordsTotal = await Table.countDocuments({
-      organization: organizationId
-    })
+    const recordsTotal = await Table.countDocuments(baseMatch)
 
     pipeline.push(
       { $sort: { [sortField]: sortDir } },
@@ -139,7 +173,6 @@ export const getDataTables = async (req, res) => {
           capacity: 1,
           area: 1,
           createdAt: 1
-          // Không trả về statusSearchText
         }
       }
     )
@@ -163,10 +196,15 @@ export const getTableById = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const table = await Table.findOne({
+    const warehouse = await getWarehouse(req, organizationId)
+
+    const matchConditions = {
       _id: id,
-      organization: organizationId
-    })
+      organization: organizationId,
+      warehouse
+    }
+
+    const table = await Table.findOne(matchConditions)
       .populate({
         path: 'currentOrderId',
         model: 'Order',
@@ -194,11 +232,16 @@ export const updateTable = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    // Kiểm tra bàn có tồn tại & thuộc tổ chức không
-    const tableExist = await Table.findOne({
+    const warehouse = await getWarehouse(req, organizationId)
+
+    const matchCondition = {
       _id: id,
-      organization: organizationId
-    }).populate({
+      organization: organizationId,
+      warehouse
+    }
+
+    // Kiểm tra bàn có tồn tại & thuộc tổ chức không
+    const tableExist = await Table.findOne(matchCondition).populate({
       path: 'currentOrderId',
       populate: { path: 'customerId' }
     })
@@ -209,6 +252,7 @@ export const updateTable = async (req, res) => {
     // Kiểm tra trùng tên bàn (trừ chính bản thân nó) trong cùng tổ chức
     const duplicated = await Table.findOne({
       name,
+      warehouse,
       organization: organizationId,
       _id: { $ne: id }
     })
@@ -222,7 +266,7 @@ export const updateTable = async (req, res) => {
       name,
       status,
       capacity,
-      area
+      area: area ? area.toUpperCase() : undefined
     }
     if (checkInTime) {
       updatedFields.checkInTime = checkInTime
@@ -233,11 +277,7 @@ export const updateTable = async (req, res) => {
       updatedFields.checkInTime = null
     }
 
-    const updatedTable = await Table.findOneAndUpdate(
-      { _id: id, organization: organizationId },
-      updatedFields,
-      { new: true }
-    )
+    const updatedTable = await Table.findOneAndUpdate(matchCondition, updatedFields, { new: true })
 
     if (customerName && tableExist.currentOrderId && tableExist.currentOrderId.customerId) {
       const customerId = tableExist.currentOrderId.customerId
@@ -266,9 +306,12 @@ export const deleteTables = async (req, res) => {
       return responseHelper.error(res, 'Không có bàn nào được chọn.', 400)
     }
 
+    const warehouse = await getWarehouse(req, organizationId)
+
     const result = await Table.deleteMany({
       _id: { $in: ids },
-      organization: organizationId
+      organization: organizationId,
+      warehouse
     })
 
     if (result.deletedCount === 0) {
@@ -288,7 +331,14 @@ export const getTablesWithTotal = async (req, res) => {
       return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     }
 
-    const tables = await Table.find({ organization: organizationId })
+    const warehouse = await getWarehouse(req, organizationId)
+
+    const matchCondition = {
+      organization: organizationId,
+      warehouse
+    }
+
+    const tables = await Table.find(matchCondition)
       .populate({
         path: 'currentOrderId',
         model: 'Order',

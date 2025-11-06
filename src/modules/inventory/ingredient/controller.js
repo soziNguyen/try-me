@@ -1,11 +1,10 @@
 import { Ingredient, units } from './model.js'
-import Organization from '../../organization/model.js'
+import IngredientStock from '../ingredient-stock/model.js'
 import { deleteFile } from '../../upload/helper.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import { normalizeValue } from '../../../helpers/common.js'
-import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 import { logActivity } from '../../activity-logs/service.js'
 
 export const getActiveIngredientsForRecipe = async (req, res) => {
@@ -47,18 +46,6 @@ export const getActiveIngredients = async (req, res) => {
       organization: organizationId
     }
 
-    // Warehouse filtering logic
-    if (req.warehouseFilter) {
-      // Staff user - chỉ thấy kho được gán
-      matchCondition.warehouse = req.warehouseFilter
-    } else {
-      // Admin/Org - sử dụng defaultWarehouse
-      const org = await Organization.findById(organizationId).select('defaultWarehouse')
-      if (org?.defaultWarehouse) {
-        matchCondition.warehouse = org.defaultWarehouse
-      }
-    }
-
     const pipeline = [
       { $match: matchCondition },
       { $sort: { name: 1 } },
@@ -91,21 +78,9 @@ export const ingredientDataAPI = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    // Build base match condition với warehouse logic
+    // Build base match condition
     const baseMatch = { organization: organizationId }
 
-    if (req.warehouseFilter) {
-      // Staff user - chỉ thấy kho được gán
-      baseMatch.warehouse = req.warehouseFilter
-    } else {
-      // Admin/Org - sử dụng defaultWarehouse
-      const org = await Organization.findById(organizationId).select('defaultWarehouse')
-      if (org?.defaultWarehouse) {
-        baseMatch.warehouse = org.defaultWarehouse
-      }
-    }
-
-    // Base pipeline với warehouse filter
     const pipeline = [
       { $match: baseMatch },
       ...lookupRef('category', 'IngredientCategories', { as: 'category' }),
@@ -132,7 +107,7 @@ export const ingredientDataAPI = async (req, res) => {
       pipeline.push({ $match: { $or: orConditions } })
     }
 
-    // Get total count với warehouse filter
+    // Get total count
     const recordsTotal = await Ingredient.countDocuments(baseMatch)
 
     // Get filtered count
@@ -196,7 +171,6 @@ export const ingredientDataAPI = async (req, res) => {
           isActive: 1,
           createdAt: 1,
           updatedAt: 1,
-          warehouse: 1,
           category: {
             _id: '$category._id',
             name: '$category.name'
@@ -241,13 +215,10 @@ export const createIngredient = async (req, res) => {
       return responseHelper.error(res, 'Thiếu thông tin người dùng', 401)
     }
 
-    const warehouse = await getWarehouse(req, organizationId)
-
     const ingredientData = {
       ...req.body,
       createdBy: req.user._id,
-      organization: organizationId,
-      warehouse // Gán warehouse từ helper
+      organization: organizationId
     }
 
     const newIngredient = new Ingredient(ingredientData)
@@ -256,7 +227,6 @@ export const createIngredient = async (req, res) => {
     const saved = await Ingredient.findById(newIngredient._id)
       .populate('category', 'name')
       .populate('createdBy', 'username -_id')
-      .populate('warehouse', 'name')
 
     await logActivity(
       organizationId,
@@ -264,7 +234,7 @@ export const createIngredient = async (req, res) => {
       req.user.username || 'Unknown',
       'Tạo nguyên liệu',
       'INGREDIENT',
-      `Tạo nguyên liệu ${saved.name} tại kho ${saved.warehouse?.name}`,
+      `Tạo nguyên liệu ${saved.name}`,
       saved.name,
       'SUCCESS'
     )
@@ -295,13 +265,11 @@ export const updateIngredient = async (req, res) => {
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // Sử dụng helper function
-    const warehouse = await getWarehouse(req, organizationId)
 
-    // Build match condition với warehouse
+    // Build match condition
     const matchCondition = {
       _id: id,
-      organization: organizationId,
-      warehouse
+      organization: organizationId
     }
 
     const ingredient = await Ingredient.findOne(matchCondition).populate('category', 'name')
@@ -312,7 +280,7 @@ export const updateIngredient = async (req, res) => {
         404
       )
 
-    // Check duplicate với warehouse context
+    // Check duplicate
     const orConditions = []
     if (sku !== undefined) orConditions.push({ sku })
     if (name !== undefined) orConditions.push({ name })
@@ -321,13 +289,11 @@ export const updateIngredient = async (req, res) => {
       const duplicateCondition = {
         _id: { $ne: id },
         organization: organizationId,
-        warehouse,
         $or: orConditions
       }
 
       const existing = await Ingredient.findOne(duplicateCondition)
-      if (existing)
-        return responseHelper.error(res, 'SKU hoặc tên nguyên liệu đã tồn tại trong kho', 400)
+      if (existing) return responseHelper.error(res, 'SKU hoặc tên nguyên liệu đã tồn tại', 400)
     }
 
     const updateData = { updatedBy: req.user._id }
@@ -418,13 +384,10 @@ export const deleteIngredients = async (req, res) => {
       return responseHelper.error(res, 'Không có nguyên liệu nào được chọn để xóa', 400)
     }
 
-    const warehouse = await getWarehouse(req, organizationId)
-
-    // Build match condition với warehouse
+    // Match condition
     const matchCondition = {
       _id: { $in: ids },
-      organization: organizationId,
-      warehouse
+      organization: organizationId
     }
 
     const ingredientsToDelete = await Ingredient.find(matchCondition).lean()
@@ -437,7 +400,37 @@ export const deleteIngredients = async (req, res) => {
       )
     }
 
+    // Kiểm tra ingredient có đang được sử dụng không
+    const ingredientIds = ingredientsToDelete.map((i) => i._id)
+
+    // check TẤT CẢ kho
+    const stocksWithQuantity = await IngredientStock.find({
+      ingredient: { $in: ingredientIds },
+      organization: organizationId,
+      quantity: { $gt: 0 }
+    })
+      .populate('warehouse', 'name')
+      .populate('ingredient', 'name')
+
+    if (stocksWithQuantity.length > 0) {
+      const stockDetails = stocksWithQuantity
+        .map((s) => `"${s.ingredient?.name}" còn ${s.quantity} tại kho "${s.warehouse?.name}"`)
+        .join('; ')
+
+      return responseHelper.error(
+        res,
+        `Không thể xóa nguyên liệu đang có tồn kho. ${stockDetails}. Vui lòng xuất hết tồn kho ở tất cả các kho trước.`,
+        400
+      )
+    }
+
     const result = await Ingredient.deleteMany(matchCondition)
+
+    // Cleanup IngredientStock records (quantity = 0)
+    await IngredientStock.deleteMany({
+      ingredient: { $in: ingredientIds },
+      organization: organizationId
+    })
 
     for (const ing of ingredientsToDelete) {
       if (ing.image) {

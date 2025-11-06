@@ -52,6 +52,16 @@ const OrderSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Warehouse',
       required: true
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
     }
   },
   {

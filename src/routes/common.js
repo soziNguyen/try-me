@@ -33,9 +33,10 @@ import productEntryRoutes from '../modules/product/entry/route.js'
 import productStockRoutes from '../modules/product/stock/route.js'
 import paymentExpense from '../modules/payment-expenses/route.js'
 import planRoutes from '../modules/plan/route.js'
-import couponPlan from '../modules/coupon-plan/route.js'
-import planTransaction from '../modules/plan-transaction/route.js'
-import paymentMethodAdmin from '../modules/payment-method-admin/route.js'
+import couponPlanRoutes from '../modules/coupon-plan/route.js'
+import planTransactionRoutes from '../modules/plan-transaction/route.js'
+import paymentMethodAdminRoutes from '../modules/payment-method-admin/route.js'
+import stockReportRoutes from '../modules/reports/stock/route.js'
 import uploadRouter from '../modules/upload/route.js'
 import pageRoute from '../pages/route.js'
 
@@ -103,10 +104,14 @@ const routes = [
   //paymentExpese
   paymentExpense,
 
+  // Plan
   planRoutes,
-  couponPlan,
-  planTransaction,
-  paymentMethodAdmin
+  couponPlanRoutes,
+  planTransactionRoutes,
+  paymentMethodAdminRoutes,
+
+  // Report
+  stockReportRoutes
 ]
 
 routes.forEach((route) => router.use('/', route))
