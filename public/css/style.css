@@ -29,6 +29,15 @@
   --light: #f8f9fa;
   --dark: #212529;
   --green-light: #d4edda;
+  --purple: #162643;
+}
+
+.text-purple {
+  color: var(--purple) !important;
+}
+
+.bg-purple {
+  background-color: var(--purple) !important;
 }
 
 /* Dark theme overrides */
