@@ -114,9 +114,32 @@ $(function () {
               year: 'numeric'
             })}</span>`
           }
+        },
+        {
+          data: null,
+          orderable: false,
+          className: 'text-center',
+          width: '100px',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `
+                <button class="btn btn-sm btn-outline-primary my-1 detail-btn" 
+                        data-id="${row._id}" 
+                        title="Xem chi tiết">
+                  <i class="bi bi-eye"></i> Chi tiết
+                </button>`
+            }
+            return ''
+          }
         }
       ],
-      rowCallback: (row, data) => $(row).attr('data-id', data._id)
+      rowCallback: (row, data) => $(row).attr('data-id', data._id),
+      initComplete: function () {
+        $(document).on('click', '.detail-btn', function () {
+          const id = $(this).data('id')
+          window.location.href = `/receipt/${id}?from=payment-receipt`
+        })
+      }
     })
   }
 

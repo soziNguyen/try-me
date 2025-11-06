@@ -41,8 +41,8 @@ $(function () {
       },
       language: {
         search: '',
-        searchPlaceholder: 'Tìm kiếm nguyên liệu...',
-        lengthMenu: '_MENU_ dòng/trang',
+        searchPlaceholder: 'Tìm kiếm món, combo...',
+        lengthMenu: '_MENU_ bản ghi',
         info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ bản ghi',
         infoEmpty: 'Không có bản ghi nào',
         infoFiltered: '(lọc từ _MAX_ bản ghi)',

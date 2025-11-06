@@ -9,38 +9,40 @@
       <div class="report-header mb-4 p-4 border-0 rounded-4 bg-white shadow">
 
         <!-- Bộ lọc ngày -->
-        <div class="filter-bar bg-white border border-primary border-opacity-25 rounded-3 p-3 mb-4 shadow-sm">
-          <div class="row g-3 align-items-end justify-content-center">
+        <div class="filter-bar bg-primary bg-opacity-10 border border-primary rounded-4 p-4 mb-4 shadow-lg">
+          <div class="row g-4 align-items-end justify-content-center">
 
+            <!-- Từ ngày -->
             <div class="col-auto">
-
-            </div>
-
-            <div class="col-auto">
-              <label class="form-label text-primary fw-semibold mb-2 small">
+              <label class="form-label text-primary fw-bold mb-1 small">
                 <i class="bi bi-calendar-event me-1"></i>Từ ngày
               </label>
-              <input type="date" id="startDate" class="form-control border-primary border-opacity-50 rounded-2 w-auto">
+              <input type="date" id="startDate" class="form-control form-control-lg border-primary rounded-3">
             </div>
 
-            <div class="col-auto d-flex align-items-center text-primary opacity-75 pb-2">
-              <i class="bi bi-arrow-right fs-5"></i>
+            <!-- Mũi tên -->
+            <div class="col-auto d-flex align-items-center text-primary fs-4">
+              <i class="bi bi-arrow-right"></i>
             </div>
 
+            <!-- Đến ngày -->
             <div class="col-auto">
-              <label class="form-label text-primary fw-semibold mb-2 small">
+              <label class="form-label text-primary fw-bold mb-1 small">
                 <i class="bi bi-calendar-check me-1"></i>Đến ngày
               </label>
-              <input type="date" id="endDate" class="form-control border-primary border-opacity-50 rounded-2 w-auto">
+              <input type="date" id="endDate" class="form-control form-control-lg border-primary rounded-3">
             </div>
 
+            <!-- Nút Lọc -->
             <div class="col-auto">
-              <button id="filterDateBtn" class="btn btn-primary shadow-sm px-4 py-2">
-                <i class="bi bi-funnel me-2"></i>Lọc
+              <button id="filterDateBtn" class="btn btn-primary btn-lg shadow px-4 py-2">
+                <i class="bi bi-funnel me-2 fs-5"></i>Lọc
               </button>
             </div>
+
           </div>
         </div>
+
 
         <!-- Summary Cards -->
         <div class="row g-4 mb-5" id="summaryCards">

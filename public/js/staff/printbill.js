@@ -176,7 +176,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       aElement.addEventListener('click', function (e) {
         e.preventDefault() // chặn nhảy về "#"
 
-        if (window.location.href.includes('receipt')) {
+        const params = new URLSearchParams(window.location.search)
+        const from = params.get('from')
+
+        if (from === 'payment-receipt') {
+          window.location.href = '/payment-receipts'
+        } else if (window.location.href.includes('receipt')) {
           window.location.href = '/receipts'
         } else {
           window.location.href = '/orders'
