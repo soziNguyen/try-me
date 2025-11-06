@@ -469,6 +469,7 @@ if (logInForm) {
     // Hiển thị modal xác nhận
     showConfirmModal({
       title: 'Xác nhận xóa',
+      okBtnColor: 'danger',
       message: `Bạn có chắc chắn muốn xóa ${selectedUsers.length} thành viên?`,
       onConfirm: async () => {
         try {

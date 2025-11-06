@@ -5,7 +5,7 @@ $(function () {
 
   Promise.all([fetchData('users'), fetchData('shifts/get')])
     .then(([user, shift]) => {
-      users = user
+      users = user.data
       shifts = shift
       initDataTable()
     })
@@ -73,7 +73,7 @@ $(function () {
 
               const emptyOption = selectedUserId
                 ? ''
-                : '<option value="" selected>-- Chọn nhân viên --</option>'
+                : '<option value="" selected>— Chọn nhân viên —</option>'
 
               return `
                 <select class="dataInput form-select border-0" data-field="user" data-schedule-id="${row._id}">
@@ -101,7 +101,7 @@ $(function () {
 
               const emptyOption = selectedShiftId
                 ? ''
-                : '<option value="" selected>-- Chọn ca làm --</option>'
+                : '<option value="" selected>— Chọn ca làm —</option>'
 
               return `
                 <select class="dataInput form-select border-0" data-field="shift" data-schedule-id="${row._id}">

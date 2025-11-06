@@ -42,6 +42,7 @@ $(function () {
       columns: [
         {
           data: null,
+          orderable: false,
           className: 'text-center',
           title: 'STT',
           render: (data, type, row, meta) => meta.row + 1 + meta.settings._iDisplayStart
@@ -60,13 +61,13 @@ $(function () {
         },
         {
           data: 'totalWorkingMinutes',
-          className: 'text-end',
+          className: 'text-center',
           title: 'Tổng giờ làm',
           render: (val) => (val ? `${(val / 60).toFixed(1)}h` : '')
         },
         {
           data: 'totalSalary',
-          className: 'text-end',
+          className: 'text-center',
           title: 'Tổng lương',
           render: (val) => (val ? val.toLocaleString('vi-VN') + ' đ' : '0 đ')
         },

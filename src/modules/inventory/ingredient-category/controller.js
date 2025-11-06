@@ -1,6 +1,8 @@
 import IngredientCategory from './model.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import { logActivity } from '../../activity-logs/service.js'
+import { buildChangeLog } from '../../../helpers/changeLog.js'
 
 export const getIngredientCategories = async (req, res) => {
   try {
@@ -31,16 +33,38 @@ export const createInredientCategory = async (req, res) => {
       organization: organizationId
     }
 
-    const newCategory = new IngredientCategory(categoryData)
-    await newCategory.save()
+    const newCategory = await IngredientCategory.create(categoryData)
 
     const saved = await IngredientCategory.findOne({
       _id: newCategory._id,
       organization: organizationId
     }).populate('createdBy', 'username -_id')
-    responseHelper.success(res, saved, 'Thêm Danh Mục Nguyên Liệu Thành Công')
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'CREATE',
+      'CATEGORIES',
+      `Tạo danh mục nguyên liệu`,
+      saved.name,
+      'SUCCESS'
+    )
+
+    return responseHelper.success(res, saved, 'Thêm Danh Mục Nguyên Liệu Thành Công')
   } catch (err) {
-    responseHelper.error(res, err.message)
+    logActivity(
+      getCurrentOrg(req),
+      req.user?._id,
+      req.user?.username,
+      'CREATE',
+      'CATEGORIES',
+      `Lỗi khi tạo danh mục: ${err.message}`,
+      req.body?.name || '',
+      'FAILED'
+    )
+
+    return responseHelper.error(res, err.message)
   }
 }
 
@@ -52,11 +76,11 @@ export const updateIngredientCategory = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const ingredientCate = await IngredientCategory.findOne({
+    const oldCate = await IngredientCategory.findOne({
       _id: id,
       organization: organizationId
     })
-    if (!ingredientCate) {
+    if (!oldCate) {
       return responseHelper.error(res, 'Danh mục không tồn tại', 404)
     }
 
@@ -68,14 +92,37 @@ export const updateIngredientCategory = async (req, res) => {
     if (existing) {
       return responseHelper.error(res, 'Tên danh mục nguyên liệu đã tồn tại', 400)
     }
-    const data = await IngredientCategory.findOneAndUpdate(
+
+    const updated = await IngredientCategory.findOneAndUpdate(
       { _id: id, organization: organizationId },
       { name, description, updatedBy: req.user._id },
       { new: true }
     )
       .populate('createdBy', 'username -_id')
       .populate('updatedBy', 'username -_id')
-    responseHelper.success(res, data, 'Cập nhật thành công')
+
+    const changeDetailsCat = buildChangeLog(
+      oldCate,
+      updated,
+      [
+        { field: 'name', label: 'Tên danh mục' },
+        { field: 'description', label: 'Mô tả' }
+      ],
+      oldCate.name,
+      'danh mục'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'Cập nhật danh mục nguyên liệu',
+      'INGREDIENT_CATEGORY',
+      changeDetailsCat || 'Không có thay đổi',
+      updated.name
+    )
+
+    responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (err) {
     responseHelper.error(res, err.message)
   }
@@ -97,8 +144,30 @@ export const deleteIngredientCategories = async (req, res) => {
       organization: organizationId
     })
 
-    responseHelper.success(res, result.deletedCount, 'Xóa danh mục thành công')
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'INGREDIENT_CATEGORY',
+      `Xóa ${result.deletedCount} danh mục nguyên liệu`,
+      '',
+      'SUCCESS'
+    )
+
+    return responseHelper.success(res, result.deletedCount, 'Xóa danh mục thành công')
   } catch (err) {
-    responseHelper.error(res, err.message)
+    logActivity(
+      getCurrentOrg(req),
+      req.user?._id,
+      req.user?.username,
+      'DELETE',
+      'INGREDIENT_CATEGORY',
+      `Lỗi khi xóa danh mục: ${err.message}`,
+      '',
+      'FAILED'
+    )
+
+    return responseHelper.error(res, err.message)
   }
 }

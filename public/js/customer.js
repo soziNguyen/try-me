@@ -95,6 +95,7 @@ function initCustomerTable() {
       },
       {
         data: null,
+        title: '<i class="bi bi-pencil-square"></i>',
         className: 'text-center',
         orderable: false,
         render: (_, __, row) => `

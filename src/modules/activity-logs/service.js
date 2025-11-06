@@ -1,27 +1,25 @@
 import ActivityLog from './model.js'
 
-export const logActivity = async (
-  organization,
+export const logActivity = (
+  organizationId,
   userId,
   userName,
   action,
   module,
   description,
   targetName = '',
-  status = 'SUCCESS'
+  status = 'SUCCESS',
+  warehouse = null
 ) => {
-  try {
-    await ActivityLog.create({
-      organization,
-      userId,
-      userName,
-      action,
-      module,
-      description,
-      targetName,
-      status
-    })
-  } catch (error) {
-    console.error('Failed to log activity:', error)
-  }
+  ActivityLog.create({
+    organization: organizationId,
+    userId,
+    userName,
+    action,
+    module,
+    description,
+    targetName,
+    status,
+    warehouse
+  }).catch((err) => console.error('ActivityLog Error:', err?.message))
 }

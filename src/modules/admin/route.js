@@ -10,7 +10,8 @@ import {
   deleteUsers,
   setOrg,
   exitOrg,
-  getAllAuditLogs
+  getAllAuditLogs,
+  deleteLogs
 } from './controller.js'
 
 const router = express.Router()
@@ -19,6 +20,7 @@ router.get('/admin', isAuthenticated, isAdmin, userManagementPage)
 router.get('/audit-logs', isAuthenticated, isAdmin, auditPage)
 
 router.get('/api/admin/audit-logs', isAuthenticated, isAdmin, getAllAuditLogs)
+router.post('/api/admin/audit-logs/deletes', isAuthenticated, isAdmin, deleteLogs)
 
 router.get('/api/admin/users', isAuthenticated, isAdmin, getAllUsers)
 router.get('/api/admin/users/:id', isAuthenticated, isAdmin, getUserById)

@@ -26,7 +26,6 @@ $(function () {
     serverSide: true,
     processing: true,
     autoWidth: false,
-    // scrollX: true,
     order: [],
     ajax: {
       url: '/api/payment-methods',
@@ -75,7 +74,7 @@ $(function () {
               'e-wallet': 'Ví điện tử'
             }
 
-            let selectHtml = `<select class="dataInput border-0 w-100 form-control" data-field="type">`
+            let selectHtml = `<select class="dataInput type-select border-0 w-100 form-control" data-field="type">`
             for (const key in options) {
               const selected = data === key ? 'selected' : ''
               selectHtml += `<option value="${key}" ${selected}>${options[key]}</option>`
@@ -103,15 +102,14 @@ $(function () {
         render: (data, type, row) => {
           if (type === 'display') {
             if (['bank', 'e-wallet'].includes(row.type)) {
-              // Build dropdown với receivingAccounts
               let options = '<option value="">— Chọn tài khoản —</option>'
               receivingAccounts.forEach((acc) => {
                 const selected = data?._id === acc._id ? 'selected' : ''
                 options += `<option value="${acc._id}" ${selected}>${acc.name} - ${acc.bankName || acc.bankCode}</option>`
               })
-              return `<select class="dataInput border-0 w-100 form-control" data-field="receivingAccountId">${options}</select>`
+              return `<select class="dataInput receiving-account-select border-0 w-100 form-control" data-field="receivingAccountId">${options}</select>`
             } else {
-              return '<span class="text-muted form-control">Không áp dụng</span>'
+              return '<span class="text-muted form-control receiving-account-cell">Không áp dụng</span>'
             }
           }
           return data?.name || ''
@@ -130,11 +128,9 @@ $(function () {
       }
     ],
     rowCallback: function (row, data) {
-      // Tag row with data-id for update
       $(row).attr('data-id', data._id)
     },
     initComplete: function () {
-      // const api = this.api()
       $('.right-group').html(`
         <div class="btn-group flex-wrap mb-2">
           <button class="btn btn-outline-danger me-2" id="deletePaymentMethodBtn">
@@ -145,6 +141,44 @@ $(function () {
           </button>
         </div>
       `)
+    }
+  })
+
+  $('#paymentMethodTable').on('change', '.type-select', function () {
+    const $row = $(this).closest('tr')
+    const id = $row.data('id')
+    const newType = $(this).val()
+    const $cell = $row.find('td').eq(4)
+    const csrfToken = $('#_csrf').val()
+
+    if (['bank', 'e-wallet'].includes(newType)) {
+      let options = '<option value="">— Chọn tài khoản —</option>'
+      receivingAccounts.forEach((acc) => {
+        options += `<option value="${acc._id}">${acc.name} - ${acc.bankName || acc.bankCode}</option>`
+      })
+      $cell.html(
+        `<select class="dataInput receiving-account-select border-0 w-100 form-control" data-field="receivingAccountId">${options}</select>`
+      )
+      // gửi update chỉ cho type (receivingAccountId sẽ được set khi user chọn trong select)
+      $.ajax({
+        url: `/api/payment-method/update/${id}`,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ type: newType }),
+        headers: { 'x-csrf-token': csrfToken }
+      })
+    } else {
+      // chuyển sang không áp dụng => hiển thị và reset trên server
+      $cell.html(
+        '<span class="text-muted form-control receiving-account-cell">Không áp dụng</span>'
+      )
+      $.ajax({
+        url: `/api/payment-method/update/${id}`,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ type: newType, receivingAccountId: null }),
+        headers: { 'x-csrf-token': csrfToken }
+      })
     }
   })
 
