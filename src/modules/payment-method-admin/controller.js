@@ -147,7 +147,7 @@ export const updatePaymentMethod = async (req, res) => {
 export const deletePaymentMethods = async (req, res) => {
   try {
     const { ids } = req.body
-    if (!Array.isArray(ids) || ids.length == 0)
+    if (!Array.isArray(ids) || ids.length === 0)
       return responseHelper.error(res, 'Vui lòng chọn 1 bản ghi để xóa', 400)
 
     const result = await PaymentMethod.deleteMany({

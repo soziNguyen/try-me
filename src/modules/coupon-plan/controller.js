@@ -137,7 +137,7 @@ export const updateCouponPlan = async (req, res) => {
     const coupon = await CouponPlan.findById(id)
     if (!coupon) return responseHelper.error(res, 'Không tìm thấy mã giảm giá', 400)
 
-    let normalizedDiscountValue = discountValue === '' ? null : discountValue
+    const normalizedDiscountValue = discountValue === '' ? null : discountValue
 
     if (
       normalizedDiscountValue !== undefined &&
@@ -150,7 +150,7 @@ export const updateCouponPlan = async (req, res) => {
     const finalDiscountType = discountType ?? coupon.discountType
     const finalDiscountValue = normalizedDiscountValue ?? coupon.discountValue
 
-    if (finalDiscountValue != null && finalDiscountValue !== '') {
+    if (finalDiscountValue !== null && finalDiscountValue !== '') {
       const value = Number(finalDiscountValue)
 
       if (!finalDiscountType) {
