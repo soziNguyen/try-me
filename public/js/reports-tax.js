@@ -1,154 +1,141 @@
 $(function () {
-  let table
+  //KHAI BÁO BIẾN
 
-  // Hàm định dạng tiền tệ
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0)
+  const $reportType = $('#reportType')
+  const $quarterGroup = $('#quarterGroup')
+  const $quarterSelect = $('#quarterSelect')
+  const $startDate = $('#startDate')
+  const $endDate = $('#endDate')
+  const $tbody = $('#tax-data')
 
-  // Hàm set ngày theo loại kỳ và quý
+  /** Format ngày -> YYYY-MM-DD */
+  const formatDate = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+  /** Format số tiền theo locale Việt Nam */
+  const formatNumber = (num) => num.toLocaleString('vi-VN')
+
+  //HÀM SET NGÀY THEO KỲ
   function setDateInputs(type, quarter) {
     const today = new Date()
     const year = today.getFullYear()
     let startDate, endDate
 
-    if (type === 'month') {
-      startDate = new Date(year, today.getMonth(), 1)
-      endDate = new Date(year, today.getMonth() + 1, 0)
-    } else if (type === 'quarter') {
-      const q = quarter || Math.floor(today.getMonth() / 3) + 1
-      const startMonth = (q - 1) * 3
-      const endMonth = startMonth + 2
-      startDate = new Date(year, startMonth, 1)
-      endDate = new Date(year, endMonth + 1, 0)
-    } else if (type === 'custom') {
+    // --- Hiển thị tất cả ---
+    if (type === 'all') {
+      $reportType.val('all')
+      $startDate.val('')
+      $endDate.val('')
+      $quarterGroup.hide()
+      loadTaxSummary(null, null)
       return
     }
 
-    const format = (d) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-
-    $('#startDate').val(format(startDate))
-    $('#endDate').val(format(endDate))
-  }
-
-  // Khởi tạo DataTable
-  function initTaxDataTable() {
-    const showList = [10, 25, 50, 100]
-    const numRows = Math.floor(($(window).height() - $('#tax-data').offset().top - 100) / 45)
-    if (!showList.includes(numRows)) showList.push(numRows)
-    showList.sort((a, b) => a - b)
-
-    table = $('#tax-dataTable').DataTable({
-      serverSide: false,
-      processing: true,
-      autoWidth: true,
-      scrollX: true,
-      ordering: true,
-      lengthMenu: [showList, showList],
-      pageLength: numRows,
-      columns: [
-        {
-          data: 'updatedAt',
-          title: 'Thời gian',
-          render: (data, type) =>
-            type === 'display'
-              ? `<span class="text form-control border-0">${new Date(data).toLocaleDateString('vi-VN')}</span>`
-              : data
-        },
-        {
-          data: 'warehouse.name',
-          title: 'Kho',
-          className: 'text-start px-1',
-          render: (data, type, row) =>
-            type === 'display'
-              ? row.warehouse
-                ? `${row.warehouse.name} - ${row.warehouse.location}`
-                : ''
-              : row.warehouse?.name || ''
-        },
-        {
-          data: 'totalPayable',
-          title: 'Tổng tiền trước thuế',
-          render: (data, type) =>
-            type === 'display'
-              ? `<span class="number form-control border-0">${formatCurrency(data)}</span>`
-              : data
-        },
-        {
-          data: 'vatRate',
-          title: 'VAT',
-          render: (data, type) =>
-            type === 'display'
-              ? `<span class="text form-control border-0 text-end">${data ?? 0} %</span>`
-              : (data ?? 0)
-        },
-        {
-          data: 'total',
-          title: 'Tổng tiền',
-          render: (data, type) =>
-            type === 'display'
-              ? `<span class="number form-control border-0">${formatCurrency(data)}</span>`
-              : data
-        }
-      ],
-      rowCallback: (row, data) => $(row).attr('data-id', data._id),
-      language: {
-        search: '',
-        searchPlaceholder: 'Tìm kiếm',
-        lengthMenu: '_MENU_ bản ghi mỗi trang',
-        info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ bản ghi',
-        infoEmpty: 'Không có bản ghi nào',
-        zeroRecords: 'Không tìm thấy kết quả phù hợp',
-        emptyTable: 'Chưa có dữ liệu.'
-      }
-    })
-  }
-
-  // Load dữ liệu theo bộ lọc
-  function loadTaxData() {
-    $.get('/api/orders/get', {
-      startDate: $('#startDate').val(),
-      endDate: $('#endDate').val(),
-      warehouseId: $('#warehouseId').val()
-    })
-      .done((res) => {
-        const data = res.data || []
-        if (!table) initTaxDataTable()
-        table.clear().rows.add(data).draw()
-      })
-      .fail((err) => {
-        console.error('Lấy dữ liệu thất bại', err)
-        table?.clear().draw()
-      })
-  }
-
-  // Event: thay đổi loại kỳ
-  $('#reportType').on('change', function () {
-    const type = $(this).val()
-    if (type === 'quarter') {
-      $('#quarterGroup').show()
-      const currentQuarter = Math.floor(new Date().getMonth() / 3) + 1
-      $('#quarterSelect').val(currentQuarter)
-      setDateInputs('quarter', currentQuarter)
-    } else {
-      $('#quarterGroup').hide()
-      setDateInputs(type)
+    // --- Theo tháng hiện tại ---
+    if (type === 'month') {
+      startDate = new Date(year, today.getMonth(), 1)
+      endDate = new Date(year, today.getMonth() + 1, 0)
+      $quarterGroup.hide()
     }
-    if (type !== 'custom') loadTaxData()
+
+    // --- Theo quý ---
+    else if (type === 'quarter') {
+      const currentQuarter = Math.floor(today.getMonth() / 3) + 1
+      const q = quarter || currentQuarter
+      const startMonth = (q - 1) * 3
+      const endMonth = startMonth + 2
+
+      startDate = new Date(year, startMonth, 1)
+      endDate = new Date(year, endMonth + 1, 0)
+
+      $quarterGroup.show()
+      $quarterSelect.val(q)
+    }
+
+    // --- Tùy chọn ngày ---
+    else if (type === 'custom') {
+      $quarterGroup.hide()
+      if ($startDate.val() && $endDate.val()) {
+        loadTaxSummary($startDate.val(), $endDate.val())
+      }
+      return
+    }
+
+    // --- Gán lại giá trị input & tải dữ liệu ---
+    $startDate.val(formatDate(startDate))
+    $endDate.val(formatDate(endDate))
+    loadTaxSummary(formatDate(startDate), formatDate(endDate))
+  }
+
+  async function loadTaxSummary(startDate, endDate) {
+    $tbody.html('<tr><td colspan="4" class="text-center">Đang tải...</td></tr>')
+
+    try {
+      // Chuẩn bị URL gọi API
+      let url = '/api/orders/get'
+      if (startDate && endDate) {
+        const query = new URLSearchParams({ startDate, endDate })
+        url += `?${query.toString()}`
+      }
+
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+
+      const result = await res.json()
+      $tbody.empty()
+
+      if (result.summary && result.summary.totalAmount > 0) {
+        const { totalBeforeTax, totalAmount } = result.summary
+        const vat = totalAmount - totalBeforeTax
+        const period = startDate && endDate ? `${startDate} - ${endDate}` : 'Tất cả'
+
+        $tbody.append(`
+        <tr>
+          <td class="text-center px-3 py-2">${period}</td>
+          <td class="text-center px-3 py-2">${formatNumber(totalBeforeTax)}</td>
+          <td class="text-center px-3 py-2">${formatNumber(vat)}</td>
+          <td class="text-center px-3 py-2">${formatNumber(totalAmount)}</td>
+        </tr>
+      `)
+      } else {
+        $tbody.html('<tr><td colspan="4" class="text-center">Không có dữ liệu</td></tr>')
+      }
+    } catch (err) {
+      console.error('Lỗi load báo cáo thuế:', err)
+      $tbody.html(
+        '<tr><td colspan="4" class="text-center text-danger">Không thể tải dữ liệu</td></tr>'
+      )
+    }
+  }
+
+  // Thay đổi loại kỳ
+  $reportType.on('change', function () {
+    setDateInputs($(this).val(), null)
   })
 
-  // Event: thay đổi quý
-  $('#quarterSelect').on('change', function () {
+  // Thay đổi quý
+  $quarterSelect.on('change', function () {
     setDateInputs('quarter', parseInt($(this).val()))
-    loadTaxData()
   })
 
-  // Event: lọc thủ công
-  $('#filterDateBtn').on('click', loadTaxData)
+  // Lọc theo ngày tùy chọn
+  $('#filterDateBtn').on('click', function () {
+    const start = $startDate.val()
+    const end = $endDate.val()
 
-  // Khởi chạy lần đầu
-  const initialType = $('#reportType').val()
-  setDateInputs(initialType)
-  initTaxDataTable()
-  loadTaxData()
+    // Kiểm tra hợp lệ
+    if (new Date(end) < new Date(start)) {
+      alert('Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu')
+      return
+    }
+
+    loadTaxSummary(start, end)
+  })
+  $('#viewInvoiceBtn').on('click', function () {
+    window.location.href = '/payment-receipts'
+  })
+
+  //KHỞI CHẠY MẶC ĐỊNH
+  $quarterGroup.hide()
+  setDateInputs('all', null)
 })

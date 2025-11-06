@@ -1454,6 +1454,7 @@ export const getOrders = async (req, res) => {
         $group: {
           _id: null,
           totalOrders: { $sum: 1 },
+          totalBeforeTax: { $sum: '$totalPayable' },
           totalAmount: { $sum: '$total' },
           avgAmount: { $avg: '$total' },
           totalItems: { $sum: '$orderTotalItems' },
@@ -1507,6 +1508,7 @@ export const getOrders = async (req, res) => {
       data,
       summary: {
         totalOrders: summary.totalOrders,
+        totalBeforeTax: summary.totalBeforeTax || 0,
         totalAmount: summary.totalAmount,
         avgAmount: summary.avgAmount,
         totalItems: summary.totalItems,
@@ -1623,11 +1625,23 @@ export const getTopItems = async (req, res) => {
     // ===== Xử lý top / slow =====
     const getTopAndSlow = (list, limit = 3) => {
       if (!list.length) return { top: [], slow: [] }
+
       const sorted = [...list].sort((a, b) => b.quantity - a.quantity)
-      return {
-        top: sorted.slice(0, limit),
-        slow: sorted.slice(-limit).reverse()
-      }
+
+      const top = sorted.slice(0, limit)
+
+      // Lấy slow nhưng loại bỏ các món đã nằm trong top
+      const topIds = new Set(top.map((i) => i._id.foodId || i._id.comboId))
+      const slow = sorted
+        .filter(
+          (i) =>
+            !(i._id.foodId && topIds.has(i._id.foodId)) &&
+            !(i._id.comboId && topIds.has(i._id.comboId))
+        )
+        .slice(-limit)
+        .reverse()
+
+      return { top, slow }
     }
 
     const { top: topSellingFoods, slow: slowSellingFoods } = getTopAndSlow(foodItems)
@@ -1661,7 +1675,13 @@ export const assignCustomerToOrder = async (req, res) => {
 
     if (!order) return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
     if (!customer) return responseHelper.error(res, 'Khách hàng không tồn tại', 404)
-    if (order.customerId) return responseHelper.error(res, 'Đơn hàng đã có khách hàng', 400)
+
+    // Chỉ chặn nếu gán trùng khách hàng cũ
+    if (order.customerId && order.customerId.toString() === customerId) {
+      return responseHelper.error(res, 'Đơn hàng đã được gán cho khách hàng này', 400)
+    }
+
+    const isUpdating = !!order.customerId
 
     order.customerId = customer._id
     await order.save()
@@ -1669,7 +1689,7 @@ export const assignCustomerToOrder = async (req, res) => {
     const { _id, name, phone, totalPoints = 0 } = customer
 
     return responseHelper.success(res, {
-      message: 'Gán khách hàng thành công',
+      message: isUpdating ? 'Cập nhật khách hàng thành công' : 'Gán khách hàng thành công',
       customer: { _id, name, phone, totalPoints }
     })
   } catch (error) {
