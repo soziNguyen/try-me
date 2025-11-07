@@ -1,86 +1,95 @@
 $(function () {
-  //KHAI BÁO BIẾN
-
+  // KHAI BÁO BIẾN
   const $reportType = $('#reportType')
   const $quarterGroup = $('#quarterGroup')
   const $quarterSelect = $('#quarterSelect')
+  const $monthGroup = $('#monthGroup')
+  const $monthSelect = $('#monthSelect')
   const $startDate = $('#startDate')
   const $endDate = $('#endDate')
   const $tbody = $('#tax-data')
+  const $warehouseFilter = $('#warehouseFilter')
 
-  /** Format ngày -> YYYY-MM-DD */
+  let warehouses = []
+
+  // HÀM HỖ TRỢ
   const formatDate = (d) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-  /** Format số tiền theo locale Việt Nam */
   const formatNumber = (num) => num.toLocaleString('vi-VN')
 
-  //HÀM SET NGÀY THEO KỲ
-  function setDateInputs(type, quarter) {
+  function fetchWarehouses() {
+    return fetchData('inventory/warehouse/all')
+      .then((res) => {
+        warehouses = res || []
+        const html = warehouses.map((w) => `<option value="${w._id}">${w.name}</option>`).join('')
+        $warehouseFilter.html('<option value="all" selected>Tất cả kho</option>' + html)
+      })
+      .catch((err) => console.error('Không load được danh sách kho', err))
+  }
+
+  // SET NGÀY THEO KỲ
+  function setDateInputs(type, value) {
     const today = new Date()
     const year = today.getFullYear()
     let startDate, endDate
 
-    // --- Hiển thị tất cả ---
     if (type === 'all') {
       $reportType.val('all')
       $startDate.val('')
       $endDate.val('')
       $quarterGroup.hide()
-      loadTaxSummary(null, null)
-      return
-    }
-
-    // --- Theo tháng hiện tại ---
-    if (type === 'month') {
-      startDate = new Date(year, today.getMonth(), 1)
-      endDate = new Date(year, today.getMonth() + 1, 0)
+      $monthGroup.hide()
+    } else if (type === 'month') {
       $quarterGroup.hide()
-    }
-
-    // --- Theo quý ---
-    else if (type === 'quarter') {
+      $monthGroup.show()
+      const month = value ? value - 1 : today.getMonth()
+      startDate = new Date(year, month, 1)
+      endDate = new Date(year, month + 1, 0)
+      $monthSelect.val(month + 1)
+    } else if (type === 'quarter') {
+      $monthGroup.hide()
+      $quarterGroup.show()
       const currentQuarter = Math.floor(today.getMonth() / 3) + 1
-      const q = quarter || currentQuarter
+      const q = value || currentQuarter
       const startMonth = (q - 1) * 3
       const endMonth = startMonth + 2
-
       startDate = new Date(year, startMonth, 1)
       endDate = new Date(year, endMonth + 1, 0)
-
-      $quarterGroup.show()
       $quarterSelect.val(q)
-    }
-
-    // --- Tùy chọn ngày ---
-    else if (type === 'custom') {
+    } else if (type === 'custom') {
       $quarterGroup.hide()
-      if ($startDate.val() && $endDate.val()) {
-        loadTaxSummary($startDate.val(), $endDate.val())
-      }
-      return
+      $monthGroup.hide()
+      startDate = $startDate.val() ? new Date($startDate.val()) : null
+      endDate = $endDate.val() ? new Date($endDate.val()) : null
     }
 
-    // --- Gán lại giá trị input & tải dữ liệu ---
-    $startDate.val(formatDate(startDate))
-    $endDate.val(formatDate(endDate))
-    loadTaxSummary(formatDate(startDate), formatDate(endDate))
+    if (startDate && endDate) {
+      $startDate.val(formatDate(startDate))
+      $endDate.val(formatDate(endDate))
+    }
+
+    loadTaxSummary($startDate.val() || null, $endDate.val() || null)
   }
 
+  // LOAD DỮ LIỆU
   async function loadTaxSummary(startDate, endDate) {
     $tbody.html('<tr><td colspan="4" class="text-center">Đang tải...</td></tr>')
 
     try {
-      // Chuẩn bị URL gọi API
       let url = '/api/orders/get'
-      if (startDate && endDate) {
-        const query = new URLSearchParams({ startDate, endDate })
-        url += `?${query.toString()}`
-      }
+      const query = {}
+
+      if (startDate) query.startDate = startDate
+      if (endDate) query.endDate = endDate
+
+      const warehouse = $warehouseFilter.val()
+      if (warehouse && warehouse !== 'all') query.warehouse = warehouse
+
+      if (Object.keys(query).length) url += `?${new URLSearchParams(query).toString()}`
 
       const res = await fetch(url)
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
-
       const result = await res.json()
       $tbody.empty()
 
@@ -90,13 +99,13 @@ $(function () {
         const period = startDate && endDate ? `${startDate} - ${endDate}` : 'Tất cả'
 
         $tbody.append(`
-        <tr>
-          <td class="text-center px-3 py-2">${period}</td>
-          <td class="text-center px-3 py-2">${formatNumber(totalBeforeTax)}</td>
-          <td class="text-center px-3 py-2">${formatNumber(vat)}</td>
-          <td class="text-center px-3 py-2">${formatNumber(totalAmount)}</td>
-        </tr>
-      `)
+          <tr>
+            <td class="text-center px-3 py-2">${period}</td>
+            <td class="text-center px-3 py-2">${formatNumber(totalBeforeTax)}</td>
+            <td class="text-center px-3 py-2">${formatNumber(vat)}</td>
+            <td class="text-center px-3 py-2">${formatNumber(totalAmount)}</td>
+          </tr>
+        `)
       } else {
         $tbody.html('<tr><td colspan="4" class="text-center">Không có dữ liệu</td></tr>')
       }
@@ -108,34 +117,31 @@ $(function () {
     }
   }
 
-  // Thay đổi loại kỳ
-  $reportType.on('change', function () {
-    setDateInputs($(this).val(), null)
-  })
+  // EVENT HANDLERS
+  $reportType.on('change', () => setDateInputs($reportType.val(), null))
+  $quarterSelect.on('change', () => setDateInputs('quarter', parseInt($quarterSelect.val())))
+  $monthSelect.on('change', () => setDateInputs('month', parseInt($monthSelect.val())))
 
-  // Thay đổi quý
-  $quarterSelect.on('change', function () {
-    setDateInputs('quarter', parseInt($(this).val()))
-  })
-
-  // Lọc theo ngày tùy chọn
-  $('#filterDateBtn').on('click', function () {
+  $('#filterDateBtn').on('click', () => {
     const start = $startDate.val()
     const end = $endDate.val()
-
-    // Kiểm tra hợp lệ
     if (new Date(end) < new Date(start)) {
       alert('Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu')
       return
     }
-
     loadTaxSummary(start, end)
   })
-  $('#viewInvoiceBtn').on('click', function () {
-    window.location.href = '/payment-receipts'
+
+  $warehouseFilter.on('change', () => {
+    const start = $startDate.val() || null
+    const end = $endDate.val() || null
+    loadTaxSummary(start, end)
   })
 
-  //KHỞI CHẠY MẶC ĐỊNH
+  $('#viewInvoiceBtn').on('click', () => (window.location.href = '/payment-receipts'))
+
+  // KHỞI CHẠY
   $quarterGroup.hide()
-  setDateInputs('all', null)
+  $monthGroup.hide()
+  fetchWarehouses().then(() => setDateInputs('all', null))
 })

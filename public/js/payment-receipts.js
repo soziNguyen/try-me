@@ -1,5 +1,17 @@
 $(function () {
   let table
+  let warehouses = []
+
+  // Load danh sách kho trước khi khởi tạo DataTable
+  $.get('/api/inventory/warehouse/all')
+    .done((res) => {
+      // Đảm bảo warehouses luôn là array
+      warehouses = Array.isArray(res) ? res : res.data || []
+      initDataTable()
+    })
+    .fail((err) => {
+      toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
+    })
 
   // Tính số dòng hiển thị dựa trên chiều cao cửa sổ
   const showList = [10, 25, 50, 100]
@@ -7,21 +19,27 @@ $(function () {
   if (!showList.includes(numRows)) showList.push(numRows)
   showList.sort((a, b) => a - b)
 
-  initDataTable()
-
   function initDataTable() {
     table = $('#receiptTable').DataTable({
       serverSide: true,
       processing: true,
       autoWidth: false,
       order: [],
+      dom:
+        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
+        'l' +
+        '<"right-group d-flex align-items-center btn-group flex-wrap">' +
+        'f' +
+        '>' +
+        'rt' +
+        '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       ajax: {
         url: '/api/orders/get',
         method: 'GET',
         data: function (d) {
           d.startDate = $('#startDate').val()
           d.endDate = $('#endDate').val()
-          d.warehouseId = $('#warehouseId').val()
+          d.warehouse = $('#warehouseFilter').val() || 'all'
         },
         dataSrc: function (response) {
           const summary = response.summary || {}
@@ -135,6 +153,20 @@ $(function () {
       ],
       rowCallback: (row, data) => $(row).attr('data-id', data._id),
       initComplete: function () {
+        // Thêm filter chọn kho
+        const selectHtml = `
+          <select id="warehouseFilter" class="form-select">
+            <option value="all">Tất cả kho</option>
+            ${warehouses.map((w) => `<option value="${w._id}">${w.name}</option>`).join('')}
+          </select>
+        `
+        $('.right-group').html(selectHtml)
+
+        $('#warehouseFilter').on('change', function () {
+          table.ajax.reload()
+        })
+
+        // Nút xem chi tiết
         $(document).on('click', '.detail-btn', function () {
           const id = $(this).data('id')
           window.location.href = `/receipt/${id}?from=payment-receipt`

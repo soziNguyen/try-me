@@ -1278,14 +1278,16 @@ export const getOrders = async (req, res) => {
     // Base match object
     const match = { organization: organizationId }
 
+    const warehouse = req.query.warehouse
+
+    console.log(warehouse)
+
     if (req.warehouseFilter) {
       // Staff user - chỉ thấy kho được gán
       match.warehouse = req.warehouseFilter
     } else {
-      // Admin/Org - sử dụng defaultWarehouse
-      const org = await Organization.findById(organizationId).select('defaultWarehouse')
-      if (org?.defaultWarehouse) {
-        match.warehouse = org.defaultWarehouse
+      if (warehouse && warehouse !== 'all') {
+        match.warehouse = new mongoose.Types.ObjectId(String(warehouse))
       }
     }
 
@@ -1513,17 +1515,14 @@ export const getTopItems = async (req, res) => {
       return res.status(400).json({ error: 'Thiếu thông tin tổ chức' })
     }
 
-    const startDate = req.query.startDate ? new Date(req.query.startDate) : null
-    const endDate = req.query.endDate ? new Date(req.query.endDate) : null
-
-    if (startDate) startDate.setHours(0, 0, 0, 0)
-    if (endDate) endDate.setHours(23, 59, 59, 999)
-
     // ===== Base match =====
     const match = { organization: organizationId }
 
-    // ✅ Thêm điều kiện warehouse (giống getOrders)
-    if (req.warehouseFilter) {
+    // ===== Filter warehouse =====
+    const warehouse = req.query.warehouse
+    if (warehouse && warehouse !== 'all') {
+      match.warehouse = new mongoose.Types.ObjectId(String(warehouse))
+    } else if (req.warehouseFilter) {
       // Nếu user là staff → chỉ thấy kho được gán
       match.warehouse = req.warehouseFilter
     } else {
@@ -1534,7 +1533,15 @@ export const getTopItems = async (req, res) => {
       }
     }
 
-    // ===== Thêm điều kiện thời gian =====
+    // ===== Filter thời gian =====
+    const startDate = req.query.startDate ? new Date(req.query.startDate) : null
+    const endDate = req.query.endDate ? new Date(req.query.endDate) : null
+    if (startDate) {
+      startDate.setHours(0, 0, 0, 0)
+    }
+    if (endDate) {
+      endDate.setHours(23, 59, 59, 999)
+    }
     if (startDate || endDate) {
       match.updatedAt = {}
       if (startDate) match.updatedAt.$gte = startDate
@@ -1609,9 +1616,8 @@ export const getTopItems = async (req, res) => {
       const sorted = [...list].sort((a, b) => b.quantity - a.quantity)
 
       const top = sorted.slice(0, limit)
-
-      // Lấy slow nhưng loại bỏ các món đã nằm trong top
       const topIds = new Set(top.map((i) => i._id.foodId || i._id.comboId))
+
       const slow = sorted
         .filter(
           (i) =>

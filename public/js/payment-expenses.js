@@ -1,6 +1,15 @@
 $(function () {
   let table
-  initDataTable()
+  let warehouses = []
+  Promise.all([fetchData('inventory/warehouse/all')])
+    .then(([whs]) => {
+      warehouses = whs
+      initDataTable() // gọi DataTable sau khi có danh sách kho
+    })
+    .catch((err) => {
+      toastr.error('Không load được danh sách kho', err)
+      initDataTable() // vẫn khởi tạo table nếu fetch thất bại
+    })
   function initDataTable() {
     let showList = [10, 25, 50, 100]
     const numRows = Math.floor(
@@ -25,7 +34,13 @@ $(function () {
       order: [],
       ajax: {
         url: '/api/payment-expenses',
-        method: 'GET'
+        method: 'GET',
+        data: function (d) {
+          return {
+            ...d,
+            warehouse: $('#warehouseFilter').val() || 'all'
+          }
+        }
       },
       lengthMenu: [showList, showList],
       pageLength: numRows,
@@ -128,31 +143,49 @@ $(function () {
         $(row).attr('data-id', data._id)
       },
       initComplete: function () {
-        $('.right-group').html(`
-          <div class="btn-group flex-wrap mb-2 mb-2">
-            <button class="btn btn-outline-danger me-2" id="deletePaymentExpensesBtn">
-              <i class="bi bi-trash"></i> Xóa
-            </button>
-            <button class="btn btn-outline-success" id="addPaymentExpensesBtn">
-              <i class="bi bi-plus-circle"></i> Thêm
-            </button>
-          </div>
-        `)
+        // Container right-group
+        const rightGroup = $('.right-group')
 
-        // Event handler cho nút "Thêm"
+        // HTML dropdown + nút
+        const html = `
+        <select id="warehouseFilter" class="form-select me-2" style="width: 200px;">
+          <option value="all">Tất cả kho</option>
+          ${warehouses.map((w) => `<option value="${w._id}">${w.name}</option>`).join('')}
+        </select>
+        <button class="btn btn-outline-danger me-2" id="deletePaymentExpensesBtn">
+          <i class="bi bi-trash"></i> Xóa
+        </button>
+        <button class="btn btn-outline-success" id="addPaymentExpensesBtn">
+          <i class="bi bi-plus-circle"></i> Thêm
+        </button>
+      `
+
+        rightGroup.html(html)
+        rightGroup.addClass('d-flex align-items-center')
+
+        // Khi đổi kho -> reload table
+        $('#warehouseFilter').on('change', function () {
+          table.ajax.reload()
+        })
+
+        // Event thêm
         $('#addPaymentExpensesBtn').on('click', () => {
-          createNewRecord('payment-expenses', {}, (data) => {
+          const selectedWarehouse = $('#warehouseFilter').val() // Lấy kho đang chọn
+          const requestData = {
+            warehouse: selectedWarehouse
+          }
+
+          createNewRecord('payment-expenses', requestData, (data) => {
             window.location.href = `/payment-expenses/${data.id}?mode=new`
           })
         })
 
-        // Event handler cho nút "Chi tiết"
+        // Các event chi tiết, xóa, checkbox...
         $(document).on('click', '.detail-btn', function () {
           const id = $(this).data('id')
           window.location.href = `/payment-expenses/${id}`
         })
 
-        // CHỈ GIỮ LẠI DELETE VÀ CHECKBOX EVENTS
         handlerDeleteEvent(
           '#PaymentExpensesTable',
           '#deletePaymentExpensesBtn',

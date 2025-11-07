@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 import { ProductExpense, units } from './model.js'
-import Organization from '../organization/model.js'
+// import Organization from '../organization/model.js'
 import BusinessError from '../error/BusinessError.js'
 
 import responseHelper from '../../helpers/responseHelper.js'
@@ -19,9 +19,9 @@ export const createPaymentExpense = async (req, res) => {
     const { reason, name, expenseAmount, note } = req.body
 
     const expense = await withTransaction(async (session) => {
-      const code = await generateDocumentCode(ProductExpense, 'NQC')
+      const code = await generateDocumentCode(ProductExpense, 'PE')
       const date = new Date()
-      const warehouse = await getWarehouse(req, organizationId)
+      const warehouse = req.body.warehouse || (await getWarehouse(req, organizationId))
 
       const docData = {
         code,
@@ -91,13 +91,10 @@ export const getPaymentExpenses = async (req, res) => {
 
     const matchCondition = { organization: organizationId }
 
-    if (req.warehouseFilter) {
-      matchCondition.warehouse = req.warehouseFilter
-    } else {
-      const org = await Organization.findById(organizationId).select('defaultWarehouse')
-      if (org?.defaultWarehouse) {
-        matchCondition.warehouse = org.defaultWarehouse
-      }
+    const warehouse = req.query.warehouse
+
+    if (warehouse && warehouse !== 'all') {
+      matchCondition.warehouse = new mongoose.Types.ObjectId(String(warehouse))
     }
 
     const basePipeline = [
