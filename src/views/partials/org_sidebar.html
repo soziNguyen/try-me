@@ -7,7 +7,7 @@
           <li class="<%= page === 'Dashboard' ? 'active' : '' %>">
             <a class="w-100" href="/">
               <i class="bi bi-speedometer2 text-dark me-2"></i>
-              <span>Dashboard</span>
+              <span>Trang chủ</span>
             </a>
           </li>
 
@@ -187,12 +187,14 @@
                   </div>
                 </li>
 
+                <% if (user.businessType !== 'shop') { %>
                 <li class="<%= page === 'Table Management' ? 'active' : '' %>">
                   <a class="w-100" href="/table/lists">
                     <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>
                     <span>Quản lý bàn</span>
                   </a>
                 </li>
+                <% } %>
 
                 <li class="<%= page === 'Customer' ? 'active' : '' %>">
                   <a class="w-100" href="/customers">

@@ -4,10 +4,12 @@
   </button>
   <div class="d-flex align-items-center">
     <div class="d-flex align-items-center gap-2 me-2">
-      <a class="badge bg-success py-2 fs-6 bg-opacity-10 text-success text-decoration-none" href="/upgrade">
-        <i class="bi bi-gift me-1"></i>
-        <%= user?.orgPlan || 'Free' %>
-      </a>
+      <% if (user?.orgPlan && user?.role === 'Org') { %>
+        <a class="badge bg-success py-2 fs-6 bg-opacity-10 text-success text-decoration-none" href="/upgrade">
+          <i class="bi bi-gift me-1"></i>
+          <%= user?.orgPlan || 'Free' %>
+        </a>
+      <% } %>
     </div> 
     <div class="dropdown info d-flex align-items-center">
       <a class="w-100 info__icon" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -37,10 +39,10 @@
             </div>
           </div>
           <div class="d-flex align-items-center gap-2 mt-2">
-            <span class="badge bg-primary bg-opacity-10 text-primary">
+            <span class="badge bg-primary bg-opacity-10 text-primary" title="Vai trò">
               <%= user.role %>
             </span>
-            <span class="badge bg-success bg-opacity-10 text-success">
+            <span class="badge bg-success bg-opacity-10 text-success" title="Gói sử dụng">
               <i class="bi bi-gift me-1"></i>
               <%= user?.orgPlan || 'Free' %>
             </span>
@@ -48,12 +50,14 @@
         </li>
   
         <!-- Upgrade Section -->
-        <li class="px-3 py-2 bg-light">
-          <a class="btn btn-info btn-sm w-100 d-flex align-items-center justify-content-center gap-2" href="/upgrade">
-            <i class="bi bi-gem"></i>
-            <span>Nâng cấp ngay</span>
-          </a>
-        </li>
+        <% if (user?.orgPlan && user?.role === 'Org') { %>
+          <li class="px-3 py-2 bg-light">
+            <a class="btn btn-info btn-sm w-100 d-flex align-items-center justify-content-center gap-2" href="/upgrade">
+              <i class="bi bi-gem"></i>
+              <span>Nâng cấp ngay</span>
+            </a>
+          </li>
+        <% } %>
   
         <!-- Menu Items -->
         <li class="py-1">

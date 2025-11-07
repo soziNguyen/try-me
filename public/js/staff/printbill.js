@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 5. Loại hóa đơn
     const orderTypeEl = document.getElementById('orderType')
     if (order.isTakeaway) {
-      orderTypeEl.textContent = 'Mang về'
+      orderTypeEl.textContent = 'Mang đi'
     } else if (order.tableId?.name) {
       orderTypeEl.textContent = `Bàn ${order.tableId.name} - ${order.tableId.area || ''}`
     } else if (!order.tableId && !order.isTakeaway) {

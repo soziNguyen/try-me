@@ -51,12 +51,12 @@
                 <div class="row">
                   <div class="mb-3 col-md-6">
                     <label for="orgProvince" class="form-label text-secondary fw-semibold">Tỉnh/Thành phố *</label>
-                    <select id="orgProvince" name="orgProvince" class="form-select rounded-3" required></select>
+                    <select id="orgProvince" name="orgProvince" class="form-select rounded-3"></select>
                   </div>
 
                   <div class="mb-3 col-md-6">
                     <label for="orgCommune" class="form-label text-secondary fw-semibold">Xã/Phường *</label>
-                    <select id="orgCommune" name="orgCommune" class="form-select rounded-3" required></select>
+                    <select id="orgCommune" name="orgCommune" class="form-select rounded-3"></select>
                   </div>
                 </div>
 
@@ -89,15 +89,20 @@
                   </div>
 
                   <div class="row g-3 mb-3">
-                    <div class="col-md-12">
+                    <div class="col-md-6">
                       <label for="adminPassword" class="form-label text-secondary fw-semibold">Mật khẩu *</label>
                       <input type="password" id="adminPassword" name="adminPassword" class="form-control rounded-3"
                         placeholder="••••••••" required>
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-6">
                       <label for="confirmPassword" class="form-label text-secondary fw-semibold">Xác nhận *</label>
                       <input type="password" id="confirmPassword" name="confirmPassword" class="form-control rounded-3"
                         placeholder="••••••••" required>
+                    </div>
+                    <div class="col-md-12">
+                      <label for="accountType" class="form-label text-secondary fw-semibold">Loại hình kinh doanh
+                        *</label>
+                      <select id="accountType" name="accountType" class="form-select rounded-3"></select>
                     </div>
                   </div>
                 </div>

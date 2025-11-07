@@ -18,6 +18,7 @@ import Organization from '../organization/model.js'
 import ProductStock from '../product/stock/model.js'
 import { generateInvoiceCode } from '../../helpers/generateInvoiceCode.js'
 import { formatPhoneNumber, validatePhoneNumber } from '../../helpers/validator.js'
+import mongoose from 'mongoose'
 
 const { POINT_VALUE, POINTS_EARN_RATE } = constants
 
@@ -223,6 +224,14 @@ export const createOrder = async (req, res) => {
 export const getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params
+
+    if (!orderId) {
+      return responseHelper.error(res, 'ID không tồn tại', 404)
+    }
+
+    if (!mongoose.isValidObjectId(orderId)) {
+      return responseHelper.error(res, 'Mã đơn hàng không hợp lệ', 400)
+    }
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -1351,7 +1360,7 @@ export const getOrders = async (req, res) => {
             {
               $and: [
                 { table: { $eq: null } },
-                { $expr: { $regexMatch: { input: 'Mang về', regex: searchValue, options: 'i' } } }
+                { $expr: { $regexMatch: { input: 'Mang đi', regex: searchValue, options: 'i' } } }
               ]
             }
           ]

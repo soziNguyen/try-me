@@ -69,6 +69,21 @@ if (logInForm) {
     }
   })
 } else if (signUpForm) {
+  const accountTypeSelect = document.getElementById('accountType')
+
+  const accType = {
+    shop: 'Siêu thị, cửa hàng',
+    food: 'Nhà hàng, quán ăn',
+    drink: 'Đồ uống, cafe'
+  }
+
+  for (const [key, label] of Object.entries(accType)) {
+    const option = document.createElement('option')
+    option.value = key
+    option.textContent = label
+    accountTypeSelect.appendChild(option)
+  }
+
   signUpForm.addEventListener('submit', async (event) => {
     event.preventDefault()
 
@@ -84,7 +99,8 @@ if (logInForm) {
       orgStreet: formData.get('orgStreet'),
       adminUsername: formData.get('adminUsername'),
       adminEmail: formData.get('adminEmail'),
-      adminPassword: formData.get('adminPassword')
+      adminPassword: formData.get('adminPassword'),
+      accountType: formData.get('accountType')
     }
 
     const confirmPassword = formData.get('confirmPassword')
@@ -104,7 +120,8 @@ if (logInForm) {
       orgStreet: data.orgStreet,
       adminUsername: data.adminUsername,
       adminEmail: data.adminEmail,
-      adminPassword: data.adminPassword
+      adminPassword: data.adminPassword,
+      accountType: data.accountType
     }
 
     if (Object.values(requiredFields).some((value) => !value)) {

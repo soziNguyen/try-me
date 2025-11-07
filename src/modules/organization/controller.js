@@ -32,8 +32,17 @@ export const createOrganization = async (req, res) => {
       adminEmail,
       adminPassword
     } = req.body
+    const accountType = (req.body.accountType || '').toLowerCase()
 
-    if (!orgName || !orgEmail || !orgPhone || !adminUsername || !adminEmail || !adminPassword) {
+    if (
+      !orgName ||
+      !orgEmail ||
+      !orgPhone ||
+      !adminUsername ||
+      !adminEmail ||
+      !adminPassword ||
+      !accountType
+    ) {
       return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin bắt buộc', 400)
     }
 
@@ -66,6 +75,10 @@ export const createOrganization = async (req, res) => {
     // Validate tax code if provided
     if (taxCode && !validateTaxCode(taxCode)) {
       return responseHelper.error(res, 'Mã số thuế không hợp lệ (10-13 chữ số)', 400)
+    }
+
+    if (!['shop', 'food', 'drink'].includes(accountType)) {
+      return responseHelper.error(res, 'Loại hình kinh doanh không hợp lệ', 400)
     }
 
     // Process data
@@ -128,6 +141,7 @@ export const createOrganization = async (req, res) => {
         province: orgProvince,
         commune: orgCommune,
         street: orgStreet,
+        businessType: accountType,
         plan: freePlan ? freePlan._id : null
       }
       if (cleanTaxCode) {

@@ -795,44 +795,43 @@ document.addEventListener('click', (e) => {
 
 async function loadOrderData(orderId) {
   try {
-    const response = await fetch(`/api/orders/${orderId}`)
-    if (!response.ok) throw new Error('Failed to fetch order data')
+    const result = await ajax(`/api/orders/${orderId}`, {}, 'GET')
 
-    const data = await response.json()
-    const result = data.data
+    if (result) {
+      document.getElementById('discountInput').value =
+        result.discount.toLocaleString('vi-VN') || '0'
+      document.getElementById('pointsInput').value = result.pointsUsed || '0'
+      document.getElementById('serviceChargeInput').value =
+        result.serviceCharge.toLocaleString('vi-VN') || '0'
+      document.getElementById('extraDiscountInput').value = Number(
+        result?.extraDiscount ?? 0
+      ).toLocaleString('vi-VN')
+      document.getElementById('vatInput').value = result.vatRate || '0'
+      document.getElementById('customerPaidInput').value =
+        result.customerPaid.toLocaleString('vi-VN') || '0'
+      document.getElementById('paymentMethodValue').value = result.paymentMethodId || ''
 
-    document.getElementById('discountInput').value = result.discount.toLocaleString('vi-VN') || '0'
-    document.getElementById('pointsInput').value = result.pointsUsed || '0'
-    document.getElementById('serviceChargeInput').value =
-      result.serviceCharge.toLocaleString('vi-VN') || '0'
-    document.getElementById('extraDiscountInput').value = Number(
-      result?.extraDiscount ?? 0
-    ).toLocaleString('vi-VN')
-    document.getElementById('vatInput').value = result.vatRate || '0'
-    document.getElementById('customerPaidInput').value =
-      result.customerPaid.toLocaleString('vi-VN') || '0'
-    document.getElementById('paymentMethodValue').value = result.paymentMethodId || ''
+      if (result.paymentMethodId) {
+        const buttons = document.querySelectorAll('#paymentMethod button')
+        buttons.forEach((btn) => {
+          if (btn.getAttribute('data-value') === result.paymentMethodId) {
+            btn.classList.add('active')
+          } else {
+            btn.classList.remove('active')
+          }
+        })
+      }
 
-    if (result.paymentMethodId) {
-      const buttons = document.querySelectorAll('#paymentMethod button')
-      buttons.forEach((btn) => {
-        if (btn.getAttribute('data-value') === result.paymentMethodId) {
-          btn.classList.add('active')
-        } else {
-          btn.classList.remove('active')
-        }
-      })
+      window.appliedCouponId = result.couponId || localStorage.getItem('appliedCouponId') || null
+
+      if (window.appliedCouponId) {
+        localStorage.setItem('appliedCouponId', window.appliedCouponId)
+      } else {
+        localStorage.removeItem('appliedCouponId')
+      }
+
+      calculateTotals()
     }
-
-    window.appliedCouponId = result.couponId || localStorage.getItem('appliedCouponId') || null
-
-    if (window.appliedCouponId) {
-      localStorage.setItem('appliedCouponId', window.appliedCouponId)
-    } else {
-      localStorage.removeItem('appliedCouponId')
-    }
-
-    calculateTotals()
   } catch (error) {
     console.error('Lỗi khi load dữ liệu đơn hàng:', error)
   }

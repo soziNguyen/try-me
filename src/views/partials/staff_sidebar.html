@@ -6,16 +6,17 @@
           <li class="<%= page === 'Dashboard' ? 'active' : '' %>">
             <a class="w-100" href="/">
               <i class="bi bi-speedometer2 me-2 text-dark"></i>
-              <span>Dashboard</span>
+              <span>Trang chủ</span>
             </a>
           </li>
-
+          <% if (user.businessType !== 'shop') { %>
           <li class="<%= page === 'Table' ? 'active' : '' %>">
             <a class="w-100" href="/tables">
               <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>
-              <span>Quản lý Bàn</span>
+              <span>Quản lý bàn</span>
             </a>
           </li>
+          <% } %>
 
           <li class="<%= page === 'Orders' ? 'active' : '' %>">
             <a class="w-100" href="/orders">
@@ -34,7 +35,7 @@
           <li class="<%= page === 'My Schedule' ? 'active' : '' %>">
             <a class="w-100" href="/my-schedule">
               <i class="bi bi-calendar3 me-2 text-warning"></i>
-              <span>Xem Lịch làm việc</span>
+              <span>Xem lịch làm việc</span>
             </a>
           </li>
         </ul>

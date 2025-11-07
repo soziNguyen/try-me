@@ -43,12 +43,13 @@ passport.deserializeUser(async (id, done) => {
       .populate({
         path: 'organization',
         populate: { path: 'plan', model: 'Plan', select: 'name' },
-        select: 'logo'
+        select: 'logo businessType'
       })
       .lean()
 
     user.orgPlan = currentUser.organization?.plan?.name || null
     user.orgLogo = currentUser.organization?.logo || ''
+    user.businessType = currentUser.organization?.businessType || ''
 
     done(null, user)
   } catch (error) {
