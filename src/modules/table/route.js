@@ -15,7 +15,7 @@ router.get(
   '/api/tables',
   isAuthenticated,
   checkWarehouseAccess,
-  checkAccountTypeAccess,
+  // checkAccountTypeAccess,
   tableController.getTables
 )
 router.get(
