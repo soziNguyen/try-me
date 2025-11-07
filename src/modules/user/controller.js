@@ -12,6 +12,7 @@ import { isValidPassword, generateSalt } from '../../helpers/common.js'
 import { parseShiftStart } from '../../helpers/dateHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { logActivity } from '../activity-logs/service.js'
+import paginationHelper from '../../helpers/paginationHelper.js'
 
 // [CREATE] / User
 export const createUser = async (req, res) => {
@@ -82,9 +83,11 @@ export const createUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   try {
-    const { s } = req.query
+    const { s, page, limit } = req.query
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const { currentPage, perPage, skip } = paginationHelper(page, limit)
 
     const filter = { organization: organizationId }
     if (s) {
@@ -93,10 +96,26 @@ export const getUsers = async (req, res) => {
         { email: { $regex: s, $options: 'i' } }
       ]
     }
-    const users = await User.find(filter)
-      .populate('organization', 'name')
-      .populate('warehouse', '_id name location')
-    responseHelper.success(res, users)
+
+    const [users, totalUsers] = await Promise.all([
+      User.find(filter)
+        .populate('organization', 'name')
+        .populate('warehouse', '_id name location')
+        .skip(skip)
+        .limit(perPage)
+        .sort({ createdAt: -1 }),
+      User.countDocuments(filter)
+    ])
+
+    responseHelper.success(res, {
+      data: users,
+      pagination: {
+        total: totalUsers,
+        currentPage,
+        perPage,
+        totalPages: Math.ceil(totalUsers / perPage)
+      }
+    })
   } catch (error) {
     responseHelper.error(res, error.message)
   }

@@ -2,162 +2,120 @@
 
   <div class="container py-5">
     <div class="row justify-content-center">
-      <div class="col-lg-6 col-md-8">
-        <div class="card shadow-lg border-0 rounded-4">
-          <!-- Header -->
-          <div class="card-header bg-white text-center py-4 border-0">
-            <div class="d-flex justify-content-center mb-3">
-              <div class="bg-primary bg-opacity-10 rounded-circle px-3 py-2">
-                <i class="bi bi-building text-primary fs-1"></i>
-              </div>
-            </div>
-            <h4 class="mb-0 fw-bold text-dark">Đăng ký tổ chức và quản trị viên</h4>
-            <p class="text-muted small mb-0 mt-2">Vui lòng điền đầy đủ thông tin để đăng ký</p>
-          </div>
+      <div class="col-xl-10 col-lg-11">
 
-          <div class="card-body p-4 p-md-5">
-            <form id="signup-form">
-              <!-- Thông tin tổ chức -->
-              <div class="mb-4">
-                <h5 class="fw-bold text-primary border-bottom border-primary border-2 pb-2 mb-4">
-                  <i class="bi bi-building me-2"></i>
-                  Thông tin hồ sơ <span class="text-danger">*</span>
+        <!-- Header -->
+        <div class="card shadow border rounded-4 mb-4">
+          <div class="card-header text-center py-4 bg-light border-0">
+            <h4 class="mb-0 fw-semibold text-dark">Đăng ký tổ chức và quản trị viên</h4>
+            <p class="text-muted small mb-0 mt-2">Điền đầy đủ thông tin để đăng ký</p>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <form id="signup-form">
+          <div class="row g-4">
+
+            <!-- Thông tin tổ chức -->
+            <div class="col-lg-6 d-flex">
+              <div class="card shadow-sm rounded-4 p-4 flex-fill">
+                <h5 class="fw-bold border-bottom pb-2 mb-4">
+                  <i class="bi bi-building me-2"></i>Thông tin hồ sơ
                 </h5>
 
-                <div class="row g-3">
-                  <div class="col-12">
-                    <label for="taxCode" class="form-label fw-semibold">
-                      <i class="bi bi-file-text text-primary me-1"></i>
-                      Mã số thuế
-                    </label>
-                    <input type="text" name="taxCode" id="taxCode" class="form-control form-control-lg"
-                      placeholder="Nhập mã số thuế">
-                  </div>
+                <div class="mb-3">
+                  <label for="taxCode" class="form-label text-secondary fw-semibold">Mã số thuế</label>
+                  <input type="text" id="taxCode" name="taxCode" class="form-control rounded-3"
+                    placeholder="Nhập mã số thuế">
+                </div>
 
-                  <div class="col-12">
-                    <label for="orgName" class="form-label fw-semibold">
-                      <i class="bi bi-bank text-primary me-1"></i>
-                      Tên tổ chức <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" name="orgName" id="orgName" class="form-control form-control-lg"
-                      placeholder="Nhập tên tổ chức" required>
-                  </div>
+                <div class="mb-3">
+                  <label for="orgName" class="form-label text-secondary fw-semibold">Tên tổ chức *</label>
+                  <input type="text" id="orgName" name="orgName" class="form-control rounded-3"
+                    placeholder="Nhập tên tổ chức" required>
+                </div>
 
+                <div class="row g-3 mb-3">
                   <div class="col-md-6">
-                    <label for="orgEmail" class="form-label fw-semibold">
-                      <i class="bi bi-envelope text-primary me-1"></i>
-                      Email <span class="text-danger">*</span>
-                    </label>
-                    <input type="email" name="orgEmail" id="orgEmail" class="form-control form-control-lg"
+                    <label for="orgEmail" class="form-label text-secondary fw-semibold">Email *</label>
+                    <input type="email" id="orgEmail" name="orgEmail" class="form-control rounded-3"
                       placeholder="email@domain.com" required>
                   </div>
-
                   <div class="col-md-6">
-                    <label for="orgPhone" class="form-label fw-semibold">
-                      <i class="bi bi-telephone text-primary me-1"></i>
-                      Số điện thoại <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" name="orgPhone" id="orgPhone" class="form-control form-control-lg"
+                    <label for="orgPhone" class="form-label text-secondary fw-semibold">Số điện thoại *</label>
+                    <input type="text" id="orgPhone" name="orgPhone" class="form-control rounded-3"
                       placeholder="0123456789" required>
                   </div>
+                </div>
 
-                  <div class="col-12">
-                    <label for="orgProvince" class="form-label fw-semibold">
-                      <i class="bi bi-geo-alt text-primary me-1"></i>
-                      Tỉnh/Thành phố <span class="text-danger">*</span>
-                    </label>
-                    <select name="orgProvince" id="orgProvince" class="form-select" required>
-                    </select>
+                <div class="row">
+                  <div class="mb-3 col-md-6">
+                    <label for="orgProvince" class="form-label text-secondary fw-semibold">Tỉnh/Thành phố *</label>
+                    <select id="orgProvince" name="orgProvince" class="form-select rounded-3" required></select>
                   </div>
 
-                  <div class="col-12">
-                    <label for="orgCommune" class="form-label fw-semibold">
-                      <i class="bi bi-signpost text-primary me-1"></i>
-                      Xã/Phường <span class="text-danger">*</span>
-                    </label>
-                    <select name="orgCommune" id="orgCommune" class="form-select" required>
-                    </select>
-                  </div>
-
-                  <div class="col-12">
-                    <label for="orgStreet" class="form-label fw-semibold">
-                      <i class="bi bi-house text-primary me-1"></i>
-                      Địa chỉ chi tiết
-                    </label>
-                    <input type="text" name="orgStreet" id="orgStreet" class="form-control form-control-lg"
-                      placeholder="Số nhà, tên đường">
+                  <div class="mb-3 col-md-6">
+                    <label for="orgCommune" class="form-label text-secondary fw-semibold">Xã/Phường *</label>
+                    <select id="orgCommune" name="orgCommune" class="form-select rounded-3" required></select>
                   </div>
                 </div>
+
+                <div class="mb-3">
+                  <label for="orgStreet" class="form-label text-secondary fw-semibold">Địa chỉ chi tiết</label>
+                  <input type="text" id="orgStreet" name="orgStreet" class="form-control rounded-3"
+                    placeholder="Số nhà, tên đường">
+                </div>
               </div>
+            </div>
 
-              <!-- Thông tin đăng nhập -->
-              <div class="mb-4">
-                <h5 class="fw-bold text-primary border-bottom border-primary border-2 pb-2 mb-4">
-                  <i class="bi bi-person-circle me-2"></i>
-                  Thông tin đăng nhập <span class="text-danger">*</span>
-                </h5>
+            <!-- Thông tin quản trị viên -->
+            <div class="col-lg-6 d-flex flex-column">
+              <div class="card shadow-sm rounded-4 p-4 flex-fill d-flex flex-column">
+                <div class="flex-grow-1">
+                  <h5 class="fw-bold border-bottom pb-2 mb-4">
+                    <i class="bi bi-person-circle me-2"></i>Thông tin đăng nhập
+                  </h5>
 
-                <div class="row g-3">
-                  <div class="col-12">
-                    <label for="adminUsername" class="form-label fw-semibold">
-                      <i class="bi bi-person text-primary me-1"></i>
-                      Tài khoản <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" name="adminUsername" id="adminUsername" class="form-control form-control-lg"
+                  <div class="mb-3">
+                    <label for="adminUsername" class="form-label text-secondary fw-semibold">Tài khoản *</label>
+                    <input type="text" id="adminUsername" name="adminUsername" class="form-control rounded-3"
                       placeholder="Nhập tên tài khoản" required>
                   </div>
 
-                  <div class="col-12">
-                    <label for="adminEmail" class="form-label fw-semibold">
-                      <i class="bi bi-envelope-at text-primary me-1"></i>
-                      Email đăng nhập <span class="text-danger">*</span>
-                    </label>
-                    <input type="email" name="adminEmail" id="adminEmail" class="form-control form-control-lg"
+                  <div class="mb-3">
+                    <label for="adminEmail" class="form-label text-secondary fw-semibold">Email đăng nhập *</label>
+                    <input type="email" id="adminEmail" name="adminEmail" class="form-control rounded-3"
                       placeholder="admin@email.com" required>
                   </div>
 
-                  <div class="col-md-6">
-                    <label for="adminPassword" class="form-label fw-semibold">
-                      <i class="bi bi-lock text-primary me-1"></i>
-                      Mật khẩu <span class="text-danger">*</span>
-                    </label>
-                    <input type="password" name="adminPassword" id="adminPassword" class="form-control form-control-lg"
-                      placeholder="••••••••" required>
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="confirmPassword" class="form-label fw-semibold">
-                      <i class="bi bi-lock-fill text-primary me-1"></i>
-                      Xác nhận <span class="text-danger">*</span>
-                    </label>
-                    <input type="password" name="confirmPassword" id="confirmPassword"
-                      class="form-control form-control-lg" placeholder="••••••••" required>
+                  <div class="row g-3 mb-3">
+                    <div class="col-md-12">
+                      <label for="adminPassword" class="form-label text-secondary fw-semibold">Mật khẩu *</label>
+                      <input type="password" id="adminPassword" name="adminPassword" class="form-control rounded-3"
+                        placeholder="••••••••" required>
+                    </div>
+                    <div class="col-md-12">
+                      <label for="confirmPassword" class="form-label text-secondary fw-semibold">Xác nhận *</label>
+                      <input type="password" id="confirmPassword" name="confirmPassword" class="form-control rounded-3"
+                        placeholder="••••••••" required>
+                    </div>
                   </div>
                 </div>
+
+                <button type="submit" class="btn btn-primary w-100 rounded-pill mt-3">
+                  Tạo tổ chức và quản trị viên
+                </button>
               </div>
+            </div>
 
-              <!-- Button -->
-              <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
-                <i class="bi bi-plus-circle me-2"></i>
-                Tạo tổ chức và quản trị viên
-              </button>
-
-              <div class="text-center text-muted small">
-                <i class="bi bi-shield-check me-1"></i>
-                Thông tin của bạn được bảo mật và an toàn
-              </div>
-            </form>
           </div>
+        </form>
 
-          <!-- Footer -->
-          <div class="card-footer text-center bg-light border-0 py-3">
-            <p class="mb-0">
-              Đã có tài khoản?
-              <a href="/login" class="text-primary fw-semibold text-decoration-none">
-                Đăng nhập ngay <i class="bi bi-arrow-right"></i>
-              </a>
-            </p>
-          </div>
+        <!-- Footer -->
+        <div class="text-center mt-5">
+          <p class="mb-0">Đã có tài khoản?
+            <a href="/login" class="text-primary fst-italic text-decoration-none">Đăng nhập ngay</a>
+          </p>
         </div>
       </div>
     </div>

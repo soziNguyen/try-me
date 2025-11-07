@@ -228,7 +228,7 @@ export const createIngredient = async (req, res) => {
       .populate('category', 'name')
       .populate('createdBy', 'username -_id')
 
-    await logActivity(
+    logActivity(
       organizationId,
       req.user._id,
       req.user.username || 'Unknown',
@@ -241,7 +241,7 @@ export const createIngredient = async (req, res) => {
     responseHelper.success(res, saved, 'Tạo nguyên liệu thành công')
   } catch (err) {
     if (req?.user?._id) {
-      await logActivity(
+      logActivity(
         getCurrentOrg(req),
         req.user._id,
         req.user.username || 'Unknown',
@@ -338,7 +338,8 @@ export const updateIngredient = async (req, res) => {
       expirationDays: 'HSD (ngày)',
       isActive: 'Kích hoạt',
       note: 'Ghi chú',
-      image: 'Ảnh'
+      image: 'Ảnh',
+      updatedBy: 'Người cập nhật'
     }
 
     let description = ''
@@ -348,15 +349,26 @@ export const updateIngredient = async (req, res) => {
         Object.keys(actualChanges)
           .map((key) => {
             let oldVal = ingredient?.[key] ?? ''
-            if (key === 'category' && oldVal) oldVal = oldVal.name || ''
             let newVal = actualChanges[key]
-            if (key === 'category' && newVal) newVal = updated.category?.name || ''
+
+            // Xử lý category
+            if (key === 'category') {
+              oldVal = oldVal?.name || ''
+              newVal = updated?.category?.name || ''
+            }
+
+            // Xử lý updatedBy
+            if (key === 'updatedBy') {
+              oldVal = ingredient?.updatedBy?.username || ''
+              newVal = updated?.updatedBy?.username || ''
+            }
+
             return `${fieldLabels[key] || key}: "${normalizeValue(oldVal)}" → "${normalizeValue(newVal)}"`
           })
           .join(', ')
     }
 
-    await logActivity(
+    logActivity(
       organizationId,
       req.user._id,
       req.user.username || 'Unknown',
@@ -442,7 +454,7 @@ export const deleteIngredients = async (req, res) => {
       }
     }
 
-    await logActivity(
+    logActivity(
       organizationId,
       req.user._id,
       req.user.username,

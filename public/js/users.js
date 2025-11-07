@@ -209,6 +209,7 @@ if (logInForm) {
 } else {
   document.addEventListener('DOMContentLoaded', async () => {
     await getUsers()
+    paginationHandle(getUsers)
     await getActiveWarehouses()
     await addUser()
   })
@@ -299,44 +300,43 @@ if (logInForm) {
   }
 
   let userData = []
-  async function getUsers() {
+  let currentPage = 1
+  let perPage = 10
+  let totalPages = 1
+  let searchKeyword = ''
+
+  document.getElementById('searchUserInput').addEventListener(
+    'input',
+    debounce(async function () {
+      searchKeyword = this.value.trim()
+      await getUsers(1)
+    }, 500)
+  )
+
+  async function getUsers(page = 1) {
     try {
-      const users = await ajax('/api/users', {}, 'GET')
-      if (users) {
-        userData = users
-        renderTable(users)
+      const params = { page, limit: perPage }
+      if (searchKeyword) params.s = searchKeyword
+
+      const response = await ajax('/api/users', params, 'GET')
+
+      if (response) {
+        userData = response.data
+        currentPage = response.pagination.currentPage
+        totalPages = response.pagination.totalPages
+
+        renderTable(userData)
+        renderPagination(response.pagination, searchKeyword ? `&s=${searchKeyword}` : '')
+        const total = document.getElementById('total-records')
+        const hasTotal = total ? `<span>Tổng ${response.pagination.total} bản ghi</span>` : ''
+        total.innerHTML = hasTotal
+
         document.getElementById('selectAll').checked = false
       }
     } catch (error) {
       toastr.error(error.message)
     }
   }
-  window.getUsers = getUsers
-
-  document.getElementById('searchUserInput').addEventListener('input', function () {
-    const query = this.value.trim().toLowerCase()
-    const filtered = userData.filter((u) => {
-      const username = removeAccents(u.username).toLowerCase()
-      const email = removeAccents(u.email).toLowerCase()
-      const createdAt = formatDate(u.createdAt)
-      const updatedAt = formatDate(u.updatedAt)
-      return (
-        username.includes(query) ||
-        email.includes(query) ||
-        createdAt.includes(query) ||
-        updatedAt.includes(query)
-      )
-    })
-    if (filtered.length === 0) {
-      userTableBody.innerHTML = `
-        <tr>
-          <td colspan="7" class="text-center">Không có bản ghi nào</td>
-        </tr>
-      `
-    } else {
-      renderTable(filtered)
-    }
-  })
 
   // update event handler
   async function updateUser(userId) {
@@ -469,6 +469,7 @@ if (logInForm) {
     // Hiển thị modal xác nhận
     showConfirmModal({
       title: 'Xác nhận xóa',
+      okBtnColor: 'danger',
       message: `Bạn có chắc chắn muốn xóa ${selectedUsers.length} thành viên?`,
       onConfirm: async () => {
         try {

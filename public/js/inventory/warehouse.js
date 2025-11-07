@@ -4,7 +4,8 @@ $(function () {
 
   Promise.all([fetchData('users')])
     .then(([data]) => {
-      managers = data
+      managers = data.data
+
       initDataTable()
     })
     .catch((err) => {

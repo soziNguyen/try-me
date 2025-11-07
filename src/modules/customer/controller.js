@@ -181,7 +181,7 @@ export const createCustomer = async (req, res) => {
       'Thêm mới khách hàng thành công'
     )
   } catch (error) {
-    return responseHelper.error(res, 'Không thể tạo khách hàng')
+    return responseHelper.error(res, error.message)
   }
 }
 

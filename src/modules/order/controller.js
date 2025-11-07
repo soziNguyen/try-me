@@ -32,10 +32,17 @@ export const createOrder = async (req, res) => {
       // Lấy warehouse dựa trên role
       const warehouse = await getWarehouse(req, organizationId)
 
-      let { tableId, isTakeaway, customerName, customerPhone } = req.body
+      const { tableId, isTakeaway, customerName } = req.body
+      let customerPhone = req.body.customerPhone
       let prefix = 'INV'
 
-      const invoiceOptions = await InvoiceOption.findOne({ organizationId }).lean()
+      const matchCondition = {
+        organizationId,
+        warehouseId: warehouse
+      }
+
+      const invoiceOptions = await InvoiceOption.findOne(matchCondition).session(session).lean()
+
       if (invoiceOptions?.prefix?.trim()) {
         prefix = invoiceOptions.prefix.trim()
       }
@@ -53,15 +60,11 @@ export const createOrder = async (req, res) => {
         const nameToUpdate = customerName?.trim()
         const query = { organization: organizationId, phone: customerPhone }
 
-        // Tìm customer trước (chỉ thêm session nếu có)
-        customer = await Customer.findOne(query)[session ? 'session' : 'exec'](session || undefined)
+        customer = await Customer.findOne(query).session(session)
 
         if (customer) {
           // Customer đã tồn tại - chỉ update name nếu cần
           if (nameToUpdate && nameToUpdate !== customer.name) {
-            const updateOptions = { new: true }
-            if (session) updateOptions.session = session
-
             customer = await Customer.findOneAndUpdate(
               query,
               {
@@ -70,30 +73,22 @@ export const createOrder = async (req, res) => {
                   updatedAt: new Date()
                 }
               },
-              updateOptions
+              { new: true, session }
             )
           }
         } else {
           // Customer chưa tồn tại - tạo mới
-          if (session) {
-            const [newCustomer] = await Customer.create(
-              [
-                {
-                  organization: organizationId,
-                  phone: customerPhone,
-                  name: nameToUpdate || 'Khách lẻ'
-                }
-              ],
-              { session }
-            )
-            customer = newCustomer
-          } else {
-            customer = await Customer.create({
-              organization: organizationId,
-              phone: customerPhone,
-              name: nameToUpdate || 'Khách lẻ'
-            })
-          }
+          const [newCustomer] = await Customer.create(
+            [
+              {
+                organization: organizationId,
+                phone: customerPhone,
+                name: nameToUpdate || 'Khách lẻ'
+              }
+            ],
+            { session }
+          )
+          customer = newCustomer
         }
       }
 
@@ -112,42 +107,52 @@ export const createOrder = async (req, res) => {
 
       // 2. Đơn mang đi
       if (isTakeaway) {
-        const existingOrder = await Order.findOne({
-          isTakeaway: true,
-          status: 'open',
-          organization: organizationId,
-          warehouse
-        })[session ? 'session' : 'exec'](session || undefined)
-
-        if (existingOrder) {
-          return {
-            orderId: existingOrder._id,
-            orderCode: existingOrder.code,
-            tableId: null,
-            isNewOrder: false
+        const order = await Order.findOneAndUpdate(
+          {
+            isTakeaway: true,
+            status: 'open',
+            organization: organizationId,
+            warehouse
+          },
+          {
+            $setOnInsert: {
+              ...baseOrderData,
+              tableId: null,
+              isTakeaway: true,
+              createdAt: new Date()
+            }
+          },
+          {
+            upsert: true,
+            new: true,
+            session,
+            setDefaultsOnInsert: true
           }
-        }
+        )
 
-        let newOrder
-        if (session) {
-          const [createdOrder] = await Order.create(
-            [
-              {
-                ...baseOrderData,
-                tableId: null,
-                isTakeaway: true
-              }
-            ],
-            { session }
-          )
-          newOrder = createdOrder
-        } else {
-          newOrder = await Order.create({
-            ...baseOrderData,
-            tableId: null,
-            isTakeaway: true
-          })
+        // Kiểm tra xem order có phải mới tạo không
+        const isNewOrder = order.createdAt.getTime() === new Date().getTime()
+
+        return {
+          orderId: order._id,
+          orderCode: order.code,
+          tableId: null,
+          isNewOrder
         }
+      }
+
+      // 3. Đơn tại bàn - không có tableId
+      if (!tableId) {
+        const [newOrder] = await Order.create(
+          [
+            {
+              ...baseOrderData,
+              tableId: null,
+              isTakeaway: false
+            }
+          ],
+          { session }
+        )
 
         return {
           orderId: newOrder._id,
@@ -157,69 +162,30 @@ export const createOrder = async (req, res) => {
         }
       }
 
-      // 3. Đơn tại bàn - không có tableId
-      if (!tableId) {
-        let newOrder
-        if (session) {
-          const [createdOrder] = await Order.create(
-            [
-              {
-                ...baseOrderData,
-                tableId: null,
-                isTakeaway: false
-              }
-            ],
-            { session }
-          )
-          newOrder = createdOrder
-        } else {
-          newOrder = await Order.create({
-            ...baseOrderData,
-            tableId: null,
-            isTakeaway: false
-          })
-        }
-
-        return {
-          orderId: newOrder._id,
-          orderCode: newOrder.code,
-          tableId: null
-        }
-      }
-
       // 4. Đơn tại bàn - có tableId
-      const table = await Table.findById(tableId)[session ? 'session' : 'exec'](
-        session || undefined
+      // Kiểm tra bàn tồn tại trước
+      const tableCheck = await Table.findById(tableId).session(session)
+
+      if (!tableCheck) throw new BusinessError('Bàn không tồn tại', 404)
+
+      // Tạo order trước
+      const [newOrder] = await Order.create(
+        [
+          {
+            ...baseOrderData,
+            tableId,
+            isTakeaway: false
+          }
+        ],
+        { session }
       )
-      if (!table) throw new BusinessError('Bàn không tồn tại', 404)
-      if (table.status === 'occupied') throw new BusinessError('Bàn đã có khách', 409)
 
-      let newOrder
-      if (session) {
-        const [createdOrder] = await Order.create(
-          [
-            {
-              ...baseOrderData,
-              tableId,
-              isTakeaway: false
-            }
-          ],
-          { session }
-        )
-        newOrder = createdOrder
-      } else {
-        newOrder = await Order.create({
-          ...baseOrderData,
-          tableId,
-          isTakeaway: false
-        })
-      }
-
-      const updateOptions = {}
-      if (session) updateOptions.session = session
-
-      await Table.findByIdAndUpdate(
-        tableId,
+      // Update table với điều kiện atomic để tránh race condition
+      const updatedTable = await Table.findOneAndUpdate(
+        {
+          _id: tableId,
+          status: { $ne: 'occupied' } // Chỉ update nếu bàn chưa bị chiếm
+        },
         {
           $set: {
             status: 'occupied',
@@ -229,19 +195,24 @@ export const createOrder = async (req, res) => {
             orderCode: orderCode
           }
         },
-        updateOptions
+        { new: true, session }
       )
+
+      // Nếu không update được = bàn đã bị chiếm
+      if (!updatedTable) {
+        throw new BusinessError('Bàn đã có khách', 409)
+      }
 
       return {
         orderId: newOrder._id,
         orderCode: newOrder.code,
-        tableId: table._id
+        tableId: updatedTable._id,
+        isNewOrder: true
       }
     })
 
     responseHelper.success(res, result)
   } catch (error) {
-    console.error('Create order error:', error)
     if (error instanceof BusinessError) {
       return responseHelper.error(res, error.message, error.statusCode)
     }
@@ -733,7 +704,7 @@ export const checkoutOrder = async (req, res) => {
       if (order.status !== 'open')
         throw new BusinessError('Order đã được thanh toán hoặc đã đóng', 400)
 
-      if (!Array.isArray(order.items) || order.items.length == 0) {
+      if (!Array.isArray(order.items) || order.items.length === 0) {
         throw new BusinessError('Đơn hàng phải có ít nhất 1 sản phẩm ', 400)
       }
 

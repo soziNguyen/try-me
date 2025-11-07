@@ -289,8 +289,7 @@ async function updateTable(tableId) {
     const dataUpdate = {
       customerName: document.getElementById('update-customer').value.trim(),
       status: document.getElementById('update-status').value,
-      capacity: Number(document.getElementById('update-capacity').value || 0),
-      area: document.getElementById('update-area').value
+      capacity: Number(document.getElementById('update-capacity').value || 0)
     }
     const res = await ajax(`/api/tables/update/${tableId}`, dataUpdate)
     if (res) {

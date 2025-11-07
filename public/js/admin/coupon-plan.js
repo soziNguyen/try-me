@@ -30,7 +30,7 @@ $(function () {
         '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
-      order: [[10, 'desc']], // Sort by createdAt (column index 10) descending
+      order: [[1, 'desc']],
       ajax: {
         url: '/api/admin/coupons',
         method: 'GET'

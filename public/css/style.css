@@ -29,6 +29,15 @@
   --light: #f8f9fa;
   --dark: #212529;
   --green-light: #d4edda;
+  --purple: #162643;
+}
+
+.text-purple {
+  color: var(--purple) !important;
+}
+
+.bg-purple {
+  background-color: var(--purple) !important;
 }
 
 /* Dark theme overrides */
@@ -346,6 +355,49 @@ body {
   width: 70px;
   height: 70px;
 }
+.admin__layout .admin__main .admin__content .pagination-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 320px;
+  width: calc(100% - 320px);
+  background: var(--surface);
+  padding: 16px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  z-index: 100;
+  -webkit-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+.admin__layout .admin__main .admin__content .pagination-bar .pagination .page-link {
+  border: 1px solid var(--card-border);
+  color: var(--text);
+  background-color: var(--surface);
+  -webkit-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+}
+.admin__layout .admin__main .admin__content .pagination-bar .pagination .page-link:hover {
+  background-color: var(--accent-bg);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.admin__layout .admin__main .admin__content .pagination-bar .pagination .page-item.active .page-link {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--white) !important;
+}
+.admin__layout .admin__main .admin__content .pagination-bar .pagination .page-item.disabled .page-link {
+  color: var(--muted);
+  pointer-events: none;
+  background-color: var(--light);
+}
+.admin__layout .admin__main #admin__sidebar.collapsed ~ .admin__content .pagination-bar {
+  left: 60px;
+  width: calc(100% - 60px);
+}
 
 .staff__layout {
   height: 100vh;
@@ -579,6 +631,49 @@ body {
 .staff__layout .staff__main .staff__content .report-header .icon {
   width: 70px;
   height: 70px;
+}
+.staff__layout .staff__main .staff__content .pagination-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 320px;
+  width: calc(100% - 320px);
+  background: var(--surface);
+  padding: 16px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  z-index: 100;
+  -webkit-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+.staff__layout .staff__main .staff__content .pagination-bar .pagination .page-link {
+  border: 1px solid var(--card-border);
+  color: var(--text);
+  background-color: var(--surface);
+  -webkit-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+}
+.staff__layout .staff__main .staff__content .pagination-bar .pagination .page-link:hover {
+  background-color: var(--accent-bg);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.staff__layout .staff__main .staff__content .pagination-bar .pagination .page-item.active .page-link {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--white) !important;
+}
+.staff__layout .staff__main .staff__content .pagination-bar .pagination .page-item.disabled .page-link {
+  color: var(--muted);
+  pointer-events: none;
+  background-color: var(--light);
+}
+.staff__layout .staff__main #staff__sidebar.collapsed ~ .staff__content .pagination-bar {
+  left: 60px;
+  width: calc(100% - 60px);
 }
 
 #themeModal .modal-dialog {

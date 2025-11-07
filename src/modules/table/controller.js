@@ -43,7 +43,7 @@ export const getTables = async (req, res) => {
     if (status) filter.status = status
     if (area) filter.area = new RegExp(`^${area}$`, 'i')
 
-    let tables = await Table.find(filter)
+    const tables = await Table.find(filter)
       .populate({
         path: 'currentOrderId',
         model: 'Order',

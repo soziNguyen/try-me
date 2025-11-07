@@ -6,6 +6,7 @@ import { isValidUsername, isValidPassword, isPasswordMatch } from '../../helpers
 import { lookupRef } from '../../helpers/lookupHelper.js'
 import ActivityLog from '../activity-logs/model.js'
 import dayjs from 'dayjs'
+import mongoose from 'mongoose'
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -241,11 +242,21 @@ export const getAllAuditLogs = async (req, res) => {
     const colIdx = req.query['order[0][column]']
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
+    const organization = req.query.organization
 
     const pipeline = [
       ...lookupRef('userId', 'Users', { as: 'user' }),
       ...lookupRef('organization', 'Organizations', { as: 'organizationInfo' })
     ]
+
+    // Filter theo organization !== all
+    if (organization && organization !== 'all') {
+      pipeline.push({
+        $match: {
+          organization: { $eq: new mongoose.Types.ObjectId(String(organization)) }
+        }
+      })
+    }
 
     // Multi-token search
     if (searchValue) {
@@ -280,13 +291,21 @@ export const getAllAuditLogs = async (req, res) => {
       pipeline.push({ $match: { $and: andConditions } })
     }
 
-    const recordsTotal = await ActivityLog.countDocuments()
+    // Đếm total theo filter organization
+    let recordsTotal
+    if (organization && organization !== 'all') {
+      recordsTotal = await ActivityLog.countDocuments({
+        organization: new mongoose.Types.ObjectId(String(organization))
+      })
+    } else {
+      recordsTotal = await ActivityLog.countDocuments()
+    }
 
     const countPipeline = [...pipeline, { $count: 'count' }]
     const countResult = await ActivityLog.aggregate(countPipeline)
     const recordsFiltered = countResult[0]?.count || 0
 
-    const allowedSort = ['userName', 'description', 'createdAt', 'organizationName']
+    const allowedSort = ['userName', 'description', 'createdAt', 'organizationName', 'status']
     const sortObj = {}
 
     if (sortField === 'organizationName') {
@@ -295,14 +314,13 @@ export const getAllAuditLogs = async (req, res) => {
       sortObj[allowedSort.includes(sortField) ? sortField : 'createdAt'] = sortDir
     }
 
-    // Sort, phân trang, projection
     pipeline.push(
       { $sort: sortObj },
       { $skip: start },
       { $limit: length },
       {
         $project: {
-          _id: 0,
+          _id: 1,
           createdAt: 1,
           userName: 1,
           description: 1,
@@ -315,6 +333,7 @@ export const getAllAuditLogs = async (req, res) => {
     let data = await ActivityLog.aggregate(pipeline)
 
     data = data.map((item) => ({
+      _id: item._id,
       time: dayjs(item.createdAt).format('DD/MM/YYYY HH:mm:ss'),
       userName: item.userName,
       organizationName: item.organizationName || 'N/A',
@@ -332,5 +351,22 @@ export const getAllAuditLogs = async (req, res) => {
       data: [],
       error: error.message
     })
+  }
+}
+
+export const deleteLogs = async (req, res) => {
+  try {
+    const { ids } = req.body
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return responseHelper.error(res, 'Chọn ít nhất 1 bản ghi để xóa', 400)
+    }
+
+    const result = await ActivityLog.deleteMany({
+      _id: { $in: ids }
+    })
+
+    responseHelper.success(res, `Xóa thành công ${result.deletedCount} bản ghi`)
+  } catch (error) {
+    responseHelper.error(res, error.message)
   }
 }
