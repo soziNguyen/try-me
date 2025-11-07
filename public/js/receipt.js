@@ -47,7 +47,7 @@ $(function () {
           data: 'table',
           title: 'Bàn',
           render: (data, type, row) => {
-            const tableName = data ? data.name || '' : 'Mang về'
+            const tableName = data ? data.name || '' : 'Mang đi'
             if (type === 'display') {
               return `<span class="number form-control border-0">${tableName}</span>`
             }

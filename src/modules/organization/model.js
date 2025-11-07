@@ -10,6 +10,11 @@ const OrganizationSchema = new Schema(
     province: { type: String, trim: true, default: '' }, // tỉnh thành
     commune: { type: String, trim: true, default: '' }, // xã phường
     street: { type: String, trim: true, default: '' }, // địa chỉ cụ thể
+    businessType: {
+      type: String,
+      enum: ['shop', 'food', 'drink'],
+      require: true
+    },
     defaultWarehouse: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Warehouse', // collection kho

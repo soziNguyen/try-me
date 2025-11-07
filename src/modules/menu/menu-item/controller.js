@@ -381,7 +381,7 @@ export const deleteMenus = async (req, res) => {
 
 export const searchMenus = async (req, res) => {
   try {
-    const keyword = (req.query.keyword || '').trim()
+    const keyword = (req.query.s || '').trim()
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 

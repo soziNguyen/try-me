@@ -9,6 +9,7 @@ router.use(checkWarehouseAccess)
 
 // --- GET PAGE ---
 router.get('/orders', isAuthenticated, ordersPage)
+router.get('/orders/:id', isAuthenticated, ordersPage)
 
 // --- Đặt món và quản lý đơn hàng ---
 router.get('/api/orders/get', isAuthenticated, orderController.getOrders)

@@ -1,15 +1,19 @@
 // ======== Biến toàn cục ========
-const urlParams = new URLSearchParams(window.location.search)
-const orderId = urlParams.get('orderId')
+const urlParams = window.location.pathname.split('/')
+const orderId = urlParams.pop()
 let allItems = []
 const csrfToken = document.getElementById('_csrf').value
+
+function getOrderIdFromURL() {
+  const match = window.location.pathname.match(/^\/orders\/([a-f0-9]{24})$/i)
+  return match ? match[1] : null
+}
 
 // ======== Event Listeners ========
 
 // DOMContentLoaded:
 document.addEventListener('DOMContentLoaded', async () => {
-  const urlParams = new URLSearchParams(window.location.search)
-  const orderId = urlParams.get('orderId')
+  const orderId = getOrderIdFromURL()
   if (orderId) window.currentOrderId = orderId
 
   try {
@@ -33,6 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       searchInput.focus()
       const orderData = await orderRes.json()
       if (orderRes.ok) updateOrderUI(orderData.data)
+      await getTables(orderData.data)
     } else {
       const warningDiv = document.getElementById('orderWarning')
       if (warningDiv) {
@@ -79,20 +84,23 @@ let isLoaded = false
 
 // Kiểm tra orderId trong URL để ẩn/hiện phần tương ứng
 function checkOrderIdInURL(orders = []) {
-  const urlParams = new URLSearchParams(window.location.search)
-  const orderId = urlParams.get('orderId')
+  const orderId = getOrderIdFromURL()
 
   if (orderId) {
+    // Có ID hợp lệ → hiển thị giao diện chi tiết đơn
     createOrderCard.style.display = 'none'
     orderFull.classList.remove('d-none')
+    return
+  }
+
+  // Không có orderId → đứng tại /orders
+  if (orders.length > 0) {
+    // Chuyển sang đơn đầu tiên
+    window.location.href = `/orders/${orders[0]._id}`
   } else {
-    if (orders.length > 0) {
-      // Nếu có hóa đơn nhưng không có orderId => chuyển đến order mới nhất (hoặc đầu tiên)
-      window.location.href = `/orders?orderId=${orders[0]._id}`
-    } else {
-      createOrderCard.style.display = 'block'
-      orderFull.classList.add('d-none')
-    }
+    // Không có đơn nào → hiện nút tạo đơn
+    createOrderCard.style.display = 'block'
+    orderFull.classList.add('d-none')
   }
 }
 
@@ -100,11 +108,11 @@ function checkOrderIdInURL(orders = []) {
 async function handleCreateNewOrder(button) {
   button.disabled = true
   try {
-    const orderResult = await ajax('/api/orders', { tableId: null, isTakeaway: false }, 'POST')
+    const orderResult = await ajax('/api/orders', { tableId: null, isTakeaway: true }, 'POST')
     if (orderResult?.orderId) {
       toastr.success('Tạo hóa đơn thành công!')
       setTimeout(() => {
-        window.location.href = `/orders?orderId=${orderResult.orderId}`
+        window.location.href = `/orders/${orderResult.orderId}`
       }, 300)
     } else {
       toastr.error('Không thể tạo hóa đơn trống.')
@@ -129,8 +137,8 @@ function createNewOrderButton() {
 function renderEmptyOrders(orders) {
   let html = ''
 
-  const urlParams = new URLSearchParams(window.location.search)
-  const currentOrderId = urlParams.get('orderId')
+  const currentOrderId = window.location.pathname.split('/').pop()
+  // const currentOrderId = urlParams.get('orderId')
 
   if (!orders || orders.length === 0) {
     html = `
@@ -223,7 +231,7 @@ function renderEmptyOrders(orders) {
   tabButtons.forEach((tab) => {
     tab.addEventListener('click', () => {
       const orderId = tab.getAttribute('data-order-id')
-      window.location.href = `/orders?orderId=${orderId}`
+      window.location.href = `/orders/${orderId}`
     })
   })
 }
@@ -257,6 +265,18 @@ async function getTables(order = null) {
     const tables = Array.isArray(res?.tables) ? res.tables : []
 
     const $select = $('#table-select')
+
+    // Kiểm tra element có tồn tại không
+    if (!$select.length) {
+      console.error('Không tìm thấy element #table-select')
+      return
+    }
+
+    // Hủy Select2 cũ nếu có
+    if ($select.hasClass('select2-hidden-accessible')) {
+      $select.select2('destroy')
+    }
+
     const availableTables = tables.filter((t) => t.status === 'available')
 
     let html = ''
@@ -267,47 +287,20 @@ async function getTables(order = null) {
       html += availableTables.map((t) => `<option value="${t._id}">${t.name}</option>`).join('')
     }
 
+    // Cập nhật HTML
     $select.html(html)
 
-    // Khởi tạo hoặc cập nhật select2
-    if ($select.hasClass('select2-hidden-accessible')) {
-      $select.trigger('change.select2')
-    } else {
-      $select.select2({ width: '100px', placeholder: 'Chọn bàn' })
-    }
+    // Khởi tạo Select2
+    $select.select2({
+      width: '100%',
+      placeholder: 'Chọn bàn'
+    })
 
-    // Nếu đã có bàn được gán thì disable select
-    if (order?.tableId?._id) {
-      $select.prop('disabled', true)
-    } else {
-      $select.prop('disabled', false)
-    }
+    // Disable/Enable sau khi khởi tạo
+    $select.prop('disabled', !!order?.tableId?._id)
   } catch (error) {
     console.error('Lỗi khi lấy danh sách bàn:', error)
-    $('#tableGrid').html(`<div>Không có bàn nào.</div>`)
-  }
-}
-
-// Render danh sách bàn thủ công
-function renderTableList(tables = []) {
-  const $select = $('#table-select')
-  const availableTables = tables.filter((t) => t.status === 'available')
-
-  if (availableTables.length === 0) {
-    $select.html('<option value="">Không có bàn nào</option>')
-    return
-  }
-
-  const options = availableTables
-    .map((table) => `<option value="${table._id}">${table.name}</option>`)
-    .join('')
-
-  $select.html('<option value="">Chọn bàn</option>' + options)
-
-  if ($select.hasClass('select2-hidden-accessible')) {
-    $select.trigger('change.select2')
-  } else {
-    $select.select2({ placeholder: 'Chọn bàn', width: '100px' })
+    toastr.error('Không thể tải danh sách bàn')
   }
 }
 
@@ -501,8 +494,8 @@ if (searchInput) {
   const runSearch = async (keyword) => {
     try {
       const [menuRes, comboRes] = await Promise.all([
-        fetch(`/api/menu/search?keyword=${encodeURIComponent(keyword)}`),
-        fetch(`/api/menu/combo/search?keyword=${encodeURIComponent(keyword)}`)
+        fetch(`/api/menu/search?s=${encodeURIComponent(keyword)}`),
+        fetch(`/api/menu/combo/search?s=${encodeURIComponent(keyword)}`)
       ])
 
       const menuData = menuRes.ok ? await menuRes.json() : { data: [] }
@@ -624,19 +617,6 @@ function updateOrderSectionVisibility() {
 function updateOrderUI(order) {
   const tbody = document.getElementById('orderItems')
   const totalAmountEl = document.getElementById('totalAmount')
-
-  // Tiêu đề hóa đơn
-  const titleEl = document.getElementById('orderTitle')
-  if (titleEl) {
-    // update title
-    if (order.isTakeaway) {
-      titleEl.textContent = '🧾 Hóa đơn mang về'
-    } else if (order.tableId && order.tableId.name) {
-      titleEl.textContent = `🧾 Hóa đơn bàn ${order.tableId.name} (${order.tableId.area})`
-    } else {
-      titleEl.textContent = '🧾 Hóa đơn'
-    }
-  }
 
   // Danh sách món
   tbody.innerHTML = ''
@@ -795,7 +775,7 @@ $(async () => {
   const $select = $('#customerSelect'),
     $loyaltyPoints = $('#loyaltyPoints'),
     $addCustomerBtn = $('#addCustomerBtn'),
-    orderId = new URLSearchParams(window.location.search).get('orderId')
+    orderId = getOrderIdFromURL()
 
   const updatePoints = (points = 0) => {
     $loyaltyPoints.text(`${points} điểm`)

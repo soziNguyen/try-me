@@ -240,7 +240,7 @@ async function handleOrderButton(btnOrder) {
   const tableId = card.querySelector('.tableCheckbox').dataset.id
   const existingOrderId = btnOrder.dataset.orderId
 
-  if (existingOrderId) return (window.location.href = `/orders?orderId=${existingOrderId}`)
+  if (existingOrderId) return (window.location.href = `/orders/${existingOrderId}`)
 
   showConfirmModal({
     title: 'Tạo order mới',
@@ -251,7 +251,7 @@ async function handleOrderButton(btnOrder) {
       const res = await ajax('/api/orders', { tableId }, 'POST')
       if (res?.orderId) {
         toastr.success('Tạo order thành công')
-        setTimeout(() => (window.location.href = `/orders?orderId=${res.orderId}`), 300)
+        setTimeout(() => (window.location.href = `/orders/${res.orderId}`), 300)
       }
     }
   })
@@ -264,7 +264,7 @@ function handleOrderCheckoutButtons(e) {
   if (btnCheckout) {
     const orderId = btnCheckout.dataset.orderId
     return orderId
-      ? (window.location.href = `/orders?orderId=${orderId}`)
+      ? (window.location.href = `/orders/${orderId}`)
       : toastr.warning('Bàn chưa có hóa đơn, vui lòng giao bàn trước khi thanh toán.')
   }
 }
