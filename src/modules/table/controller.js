@@ -5,6 +5,7 @@ import Customer from '../customer/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { getWarehouse } from '../../helpers/warehouseHelper.js'
 import Organization from '../organization/model.js'
+import QRCode from 'qrcode'
 
 // [CREATE] / table
 export const createTable = async (req, res) => {
@@ -21,7 +22,17 @@ export const createTable = async (req, res) => {
     }
 
     const newTable = new Table(data)
+
+    // Generate QR
+    const qrImage = await QRCode.toDataURL(newTable._id.toString(), {
+      width: 200,
+      margin: 1,
+      errorCorrectionLevel: 'M'
+    })
+
+    newTable.qrCode = qrImage
     await newTable.save()
+
     responseHelper.success(res, newTable, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -171,6 +182,7 @@ export const getDataTables = async (req, res) => {
           name: 1,
           status: 1, // Trả về status gốc
           capacity: 1,
+          qrCode: 1,
           area: 1,
           createdAt: 1
         }

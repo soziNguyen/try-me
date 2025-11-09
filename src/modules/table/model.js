@@ -13,6 +13,7 @@ const TableSchema = new Schema(
     capacity: { type: Number, default: 4 },
     area: { type: String, default: 'KV1' },
     checkInTime: { type: Date, default: null },
+    qrCode: { type: String, unique: true },
     currentOrderId: {
       type: Schema.Types.ObjectId,
       ref: 'Order',
