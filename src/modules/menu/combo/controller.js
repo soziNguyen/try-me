@@ -138,7 +138,7 @@ export const getCombos = async (req, res) => {
 
 export const createCombo = async (req, res) => {
   try {
-    const { sku, name, image, items, price, note } = req.body
+    const { sku, name, image, items, price, note, isActive } = req.body
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -170,6 +170,7 @@ export const createCombo = async (req, res) => {
       items,
       price,
       note,
+      isActive,
       organization: organizationId,
       createdBy: req.user._id,
       warehouse

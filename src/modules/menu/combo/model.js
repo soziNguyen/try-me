@@ -47,7 +47,7 @@ const comboSchema = new mongoose.Schema(
 )
 
 comboSchema.index(
-  { organization: 1, sku: 1 },
+  { organization: 1, warehouse: 1, sku: 1 },
   {
     unique: true,
     partialFilterExpression: { sku: { $exists: true, $ne: '' } }
@@ -55,7 +55,7 @@ comboSchema.index(
 )
 
 comboSchema.index(
-  { organization: 1, name: 1 },
+  { organization: 1, warehouse: 1, name: 1 },
   {
     unique: true,
     partialFilterExpression: { name: { $exists: true, $ne: '' } }

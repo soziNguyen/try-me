@@ -31,7 +31,21 @@ const productStockSchema = new mongoose.Schema(
   }
 )
 
-productStockSchema.index({ organization: 1, product: 1, combo: 1, warehouse: 1 }, { unique: true })
+productStockSchema.index(
+  { organization: 1, product: 1, warehouse: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { product: { $ne: null } }
+  }
+)
+
+productStockSchema.index(
+  { organization: 1, combo: 1, warehouse: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { combo: { $ne: null } }
+  }
+)
 
 const ProductStock = mongoose.model('ProductStock', productStockSchema)
 export default ProductStock
