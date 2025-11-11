@@ -1,0 +1,107 @@
+<%- include('../partials/header.html') %>
+
+  <div class="container container-xxl">
+    <div class="row justify-content-center mt-md-3">
+      <div class="col-12 col-xl-10">
+        <div class="card shadow-lg border-0">
+
+          <!-- Header -->
+          <div class="card-header bg-primary text-white text-center py-4 border-0">
+            <h1 class="card-title mb-2">
+              <i class="bi bi-cash-stack me-2"></i>PHIẾU THU
+            </h1>
+            <p class="mb-0 text-primary-light">Quản lý thu nhập phát sinh</p>
+          </div>
+
+          <!-- Form Content -->
+          <div class="card-body p-4 bg-light">
+            <form id="receiptForm">
+
+              <!-- Thông tin chung -->
+              <div class="mb-4">
+                <h5 class="text-primary border-bottom pb-2 mb-3">
+                  <i class="bi bi-info-circle me-2"></i>Thông tin chung
+                </h5>
+                <div class="row g-3">
+
+                  <div class="col-md-6">
+                    <label for="code" class="form-label fw-500">Mã phiếu</label>
+                    <input type="text" class="form-control border-primary" id="code" name="code"
+                      placeholder="Mã phiếu..." readonly>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="date" class="form-label fw-500">Ngày thu</label>
+                    <input type="text" class="form-control border-primary" id="date" name="date"
+                      placeholder="dd/mm/yyyy" readonly>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="createdBy" class="form-label fw-500">Người tạo</label>
+                    <input type="text" class="form-control border-primary" id="createdBy" readonly>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="submitTer" class="form-label fw-500">Họ và tên người nộp</label>
+                    <input type="text" class="form-control border-primary" id="submitTer" readonly>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="warehouse" class="form-label fw-500">Kho thu <span class="text-danger">*</span></label>
+                    <input type="text" id="warehouse" name="warehouse" class="form-control border-primary" readonly>
+                  </div>
+
+
+                  <div class="col-md-6">
+                    <label for="receiptAmount" class="form-label fw-500">Số tiền</label>
+                    <input type="text" class="form-control border-primary" id="receiptAmount">
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="reason" class="form-label fw-500">Lý do thu</label>
+                    <input type="text" class="form-control border-primary" id="reason">
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Ghi chú -->
+              <div class="mb-4">
+                <label for="note" class="form-label fw-500">Ghi chú</label>
+                <textarea class="form-control border-primary" id="note" name="note" rows="3"
+                  placeholder="Nhập ghi chú..."></textarea>
+              </div>
+
+              <!-- Buttons -->
+              <div class="d-flex gap-2 justify-content-end">
+                <button id="btn-back" class="btn btn-outline-secondary me-2 no-print">
+                  <i class="bi bi-x-circle me-2 no-print"></i>Quay lại
+                </button>
+
+                <button type="button" id="btn-print" class="btn btn-outline-warning me-2 no-print">
+                  <i class="bi bi-printer me-2 no-print"></i>In phiếu
+                </button>
+
+                <button type="submit" id="btn-save-receipt" class="btn btn-primary no-print">
+                  <i class="bi bi-check-circle me-2 no-print"></i>Lưu phiếu
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/commonjs.html') %>
+
+    <script src="/js/data-table.js"></script>
+
+    <input type="hidden" id="currentOrgId"
+      value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
+    <input type="hidden" id="receiptId" value="<%= receiptId %>">
+
+    <script src="/js/payment-receipts-detail.js"></script>
+
+    <%- include('../partials/footer.html') %>
