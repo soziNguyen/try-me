@@ -1,0 +1,47 @@
+<%- include('../partials/header.html') %>
+  <div class="container container-xl">
+    <div class="cus-nav">
+      <div class="cart-icon" id="cartIcon">
+        <i class="bi bi-cart"></i>
+        <span class="cart-quantity"></span>
+      </div>
+    </div>
+
+    <div class="order order-card">
+      <div class="row ">
+        <div class="col-lg" id="foodMenuCol">
+          <div class="search-form position-relative d-flex align-items-center mb-4 mt-3" id="search-menu">
+            <i class="bi bi-search position-absolute end-0 translate-middle-x me-2 fs-5"></i>
+            <input type="text" id="searchMenuInput" class="form-control" placeholder="Tìm kiếm" />
+          </div>
+          <h3>Danh sách thực đơn</h3>
+          <div class="d-flex justify-content-between">
+            <div id="categoryList" class="mb-4 d-flex gap-2 flex-wrap"></div>
+          </div>
+          <div id="foodMenu" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xxl-4 g-3">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="cartModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Giỏ hàng</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="cartItemsList"></div>
+        <div class="modal-footer d-block">
+          <button type="button" id="btnSubmitOrder" class="btn btn-success w-100">Gửi đơn</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
+
+  <%- include('../partials/commonjs.html') %>
+    <script src="/js/sidebar-toggle.js"></script>
+    <script src="/js/cart.js"></script>
+    <%- include('../partials/footer.html') %>

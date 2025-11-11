@@ -1266,8 +1266,6 @@ export const getOrders = async (req, res) => {
 
     const warehouse = req.query.warehouse
 
-    console.log(warehouse)
-
     if (req.warehouseFilter) {
       // Staff user - chỉ thấy kho được gán
       match.warehouse = req.warehouseFilter
@@ -1727,5 +1725,60 @@ export const assignTableToOrder = async (req, res) => {
     responseHelper.success(res, result)
   } catch (error) {
     responseHelper.error(res, error.message)
+  }
+}
+
+export const submitOrderFromCustomer = async (req, res) => {
+  try {
+    const { orderId } = req.params
+    const { items } = req.body
+
+    if (!items || items.length === 0) {
+      return responseHelper.error(res, 'Giỏ hàng trống', 400)
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return responseHelper.error(res, 'Mã đơn hàng không hợp lệ', 400)
+    }
+
+    const order = await Order.findById(orderId)
+    if (!order) {
+      return responseHelper.error(res, 'Không tìm thấy đơn hàng', 404)
+    }
+
+    if (order.status !== 'open') {
+      return responseHelper.error(res, 'Đơn hàng đã đóng hoặc bị hủy', 400)
+    }
+
+    // Xử lý gộp items
+    for (const item of items) {
+      const itemId = item._id
+      const isCombo = item.isCombo
+
+      // Tìm item đã tồn tại trong order (status = pending)
+      const existingItemIndex = order.items.findIndex((orderItem) => {
+        const existingId = isCombo ? orderItem.comboId : orderItem.foodId
+        return existingId?.toString() === itemId && orderItem.status === 'pending'
+      })
+
+      if (existingItemIndex !== -1) {
+        // Nếu đã tồn tại, cộng dồn quantity
+        order.items[existingItemIndex].quantity += item.quantity
+      } else {
+        // Nếu chưa có, thêm mới
+        order.items.push({
+          ...(isCombo ? { comboId: itemId } : { foodId: itemId }),
+          quantity: item.quantity,
+          price: item.price,
+          status: 'pending'
+        })
+      }
+    }
+
+    await order.save()
+
+    return responseHelper.success(res, order, 'Cập nhật giỏ hàng thành công')
+  } catch (error) {
+    return responseHelper.error(res, error.message)
   }
 }

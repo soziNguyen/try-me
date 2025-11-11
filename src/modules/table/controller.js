@@ -45,7 +45,8 @@ export const scanQRCode = async (req, res) => {
   const tableId = req.params.id
   try {
     const result = await createOrderForTable({ tableId, req })
-    return res.redirect(`/orders/${result.orderId}`)
+
+    return res.redirect(`/cart?table=${result.tableId}&orderId=${result.orderId}`)
   } catch (err) {
     responseHelper.error(res, err.message)
   }

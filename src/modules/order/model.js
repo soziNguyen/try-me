@@ -22,7 +22,8 @@ const OrderSchema = new Schema(
         foodId: { type: Schema.Types.ObjectId, ref: 'MenuItem' },
         comboId: { type: Schema.Types.ObjectId, ref: 'Combo' },
         quantity: { type: Number, default: 1 },
-        price: { type: Number, required: true }
+        price: { type: Number, required: true },
+        status: { type: String, enum: ['pending', 'cooking', 'done'], default: 'pending' }
       }
     ],
     totalAmount: { type: Number, default: 0 }, // Tổng tiền gốc

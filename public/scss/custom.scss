@@ -590,6 +590,85 @@ input[type='text']::-ms-clear {
   display: none !important;
 }
 
+.cus-nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 40px;
+  padding: 16px 0;
+
+  .cart-icon {
+    position: relative;
+    cursor: pointer;
+    margin-top: 16px;
+
+    .bi-cart {
+      &::before {
+        font-size: 2.5rem;
+      }
+    }
+
+    .cart-quantity {
+      position: absolute;
+      left: 53%;
+      top: 48%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 2px 6px;
+    }
+  }
+}
+
+.order-card {
+  #foodMenuCol {
+    .card-img-top {
+      height: 200px;
+      background-position: left;
+    }
+  }
+}
+
+#cartItemsList {
+  .cart-item-img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .btn-quantity {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 1.2rem;
+    }
+  }
+
+  .btn-remove-cart {
+    background: transparent;
+    border: none;
+  }
+
+  .cart-items-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none; // IE / Edge legacy
+  }
+
+  .card-total {
+    background: white;
+    position: sticky;
+    bottom: 0;
+  }
+}
 //================= Responsive =================//
 
 @media (max-width: 767px) {

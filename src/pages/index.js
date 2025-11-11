@@ -856,3 +856,7 @@ export const paymentMethodForAdminPage = async (req, res) => {
     })
   )
 }
+
+export const customerUI = async (req, res) => {
+  res.render('customer/index', getPageData(req, 'Đặt hàng'))
+}

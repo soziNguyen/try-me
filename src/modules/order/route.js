@@ -73,4 +73,10 @@ router.post(
   checkWarehouseAccess,
   orderController.assignTableToOrder
 )
+
+router.post(
+  '/api/order/:orderId/add-items',
+  isAuthenticated,
+  orderController.submitOrderFromCustomer
+)
 export default router

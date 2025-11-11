@@ -4,6 +4,7 @@ import Organization from '../organization/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { getWarehouse } from '../../helpers/warehouseHelper.js'
 import { generateInvoiceCode } from '../../helpers/generateInvoiceCode.js'
+import InvoiceOption from '../invoice/model.js'
 import BusinessError from '../error/BusinessError.js'
 import mongoose from 'mongoose'
 
@@ -12,6 +13,7 @@ export const createOrderForTable = async ({ tableId, req }) => {
   if (!organizationId) throw new BusinessError('Thiếu thông tin tổ chức', 400)
 
   const warehouse = await getWarehouse(req, organizationId)
+  let prefix = 'INV'
 
   // Kiểm tra bàn
   const table = await Table.findOne({
@@ -20,11 +22,16 @@ export const createOrderForTable = async ({ tableId, req }) => {
     warehouse
   })
 
+  const invoiceOptions = await InvoiceOption.findOne({ organizationId, warehouseId: warehouse })
+  if (invoiceOptions?.prefix?.trim()) {
+    prefix = invoiceOptions.prefix.trim()
+  }
+
   if (!table) throw new BusinessError('Bàn không tồn tại', 404)
   if (table.status === 'occupied') throw new BusinessError('Bàn đã có khách', 400)
 
   // Tạo order
-  const orderCode = await generateInvoiceCode(Order, 'INV')
+  const orderCode = await generateInvoiceCode(Order, prefix)
   const order = await Order.create({
     tableId,
     organization: organizationId,
@@ -40,5 +47,5 @@ export const createOrderForTable = async ({ tableId, req }) => {
   table.currentOrderId = order._id
   await table.save()
 
-  return { orderId: order._id, orderCode }
+  return { orderId: order._id, orderCode, tableId }
 }
