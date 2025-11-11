@@ -1679,7 +1679,7 @@ export const assignTableToOrder = async (req, res) => {
       const { tableId } = req.body
       if (!orderId || !tableId) throw new BusinessError('Thiếu orderId hoặc tableId', 400)
 
-      // Tìm order trống
+      // Tìm order đang mở
       const order = await Order.findOne({
         _id: orderId,
         organization: organizationId,
@@ -1687,11 +1687,26 @@ export const assignTableToOrder = async (req, res) => {
       }).session(session)
       if (!order) throw new BusinessError('Order không tồn tại hoặc không hợp lệ', 404)
 
-      // Kiểm tra bàn
-      const table = await Table.findById(tableId).session(session)
-      if (!table) throw new BusinessError('Bàn không tồn tại')
-      if (table.status === 'occupied') throw new BusinessError('Bàn đã có khách', 409)
+      // Kiểm tra bàn mới
+      const newTable = await Table.findById(tableId).session(session)
+      if (!newTable) throw new BusinessError('Bàn không tồn tại')
+      if (newTable.status === 'occupied') throw new BusinessError('Bàn đã có khách', 409)
 
+      // Nếu order đang có bàn cũ, giải phóng bàn cũ
+      if (order.tableId) {
+        await Table.updateOne(
+          { _id: order.tableId },
+          {
+            status: 'available',
+            checkInTime: null,
+            currentOrderId: null,
+            orderCode: null
+          },
+          { session }
+        )
+      }
+
+      // Gán bàn mới
       await Promise.all([
         Order.updateOne({ _id: orderId }, { tableId, isTakeaway: false }, { session }),
         Table.updateOne(
