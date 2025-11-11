@@ -300,7 +300,6 @@ async function getTables(order = null) {
     // Luôn enable select để cho phép đổi bàn
     $select.prop('disabled', false)
   } catch (error) {
-    console.error('Lỗi khi lấy danh sách bàn:', error)
     toastr.error('Không thể tải danh sách bàn')
   }
 }
