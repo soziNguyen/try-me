@@ -6,7 +6,7 @@ import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { getWarehouse } from '../../helpers/warehouseHelper.js'
 import Organization from '../organization/model.js'
 import QRCode from 'qrcode'
-// import { createOrderForTable } from '../order/service.js'
+import { createOrderForTable } from '../order/service.js'
 
 // [CREATE] / table
 export const createTable = async (req, res) => {
@@ -41,15 +41,15 @@ export const createTable = async (req, res) => {
 }
 
 // [GET] /api/scan/:id
-// export const scanQRCode = async (req, res) => {
-//   const tableId = req.params.id
-//   try {
-//     const result = await createOrderForTable({ tableId, req })
-//     return res.redirect(`/orders/${result.orderId}`)
-//   } catch (err) {
-//     responseHelper.error(res, err.message)
-//   }
-// }
+export const scanQRCode = async (req, res) => {
+  const tableId = req.params.id
+  try {
+    const result = await createOrderForTable({ tableId, req })
+    return res.redirect(`/orders/${result.orderId}`)
+  } catch (err) {
+    responseHelper.error(res, err.message)
+  }
+}
 
 // [GET] /api/tables
 export const getTables = async (req, res) => {

@@ -61,12 +61,12 @@ router.post(
   tableController.deleteTables
 )
 
-// router.get(
-//   '/api/scan/:id',
-//   isAuthenticated,
-//   checkWarehouseAccess,
-//   checkAccountTypeAccess,
-//   tableController.scanQRCode
-// )
+router.get(
+  '/api/scan/:id',
+  isAuthenticated,
+  checkWarehouseAccess,
+  checkAccountTypeAccess,
+  tableController.scanQRCode
+)
 
 export default router
