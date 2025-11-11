@@ -283,34 +283,41 @@ export const updateMenu = async (req, res) => {
 
     const menu = await MenuItem.findOne(matchCondition)
 
-    const existingName = await MenuItem.findOne({
-      _id: { $ne: id },
-      warehouse,
-      name,
-      organization: organizationId
-    })
+    const normalizedName = name?.trim() || null
+    const normalizedSku = sku?.trim() || null
 
-    const existingSku = await MenuItem.findOne({
-      _id: { $ne: id },
-      warehouse,
-      sku,
-      organization: organizationId
-    })
+    if (normalizedName) {
+      const existingName = await MenuItem.findOne({
+        _id: { $ne: id },
+        warehouse,
+        name,
+        organization: organizationId
+      })
 
-    if (existingName) {
-      return responseHelper.error(res, 'Tên món đã tồn tại', 400)
+      if (existingName) {
+        return responseHelper.error(res, 'Tên món đã tồn tại', 400)
+      }
     }
 
-    if (existingSku) {
-      return responseHelper.error(res, 'SKU đã tồn tại', 400)
+    if (normalizedSku) {
+      const existingSku = await MenuItem.findOne({
+        _id: { $ne: id },
+        warehouse,
+        sku,
+        organization: organizationId
+      })
+
+      if (existingSku) {
+        return responseHelper.error(res, 'SKU đã tồn tại', 400)
+      }
     }
 
     const dataUpdate = { updatedBy: req.user._id }
 
     const oldImage = menu.image
-    if (sku !== undefined) dataUpdate.sku = sku
+    if (sku !== undefined) dataUpdate.sku = normalizedSku
     if (image !== undefined) dataUpdate.image = image
-    if (name !== undefined) dataUpdate.name = name
+    if (name !== undefined) dataUpdate.name = normalizedName
     if (category !== undefined) dataUpdate.category = category
     if (price !== undefined) dataUpdate.price = price
     if (description !== undefined) dataUpdate.description = description

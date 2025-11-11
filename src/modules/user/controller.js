@@ -172,6 +172,16 @@ export const updateUser = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy người dùng', 404)
     }
 
+    // Chặn sửa quyền của Admin
+    if (userExist.role === 'Admin' && role !== 'Admin') {
+      return responseHelper.error(res, 'Không thể thay đổi quyền của Admin', 403)
+    }
+
+    // Chặn nâng quyền lên Admin nếu không phải Admin thật (thay value của option ngoài FE)
+    if (role === 'Admin' && userExist.role !== 'Admin') {
+      return responseHelper.error(res, 'Bạn không có thẩm quyền để thực hiện thao tác này', 403)
+    }
+
     const existUser = await User.findOne({
       organization: organizationId,
       $or: [{ username }, { email }],

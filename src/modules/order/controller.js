@@ -108,37 +108,23 @@ export const createOrder = async (req, res) => {
 
       // 2. Đơn mang đi
       if (isTakeaway) {
-        const order = await Order.findOneAndUpdate(
-          {
-            isTakeaway: true,
-            status: 'open',
-            organization: organizationId,
-            warehouse
-          },
-          {
-            $setOnInsert: {
+        const [newOrder] = await Order.create(
+          [
+            {
               ...baseOrderData,
               tableId: null,
               isTakeaway: true,
               createdAt: new Date()
             }
-          },
-          {
-            upsert: true,
-            new: true,
-            session,
-            setDefaultsOnInsert: true
-          }
+          ],
+          { session }
         )
 
-        // Kiểm tra xem order có phải mới tạo không
-        const isNewOrder = order.createdAt.getTime() === new Date().getTime()
-
         return {
-          orderId: order._id,
-          orderCode: order.code,
+          orderId: newOrder._id,
+          orderCode: newOrder.code,
           tableId: null,
-          isNewOrder
+          isNewOrder: true
         }
       }
 

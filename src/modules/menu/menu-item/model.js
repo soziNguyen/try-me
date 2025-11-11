@@ -41,18 +41,18 @@ const menuItemSchema = new mongoose.Schema(
 )
 
 menuItemSchema.index(
-  { organization: 1, sku: 1 },
+  { organization: 1, warehouse: 1, name: 1 },
   {
     unique: true,
-    partialFilterExpression: { sku: { $exists: true, $ne: '' } }
+    partialFilterExpression: { name: { $ne: null } }
   }
 )
 
 menuItemSchema.index(
-  { organization: 1, category: 1, name: 1 },
+  { organization: 1, warehouse: 1, sku: 1 },
   {
     unique: true,
-    partialFilterExpression: { name: { $exists: true, $ne: '' } }
+    partialFilterExpression: { sku: { $ne: null } }
   }
 )
 

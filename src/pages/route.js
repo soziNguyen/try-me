@@ -3,10 +3,17 @@ import express from 'express'
 import isAuthenticated from '../helpers/isAuthenticated.js'
 import { isPermit } from '../helpers/isPermit.js'
 import isAdmin from '../helpers/isAdmin.js'
+import { checkAccountTypeAccess } from '../helpers/permission.js'
 
 const router = express.Router()
 
-router.get('/table/lists', isAuthenticated, isPermit('Admin', 'Org'), page.tableManagementPage)
+router.get(
+  '/table/lists',
+  isAuthenticated,
+  isPermit('Admin', 'Org'),
+  checkAccountTypeAccess,
+  page.tableManagementPage
+)
 router.get('/tax', isAuthenticated, isPermit('Admin', 'Org'), page.taxPage)
 router.get('/payment-methods', isAuthenticated, isPermit('Admin', 'Org'), page.paymentMethodPage)
 router.get('/revenue', isAuthenticated, isPermit('Admin', 'Org'), page.revenuePage)
