@@ -5,6 +5,8 @@ import Customer from '../customer/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { getWarehouse } from '../../helpers/warehouseHelper.js'
 import Organization from '../organization/model.js'
+import QRCode from 'qrcode'
+// import { createOrderForTable } from '../order/service.js'
 
 // [CREATE] / table
 export const createTable = async (req, res) => {
@@ -21,12 +23,33 @@ export const createTable = async (req, res) => {
     }
 
     const newTable = new Table(data)
+    const url = `/api/scan/${newTable._id.toString()}`
+    // Generate QR
+    const qrImage = await QRCode.toDataURL(url, {
+      width: 200,
+      margin: 1,
+      errorCorrectionLevel: 'M'
+    })
+
+    newTable.qrCode = qrImage
     await newTable.save()
+
     responseHelper.success(res, newTable, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }
 }
+
+// [GET] /api/scan/:id
+// export const scanQRCode = async (req, res) => {
+//   const tableId = req.params.id
+//   try {
+//     const result = await createOrderForTable({ tableId, req })
+//     return res.redirect(`/orders/${result.orderId}`)
+//   } catch (err) {
+//     responseHelper.error(res, err.message)
+//   }
+// }
 
 // [GET] /api/tables
 export const getTables = async (req, res) => {
@@ -171,6 +194,7 @@ export const getDataTables = async (req, res) => {
           name: 1,
           status: 1, // Trả về status gốc
           capacity: 1,
+          qrCode: 1,
           area: 1,
           createdAt: 1
         }

@@ -394,6 +394,60 @@ body {
   pointer-events: none;
   background-color: var(--light);
 }
+.admin__layout .admin__main .admin__content .qr-cell {
+  padding: 0 !important;
+}
+.admin__layout .admin__main .admin__content .qr-cell .qr-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  padding: 8px;
+}
+.admin__layout .admin__main .admin__content .qr-cell .qr-wrapper .qr-img {
+  display: block;
+  -webkit-transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease;
+}
+.admin__layout .admin__main .admin__content .qr-cell .qr-wrapper .qr-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: -webkit-box !important;
+  display: -ms-flexbox !important;
+  display: flex !important;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  opacity: 0;
+  -webkit-transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease;
+  text-decoration: none;
+}
+.admin__layout .admin__main .admin__content .qr-cell .qr-wrapper .qr-overlay .qr-icon {
+  color: white;
+  font-size: 24px;
+}
+.admin__layout .admin__main .admin__content .qr-cell .qr-wrapper:hover .qr-overlay {
+  opacity: 1;
+}
+.admin__layout .admin__main .admin__content .qr-cell .qr-wrapper:hover .qr-img {
+  opacity: 0.3;
+}
 .admin__layout .admin__main #admin__sidebar.collapsed ~ .admin__content .pagination-bar {
   left: 60px;
   width: calc(100% - 60px);
@@ -670,6 +724,60 @@ body {
   color: var(--muted);
   pointer-events: none;
   background-color: var(--light);
+}
+.staff__layout .staff__main .staff__content .qr-cell {
+  padding: 0 !important;
+}
+.staff__layout .staff__main .staff__content .qr-cell .qr-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  padding: 8px;
+}
+.staff__layout .staff__main .staff__content .qr-cell .qr-wrapper .qr-img {
+  display: block;
+  -webkit-transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease;
+}
+.staff__layout .staff__main .staff__content .qr-cell .qr-wrapper .qr-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: -webkit-box !important;
+  display: -ms-flexbox !important;
+  display: flex !important;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  opacity: 0;
+  -webkit-transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease;
+  text-decoration: none;
+}
+.staff__layout .staff__main .staff__content .qr-cell .qr-wrapper .qr-overlay .qr-icon {
+  color: white;
+  font-size: 24px;
+}
+.staff__layout .staff__main .staff__content .qr-cell .qr-wrapper:hover .qr-overlay {
+  opacity: 1;
+}
+.staff__layout .staff__main .staff__content .qr-cell .qr-wrapper:hover .qr-img {
+  opacity: 0.3;
 }
 .staff__layout .staff__main #staff__sidebar.collapsed ~ .staff__content .pagination-bar {
   left: 60px;

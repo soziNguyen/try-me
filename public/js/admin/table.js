@@ -93,6 +93,25 @@ $(function () {
           }
           return data
         }
+      },
+      {
+        data: 'qrCode',
+        title: 'Mã QR',
+        className: 'text-center qr-cell position-relative',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `
+              <div class="qr-wrapper">
+                <img src="${data || ''}" class="qr-img" width="50" height="50">
+                <a href="${data || ''}" download="qr-table-${row.name || row._id}.png" 
+                  class="qr-overlay d-flex justify-content-center align-items-center" title="Tải mã QR">
+                  <i class="bi bi-download qr-icon"></i>
+                </a>
+              </div>
+            `
+          }
+          return data
+        }
       }
     ],
     rowCallback: function (row, data) {
