@@ -19,6 +19,7 @@ router.get(
   orderController.getTopItems
 )
 router.post('/api/orders', isAuthenticated, checkWarehouseAccess, orderController.createOrder)
+router.get('/api/order/:orderId/public', orderController.getOrderByIdPublic)
 router.get(
   '/api/orders/:orderId',
   isAuthenticated,

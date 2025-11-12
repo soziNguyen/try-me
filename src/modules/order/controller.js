@@ -266,6 +266,77 @@ export const getOrderById = async (req, res) => {
   }
 }
 
+export const getOrderByIdPublic = async (req, res) => {
+  try {
+    const { orderId } = req.params
+
+    if (!orderId) {
+      return responseHelper.error(res, 'ID không tồn tại', 404)
+    }
+
+    if (!mongoose.isValidObjectId(orderId)) {
+      return responseHelper.error(res, 'Mã đơn hàng không hợp lệ', 400)
+    }
+
+    const order = await Order.findById(orderId)
+      .populate('tableId', 'name area')
+      .populate('items.foodId', 'name price image')
+      .populate('items.comboId', 'name price image')
+      .select('_id code tableId items totalAmount status createdAt')
+      .lean()
+
+    if (!order) {
+      return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
+    }
+
+    // Format lại items để dễ hiển thị
+    const formattedItems = order.items
+      .map((item) => {
+        if (item.foodId) {
+          return {
+            _id: item.foodId._id,
+            name: item.foodId.name,
+            price: item.price || item.foodId.price,
+            quantity: item.quantity,
+            image: item.foodId.image || '/assets/images/default.png',
+            isCombo: false
+          }
+        } else if (item.comboId) {
+          return {
+            _id: item.comboId._id,
+            name: item.comboId.name,
+            price: item.price || item.comboId.price,
+            quantity: item.quantity,
+            image: item.comboId.image || '/assets/images/default.png',
+            isCombo: true
+          }
+        }
+        return null
+      })
+      .filter(Boolean)
+
+    // Response với format đơn giản
+    const response = {
+      _id: order._id,
+      code: order.code,
+      table: order.tableId
+        ? {
+            name: order.tableId.name,
+            area: order.tableId.area
+          }
+        : null,
+      items: formattedItems,
+      totalAmount: order.totalAmount,
+      status: order.status,
+      createdAt: order.createdAt
+    }
+
+    responseHelper.success(res, response)
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
 function calcOrderTotal(items = []) {
   if (!Array.isArray(items)) return 0
   return items.reduce((sum, it) => {

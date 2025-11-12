@@ -300,10 +300,11 @@ function renderCart() {
       ${cartItems.map(createCartItemHTML).join('')}
     </div>
     <div class="cart-total pt-3 border-top">
-      <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0 fw-bold">Tổng cộng:</h5>
         <h5 class="mb-0 text-danger fw-bold">${totalAmount.toLocaleString()} đ</h5>
       </div>
+      <div class="text-center text-success">Lưu ý: Giá trên chưa bao gồm phí VAT</div>
     </div>
   `
   attachCartEventListeners(cartDiv)
