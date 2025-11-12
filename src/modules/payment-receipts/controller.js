@@ -1,8 +1,7 @@
 import mongoose from 'mongoose'
-import { ProductExpense, units } from './model.js'
+import { Receipt } from './model.js'
 // import Organization from '../organization/model.js'
 import BusinessError from '../error/BusinessError.js'
-
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { generateDocumentCode } from '../../helpers/common.js'
@@ -10,16 +9,17 @@ import withTransaction from '../../helpers/withTransaction.js'
 import { lookupRef, lookupUser } from '../../helpers/lookupHelper.js'
 import { getWarehouse } from '../../helpers/warehouseHelper.js'
 
-// Tạo phiếu chi
-export const createPaymentExpense = async (req, res) => {
+export const createReceipt = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) {
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    }
 
-    const { reason, name, expenseAmount, note } = req.body
+    const { reason, note, receiptAmount, submitTer } = req.body
 
-    const expense = await withTransaction(async (session) => {
-      const code = await generateDocumentCode(ProductExpense, 'PE')
+    const receipt = await withTransaction(async (session) => {
+      const code = await generateDocumentCode(Receipt, 'RC')
       const date = new Date()
 
       let warehouse = req.body.warehouse
@@ -34,53 +34,64 @@ export const createPaymentExpense = async (req, res) => {
         organization: organizationId,
         warehouse,
         reason,
-        name,
-        expenseAmount,
-        note
+        note,
+        receiptAmount,
+        submitTer
       }
 
-      const doc = new ProductExpense(docData)
+      const doc = new Receipt(docData)
       await doc.save({ session })
       return doc
     })
 
-    responseHelper.success(res, { id: expense._id, code: expense.code })
+    responseHelper.success(res, { id: receipt._id, code: receipt.code })
   } catch (error) {
+    console.error('Lỗi khi tạo phiếu thu:', error)
     responseHelper.error(res, error.message)
   }
 }
 
-// Lấy phiếu chi theo ID
-export const getPaymentExpensesById = async (req, res) => {
+// Lấy phiếu thu theo ID
+export const getReceiptById = async (req, res) => {
   try {
     const { id } = req.params
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) {
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    }
 
-    if (!mongoose.isValidObjectId(id)) return responseHelper.error(res, 'ID không hợp lệ', 400)
+    if (!mongoose.isValidObjectId(id)) {
+      return responseHelper.error(res, 'ID không hợp lệ', 400)
+    }
 
     const matchCondition = { _id: id, organization: organizationId }
 
+    // Nếu bạn có filter theo kho (kho được phép xem)
     if (req.warehouseFilter) {
       matchCondition.warehouse = req.warehouseFilter
     }
 
-    const productExpense = await ProductExpense.findOne(matchCondition)
+    const receipt = await Receipt.findOne(matchCondition)
       .populate('warehouse', 'name location')
-      .populate('createdBy', 'username')
-      .populate('updatedBy', 'username')
-      .populate('lockedBy', 'username')
+      .populate('createdBy', 'username fullName')
+      .populate('updatedBy', 'username fullName')
+      .populate('lockedBy', 'username fullName')
+      .populate('submitTer', 'username fullName') // Người nộp tiền
 
-    if (!productExpense) return responseHelper.error(res, 'Không tìm thấy phiếu chi', 404)
+    if (!receipt) {
+      return responseHelper.error(res, 'Không tìm thấy phiếu thu', 404)
+    }
 
-    responseHelper.success(res, { productExpense, units })
+    // Trả về dữ liệu
+    responseHelper.success(res, { receipt })
   } catch (error) {
+    console.error('Lỗi khi lấy phiếu thu:', error)
     responseHelper.error(res, error.message)
   }
 }
 
-// Lấy danh sách phiếu chi
-export const getPaymentExpenses = async (req, res) => {
+// Lấy danh sách phiếu thu
+export const getReceipts = async (req, res) => {
   try {
     const draw = +req.query.draw || 0
     const start = +req.query.start || 0
@@ -91,16 +102,18 @@ export const getPaymentExpenses = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) {
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    }
 
     const matchCondition = { organization: organizationId }
 
     const warehouse = req.query.warehouse
-
     if (warehouse && warehouse !== 'all') {
       matchCondition.warehouse = new mongoose.Types.ObjectId(String(warehouse))
     }
 
+    // ====== PIPELINE XỬ LÝ DỮ LIỆU ======
     const basePipeline = [
       { $match: matchCondition },
       ...lookupRef('warehouse', 'Warehouses'),
@@ -128,6 +141,7 @@ export const getPaymentExpenses = async (req, res) => {
       })
     }
 
+    // Gom nhóm các trường cần hiển thị
     basePipeline.push({
       $group: {
         _id: '$_id',
@@ -135,21 +149,23 @@ export const getPaymentExpenses = async (req, res) => {
         date: { $first: '$date' },
         warehouse: { $first: '$warehouse' },
         reason: { $first: '$reason' },
+        submitTer: { $first: '$submitTer' },
         note: { $first: '$note' },
-        expenseAmount: { $first: '$expenseAmount' },
+        receiptAmount: { $first: '$receiptAmount' },
         createdBy: { $first: '$createdBy.username' }
       }
     })
 
+    // Sắp xếp
     basePipeline.push({ $sort: { [sortField]: sortDir } })
 
+    // ====== ĐẾM TỔNG SỐ BẢN GHI ======
     const countPipeline = [...basePipeline, { $count: 'totalCount' }]
-    const totalData = await ProductExpense.aggregate(countPipeline)
+    const totalData = await Receipt.aggregate(countPipeline)
     const recordsTotal = totalData.length > 0 ? totalData[0].totalCount : 0
-
     basePipeline.push({ $skip: start }, { $limit: length })
 
-    const data = await ProductExpense.aggregate(basePipeline)
+    const data = await Receipt.aggregate(basePipeline)
 
     return res.json({
       draw,
@@ -162,11 +178,13 @@ export const getPaymentExpenses = async (req, res) => {
   }
 }
 
-// Cập nhật phiếu chi
-export const updatePaymentExpenses = async (req, res) => {
+//Cập nhật phiếu thu
+export const updateReceipt = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    if (!organizationId) {
+      return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    }
 
     const updatedDoc = await withTransaction(async (session) => {
       const { id } = req.params
@@ -175,41 +193,49 @@ export const updatePaymentExpenses = async (req, res) => {
       const findCondition = { _id: id, organization: organizationId }
       if (req.warehouseFilter) findCondition.warehouse = req.warehouseFilter
 
-      const oldExpense = await ProductExpense.findOne(findCondition).session(session)
-      if (!oldExpense) throw new BusinessError('Phiếu chi không tồn tại', 404)
-      if (oldExpense.isLocked)
-        throw new BusinessError('Phiếu chi đã bị khóa, không thể chỉnh sửa', 400)
+      const oldReceipt = await Receipt.findOne(findCondition).session(session)
+      if (!oldReceipt) throw new BusinessError('Phiếu thu không tồn tại', 404)
+      if (oldReceipt.isLocked)
+        throw new BusinessError('Phiếu thu đã bị khóa, không thể chỉnh sửa', 400)
 
-      const { expenseAmount, reason, note } = req.body
-      const updateData = { reason, note, expenseAmount, updatedBy: req.user._id }
+      const { receiptAmount, reason, note, submitTer } = req.body
 
-      const updatedExpense = await ProductExpense.findOneAndUpdate(
+      const updateData = {
+        receiptAmount,
+        reason,
+        note,
+        submitTer,
+        updatedBy: req.user._id
+      }
+
+      const updatedReceipt = await Receipt.findOneAndUpdate(
         { _id: id, organization: organizationId },
         updateData,
         { new: true, session }
       )
 
-      if (!updatedExpense) throw new BusinessError('Cập nhật thất bại', 400)
+      if (!updatedReceipt) throw new BusinessError('Cập nhật phiếu thu thất bại', 400)
 
-      await updatedExpense.populate([
+      await updatedReceipt.populate([
         { path: 'warehouse', select: 'name location' },
-        { path: 'createdBy updatedBy lockedBy', select: 'username' }
+        { path: 'createdBy updatedBy lockedBy submitTer', select: 'username' }
       ])
 
-      return updatedExpense
+      return updatedReceipt
     })
 
-    responseHelper.success(res, updatedDoc, 'Cập nhật phiếu chi thành công')
+    responseHelper.success(res, updatedDoc, 'Cập nhật phiếu thu thành công')
   } catch (error) {
     if (error instanceof BusinessError)
       return responseHelper.error(res, error.message, error.statusCode || 400)
-    console.error('Error updating payment expense:', error)
+
+    console.error('Lỗi khi cập nhật phiếu thu:', error)
     responseHelper.error(res, error.message)
   }
 }
 
-// Xóa phiếu chi
-export const deletePaymentExpenses = async (req, res) => {
+//Xóa phiếu thu
+export const deleteReceipts = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -222,17 +248,17 @@ export const deletePaymentExpenses = async (req, res) => {
       const findCondition = { _id: { $in: ids }, organization: organizationId }
       if (req.warehouseFilter) findCondition.warehouse = req.warehouseFilter
 
-      const expenses = await ProductExpense.find(findCondition).session(session)
-      if (!expenses.length) throw new BusinessError('Không tìm thấy phiếu chi', 404)
+      const receipts = await Receipt.find(findCondition).session(session)
+      if (!receipts.length) throw new BusinessError('Không tìm thấy phiếu thu', 404)
 
-      const lockedExpenses = expenses.filter((e) => e.isLocked)
-      if (lockedExpenses.length > 0)
-        throw new BusinessError('Không thể xóa phiếu chi đã bị khóa', 400)
+      const lockedReceipts = receipts.filter((r) => r.isLocked)
+      if (lockedReceipts.length > 0)
+        throw new BusinessError('Không thể xóa phiếu thu đã bị khóa', 400)
 
-      await ProductExpense.deleteMany(findCondition).session(session)
+      await Receipt.deleteMany(findCondition).session(session)
     })
 
-    responseHelper.success(res, null, 'Xóa phiếu chi thành công')
+    responseHelper.success(res, null, 'Xóa phiếu thu thành công')
   } catch (error) {
     if (error instanceof BusinessError)
       return responseHelper.error(res, error.message, error.statusCode || 400)

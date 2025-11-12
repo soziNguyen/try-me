@@ -266,40 +266,40 @@ async function getTables(order = null) {
 
     const $select = $('#table-select')
 
-    // Kiểm tra element có tồn tại không
     if (!$select.length) {
       console.error('Không tìm thấy element #table-select')
       return
     }
 
-    // Hủy Select2 cũ nếu có
     if ($select.hasClass('select2-hidden-accessible')) {
       $select.select2('destroy')
     }
 
     const availableTables = tables.filter((t) => t.status === 'available')
+    let html = '<option value="">Chọn bàn</option>'
 
-    let html = ''
+    // Nếu order có bàn, thêm vào option đầu tiên
     if (order?.tableId?._id) {
       html += `<option value="${order.tableId._id}" selected>Bàn: ${order.tableId.name}</option>`
-    } else {
-      html += '<option value="">Chọn bàn</option>'
-      html += availableTables.map((t) => `<option value="${t._id}">${t.name}</option>`).join('')
     }
 
-    // Cập nhật HTML
+    // Thêm các bàn trống khác (tránh lặp bàn hiện tại)
+    availableTables.forEach((t) => {
+      if (!order?.tableId?._id || t._id !== order.tableId._id) {
+        html += `<option value="${t._id}">${t.name}</option>`
+      }
+    })
+
     $select.html(html)
 
-    // Khởi tạo Select2
     $select.select2({
       width: '100%',
       placeholder: 'Chọn bàn'
     })
 
-    // Disable/Enable sau khi khởi tạo
-    $select.prop('disabled', !!order?.tableId?._id)
+    // Luôn enable select để cho phép đổi bàn
+    $select.prop('disabled', false)
   } catch (error) {
-    console.error('Lỗi khi lấy danh sách bàn:', error)
     toastr.error('Không thể tải danh sách bàn')
   }
 }
@@ -309,14 +309,9 @@ $('#table-select').on('change', async function () {
   if (!tableId) return
 
   try {
-    let orderIdToAssign = null
-
-    if (emptyOrders && emptyOrders.length > 0) {
-      orderIdToAssign = emptyOrders[0]._id
-    }
-
+    const orderIdToAssign = window.location.pathname.split('/').pop()
     if (!orderIdToAssign) {
-      toastr.error('Không có order trống để gán bàn!')
+      toastr.error('Không xác định được hóa đơn để gán bàn!')
       return
     }
 
@@ -657,8 +652,6 @@ function updateOrderUI(order) {
   // Tổng tiền
   const total = calculateTotalAmount(order.items)
   totalAmountEl.textContent = `${total.toLocaleString()}đ`
-
-  syncCheckoutDetailTotal()
 }
 
 // ======== Các hàm xử lý thêm/xóa/sửa món ========

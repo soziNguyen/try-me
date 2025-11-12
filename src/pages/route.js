@@ -106,7 +106,7 @@ router.get('/product/stocks', isAuthenticated, page.productStockPage)
 
 //payment
 router.get('/payment-expenses/:id', isAuthenticated, page.newExpensesPage)
-router.get('/payment-receipts-print', isAuthenticated, page.receiptPrint)
+router.get('/payment-receipts/:id', isAuthenticated, page.newReceiptsPage)
 router.get('/payment-receipts', isAuthenticated, page.receiptsPage)
 router.get('/payment-expenses', isAuthenticated, page.expensesPage)
 
