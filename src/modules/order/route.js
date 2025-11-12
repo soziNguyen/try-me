@@ -74,9 +74,5 @@ router.post(
   orderController.assignTableToOrder
 )
 
-router.post(
-  '/api/order/:orderId/add-items',
-  isAuthenticated,
-  orderController.submitOrderFromCustomer
-)
+router.post('/api/order/:orderId/add-items', orderController.submitOrderFromCustomer)
 export default router

@@ -2,10 +2,12 @@
 const CART_COOKIE_NAME = 'cart_items'
 let allItems = []
 let currentSearchResults = []
+const tableId = getQueryParam('tableId') || ''
 
 // INITIALIZATION
 document.addEventListener('DOMContentLoaded', async () => {
   updateCartQuantity()
+  updateTotalPrice()
   initSearchInput()
   await loadMenuData()
   initCartModal()
@@ -37,8 +39,12 @@ function initSearchInput() {
 async function runSearch(keyword) {
   try {
     const [menuRes, comboRes] = await Promise.all([
-      fetch(`/api/menu/search?s=${encodeURIComponent(keyword)}`),
-      fetch(`/api/menu/combo/search?s=${encodeURIComponent(keyword)}`)
+      fetch(
+        `/api/menu/search?s=${encodeURIComponent(keyword)}&tableId=${encodeURIComponent(tableId)}`
+      ),
+      fetch(
+        `/api/menu/combo/search?s=${encodeURIComponent(keyword)}&tableId=${encodeURIComponent(tableId)}`
+      )
     ])
 
     const menuData = menuRes.ok ? await menuRes.json() : { data: [] }
@@ -63,8 +69,8 @@ async function runSearch(keyword) {
 async function loadMenuData() {
   try {
     const [foods, combos] = await Promise.all([
-      ajax('/api/menu/get/active', {}, 'GET'),
-      ajax('/api/menu/combos/active', {}, 'GET')
+      ajax(`/api/menu/get/active`, { tableId }, 'GET'),
+      ajax(`/api/menu/combos/active`, { tableId }, 'GET')
     ])
 
     if (!Array.isArray(foods)) return
@@ -102,11 +108,12 @@ function renderCategories(categories) {
   if (!categoryList) return
 
   categoryList.innerHTML = `
-    <button class="btn btn-outline-danger active" data-action="all">Tất cả</button>
-    <button class="btn btn-outline-success" data-action="combo">Combo</button>
+    <button class="btn btn-outline-danger active category-btn" data-action="all">Tất cả</button>
+    <button class="btn btn-outline-success category-btn" data-action="combo">Combo</button>
     ${categories
       .map(
-        (cate) => `<button class="btn btn-outline-primary" data-category="${cate}">${cate}</button>`
+        (cate) =>
+          `<button class="btn btn-outline-primary category-btn" data-category="${cate}">${cate}</button>`
       )
       .join('')}
   `
@@ -156,23 +163,23 @@ function createMenuItemHTML(item) {
   const name = item.name || (item.isCombo ? 'Combo không rõ tên' : 'Không rõ tên')
   const price = typeof item.price === 'number' ? item.price : 0
   const priceFormatted = price.toLocaleString()
-  const comboItemsList = getComboItemsList(item)
+  // const comboItemsList = getComboItemsList(item)
 
   return `
     <div class="col">
-      <div class="card shadow h-100 rounded-3 p-3">
+      <div class="card shadow h-100 rounded-3 p-3 menu-card-mobile">
         <img src="${imgSrc}" alt="${name}" class="card-img-top">
         <div class="card-body d-flex flex-column px-0 pb-0">
           <h5 class="card-title fw-semibold">${name}</h5>
-          ${item.isCombo ? `<p class="card-text text-secondary">Gồm: ${comboItemsList}</p>` : ''}
+          <p class="card-text text-secondary combo-text">${item.isCombo ? item.note || '' : item.description}</p>
           <p class="card-text text-danger fw-bold fs-5 flex-grow-1">Giá: ${priceFormatted} đ</p>
           <button 
-            class="btn ${item.isCombo ? 'btn-success' : 'btn-primary'} btn-sm rounded-pill px-3 mt-auto btn-add-to-order"
+            class="btn ${item.isCombo ? 'btn-success' : 'btn-primary'} rounded-1 px-4 py-2 py mt-auto ms-auto btn-add-to-order"
             data-id="${item._id}"
             data-name="${name}"
             data-price="${price}"
-            data-is-combo="${item.isCombo}">
-            <i class="bi bi-bag-plus"></i> Thêm${item.isCombo ? ' combo' : ''}
+            data-is-combo="${item.isCombo}"
+            data-image="${item.image || '/assets/images/default.png'}">Thêm
           </button>
         </div>
       </div>
@@ -185,10 +192,10 @@ function getImageSrc(image) {
   return image.startsWith('/') || image.startsWith('http') ? image : '/uploads/' + image
 }
 
-function getComboItemsList(item) {
-  if (!item.isCombo || !Array.isArray(item.items)) return ''
-  return item.items.map((i) => i.menuItem?.name || 'Không rõ món').join(', ')
-}
+// function getComboItemsList(item) {
+//   if (!item.isCombo || !Array.isArray(item.items)) return ''
+//   return item.items.map((i) => i.menuItem?.name || 'Không rõ món').join(', ')
+// }
 
 function attachMenuEventListeners(menuDiv) {
   menuDiv.querySelectorAll('.btn-add-to-order').forEach((button) => {
@@ -197,7 +204,8 @@ function attachMenuEventListeners(menuDiv) {
         _id: button.dataset.id,
         name: button.dataset.name,
         price: Number(button.dataset.price),
-        isCombo: button.dataset.isCombo === 'true'
+        isCombo: button.dataset.isCombo === 'true',
+        image: button.dataset.image || '/assets/images/default.png'
       }
       addToCart(item)
     })
@@ -207,12 +215,16 @@ function attachMenuEventListeners(menuDiv) {
 // CART
 function initCartModal() {
   const cartIcon = document.getElementById('cartIcon')
-  const cartModalEl = document.getElementById('cartModal')
-  const cartModal = new bootstrap.Modal(cartModalEl)
+  const viewCart = document.getElementById('btnViewCart')
 
   cartIcon?.addEventListener('click', () => {
+    showModal('cartModal').show()
     renderCart()
-    cartModal.show()
+  })
+
+  viewCart?.addEventListener('click', () => {
+    showModal('cartModal').show()
+    renderCart()
   })
 }
 
@@ -223,6 +235,15 @@ function getCartItems() {
 
 function setCartItems(items) {
   TFunc.setCookie(CART_COOKIE_NAME, JSON.stringify(items), 7 * 24 * 60 * 60 * 1000, '/')
+}
+
+function updateTotalPrice() {
+  const cartItems = getCartItems()
+  const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const totalPriceEl = document.getElementById('cartTotalPrice')
+  if (totalPriceEl) {
+    totalPriceEl.textContent = totalPrice.toLocaleString()
+  }
 }
 
 function updateCartQuantity() {
@@ -236,7 +257,6 @@ function updateCartQuantity() {
 
 function addToCart(item) {
   const cart = getCartItems()
-  console.log(cart)
 
   const index = cart.findIndex((i) => i._id === item._id && i.isCombo === item.isCombo)
   if (index >= 0) {
@@ -246,9 +266,11 @@ function addToCart(item) {
   }
 
   setCartItems(cart)
+  toastr.remove()
   toastr.success(`${item.name} đã được thêm vào giỏ`)
   renderCart()
   updateCartQuantity()
+  updateTotalPrice()
 }
 
 function removeFromCart(index) {
@@ -257,6 +279,7 @@ function removeFromCart(index) {
   setCartItems(cart)
   renderCart()
   updateCartQuantity()
+  updateTotalPrice()
 }
 
 // CART RENDERING
@@ -266,7 +289,7 @@ function renderCart() {
   if (!cartDiv) return
 
   if (cartItems.length === 0) {
-    cartDiv.innerHTML = '<p>Chưa có món nào trong giỏ</p>'
+    cartDiv.innerHTML = '<p class="m-0">Chưa có món nào trong giỏ</p>'
     return
   }
 
@@ -290,7 +313,7 @@ function createCartItemHTML(item, index) {
   return `
     <div class="cart-item d-flex align-items-center mb-3 p-2 border rounded">
       <img 
-        src="${item.image || '/assets/images/default.png'}" 
+        src="${item.image}" 
         alt="${item.name}" 
         class="cart-item-img"
       >
@@ -343,6 +366,7 @@ function attachCartEventListeners(cartDiv) {
       setCartItems(cart)
       renderCart()
       updateCartQuantity()
+      updateTotalPrice()
     })
   })
 
@@ -355,6 +379,7 @@ function attachCartEventListeners(cartDiv) {
       setCartItems(cart)
       renderCart()
       updateCartQuantity()
+      updateTotalPrice()
     })
   })
 }
@@ -386,7 +411,9 @@ function submitOrder() {
         toastr.success('Gửi đơn hàng thành công!')
         TFunc.deleteCookie('cart_items', '/')
         updateCartQuantity()
+        updateTotalPrice()
         renderCart()
+        hideModal('cartModal')
       }
     } catch (error) {
       console.error('Lỗi gửi đơn hàng:', error)

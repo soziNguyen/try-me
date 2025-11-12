@@ -120,5 +120,5 @@ router.get('/organization/:id', isAuthenticated, isAdmin, page.orgDetailPage)
 router.get('/plan-transactions', isAuthenticated, isAdmin, page.planTransactionPage)
 router.get('/checkout/:id/invoice', isAuthenticated, page.planInvoicePage)
 router.get('/admin/payment-methods', isAuthenticated, isAdmin, page.paymentMethodForAdminPage)
-router.get('/cart', isAuthenticated, page.customerUI)
+router.get('/cart', page.customerUI)
 export default router
