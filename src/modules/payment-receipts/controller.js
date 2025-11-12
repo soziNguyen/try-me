@@ -19,10 +19,13 @@ export const createReceipt = async (req, res) => {
     const { reason, note, receiptAmount, submitTer } = req.body
 
     const receipt = await withTransaction(async (session) => {
-      // Sinh mã phiếu tự động, ví dụ: RC0001
       const code = await generateDocumentCode(Receipt, 'RC')
       const date = new Date()
-      const warehouse = req.body.warehouse || (await getWarehouse(req, organizationId))
+
+      let warehouse = req.body.warehouse
+      if (warehouse === 'all' || !warehouse) {
+        warehouse = await getWarehouse(req, organizationId)
+      }
 
       const docData = {
         code,
@@ -33,7 +36,7 @@ export const createReceipt = async (req, res) => {
         reason,
         note,
         receiptAmount,
-        submitTer: submitTer || null
+        submitTer
       }
 
       const doc = new Receipt(docData)
@@ -146,6 +149,7 @@ export const getReceipts = async (req, res) => {
         date: { $first: '$date' },
         warehouse: { $first: '$warehouse' },
         reason: { $first: '$reason' },
+        submitTer: { $first: '$submitTer' },
         note: { $first: '$note' },
         receiptAmount: { $first: '$receiptAmount' },
         createdBy: { $first: '$createdBy.username' }
@@ -200,7 +204,7 @@ export const updateReceipt = async (req, res) => {
         receiptAmount,
         reason,
         note,
-        submitTer: submitTer || oldReceipt.submitTer,
+        submitTer,
         updatedBy: req.user._id
       }
 
@@ -229,6 +233,7 @@ export const updateReceipt = async (req, res) => {
     responseHelper.error(res, error.message)
   }
 }
+
 //Xóa phiếu thu
 export const deleteReceipts = async (req, res) => {
   try {

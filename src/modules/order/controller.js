@@ -1266,8 +1266,6 @@ export const getOrders = async (req, res) => {
 
     const warehouse = req.query.warehouse
 
-    console.log(warehouse)
-
     if (req.warehouseFilter) {
       // Staff user - chỉ thấy kho được gán
       match.warehouse = req.warehouseFilter

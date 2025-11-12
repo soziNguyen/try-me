@@ -697,22 +697,29 @@ export const receiptsPage = (req, res) => {
   )
 }
 
+export const newReceiptsPage = async (req, res) => {
+  const paymentReceiptsId = req.params.id
+  const mode = req.query.mode || ''
+  const isNew = mode === 'new' ? 'Thêm Phiếu Thu' : 'Thu Tiết Phiếu Thu'
+
+  res.render(
+    'revenue-expenditure/payment-receipts-detail',
+    getPageData(req, isNew, 'Payment Receipts Detail', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ PHIẾU THU',
+      paymentReceiptsId,
+      userRole: req.user.role,
+      currentOrgId: req.user.organization
+    })
+  )
+}
+
 export const expensesPage = (req, res) => {
   res.render(
     'revenue-expenditure/payment-expenses',
     getPageData(req, 'Phiếu Chi', 'PaymentExpenses', {
       headerClass: 'admin__header',
       pageTitle: 'Phiếu Chi'
-    })
-  )
-}
-
-export const receiptPrint = (req, res) => {
-  res.render(
-    'revenue-expenditure/payment-receipts-print',
-    getPageData(req, 'In Phiếu', 'ReceiptsPrint', {
-      headerClass: 'admin__header',
-      pageTitle: 'In Phiếu'
     })
   )
 }

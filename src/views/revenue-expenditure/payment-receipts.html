@@ -69,13 +69,28 @@
         </div>
       </div>
 
-      <table id="receiptTable" class="table table-bordered">
-        <tbody id="receiptTableBody"></tbody>
+
+      <table id="receiptTable1" class="table table-bordered">
+        <tbody id="receiptTableBody1"></tbody>
       </table>
 
-      <div class="mt-3">
-        <button id="printBtn" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> In báo cáo</button>
-      </div>
+      <table id="receiptTable2" class="table table-bordered mt-3 mb-4">
+        <h6 class="mb-0 fw-semibold">Tổng doanh thu theo hóa đơn</h6>
+        <thead>
+          <tr>
+            <th class="text-center">Bàn</th>
+            <th class="text-center">Khách hàng</th>
+            <th class="text-center">Món</th>
+            <th class="text-center">Tổng tiền trước thuế</th>
+            <th class="text-center">VAT</th>
+            <th class="text-center">Tổng tiền</th>
+            <th class="text-center">Thời gian</th>
+            <th class="text-center">Chi tiết</th>
+          </tr>
+        </thead>
+        <tbody id="receiptTableBody2"></tbody>
+      </table>
+
     </div>
 
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
@@ -83,4 +98,5 @@
     <%- include('../partials/commonjs.html') %>
       <script src="/js/payment-receipts.js"></script>
       <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/data-table.js"></script>
       <%- include('../partials/footer.html') %>
