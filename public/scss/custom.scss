@@ -593,9 +593,13 @@ input[type='text']::-ms-clear {
 .cus-nav {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   height: 40px;
   padding: 16px 0;
+
+  .header {
+    margin-top: 16px;
+  }
 
   .cart-icon {
     position: relative;
@@ -625,7 +629,6 @@ input[type='text']::-ms-clear {
   #foodMenuCol {
     .card-img-top {
       height: 200px;
-      background-position: left;
     }
   }
 }
@@ -667,6 +670,85 @@ input[type='text']::-ms-clear {
     background: white;
     position: sticky;
     bottom: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .order-card {
+    #foodMenuCol {
+      #categoryList {
+        padding-bottom: 0.5rem;
+        .category-btn {
+          font-size: 0.75rem;
+          padding: 0.25rem 0.5rem;
+        }
+      }
+
+      #foodMenu {
+        max-height: 547px;
+        overflow-y: auto;
+
+        .menu-card-mobile {
+          display: flex !important;
+          flex-direction: row !important;
+          padding: 0.75rem !important;
+          gap: 0.75rem;
+
+          .card-img-top {
+            width: 100px !important;
+            height: 100px !important;
+            margin-bottom: auto !important;
+            margin-top: auto !important;
+            object-fit: cover;
+            border-radius: 8px;
+            flex-shrink: 0;
+          }
+
+          .card-body {
+            flex: 1;
+            min-width: 0;
+            padding: 0 !important;
+            display: flex;
+            flex-direction: column;
+          }
+
+          .card-title {
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+
+          .card-text {
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+          }
+
+          .combo-text {
+            min-height: 2.4em;
+            line-height: 1.2;
+          }
+
+          .btn-add-to-order {
+            width: auto;
+            align-self: flex-start;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.85rem;
+          }
+        }
+
+        .col {
+          &:last-child {
+            margin-bottom: 5rem;
+          }
+        }
+      }
+    }
   }
 }
 //================= Responsive =================//

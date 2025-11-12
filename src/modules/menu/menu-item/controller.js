@@ -5,6 +5,7 @@ import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import Organization from '../../organization/model.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
+import Table from '../../table/model.js'
 
 export const getActiveMenusForRecipe = async (req, res) => {
   try {
@@ -46,7 +47,19 @@ export const getActiveMenusForRecipe = async (req, res) => {
 
 export const getActiveMenus = async (req, res) => {
   try {
-    const organizationId = getCurrentOrg(req)
+    let organizationId = getCurrentOrg(req)
+    let warehouseFilter = req.warehouseFilter || null
+
+    // Nếu chưa đăng nhập (quét QR) -> lấy từ tableId
+    if (!req.isAuthenticated?.() && req.query.tableId) {
+      const tableId = req.query.tableId.replace(/\?$/, '')
+      const table = await Table.findById(tableId).select('organization warehouse')
+      if (!table) return responseHelper.error(res, 'Bàn không tồn tại', 404)
+
+      organizationId = table.organization
+      warehouseFilter = table.warehouse
+    }
+
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const matchCondition = {
@@ -55,11 +68,9 @@ export const getActiveMenus = async (req, res) => {
     }
 
     // Warehouse filtering logic
-    if (req.warehouseFilter) {
-      // Staff user - chỉ thấy kho được gán
-      matchCondition.warehouse = req.warehouseFilter
+    if (warehouseFilter) {
+      matchCondition.warehouse = warehouseFilter
     } else {
-      // Admin/Org - sử dụng defaultWarehouse
       const org = await Organization.findById(organizationId).select('defaultWarehouse')
       if (org?.defaultWarehouse) {
         matchCondition.warehouse = org.defaultWarehouse
@@ -389,12 +400,31 @@ export const deleteMenus = async (req, res) => {
 export const searchMenus = async (req, res) => {
   try {
     const keyword = (req.query.s || '').trim()
-    const organizationId = getCurrentOrg(req)
+    let organizationId = getCurrentOrg(req)
+    let warehouseFilter = req.warehouseFilter || null
+
+    if (!req.isAuthenticated?.() && req.query.tableId) {
+      const tableId = req.query.tableId.replace(/\?$/, '') // loại bỏ ? nếu có
+      const table = await Table.findById(tableId).select('organization warehouse')
+      if (!table) return responseHelper.error(res, 'Bàn không tồn tại', 404)
+
+      organizationId = table.organization
+      warehouseFilter = table.warehouse
+    }
+
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!keyword) return responseHelper.success(res, [])
 
-    const warehouse = await getWarehouse(req, organizationId)
+    // Lấy warehouse nếu chưa có
+    if (!warehouseFilter) {
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (!org?.defaultWarehouse) {
+        return responseHelper.error(res, 'Tổ chức chưa thiết lập kho mặc định', 400)
+      }
+      warehouseFilter = org.defaultWarehouse
+    }
+
     const searchRegex = new RegExp(keyword, 'i')
 
     const pipeline = [
@@ -403,7 +433,7 @@ export const searchMenus = async (req, res) => {
         $match: {
           isActive: true,
           organization: organizationId,
-          warehouse, // lọc theo kho hiện tại
+          warehouse: warehouseFilter, // lọc theo kho hiện tại
           $or: [{ name: { $regex: searchRegex } }, { sku: { $regex: searchRegex } }]
         }
       },

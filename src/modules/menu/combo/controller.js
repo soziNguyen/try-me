@@ -5,10 +5,23 @@ import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import Organization from '../../organization/model.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
+import Table from '../../table/model.js'
 
 export const getActiveCombos = async (req, res) => {
   try {
-    const organizationId = getCurrentOrg(req)
+    let organizationId = getCurrentOrg(req)
+    let warehouseFilter = req.warehouseFilter || null
+
+    // Nếu chưa đăng nhập (khách quét QR) -> lấy org & warehouse từ tableId
+    if (!req.isAuthenticated?.() && req.query.tableId) {
+      const tableId = req.query.tableId.replace(/\?$/, '') // loại bỏ ? nếu có
+      const table = await Table.findById(tableId).select('organization warehouse')
+      if (!table) return responseHelper.error(res, 'Bàn không tồn tại', 404)
+
+      organizationId = table.organization
+      warehouseFilter = table.warehouse
+    }
+
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const matchCondition = {
@@ -17,9 +30,8 @@ export const getActiveCombos = async (req, res) => {
     }
 
     // Warehouse filtering logic
-    if (req.warehouseFilter) {
-      // Staff user - chỉ thấy kho được gán
-      matchCondition.warehouse = req.warehouseFilter
+    if (warehouseFilter) {
+      matchCondition.warehouse = warehouseFilter
     } else {
       // Admin/Org - sử dụng defaultWarehouse
       const org = await Organization.findById(organizationId).select('defaultWarehouse')
@@ -27,6 +39,7 @@ export const getActiveCombos = async (req, res) => {
         matchCondition.warehouse = org.defaultWarehouse
       }
     }
+
     const combo = await Combo.find(matchCondition).populate('items.menuItem', '_id name')
     responseHelper.success(res, combo)
   } catch (error) {
@@ -74,7 +87,7 @@ export const getCombos = async (req, res) => {
       const orConditions = [
         { sku: { $regex: searchValue, $options: 'i' } },
         { name: { $regex: searchValue, $options: 'i' } },
-        { description: { $regex: searchValue, $options: 'i' } },
+        { note: { $regex: searchValue, $options: 'i' } },
         { 'menuItem.name': { $regex: searchValue, $options: 'i' } }
       ]
       if (!isNaN(searchNumber)) {
@@ -298,18 +311,35 @@ export const deleteCombos = async (req, res) => {
 export const searchCombos = async (req, res) => {
   try {
     const keyword = (req.query.s || '').trim()
-    const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    let organizationId = getCurrentOrg(req)
+    let warehouseFilter = req.warehouseFilter || null
 
+    // Khách chưa đăng nhập nhưng có tableId
+    if (!req.isAuthenticated?.() && req.query.tableId) {
+      const tableId = req.query.tableId.replace(/\?$/, '') // loại bỏ ? nếu có
+      const table = await Table.findById(tableId).select('organization warehouse')
+      if (!table) return responseHelper.error(res, 'Bàn không tồn tại', 404)
+
+      organizationId = table.organization
+      warehouseFilter = table.warehouse
+    }
+
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     if (!keyword) return responseHelper.success(res, [])
 
-    // Lấy kho hiện tại
-    const warehouse = await getWarehouse(req, organizationId)
+    // Lấy warehouse nếu chưa có
+    if (!warehouseFilter) {
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (!org?.defaultWarehouse) {
+        return responseHelper.error(res, 'Tổ chức chưa thiết lập kho mặc định', 400)
+      }
+      warehouseFilter = org.defaultWarehouse
+    }
 
-    // Tìm combo theo tổ chức + kho + keyword
+    // Query combos theo organization + warehouse + keyword
     const combos = await Combo.find({
       organization: organizationId,
-      warehouse,
+      warehouse: warehouseFilter,
       $or: [
         { name: { $regex: keyword, $options: 'i' } },
         { sku: { $regex: keyword, $options: 'i' } }
@@ -318,11 +348,11 @@ export const searchCombos = async (req, res) => {
       .populate('items.menuItem', '_id name')
       .lean()
 
-    // Format kết quả
     const formattedCombos = combos.map((combo) => ({
       _id: combo._id,
       sku: combo.sku || '',
       name: combo.name || 'Combo không rõ tên',
+      note: combo.note || '',
       image: combo.image || '',
       price: Number(combo.price) || 0,
       isCombo: true,

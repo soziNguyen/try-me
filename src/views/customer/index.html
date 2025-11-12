@@ -1,6 +1,11 @@
 <%- include('../partials/header.html') %>
   <div class="container container-xl">
     <div class="cus-nav">
+      <div class="header">
+        <button id="btnViewOrder" class="btn btn-success me-1">Xem đơn</button>
+        <button id="btnContactToStaff" class="btn btn-warning me-1">Gọi nhân viên</button>
+        <button id="btnChat" class="btn btn-danger">Chat</button>
+      </div>
       <div class="cart-icon" id="cartIcon">
         <i class="bi bi-cart"></i>
         <span class="cart-quantity"></span>
@@ -10,7 +15,7 @@
     <div class="order order-card">
       <div class="row ">
         <div class="col-lg" id="foodMenuCol">
-          <div class="search-form position-relative d-flex align-items-center mb-4 mt-3" id="search-menu">
+          <div class="search-form position-relative d-flex align-items-center mt-4 mb-3" id="search-menu">
             <i class="bi bi-search position-absolute end-0 translate-middle-x me-2 fs-5"></i>
             <input type="text" id="searchMenuInput" class="form-control" placeholder="Tìm kiếm" />
           </div>
@@ -22,6 +27,10 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="fixed-bottom p-3 bg-white border-top d-md-none d-flex justify-content-between align-items-center">
+      <h5 class="text-danger fw-semibold"><span id="cartTotalPrice">0</span> đ</h5>
+      <button type="button" id="btnViewCart" class="btn btn-success">Xem giỏ hàng</button>
     </div>
   </div>
 
@@ -39,7 +48,6 @@
       </div>
     </div>
   </div>
-  <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
 
   <%- include('../partials/commonjs.html') %>
     <script src="/js/sidebar-toggle.js"></script>

@@ -5,7 +5,6 @@ const comboSchema = new mongoose.Schema(
     sku: { type: String, default: '' }, // mã combo
     name: { type: String, required: true }, // tên combo
     image: { type: String, default: '' }, // ảnh đại diện
-    description: { type: String, default: '' }, // mô tả combo
     items: [
       {
         menuItem: {

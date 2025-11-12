@@ -2,6 +2,11 @@ import Organization from '../modules/organization/model.js'
 import BusinessError from '../modules/error/BusinessError.js'
 
 export const checkWarehouseAccess = (req, res, next) => {
+  // Nếu chưa đăng nhập thì bỏ qua
+  if (!req.user || req.isUnauthenticated?.()) {
+    return next()
+  }
+
   const { role, warehouse } = req.user
 
   if (['Admin', 'Org'].includes(role)) return next()

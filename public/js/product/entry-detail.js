@@ -344,8 +344,9 @@ $(function () {
         const quantity = $(this).find('input[name*="[quantity]"]').val()
         const unit = $(this).find('select[name*="[unit]"]').val()
         const unitPrice = $(this).find('input[name*="[unitPrice]"]').val()
+        console.table({ productId, quantity, unit, unitPrice })
 
-        if (!productId && !quantity && !unitPrice && !unit) {
+        if ([productId, quantity, unit, unitPrice].every((v) => v === '' || v == null)) {
           $(this).remove()
         }
       })
@@ -373,7 +374,7 @@ $(function () {
       const unit = $(this).find('select[name*="[unit]"]').val()
       const unitPrice = parseFloat($(this).find('input[name*="[unitPrice]"]').val())
 
-      if (productId && quantity && unitPrice) {
+      if (productId && quantity && unitPrice !== '' && unitPrice != null) {
         const itemTotal = quantity * unitPrice
         subTotal += itemTotal
 
