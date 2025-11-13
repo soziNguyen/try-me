@@ -2,211 +2,287 @@ $(function () {
   let table
   let warehouses = []
 
-  // Load danh sách kho trước khi khởi tạo DataTable
-  $.get('/api/inventory/warehouse/all')
-    .done((res) => {
-      // Đảm bảo warehouses luôn là array
-      warehouses = Array.isArray(res) ? res : res.data || []
+  // 1. Lấy danh sách kho và khởi tạo bảng
+  Promise.all([fetchData('inventory/warehouse/all')])
+    .then(([whs]) => {
+      warehouses = whs
       initDataTable()
+      initOrderTable()
     })
-    .fail((err) => {
-      toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
+    .catch((err) => {
+      toastr.error('Không load được danh sách kho', err)
+      initDataTable()
+      initOrderTable()
     })
 
-  // Tính số dòng hiển thị dựa trên chiều cao cửa sổ
-  const showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#receiptTableBody').offset().top - 120) / 45)
-  if (!showList.includes(numRows)) showList.push(numRows)
-  showList.sort((a, b) => a - b)
-
+  // 2. Khởi tạo DataTable phiếu thu
   function initDataTable() {
-    table = $('#receiptTable').DataTable({
+    const showList = getPageLengthOptions()
+    const numRows = getNumRows()
+
+    if (!showList.includes(numRows)) showList.push(numRows)
+    showList.sort((a, b) => a - b)
+
+    table = $('#receiptTable1').DataTable({
+      dom: getDomStructure(),
       serverSide: true,
       processing: true,
-      autoWidth: false,
+      autoWidth: true,
+      scrollX: true,
       order: [],
-      dom:
-        '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
-        'l' +
-        '<"right-group d-flex align-items-center btn-group flex-wrap">' +
-        'f' +
-        '>' +
-        'rt' +
-        '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       ajax: {
-        url: '/api/orders/get',
+        url: '/api/payment-receipts',
         method: 'GET',
-        data: function (d) {
-          d.startDate = $('#startDate').val()
-          d.endDate = $('#endDate').val()
-          d.warehouse = $('#warehouseFilter').val() || 'all'
-        },
-        dataSrc: function (response) {
-          const summary = response.summary || {}
-          $('#summary-total-orders').text(summary.totalOrders || 0)
-          $('#summary-total-amount').text((summary.totalAmount || 0).toLocaleString('vi-VN'))
-          return response.data
-        }
+        data: (d) => ({
+          ...d,
+          warehouse: $('#warehouseFilter').val() || 'all'
+        })
       },
       lengthMenu: [showList, showList],
-      language: {
-        search: '',
-        searchPlaceholder: 'Tìm kiếm',
-        lengthMenu: `_MENU_ chi tiết hóa đơn`,
-        info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ hóa đơn',
-        infoEmpty: 'Không có bản ghi nào',
-        infoFiltered: '(được lọc từ tổng _MAX_ hóa đơn)',
-        zeroRecords: 'Không tìm thấy kết quả phù hợp',
-        emptyTable: 'Không có dữ liệu trong bảng'
-      },
       pageLength: numRows,
-      columns: [
-        {
-          data: 'table',
-          title: 'Bàn',
-          render: (data, type) => {
-            const tableName = data?.name || 'Mang về'
-            return type === 'display'
-              ? `<span class="number form-control border-0 text-start">${tableName}</span>`
-              : (data ?? '')
-          }
-        },
-        {
-          data: 'customer',
-          title: 'Khách hàng',
-          render: (customer, type) => {
-            const name = customer?.name?.trim() ? customer.name : 'Khách lẻ'
-            return type === 'display'
-              ? `<span class="text form-control border-0">${name}</span>`
-              : name
-          }
-        },
-        {
-          data: 'items',
-          title: 'Món ăn',
-          render: (data, type) => {
-            if (type !== 'display') return data
-            if (!data?.length) return `<span class="text form-control border-0">0 món</span>`
-
-            const names = data.map((i) => i.foodName || i.comboName || '').filter((n) => n)
-            let displayNames = names.slice(0, 3).join(', ')
-            if (names.length > 3) displayNames += ` +${names.length - 3} món`
-            return `<span class="text form-control border-0">${displayNames}</span>`
-          }
-        },
-        {
-          data: 'totalPayable',
-          title: 'Tổng tiền trước thuế',
-          render: (data, type) =>
-            type === 'display'
-              ? `<span class="number form-control border-0">${Number(data || 0).toLocaleString('vi-VN')}</span>`
-              : data
-        },
-        {
-          data: 'vatRate',
-          title: 'VAT',
-          render: (data, type) =>
-            type === 'display'
-              ? `<span class="text form-control border-0 text-end">${data ?? 0} %</span>`
-              : (data ?? 0)
-        },
-        {
-          data: 'total',
-          title: 'Tổng tiền',
-          render: (data, type) =>
-            type === 'display'
-              ? `<span class="number form-control border-0">${Number(data || 0).toLocaleString('vi-VN')}</span>`
-              : data
-        },
-        {
-          data: 'updatedAt',
-          title: 'Thời gian',
-          render: (data, type) => {
-            if (type !== 'display') return data
-            const dt = new Date(data)
-            return `<span class="text form-control border-0">${dt.toLocaleString('vi-VN', {
-              hour: '2-digit',
-              minute: '2-digit',
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric'
-            })}</span>`
-          }
-        },
-        {
-          data: null,
-          orderable: false,
-          className: 'text-center',
-          width: '100px',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `
-                <button class="btn btn-sm btn-outline-primary my-1 detail-btn" 
-                        data-id="${row._id}" 
-                        title="Xem chi tiết">
-                  <i class="bi bi-eye"></i> Chi tiết
-                </button>`
-            }
-            return ''
-          }
-        }
-      ],
+      language: getDataTableLanguage(),
+      columns: getColumns(),
       rowCallback: (row, data) => $(row).attr('data-id', data._id),
-      initComplete: function () {
-        // Thêm filter chọn kho
-        const selectHtml = `
-          <select id="warehouseFilter" class="form-select">
-            <option value="all">Tất cả kho</option>
-            ${warehouses.map((w) => `<option value="${w._id}">${w.name}</option>`).join('')}
-          </select>
-        `
-        $('.right-group').html(selectHtml)
+      initComplete: setupTableControls
+    })
+  }
 
-        $('#warehouseFilter').on('change', function () {
-          table.ajax.reload()
-        })
+  // 3. Khởi tạo bảng đơn hàng
+  function initOrderTable() {
+    $.ajax({
+      url: '/api/orders/get',
+      method: 'GET',
+      success: function (res) {
+        const data = res.data || res
+        const tbody = $('#receiptTableBody2')
+        tbody.empty()
 
-        // Nút xem chi tiết
-        $(document).on('click', '.detail-btn', function () {
-          const id = $(this).data('id')
-          window.location.href = `/receipt/${id}?from=payment-receipt`
-        })
+        updateOrderSummary(res.summary)
+
+        if (!data.length) {
+          tbody.append(
+            `<tr><td colspan="8" class="text-center text-muted">Không có đơn hàng nào</td></tr>`
+          )
+          return
+        }
+
+        data.forEach((order) => tbody.append(buildOrderRow(order)))
+      },
+      error: function (xhr) {
+        console.error('Lỗi tải đơn hàng:', xhr)
+        toastr.error('Không thể tải danh sách đơn hàng')
       }
     })
   }
 
-  // Filter & reload table
-  $('#filterDateBtn').on('click', function () {
-    table.ajax.reload()
-    $('#toggleFilterBtn').dropdown('hide')
+  function getNumRows() {
+    return Math.floor(($(window).height() - $('#receiptTableBody1').offset().top - 100) / 45)
+  }
 
-    const start = $('#startDate').val()
-    const end = $('#endDate').val()
-    if (start && end) {
-      $('#toggleFilterBtn').html(`<i class="bi bi-calendar3 me-2"></i> ${start} → ${end}`)
-    } else {
-      $('#toggleFilterBtn').html(`<i class="bi bi-calendar3 me-2"></i> Chọn ngày lọc`)
-    }
-  })
+  function getPageLengthOptions() {
+    return [10, 25, 50, 100]
+  }
 
-  // Print table data
-  $('#printBtn').on('click', function () {
-    const summary = {
-      totalOrders: $('#summary-total-orders').text(),
-      totalAmount: $('#summary-total-amount').text()
-    }
-    const tableData = table.rows({ search: 'applied' }).data().toArray()
-
-    localStorage.setItem(
-      'printData',
-      JSON.stringify({
-        summary,
-        tableData,
-        startDate: $('#startDate').val(),
-        endDate: $('#endDate').val()
-      })
+  function getDomStructure() {
+    return (
+      '<"top-bar d-flex align-items-center justify-content-between flex-wrap"l' +
+      'f' +
+      '<"right-group d-flex align-items-center btn-group flex-wrap">' +
+      '>' +
+      'rt' +
+      '<"bottom-bar d-flex justify-content-between mt-3"ip>'
     )
+  }
 
-    window.open('/payment-receipts-print', '_blank')
+  function getDataTableLanguage() {
+    return {
+      search: '',
+      searchPlaceholder: 'Tìm kiếm',
+      lengthMenu: `_MENU_ phiếu thu mỗi trang`,
+      info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ phiếu thu',
+      infoEmpty: 'Không có bản ghi nào',
+      infoFiltered: '(được lọc từ tổng _MAX_ phiếu thu)',
+      zeroRecords: 'Không tìm thấy kết quả phù hợp',
+      emptyTable: 'Không có dữ liệu trong bảng'
+    }
+  }
+
+  function getColumns() {
+    return [
+      {
+        data: null,
+        title: '<input type="checkbox" id="selectAll">',
+        orderable: false,
+        className: 'text-center',
+        render: (data, type, row) =>
+          `<input type="checkbox" class="paymentReceiptsCheckbox" data-id="${row._id}">`
+      },
+      {
+        data: 'code',
+        title: 'Mã phiếu thu',
+        className: 'text-center',
+        render: (data) => data || ''
+      },
+      {
+        data: 'date',
+        title: 'Ngày thu',
+        className: 'text-center',
+        render: (data) =>
+          new Date(data).toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          })
+      },
+      {
+        data: 'createdBy',
+        title: 'Người tạo',
+        className: 'text-center',
+        render: (data) => data || ''
+      },
+      {
+        data: 'submitTer',
+        title: 'Họ và tên người nộp',
+        className: 'text-center',
+        render: (data) => data || ''
+      },
+      {
+        data: 'warehouse.name',
+        title: 'Kho thu',
+        className: 'text-start px-1',
+        render: (data, type, row) => {
+          const w = row.warehouse || {}
+          return type === 'display'
+            ? w.name
+              ? `${w.name}${w.location ? ' - ' + w.location : ''}`
+              : ''
+            : w.name || ''
+        }
+      },
+      {
+        data: 'receiptAmount',
+        title: 'Số tiền (đ)',
+        className: 'text-center',
+        render: (data) =>
+          !data && data !== 0
+            ? '0 ₫'
+            : Number(data).toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫'
+      },
+      {
+        data: 'reason',
+        title: 'Lý do thu',
+        className: 'text-center',
+        render: (data) => data || ''
+      },
+      { data: 'note', title: 'Ghi chú', className: 'text-center', render: (data) => data || '' },
+      {
+        data: null,
+        orderable: false,
+        className: 'text-center',
+        width: '100px',
+        render: (data, type, row) => `
+          <button class="btn btn-sm btn-outline-primary my-1 detail-btn"
+                  data-id="${row._id}"
+                  title="Xem chi tiết">
+            <i class="bi bi-eye"></i> Chi tiết
+          </button>`
+      }
+    ]
+  }
+
+  // 5. Setup controls và sự kiện
+  function setupTableControls() {
+    const rightGroup = $('.right-group')
+
+    const html = `
+      <select id="warehouseFilter" class="form-select me-2" style="width: 200px;">
+        <option value="all">Tất cả kho</option>
+        ${warehouses.map((w) => `<option value="${w._id}">${w.name}</option>`).join('')}
+      </select>
+      <button class="btn btn-outline-danger me-2" id="deletePaymentReceiptBtn">
+        <i class="bi bi-trash"></i> Xóa
+      </button>
+      <button class="btn btn-outline-success" id="addPaymentReceiptBtn">
+        <i class="bi bi-plus-circle"></i> Thêm
+      </button>
+    `
+
+    rightGroup.html(html).addClass('d-flex align-items-center')
+
+    $('#warehouseFilter').on('change', () => table.ajax.reload())
+
+    $('#addPaymentReceiptBtn').on('click', () => {
+      const selectedWarehouse = $('#warehouseFilter').val()
+      createNewRecord('payment-receipts', { warehouse: selectedWarehouse }, (data) => {
+        window.location.href = `/payment-receipts/${data.id}?mode=new`
+      })
+    })
+
+    $(document).on('click', '.detail-btn', function () {
+      window.location.href = `/payment-receipts/${$(this).data('id')}`
+    })
+
+    handlerDeleteEvent(
+      '#receiptTable1',
+      '#deletePaymentReceiptBtn',
+      'paymentReceiptsCheckbox',
+      'payment-receipts'
+    )
+    initTableCheckboxEvents('#receiptTable1', 'paymentReceiptsCheckbox')
+  }
+
+  // 6. Tiện ích bảng đơn hàng
+  function updateOrderSummary(summary) {
+    if (!summary) return
+    $('#summary-total-orders').text(summary.totalOrders || 0)
+    $('#summary-total-amount').text(Number(summary.totalAmount || 0).toLocaleString('vi-VN'))
+  }
+
+  function buildOrderRow(order) {
+    const tableName = order.table?.name || 'Mang về'
+    const customerName = order.customer?.name?.trim() || 'Khách lẻ'
+    const totalPayable = Number(order.totalPayable || 0).toLocaleString('vi-VN')
+    const vatRate = order.vatRate ?? 0
+    const total = Number(order.total || 0).toLocaleString('vi-VN')
+    const itemsList =
+      order.items
+        ?.map((i) =>
+          i.foodName || i.comboName
+            ? `${i.foodName || i.comboName}${i.quantity > 1 ? ` x${i.quantity}` : ''}`
+            : ''
+        )
+        .filter(Boolean) || []
+    const time = order.updatedAt
+      ? new Date(order.updatedAt).toLocaleString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        })
+      : ''
+
+    return `
+      <tr>
+        <td class="text-center px-2 py-2">${tableName}</td>
+        <td class="text-center px-2 py-2">${customerName}</td>
+        <td class="text-center px-2 py-2">${itemsList}</td>
+        <td class="text-center px-2 py-2">${totalPayable}</td>
+        <td class="text-center px-2 py-2">${vatRate} %</td>
+        <td class="text-center px-2 py-2">${total}</td>
+        <td class="text-center px-2 py-2">${time}</td>
+        <td class="text-center px-2 py-2">
+          <button class="btn btn-sm btn-outline-primary order-detail-btn" data-id="${order._id}">
+            <i class="bi bi-eye"></i> Chi tiết
+          </button>
+        </td>
+      </tr>
+    `
+  }
+
+  // 7. Chi tiết đơn hàng
+  $(document).on('click', '.order-detail-btn', function () {
+    const id = $(this).data('id')
+    window.location.href = `/receipt/${id}?from=payment-receipt`
   })
 })

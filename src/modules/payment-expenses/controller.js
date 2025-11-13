@@ -21,7 +21,11 @@ export const createPaymentExpense = async (req, res) => {
     const expense = await withTransaction(async (session) => {
       const code = await generateDocumentCode(ProductExpense, 'PE')
       const date = new Date()
-      const warehouse = req.body.warehouse || (await getWarehouse(req, organizationId))
+
+      let warehouse = req.body.warehouse
+      if (warehouse === 'all' || !warehouse) {
+        warehouse = await getWarehouse(req, organizationId)
+      }
 
       const docData = {
         code,

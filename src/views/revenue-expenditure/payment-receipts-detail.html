@@ -43,7 +43,7 @@
 
                   <div class="col-md-6">
                     <label for="submitTer" class="form-label fw-500">Họ và tên người nộp</label>
-                    <input type="text" class="form-control border-primary" id="submitTer" readonly>
+                    <input type="text" class="form-control border-primary" id="submitTer">
                   </div>
 
                   <div class="col-md-6">
@@ -100,7 +100,7 @@
 
     <input type="hidden" id="currentOrgId"
       value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
-    <input type="hidden" id="receiptId" value="<%= receiptId %>">
+    <input type="hidden" id="receiptId" value="<%= paymentReceiptsId  %>">
 
     <script src="/js/payment-receipts-detail.js"></script>
 

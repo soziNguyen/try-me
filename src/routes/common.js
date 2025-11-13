@@ -32,6 +32,7 @@ import customerRoutes from '../modules/customer/route.js'
 import productEntryRoutes from '../modules/product/entry/route.js'
 import productStockRoutes from '../modules/product/stock/route.js'
 import paymentExpense from '../modules/payment-expenses/route.js'
+import paymentReceipts from '../modules/payment-receipts/route.js'
 import planRoutes from '../modules/plan/route.js'
 import couponPlanRoutes from '../modules/coupon-plan/route.js'
 import planTransactionRoutes from '../modules/plan-transaction/route.js'
@@ -103,6 +104,7 @@ const routes = [
 
   //paymentExpese
   paymentExpense,
+  paymentReceipts,
 
   // Plan
   planRoutes,
