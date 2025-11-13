@@ -265,7 +265,6 @@ async function getTables(order = null) {
     const tables = Array.isArray(res?.tables) ? res.tables : []
 
     const $select = $('#table-select')
-
     if (!$select.length) {
       console.error('Không tìm thấy element #table-select')
       return
@@ -275,19 +274,13 @@ async function getTables(order = null) {
       $select.select2('destroy')
     }
 
-    const availableTables = tables.filter((t) => t.status === 'available')
     let html = '<option value="">Chọn bàn</option>'
+    const currentTableId = order?.tableId?._id || null
 
-    // Nếu order có bàn, thêm vào option đầu tiên
-    if (order?.tableId?._id) {
-      html += `<option value="${order.tableId._id}" selected>Bàn: ${order.tableId.name}</option>`
-    }
-
-    // Thêm các bàn trống khác (tránh lặp bàn hiện tại)
-    availableTables.forEach((t) => {
-      if (!order?.tableId?._id || t._id !== order.tableId._id) {
-        html += `<option value="${t._id}">${t.name}</option>`
-      }
+    tables.forEach((t) => {
+      const selected = t._id === currentTableId ? 'selected' : ''
+      const prefix = t._id === currentTableId ? 'Bàn: ' : ''
+      html += `<option value="${t._id}" ${selected}>${prefix}${t.name}</option>`
     })
 
     $select.html(html)
@@ -297,7 +290,6 @@ async function getTables(order = null) {
       placeholder: 'Chọn bàn'
     })
 
-    // Luôn enable select để cho phép đổi bàn
     $select.prop('disabled', false)
   } catch (error) {
     toastr.error('Không thể tải danh sách bàn')

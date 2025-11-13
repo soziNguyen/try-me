@@ -187,185 +187,187 @@
                   </div>
                 </li>
 
-                <% if (user.businessType !== 'shop') { %>
-                <li class="<%= page === 'Table Management' ? 'active' : '' %>">
-                  <a class="w-100" href="/table/lists">
-                    <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>
-                    <span>Quản lý bàn</span>
-                  </a>
-                </li>
-                <% } %>
-
-                <li class="<%= page === 'Customer' ? 'active' : '' %>">
-                  <a class="w-100" href="/customers">
-                    <i class="bi bi-person me-2 text-info"></i>
-                    <span>Quản lý khách hàng</span>
-                  </a>
-                </li>
-
-                <!-- Reports Section -->
-                <% const inReports=['SalesReport','InventoryReport','StaffReport','TaxReport'].includes(page); %>
-                  <li class="reports-accordion">
-                    <div class="accordion" id="accordionReports">
-                      <div class="accordion-item">
-                        <h2 class="accordion-header">
-                          <button
-                            class="accordion-button <%= inReports ? 'active' : '' %> <%= inReports ? '' : 'collapsed' %>"
-                            type="button" data-bs-toggle="collapse" data-bs-target="#collapseReports"
-                            aria-expanded="<%= inReports ? 'true' : 'false' %>" aria-controls="collapseReports">
-                            <i class="bi bi-bar-chart text-info-emphasis me-2"></i>
-                            <span>Báo cáo</span>
-                          </button>
-                        </h2>
-                        <div id="collapseReports" class="accordion-collapse collapse <%= inReports ? 'show' : '' %>"
-                          data-bs-parent="#accordionReports">
-                          <div class="accordion-body">
-                            <a class="<%= page === 'SalesReport' ? 'accordion-active' : '' %>" href="/reports/sales">
-                              <i class="bi bi-bar-chart-line text-success me-2"></i>
-                              <span>Báo cáo bán hàng</span>
-                            </a>
-                            <a class="<%= page === 'InventoryReport' ? 'accordion-active' : '' %>"
-                              href="/reports/inventory">
-                              <i class="bi bi-box-seam text-info me-2"></i>
-                              <span>Báo cáo kho</span>
-                            </a>
-                            <a class="<%= page === 'StaffReport' ? 'accordion-active' : '' %>"
-                              href="/reports/performance">
-                              <i class="bi bi-award text-primary me-2"></i>
-                              <span>Báo cáo nhân viên</span>
-                            </a>
-                            <a class="<%= page === 'TaxReport' ? 'accordion-active' : '' %>" href="/reports/tax">
-                              <i class="bi bi-file-earmark-text text-warning me-2"></i>
-                              <span>Báo cáo thuế</span>
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-
-                  <li class="methods-accordion">
-                    <div class="accordion" id="accordionReports">
-                      <div class="accordion-item">
-                        <h2 class="accordion-header">
-                          <button
-                            class="accordion-button <%= ['Payment Method', 'Receiving'].includes(page) ? 'active' : '' %> <%= ['Payment Method', 'Receiving'].includes(page) ? '' : 'collapsed' %>"
-                            type="button" data-bs-toggle="collapse" data-bs-target="#collapseMethods"
-                            aria-expanded="<%= ['Payment Method', 'Receiving'].includes(page) ? 'true' : 'false' %>"
-                            aria-controls="collapseMethods">
-                            <i class="las la-university text-danger me-2"></i>
-                            <span>Thông tin thanh toán</span>
-                          </button>
-                        </h2>
-                        <div id="collapseMethods"
-                          class="accordion-collapse collapse <%= ['Payment Method', 'Receiving'].includes(page) ? 'show' : '' %>"
-                          data-bs-parent="#accordionMethods">
-                          <div class="accordion-body">
-                            <a class="<%= page === 'Receiving' ? 'accordion-active' : '' %>" href="/receiving-accounts">
-                              <i class="bi bi-bank text-info me-2"></i>
-                              <span>Ngân hàng</span>
-                            </a>
-                            <a class="<%= page === 'Payment Method' ? 'accordion-active' : '' %>"
-                              href="/payment-methods">
-                              <i class="bi bi-wallet2 text-white-emphasis me-2"></i>
-                              <span>Phương thức thanh toán</span>
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-
-                  <!-- Other Features -->
-
-                  <li class="<%= page === 'Tax' ? 'active' : '' %>">
-                    <a class="w-100" href="/tax">
-                      <i class="bi bi-file-earmark-text text-danger-emphasis me-2"></i>
-                      <span>Thuế</span>
+                <% if (user.businessType !=='shop' ) { %>
+                  <li class="<%= page === 'Table Management' ? 'active' : '' %>">
+                    <a class="w-100" href="/table/lists">
+                      <i class="bi bi-grid-3x3-gap me-2 text-primary"></i>
+                      <span>Quản lý bàn</span>
                     </a>
                   </li>
+                  <% } %>
 
-                  <li class="revenue-accordion">
-                    <div class="accordion" id="accordionRevenue">
-                      <div class="accordion-item">
-                        <h2 class="accordion-header">
-                          <button
-                            class="accordion-button <%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'active' : '' %> <%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? '' : 'collapsed' %>"
-                            type="button" data-bs-toggle="collapse" data-bs-target="#collapseRevenue"
-                            aria-expanded="<%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'true' : 'false' %>"
-                            aria-controls="collapseRevenue">
-                            <i class="bi bi-cash-stack text-success me-2"></i>
-                            <span>Theo dõi doanh thu</span>
-                          </button>
-                        </h2>
-                        <div id="collapseRevenue"
-                          class="accordion-collapse collapse <%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'show' : '' %>"
-                          data-bs-parent="#accordionRevenue">
-                          <div class="accordion-body">
-                            <a class="<%= page === 'PaymentReceipts' ? 'accordion-active' : '' %>"
-                              href="/payment-receipts">
-                              <i class="bi bi-journal-plus text-white-emphasis me-2"></i>
-                              <span>Phiếu thu</span>
-                            </a>
-                            <a class="<%= page === 'PaymentExpenses' ? 'accordion-active' : '' %>"
-                              href="/payment-expenses">
-                              <i class="bi bi-journal-minus text-white-emphasis me-2"></i>
-                              <span>Phiếu chi</span>
-                            </a>
+                    <li class="<%= page === 'Customer' ? 'active' : '' %>">
+                      <a class="w-100" href="/customers">
+                        <i class="bi bi-person me-2 text-info"></i>
+                        <span>Quản lý khách hàng</span>
+                      </a>
+                    </li>
+
+                    <!-- Reports Section -->
+                    <% const inReports=['SalesReport','InventoryReport','StaffReport','TaxReport'].includes(page); %>
+                      <li class="reports-accordion">
+                        <div class="accordion" id="accordionReports">
+                          <div class="accordion-item">
+                            <h2 class="accordion-header">
+                              <button
+                                class="accordion-button <%= inReports ? 'active' : '' %> <%= inReports ? '' : 'collapsed' %>"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseReports"
+                                aria-expanded="<%= inReports ? 'true' : 'false' %>" aria-controls="collapseReports">
+                                <i class="bi bi-bar-chart text-info-emphasis me-2"></i>
+                                <span>Báo cáo</span>
+                              </button>
+                            </h2>
+                            <div id="collapseReports" class="accordion-collapse collapse <%= inReports ? 'show' : '' %>"
+                              data-bs-parent="#accordionReports">
+                              <div class="accordion-body">
+                                <a class="<%= page === 'SalesReport' ? 'accordion-active' : '' %>"
+                                  href="/reports/sales">
+                                  <i class="bi bi-bar-chart-line text-success me-2"></i>
+                                  <span>Báo cáo bán hàng</span>
+                                </a>
+                                <a class="<%= page === 'InventoryReport' ? 'accordion-active' : '' %>"
+                                  href="/reports/inventory">
+                                  <i class="bi bi-box-seam text-info me-2"></i>
+                                  <span>Báo cáo kho</span>
+                                </a>
+                                <a class="<%= page === 'StaffReport' ? 'accordion-active' : '' %>"
+                                  href="/reports/performance">
+                                  <i class="bi bi-award text-primary me-2"></i>
+                                  <span>Báo cáo nhân viên</span>
+                                </a>
+                                <a class="<%= page === 'TaxReport' ? 'accordion-active' : '' %>" href="/reports/tax">
+                                  <i class="bi bi-file-earmark-text text-warning me-2"></i>
+                                  <span>Báo cáo thuế</span>
+                                </a>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </li>
+                      </li>
 
-
-                  <li class="<%= page === 'Coupon' ? 'active' : '' %>">
-                    <a class="w-100" href="/coupon">
-                      <i class="bi bi-tags text-warning-emphasis me-2"></i>
-                      <span>Mã giảm giá</span>
-                    </a>
-                  </li>
-
-                  <li class="<%= page === 'ActivityLog' ? 'active' : '' %>">
-                    <a class="w-100" href="/activity-logs">
-                      <i class="bi bi-activity text-secondary me-2"></i>
-                      <span>Nhật ký hoạt động</span>
-                    </a>
-                  </li>
-
-                  <li class="settings-accordion">
-                    <div class="accordion" id="accordionReports">
-                      <div class="accordion-item">
-                        <h2 class="accordion-header">
-                          <button
-                            class="accordion-button <%= ['Invoice'].includes(page) ? 'active' : '' %> <%= ['Invoice'].includes(page) ? '' : 'collapsed' %>"
-                            type="button" data-bs-toggle="collapse" data-bs-target="#collapseSettings"
-                            aria-expanded="<%= ['Invoice'].includes(page) ? 'true' : 'false' %>"
-                            aria-controls="collapseSettings">
-                            <i class="bi-gear text-danger me-2"></i>
-                            <span>Cài đặt chung</span>
-                          </button>
-                        </h2>
-                        <div id="collapseSettings"
-                          class="accordion-collapse collapse <%= ['Invoice'].includes(page) ? 'show' : '' %>"
-                          data-bs-parent="#accordionSettings">
-                          <div class="accordion-body">
-                            <a class="<%= page === 'Invoice' ? 'accordion-active' : '' %>" href="/invoice">
-                              <i class="bi bi-receipt-cutoff text-white-emphasis me-2"></i>
-                              <span>Hóa đơn</span>
-                            </a>
+                      <li class="methods-accordion">
+                        <div class="accordion" id="accordionReports">
+                          <div class="accordion-item">
+                            <h2 class="accordion-header">
+                              <button
+                                class="accordion-button <%= ['Payment Method', 'Receiving'].includes(page) ? 'active' : '' %> <%= ['Payment Method', 'Receiving'].includes(page) ? '' : 'collapsed' %>"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseMethods"
+                                aria-expanded="<%= ['Payment Method', 'Receiving'].includes(page) ? 'true' : 'false' %>"
+                                aria-controls="collapseMethods">
+                                <i class="las la-university text-danger me-2"></i>
+                                <span>Thông tin thanh toán</span>
+                              </button>
+                            </h2>
+                            <div id="collapseMethods"
+                              class="accordion-collapse collapse <%= ['Payment Method', 'Receiving'].includes(page) ? 'show' : '' %>"
+                              data-bs-parent="#accordionMethods">
+                              <div class="accordion-body">
+                                <a class="<%= page === 'Receiving' ? 'accordion-active' : '' %>"
+                                  href="/receiving-accounts">
+                                  <i class="bi bi-bank text-info me-2"></i>
+                                  <span>Ngân hàng</span>
+                                </a>
+                                <a class="<%= page === 'Payment Method' ? 'accordion-active' : '' %>"
+                                  href="/payment-methods">
+                                  <i class="bi bi-wallet2 text-white-emphasis me-2"></i>
+                                  <span>Phương thức thanh toán</span>
+                                </a>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </li>
+                      </li>
 
-                  <li class="<%= page === 'Upgrade' ? 'active' : '' %>">
-                    <a class="w-100" href="/upgrade">
-                      <i class="bi bi-gem me-2 text-info"></i>
-                      <span>Nâng cấp</span>
-                    </a>
-                  </li>
+                      <!-- Other Features -->
+
+                      <li class="<%= page === 'Tax' ? 'active' : '' %>">
+                        <a class="w-100" href="/tax">
+                          <i class="bi bi-file-earmark-text text-danger-emphasis me-2"></i>
+                          <span>Thuế</span>
+                        </a>
+                      </li>
+
+                      <li class="revenue-accordion">
+                        <div class="accordion" id="accordionRevenue">
+                          <div class="accordion-item">
+                            <h2 class="accordion-header">
+                              <button
+                                class="accordion-button <%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'active' : '' %> <%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? '' : 'collapsed' %>"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseRevenue"
+                                aria-expanded="<%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'true' : 'false' %>"
+                                aria-controls="collapseRevenue">
+                                <i class="bi bi-cash-stack text-success me-2"></i>
+                                <span>Quản lý thu chi</span>
+                              </button>
+                            </h2>
+                            <div id="collapseRevenue"
+                              class="accordion-collapse collapse <%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'show' : '' %>"
+                              data-bs-parent="#accordionRevenue">
+                              <div class="accordion-body">
+                                <a class="<%= page === 'PaymentReceipts' ? 'accordion-active' : '' %>"
+                                  href="/payment-receipts">
+                                  <i class="bi bi-journal-plus text-white-emphasis me-2"></i>
+                                  <span>Phiếu thu</span>
+                                </a>
+                                <a class="<%= page === 'PaymentExpenses' ? 'accordion-active' : '' %>"
+                                  href="/payment-expenses">
+                                  <i class="bi bi-journal-minus text-white-emphasis me-2"></i>
+                                  <span>Phiếu chi</span>
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+
+
+                      <li class="<%= page === 'Coupon' ? 'active' : '' %>">
+                        <a class="w-100" href="/coupon">
+                          <i class="bi bi-tags text-warning-emphasis me-2"></i>
+                          <span>Mã giảm giá</span>
+                        </a>
+                      </li>
+
+                      <li class="<%= page === 'ActivityLog' ? 'active' : '' %>">
+                        <a class="w-100" href="/activity-logs">
+                          <i class="bi bi-activity text-secondary me-2"></i>
+                          <span>Nhật ký hoạt động</span>
+                        </a>
+                      </li>
+
+                      <li class="settings-accordion">
+                        <div class="accordion" id="accordionReports">
+                          <div class="accordion-item">
+                            <h2 class="accordion-header">
+                              <button
+                                class="accordion-button <%= ['Invoice'].includes(page) ? 'active' : '' %> <%= ['Invoice'].includes(page) ? '' : 'collapsed' %>"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseSettings"
+                                aria-expanded="<%= ['Invoice'].includes(page) ? 'true' : 'false' %>"
+                                aria-controls="collapseSettings">
+                                <i class="bi-gear text-danger me-2"></i>
+                                <span>Cài đặt chung</span>
+                              </button>
+                            </h2>
+                            <div id="collapseSettings"
+                              class="accordion-collapse collapse <%= ['Invoice'].includes(page) ? 'show' : '' %>"
+                              data-bs-parent="#accordionSettings">
+                              <div class="accordion-body">
+                                <a class="<%= page === 'Invoice' ? 'accordion-active' : '' %>" href="/invoice">
+                                  <i class="bi bi-receipt-cutoff text-white-emphasis me-2"></i>
+                                  <span>Hóa đơn</span>
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+
+                      <li class="<%= page === 'Upgrade' ? 'active' : '' %>">
+                        <a class="w-100" href="/upgrade">
+                          <i class="bi bi-gem me-2 text-info"></i>
+                          <span>Nâng cấp</span>
+                        </a>
+                      </li>
         </ul>
       </div>
       <%- include('../users/update-user.html') %>

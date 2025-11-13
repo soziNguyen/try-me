@@ -48,6 +48,7 @@ $(function () {
     $('#reason').val(expense.reason || '')
     $('#expenseAmount').val(expense.expenseAmount || '')
     $('#note').val(expense.note || '')
+    $('#receiver').val(expense.receiver || '')
   }
 
   function savePaymentExpense() {
@@ -64,7 +65,8 @@ $(function () {
       warehouse: $('#warehouse').val(),
       reason: $('#reason').val(),
       note: $('#note').val(),
-      expenseAmount
+      expenseAmount,
+      receiver: $('#receiver').val()
     }
 
     const url = paymentExpenseId
