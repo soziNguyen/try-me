@@ -11,7 +11,7 @@ export const checkWarehouseAccess = (req, res, next) => {
 
   if (['Admin', 'Org'].includes(role)) return next()
 
-  if (role === 'Staff' && warehouse) {
+  if ((role === 'Staff' || role === 'Kitchen') && warehouse) {
     req.warehouseFilter = warehouse
     return next()
   }

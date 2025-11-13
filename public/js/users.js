@@ -364,12 +364,15 @@ if (logInForm) {
       const warehouseGroup = document.getElementById('warehouse-group')
       const warehouseSelect = document.getElementById('warehouse2')
 
-      // Đổ roles
-      const roles = ['Org', 'Staff']
+      const roles = [
+        { value: 'Org', label: 'Tổ chức' },
+        { value: 'Staff', label: 'Nhân viên' },
+        { value: 'Kitchen', label: 'Bếp' }
+      ]
       roleSelect.innerHTML = roles
         .map(
           (r) =>
-            `<option value="${r}" ${r === (user.role || 'Staff') ? 'selected' : ''}>${r}</option>`
+            `<option value="${r.value}" ${r.value === (user.role || 'Staff') ? 'selected' : ''}>${r.label}</option>`
         )
         .join('')
 
@@ -384,15 +387,15 @@ if (logInForm) {
 
       // Toggle field kho với class d-none
       const toggleWarehouse = (role) => {
-        warehouseGroup.classList.toggle('d-none', role !== 'Staff')
+        warehouseGroup.classList.toggle('d-none', !['Staff', 'Kitchen'].includes(role))
       }
       toggleWarehouse(user.role)
 
       // Khi đổi role trong modal
-      roleSelect.addEventListener('change', (e) => {
+      roleSelect.onchange = (e) => {
         toggleWarehouse(e.target.value)
-        if (e.target.value !== 'Staff') warehouseSelect.value = ''
-      })
+        if (!['Staff', 'Kitchen'].includes(e.target.value)) warehouseSelect.value = ''
+      }
 
       // Gán dữ liệu khác
       document.getElementById('new-username').value = user.username || ''
@@ -419,10 +422,10 @@ if (logInForm) {
         const dataUpdate = { username, email, role }
 
         // Bắt buộc kho nếu là Staff
-        if (role === 'Staff' && !warehouse) {
-          return toastr.warning('Vui lòng chọn kho cho nhân viên')
+        if (['Staff', 'Kitchen'].includes(role) && !warehouse) {
+          return toastr.warning('Vui lòng chọn kho cho vai nhân viên')
         }
-        if (role === 'Staff') dataUpdate.warehouse = warehouse
+        if (['Staff', 'Kitchen'].includes(role)) dataUpdate.warehouse = warehouse
 
         // Chặn tự đổi role
         if (userId === currentUserId && role !== user.role) {
@@ -505,6 +508,15 @@ if (logInForm) {
     })
   }
 }
+function getRoleLabel(role) {
+  const roleMap = {
+    Admin: 'Quản trị',
+    Org: 'Tổ chức',
+    Staff: 'Nhân viên',
+    Kitchen: 'Bếp'
+  }
+  return roleMap[role] || role
+}
 
 // render table
 function renderTable(users = []) {
@@ -527,7 +539,7 @@ function renderTable(users = []) {
             <td><span class="form-control border-0 w-100">${user.username}</span></td>
             <td><span class="form-control border-0 w-100">${user.email}</span></td>
             <td><span class="form-control border-0 w-100">${user.warehouse?.name ? user.warehouse?.name : ''}</span></td>
-            <td><span class="form-control border-0 w-100">${user.role}</span></td>
+            <td><span class="form-control border-0 w-100">${getRoleLabel(user.role)}</span></td>
             <td><span class="form-control border-0 w-100">${formatDate(user.createdAt)}</span></td>
             <td><span class="form-control border-0 w-100">${formatDate(user.updatedAt)}</span></td>
             <td>

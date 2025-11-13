@@ -676,6 +676,7 @@ async function addToOrder(foodId, foodName, price) {
       toastr.error(result.message || 'Lỗi khi thêm món')
       return
     }
+    toastr.remove()
     toastr.success(`Đã thêm ${foodName} vào hóa đơn`)
     updateOrderUI(result.data)
   } catch (err) {
@@ -703,6 +704,7 @@ async function addComboToOrder(comboId, comboName, price) {
       toastr.error(result.message || 'Lỗi khi thêm combo')
       return
     }
+    toastr.remove()
     toastr.success(`Đã thêm combo ${comboName} vào hóa đơn`)
     updateOrderUI(result.data)
   } catch (err) {
@@ -827,7 +829,7 @@ $(async () => {
       const customer = order.customerId
 
       initSelect2()
-      const $select = $('#customerSelect') // giả sử select khách hàng có id này
+      const $select = $('#customerSelect')
 
       if (customer?._id) {
         const option = new Option(`${customer.name} - ${customer.phone}`, customer._id, true, true)

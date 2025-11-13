@@ -3,6 +3,8 @@ const CART_COOKIE_NAME = 'cart_items'
 let allItems = []
 let currentSearchResults = []
 const tableId = getQueryParam('tableId') || ''
+const currentOrderId = getQueryParam('orderId')
+const btn = document.querySelector('.viewCartBottomBtn')
 
 // INITIALIZATION
 document.addEventListener('DOMContentLoaded', async () => {
@@ -12,7 +14,61 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadMenuData()
   initCartModal()
   submitOrder()
+  document.getElementById('btnViewOrder').addEventListener('click', handleViewOrder)
+  document.getElementById('btnBackToMenu').addEventListener('click', handleBackToMenu)
 })
+
+async function handleViewOrder() {
+  if (!btn.classList.contains('d-none')) btn.classList.add('d-none')
+
+  try {
+    const result = await ajax(`/api/order/${currentOrderId}/public`, {}, 'GET')
+    const order = result
+    if (!order) return toastr.warning('Không có dữ liệu đơn hàng')
+
+    // Ẩn menu, hiện chi tiết đơn
+    document.getElementById('foodMenuCol').classList.add('d-none')
+    document.getElementById('orderDetail').classList.remove('d-none')
+
+    renderOrderDetail(order)
+  } catch (err) {
+    console.error(err)
+    toastr.error('Không thể tải đơn hàng')
+  }
+}
+
+function handleBackToMenu() {
+  document.getElementById('orderDetail').classList.add('d-none')
+  document.getElementById('foodMenuCol').classList.remove('d-none')
+  if (btn.classList.contains('d-none')) btn.classList.remove('d-none')
+}
+
+// RENDER
+function renderOrderDetail(order) {
+  // Thông tin tóm tắt
+  document.getElementById('orderSummary').innerHTML = `
+    <div><strong>Mã đơn:</strong> ${order.code}</div>
+    <div><strong>Bàn:</strong> ${order.table?.name || ''} (${order.table?.area || ''})</div>
+    <div><strong>Thời gian:</strong> ${new Date(order.createdAt).toLocaleString('vi-VN')}</div>
+  `
+
+  // Danh sách món
+  const rows = order.items
+    .map(
+      (i) => `
+      <tr>
+        <td>${i.name}</td>
+        <td class="text-center">${i.quantity}</td>
+        <td class="text-end">${i.price.toLocaleString()} đ</td>
+        <td class="text-end">${(i.price * i.quantity).toLocaleString()} đ</td>
+      </tr>`
+    )
+    .join('')
+
+  document.getElementById('orderDetailBody').innerHTML = rows
+  document.getElementById('orderDetailTotal').textContent =
+    order.totalAmount.toLocaleString('vi-VN') + ' đ'
+}
 
 // SEARCH FUNCTIONALITY
 function initSearchInput() {
@@ -289,7 +345,7 @@ function renderCart() {
   if (!cartDiv) return
 
   if (cartItems.length === 0) {
-    cartDiv.innerHTML = '<p class="m-0">Chưa có món nào trong giỏ</p>'
+    cartDiv.innerHTML = '<p>Chưa có món nào trong giỏ</p>'
     return
   }
 
@@ -391,8 +447,6 @@ function getQueryParam(name) {
 }
 
 function submitOrder() {
-  const currentOrderId = getQueryParam('orderId')
-
   document.getElementById('btnSubmitOrder').addEventListener('click', async () => {
     const cartItems = getCartItems()
 

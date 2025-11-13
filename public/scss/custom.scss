@@ -673,6 +673,28 @@ input[type='text']::-ms-clear {
   }
 }
 
+//================= Responsive =================//
+
+@media (max-width: 991px) {
+  .pagination-bar {
+    left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 767px) {
+  #imageCropModal {
+    .modal-body {
+      max-height: 150px;
+    }
+  }
+
+  .pagination-bar {
+    left: 0 !important;
+    width: 100% !important;
+  }
+}
+
 @media (max-width: 576px) {
   .order-card {
     #foodMenuCol {
@@ -749,26 +771,6 @@ input[type='text']::-ms-clear {
         }
       }
     }
-  }
-}
-//================= Responsive =================//
-
-@media (max-width: 767px) {
-  #imageCropModal {
-    .modal-body {
-      max-height: 150px;
-    }
-  }
-
-  .w-md {
-    width: 100% !important;
-  }
-}
-
-@media (min-width: 768px) {
-  /* md breakpoint = 768px */
-  .w-md {
-    width: 35% !important;
   }
 }
 

@@ -6,8 +6,6 @@ import mongoose from 'mongoose'
 
 export const getIngredientStockList = async (req, res) => {
   try {
-    console.log(req.user)
-
     const draw = +req.body.draw || 0
     const start = +req.body.start || 0
     const length = +req.body.length || 10

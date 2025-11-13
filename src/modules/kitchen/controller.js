@@ -1,21 +1,30 @@
-import Order from '../order/model'
-import responseHelper from '../../helpers/responseHelper'
+import Order from '../order/model.js'
+import responseHelper from '../../helpers/responseHelper.js'
 import { getWarehouse } from '../../helpers/warehouseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
+import Organization from '../organization/model.js'
 import mongoose from 'mongoose'
 
 export const getKitchenOrders = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-    const warehouseId = await getWarehouse(req)
 
-    // Lấy tất cả order còn món chưa hoàn thành
+    const matchCondition = {}
+
+    if (req.warehouseFilter) {
+      matchCondition.warehouse = req.warehouseFilter
+    } else {
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) matchCondition.warehouse = org.defaultWarehouse
+    }
+
+    // Lấy các order còn món chưa hoàn thành
     const orders = await Order.find({
-      warehouse: warehouseId,
+      ...matchCondition,
       'items.status': { $in: ['pending', 'cooking'] }
     })
-      .sort({ createdAt: 1 }) // cũ nhất lên trên -> làm trước
+      .sort({ createdAt: 1 }) // cũ nhất lên trước
       .populate('items.foodId', 'name')
       .populate('items.comboId', 'name items')
       .lean()
@@ -31,9 +40,10 @@ export const getKitchenOrderDetail = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-    const warehouseId = await getWarehouse(req)
+    const warehouseId = await getWarehouse(req, organizationId)
 
     const { orderId } = req.params
+
     if (!mongoose.Types.ObjectId.isValid(orderId))
       return responseHelper.error(res, 'Mã đơn hàng không hợp lệ', 400)
 
@@ -42,7 +52,7 @@ export const getKitchenOrderDetail = async (req, res) => {
       warehouse: warehouseId
     })
       .populate('items.foodId', 'name')
-      .populate('items.comboId', 'name items')
+      .populate('items.comboId', 'name items  ')
       .lean()
 
     if (!order) return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
@@ -61,7 +71,7 @@ export const updateKitchenItemStatus = async (req, res) => {
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-    const warehouseId = await getWarehouse(req)
+    const warehouseId = await getWarehouse(req, organizationId)
 
     if (!['pending', 'cooking', 'done'].includes(status)) {
       return responseHelper.error(res, 'Trạng thái món không hợp lệ', 400)

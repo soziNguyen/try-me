@@ -38,6 +38,7 @@ import couponPlanRoutes from '../modules/coupon-plan/route.js'
 import planTransactionRoutes from '../modules/plan-transaction/route.js'
 import paymentMethodAdminRoutes from '../modules/payment-method-admin/route.js'
 import stockReportRoutes from '../modules/reports/stock/route.js'
+import kitchenRoutes from '../modules/kitchen/route.js'
 import uploadRouter from '../modules/upload/route.js'
 import pageRoute from '../pages/route.js'
 
@@ -113,7 +114,8 @@ const routes = [
   paymentMethodAdminRoutes,
 
   // Report
-  stockReportRoutes
+  stockReportRoutes,
+  kitchenRoutes
 ]
 
 routes.forEach((route) => router.use('/', route))

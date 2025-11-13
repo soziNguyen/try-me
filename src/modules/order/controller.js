@@ -315,6 +315,8 @@ export const getOrderByIdPublic = async (req, res) => {
       })
       .filter(Boolean)
 
+    const recalculatedTotal = calcOrderTotal(formattedItems)
+
     // Response với format đơn giản
     const response = {
       _id: order._id,
@@ -326,7 +328,7 @@ export const getOrderByIdPublic = async (req, res) => {
           }
         : null,
       items: formattedItems,
-      totalAmount: order.totalAmount,
+      totalAmount: recalculatedTotal,
       status: order.status,
       createdAt: order.createdAt
     }

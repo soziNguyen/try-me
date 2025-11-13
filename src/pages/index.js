@@ -867,3 +867,13 @@ export const paymentMethodForAdminPage = async (req, res) => {
 export const customerUI = async (req, res) => {
   res.render('customer/index', getPageData(req, 'Đặt hàng'))
 }
+
+export const kitchenPage = async (req, res) => {
+  res.render(
+    'kitchen/index',
+    getPageData(req, 'Quản lý bếp', 'Kitchen', {
+      headerClass: 'admin__header',
+      pageTitle: 'BẾP'
+    })
+  )
+}
