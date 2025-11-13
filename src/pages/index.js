@@ -873,9 +873,9 @@ export const customerUI = async (req, res) => {
 export const kitchenPage = async (req, res) => {
   res.render(
     'kitchen/index',
-    getPageData(req, 'Quản lý bếp', 'Kitchen', {
+    getPageData(req, 'Quản lý chế biến', 'Kitchen', {
       headerClass: 'admin__header',
-      pageTitle: 'BẾP'
+      pageTitle: 'CHẾ BIẾN MÓN ĂN'
     })
   )
 }

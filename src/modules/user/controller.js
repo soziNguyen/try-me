@@ -140,7 +140,7 @@ export const getUserById = async (req, res) => {
     }
 
     const user = await User.findOne(query)
-      .populate('organization', '_id name')
+      .populate('organization', 'name businessType')
       .populate('warehouse', '_id name location')
 
     if (!user) {
@@ -192,7 +192,18 @@ export const updateUser = async (req, res) => {
       return responseHelper.error(res, 'Username hoặc Email đã tồn tại', 400)
     }
 
-    if (role === 'Staff' && !warehouse) return responseHelper.error(res, 'Vui lòng chọn kho', 400)
+    const organization = await Organization.findById(organizationId).select('businessType')
+    if (!organization) {
+      return responseHelper.error(res, 'Không tìm thấy tổ chức', 404)
+    }
+
+    const nonKitchenTypes = ['shop']
+    if (nonKitchenTypes.includes(organization.businessType) && role === 'Kitchen') {
+      return responseHelper.error(res, 'Vai trò Bếp không khả dụng cho loại hình này', 400)
+    }
+
+    if (['Staff', 'Kitchen'].includes(role) && !warehouse)
+      return responseHelper.error(res, 'Vui lòng chọn kho', 400)
 
     const updatedFields = { username, email, role }
     if (warehouse) updatedFields.warehouse = warehouse

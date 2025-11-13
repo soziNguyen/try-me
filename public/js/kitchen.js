@@ -42,8 +42,6 @@ function renderKitchenOrders(orders) {
     const timeElapsed = Math.floor((Date.now() - new Date(order.createdAt)) / 60000)
     const urgencyClass = timeElapsed > 30 ? 'danger' : timeElapsed > 15 ? 'warning' : 'success'
 
-    console.log(order)
-
     card.innerHTML = `
       <div class="card-header bg-white border-0 py-3">
         <div class="d-flex justify-content-between align-items-start">
