@@ -100,6 +100,8 @@ export const dashboard = async (req, res) => {
         headerClass: 'admin__header'
       })
     )
+  } else if (req.user && req.user.role === 'Kitchen') {
+    return res.redirect('/kitchen/orders')
   } else {
     return res.render(
       'users/staff_dashboard',

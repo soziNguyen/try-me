@@ -452,6 +452,14 @@ body {
   left: 60px;
   width: calc(100% - 60px);
 }
+.admin__layout .kitchen-orders .card-body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.admin__layout #orderDetailModal .modal-body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 
 .staff__layout {
   height: 100vh;
@@ -782,6 +790,14 @@ body {
 .staff__layout .staff__main #staff__sidebar.collapsed ~ .staff__content .pagination-bar {
   left: 60px;
   width: calc(100% - 60px);
+}
+.staff__layout .kitchen-orders .card-body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.staff__layout #orderDetailModal .modal-body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 #themeModal .modal-dialog {

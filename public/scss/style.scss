@@ -385,6 +385,19 @@ body {
       }
     }
   }
+  .kitchen-orders {
+    .card-body {
+      scrollbar-width: none;
+      -ms-overflow-style: none; // IE / Edge legacy
+    }
+  }
+
+  #orderDetailModal {
+    .modal-body {
+      scrollbar-width: none;
+      -ms-overflow-style: none; // IE / Edge legacy
+    }
+  }
 }
 
 .status {

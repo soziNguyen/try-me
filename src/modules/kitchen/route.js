@@ -21,7 +21,7 @@ router.get(
   kitchenController.getKitchenOrderDetail
 )
 router.post(
-  '/api/kitchen/order/:orderId',
+  '/api/kitchen/order/:orderId/item/:itemId',
   isAuthenticated,
   isPermit('Admin', 'Org', 'Kitchen'),
   checkWarehouseAccess,
