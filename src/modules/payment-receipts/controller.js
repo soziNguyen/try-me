@@ -156,14 +156,31 @@ export const getReceipts = async (req, res) => {
       }
     })
 
-    // Sắp xếp
-    basePipeline.push({ $sort: { [sortField]: sortDir } })
+    // Pipeline để tính tổng tiền
+    const totalAmountPipeline = [
+      ...basePipeline,
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: '$receiptAmount' }
+        }
+      }
+    ]
 
-    // ====== ĐẾM TỔNG SỐ BẢN GHI ======
+    // Pipeline để đếm số lượng record
     const countPipeline = [...basePipeline, { $count: 'totalCount' }]
-    const totalData = await Receipt.aggregate(countPipeline)
+
+    // Thực hiện song song các aggregation
+    const [totalAmountResult, totalData] = await Promise.all([
+      Receipt.aggregate(totalAmountPipeline),
+      Receipt.aggregate(countPipeline)
+    ])
+
+    const totalAmount = totalAmountResult.length > 0 ? totalAmountResult[0].totalAmount : 0
     const recordsTotal = totalData.length > 0 ? totalData[0].totalCount : 0
-    basePipeline.push({ $skip: start }, { $limit: length })
+
+    // Thêm sort và phân trang cho data pipeline
+    basePipeline.push({ $sort: { [sortField]: sortDir } }, { $skip: start }, { $limit: length })
 
     const data = await Receipt.aggregate(basePipeline)
 
@@ -171,6 +188,10 @@ export const getReceipts = async (req, res) => {
       draw,
       recordsTotal,
       recordsFiltered: recordsTotal,
+      summary: {
+        totalReceipts: recordsTotal, // Tổng số phiếu thu
+        totalAmount: totalAmount // Tổng tiền thu
+      },
       data
     })
   } catch (error) {

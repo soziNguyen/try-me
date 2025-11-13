@@ -101,7 +101,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
           <h4 class="fw-bold text-dark mb-0">
             <i class="bi bi-graph-up-arrow text-primary me-2"></i>
-            Báo cáo thuế
+            Báo cáo thu từ hóa đơn
           </h4>
 
           <button id="viewInvoiceBtn" class="btn btn-success shadow px-4 py-2 mt-2 mt-md-0">
@@ -126,8 +126,44 @@
         </div>
       </div>
 
+      <div class="tax-report mt-5">
+        <table id="tax-dataTable" class="table table-hover table-bordered align-middle table-info">
+          <h4 class="fw-bold text-dark mb-0">
+            Tiền từ phiếu chi
+          </h4>
+          <thead class="table-primary bg-gradient text-center">
+            <tr>
+              <th>Thời gian</th>
+              <th>Kho</th>
+              <th>Tổng số phiếu </th>
+              <th>Tổng chi phí</th>
+            </tr>
+          </thead>
+          <tbody id="expense-data">
+            <!-- JS render dữ liệu -->
+          </tbody>
+        </table>
+      </div>
 
 
+      <div class="tax-report mt-5">
+        <table id="tax-dataTable" class="table table-hover table-bordered align-middle table-info">
+          <h4 class="fw-bold text-dark mb-0">
+            Tiền từ phiếu thu
+          </h4>
+          <thead class="table-primary bg-gradient text-center">
+            <tr>
+              <th>Thời gian</th>
+              <th>Kho</th>
+              <th>Tổng số phiếu </th>
+              <th>Tổng chi phí</th>
+            </tr>
+          </thead>
+          <tbody id="receipts-data">
+            <!-- JS render dữ liệu -->
+          </tbody>
+        </table>
+      </div>
 
     </div>
 

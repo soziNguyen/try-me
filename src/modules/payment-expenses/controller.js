@@ -16,7 +16,7 @@ export const createPaymentExpense = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const { reason, name, expenseAmount, note } = req.body
+    const { reason, receiver, expenseAmount, note } = req.body
 
     const expense = await withTransaction(async (session) => {
       const code = await generateDocumentCode(ProductExpense, 'PE')
@@ -34,7 +34,7 @@ export const createPaymentExpense = async (req, res) => {
         organization: organizationId,
         warehouse,
         reason,
-        name,
+        receiver,
         expenseAmount,
         note
       }
@@ -70,6 +70,7 @@ export const getPaymentExpensesById = async (req, res) => {
       .populate('createdBy', 'username')
       .populate('updatedBy', 'username')
       .populate('lockedBy', 'username')
+      .populate('receiver', 'username')
 
     if (!productExpense) return responseHelper.error(res, 'Không tìm thấy phiếu chi', 404)
 
@@ -135,19 +136,35 @@ export const getPaymentExpenses = async (req, res) => {
         date: { $first: '$date' },
         warehouse: { $first: '$warehouse' },
         reason: { $first: '$reason' },
+        receiver: { $first: '$receiver' },
         note: { $first: '$note' },
         expenseAmount: { $first: '$expenseAmount' },
         createdBy: { $first: '$createdBy.username' }
       }
     })
 
-    basePipeline.push({ $sort: { [sortField]: sortDir } })
+    // Pipeline để tính tổng tiền
+    const totalAmountPipeline = [
+      ...basePipeline,
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: '$expenseAmount' }
+        }
+      }
+    ]
 
     const countPipeline = [...basePipeline, { $count: 'totalCount' }]
-    const totalData = await ProductExpense.aggregate(countPipeline)
+
+    const [totalAmountResult, totalData] = await Promise.all([
+      ProductExpense.aggregate(totalAmountPipeline),
+      ProductExpense.aggregate(countPipeline)
+    ])
+
+    const totalAmount = totalAmountResult.length > 0 ? totalAmountResult[0].totalAmount : 0
     const recordsTotal = totalData.length > 0 ? totalData[0].totalCount : 0
 
-    basePipeline.push({ $skip: start }, { $limit: length })
+    basePipeline.push({ $sort: { [sortField]: sortDir } }, { $skip: start }, { $limit: length })
 
     const data = await ProductExpense.aggregate(basePipeline)
 
@@ -155,6 +172,10 @@ export const getPaymentExpenses = async (req, res) => {
       draw,
       recordsTotal,
       recordsFiltered: recordsTotal,
+      summary: {
+        totalExpenses: recordsTotal, // Tổng số phiếu
+        totalAmount: totalAmount // Tổng tiền
+      },
       data
     })
   } catch (error) {
@@ -180,8 +201,14 @@ export const updatePaymentExpenses = async (req, res) => {
       if (oldExpense.isLocked)
         throw new BusinessError('Phiếu chi đã bị khóa, không thể chỉnh sửa', 400)
 
-      const { expenseAmount, reason, note } = req.body
-      const updateData = { reason, note, expenseAmount, updatedBy: req.user._id }
+      const { expenseAmount, reason, note, receiver } = req.body
+      const updateData = {
+        reason,
+        note,
+        receiver,
+        expenseAmount,
+        updatedBy: req.user._id
+      }
 
       const updatedExpense = await ProductExpense.findOneAndUpdate(
         { _id: id, organization: organizationId },
@@ -193,7 +220,7 @@ export const updatePaymentExpenses = async (req, res) => {
 
       await updatedExpense.populate([
         { path: 'warehouse', select: 'name location' },
-        { path: 'createdBy updatedBy lockedBy', select: 'username' }
+        { path: 'createdBy updatedBy lockedBy receiver', select: 'username' }
       ])
 
       return updatedExpense
