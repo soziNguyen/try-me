@@ -97,7 +97,7 @@
       </div>
 
 
-      <div class="tax-report mt-5">
+      <div class="tax-report">
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
           <h4 class="fw-bold text-dark mb-0">
             <i class="bi bi-graph-up-arrow text-primary me-2"></i>
@@ -126,7 +126,26 @@
         </div>
       </div>
 
-      <div class="tax-report mt-5">
+      <div class="tax-report ">
+        <table id="tax-dataTable" class="table table-hover table-bordered align-middle table-info">
+          <h4 class="fw-bold text-dark mb-0">
+            Tiền từ phiếu thu
+          </h4>
+          <thead class="table-primary bg-gradient text-center">
+            <tr>
+              <th>Thời gian</th>
+              <th>Kho</th>
+              <th>Tổng số phiếu </th>
+              <th>Tổng chi phí</th>
+            </tr>
+          </thead>
+          <tbody id="receipts-data">
+            <!-- JS render dữ liệu -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="tax-report ">
         <table id="tax-dataTable" class="table table-hover table-bordered align-middle table-info">
           <h4 class="fw-bold text-dark mb-0">
             Tiền từ phiếu chi
@@ -145,24 +164,28 @@
         </table>
       </div>
 
-
-      <div class="tax-report mt-5">
-        <table id="tax-dataTable" class="table table-hover table-bordered align-middle table-info">
-          <h4 class="fw-bold text-dark mb-0">
-            Tiền từ phiếu thu
-          </h4>
-          <thead class="table-primary bg-gradient text-center">
-            <tr>
-              <th>Thời gian</th>
-              <th>Kho</th>
-              <th>Tổng số phiếu </th>
-              <th>Tổng chi phí</th>
-            </tr>
-          </thead>
-          <tbody id="receipts-data">
-            <!-- JS render dữ liệu -->
-          </tbody>
-        </table>
+      <div class="tax-report mt-3">
+        <h4 class="fw-bold text-dark mb-3">Kết quả thu - chi</h4>
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <table class="table table-hover mb-0">
+              <tbody>
+                <tr>
+                  <td class="fw-semibold text-dark px-4 py-3">Tổng thu</td>
+                  <td id="total-receipts" class="text-end text-success fw-bold">0 ₫</td>
+                </tr>
+                <tr>
+                  <td class="fw-semibold text-dark px-4 py-3">Tổng chi</td>
+                  <td id="total-expenses" class="text-end text-danger fw-bold">0 ₫</td>
+                </tr>
+                <tr class="table-active">
+                  <td class="fw-bold text-dark px-4 py-3">Kết quả</td>
+                  <td id="result-balance" class="text-end fw-bold fs-5"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
     </div>

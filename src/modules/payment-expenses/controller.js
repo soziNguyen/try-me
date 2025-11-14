@@ -102,6 +102,22 @@ export const getPaymentExpenses = async (req, res) => {
       matchCondition.warehouse = new mongoose.Types.ObjectId(String(warehouse))
     }
 
+    // ====== THÊM FILTER THEO NGÀY ======
+    const startDate = req.query.startDate
+    const endDate = req.query.endDate
+
+    if (startDate || endDate) {
+      matchCondition.date = {}
+      if (startDate) {
+        matchCondition.date.$gte = new Date(startDate)
+      }
+      if (endDate) {
+        const end = new Date(endDate)
+        end.setDate(end.getDate() + 1)
+        matchCondition.date.$lt = end
+      }
+    }
+
     const basePipeline = [
       { $match: matchCondition },
       ...lookupRef('warehouse', 'Warehouses'),
