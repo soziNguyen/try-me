@@ -169,6 +169,9 @@ body {
   width: 48px;
   height: 48px;
 }
+.admin__layout .admin__header #notificationBtn:hover {
+  background-color: var(--gray-light) !important;
+}
 .admin__layout .admin__main {
   margin-top: 40px;
   -webkit-box-flex: 1;
@@ -460,6 +463,29 @@ body {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+.admin__layout #notificationModal .modal-dialog {
+  position: fixed;
+  top: 45px;
+  left: auto;
+  right: 50px;
+  width: 500px;
+  height: 600px;
+  -webkit-transform: none;
+          transform: none;
+}
+.admin__layout #notificationModal .modal-content {
+  height: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+.admin__layout #notificationModal .modal-body {
+  overflow-y: auto;
+}
 
 .staff__layout {
   height: 100vh;
@@ -507,6 +533,9 @@ body {
 .staff__layout .staff__header .dropdown.info .dropdown-menu .avatar {
   width: 48px;
   height: 48px;
+}
+.staff__layout .staff__header #notificationBtn:hover {
+  background-color: var(--gray-light) !important;
 }
 .staff__layout .staff__main {
   margin-top: 40px;
@@ -798,6 +827,29 @@ body {
 .staff__layout #orderDetailModal .modal-body {
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+.staff__layout #notificationModal .modal-dialog {
+  position: fixed;
+  top: 45px;
+  left: auto;
+  right: 50px;
+  width: 500px;
+  height: 600px;
+  -webkit-transform: none;
+          transform: none;
+}
+.staff__layout #notificationModal .modal-content {
+  height: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+.staff__layout #notificationModal .modal-body {
+  overflow-y: auto;
 }
 
 #themeModal .modal-dialog {

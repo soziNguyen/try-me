@@ -110,6 +110,12 @@ body {
         }
       }
     }
+
+    #notificationBtn {
+      &:hover {
+        background-color: var(--gray-light) !important;
+      }
+    }
   }
 
   .#{$role}__main {
@@ -396,6 +402,26 @@ body {
     .modal-body {
       scrollbar-width: none;
       -ms-overflow-style: none; // IE / Edge legacy
+    }
+  }
+
+  #notificationModal {
+    .modal-dialog {
+      position: fixed;
+      top: 45px;
+      left: auto;
+      right: 50px;
+      width: 500px;
+      height: 600px;
+      transform: none;
+    }
+    .modal-content {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-body {
+      overflow-y: auto;
     }
   }
 }
