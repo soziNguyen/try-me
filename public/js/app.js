@@ -2,9 +2,8 @@ toastr.options = {
   escapeHtml: false,
   closeButton: true,
   timeOut: 2000,
-  positionClass: 'toast-top-right',
+  positionClass: 'toast-top-right'
   // progressBar: true,
-  preventDuplicates: true
 }
 
 async function ajax(url, data = {}, method = 'POST') {

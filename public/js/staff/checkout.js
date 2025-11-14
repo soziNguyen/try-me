@@ -83,22 +83,6 @@ function calculateTotals() {
   updateChangeAmount()
 }
 
-function syncCheckoutDetailTotal() {
-  const totalAmountEl = document.getElementById('totalAmount')
-  const totalPayableEl = document.getElementById('totalPayable')
-  const customerPaidInput = document.getElementById('customerPaidInput')
-
-  if (!totalAmountEl || !totalPayableEl) return
-
-  const totalText = totalAmountEl.textContent.replace(/[^\d]/g, '')
-  const totalNumber = Number(totalText) || 0
-
-  totalPayableEl.value = totalNumber.toLocaleString()
-  if (customerPaidInput) customerPaidInput.value = ''
-
-  calculateTotals()
-}
-
 // CASH SUGGESTIONS FUNCTIONS
 function showPriceSuggestions(show) {
   const priceSuggestionDiv = document.querySelector('.price-suggestion')

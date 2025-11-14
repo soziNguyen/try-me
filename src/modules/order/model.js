@@ -22,7 +22,10 @@ const OrderSchema = new Schema(
         foodId: { type: Schema.Types.ObjectId, ref: 'MenuItem' },
         comboId: { type: Schema.Types.ObjectId, ref: 'Combo' },
         quantity: { type: Number, default: 1 },
-        price: { type: Number, required: true }
+        price: { type: Number, required: true },
+        status: { type: String, enum: ['pending', 'cooking', 'done'], default: 'pending' },
+        batch: { type: Number, default: 1 }, // Lần gửi
+        sentAt: { type: Date, default: Date.now } // Thời gian gửi
       }
     ],
     totalAmount: { type: Number, default: 0 }, // Tổng tiền gốc
@@ -56,7 +59,7 @@ const OrderSchema = new Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      default: null
     },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,

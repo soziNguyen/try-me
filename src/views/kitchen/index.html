@@ -1,0 +1,34 @@
+<%- include('../partials/header.html') %>
+  <div class="admin__layout">
+
+    <%- include('../partials/navbar.html') %>
+
+      <div class="container container-xl mt-4 py-4">
+        <h2 class="mb-4 fw-bold">
+          <%= pageTitle %>
+        </h2>
+        <div class="row kitchen-orders g-3"></div>
+      </div>
+
+      <!-- Modal Chi tiết Đơn -->
+      <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="orderDetailModalLabel">Chi tiết đơn hàng</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body mh-600 overflow-auto">
+              <div id="orderDetailContent"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  </div>
+
+  <%- include('../partials/commonjs.html') %>
+    <script src="/js/sidebar-toggle.js"></script>
+    <script src="/js/kitchen.js"></script>
+    <%- include('../partials/footer.html') %>

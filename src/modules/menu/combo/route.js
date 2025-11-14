@@ -13,7 +13,7 @@ import { checkWarehouseAccess } from '../../../helpers/warehouseHelper.js'
 
 const router = express.Router()
 
-router.get('/api/menu/combos/active', getActiveCombos)
+router.get('/api/menu/combos/active', checkWarehouseAccess, getActiveCombos)
 router.get(
   '/api/menu/combos',
   isAuthenticated,
@@ -42,5 +42,5 @@ router.post(
   isPermit('Admin', 'Org'),
   deleteCombos
 )
-router.get('/api/menu/combo/search', isAuthenticated, checkWarehouseAccess, searchCombos)
+router.get('/api/menu/combo/search', checkWarehouseAccess, searchCombos)
 export default router

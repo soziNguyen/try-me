@@ -23,7 +23,9 @@ export const createTable = async (req, res) => {
     }
 
     const newTable = new Table(data)
-    const url = `/api/scan/${newTable._id.toString()}`
+    const domainName = process.env.DOMAIN || 'http://localhost:6001'
+
+    const url = `${domainName}/api/scan/${newTable._id.toString()}`
     // Generate QR
     const qrImage = await QRCode.toDataURL(url, {
       width: 200,
@@ -45,7 +47,7 @@ export const scanQRCode = async (req, res) => {
   const tableId = req.params.id
   try {
     const result = await createOrderForTable({ tableId, req })
-    return res.redirect(`/orders/${result.orderId}`)
+    return res.redirect(`/cart?tableId=${result.tableId}&orderId=${result.orderId}`)
   } catch (err) {
     responseHelper.error(res, err.message)
   }

@@ -12528,6 +12528,11 @@
 .w {
   width: 300px !important;
 }
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
 .layout {
   display: flex;
   align-items: center;

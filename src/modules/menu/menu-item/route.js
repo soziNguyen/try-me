@@ -15,7 +15,7 @@ import { checkWarehouseAccess } from '../../../helpers/warehouseHelper.js'
 const router = express.Router()
 
 router.get('/api/menus/active', isAuthenticated, checkWarehouseAccess, getActiveMenusForRecipe)
-router.get('/api/menu/get/active', isAuthenticated, checkWarehouseAccess, getActiveMenus)
+router.get('/api/menu/get/active', checkWarehouseAccess, getActiveMenus)
 router.get(
   '/api/menu/get/',
   isAuthenticated,
@@ -23,7 +23,7 @@ router.get(
   isPermit('Admin', 'Org'),
   getMenus
 )
-router.get('/api/menu/search', isAuthenticated, checkWarehouseAccess, searchMenus)
+router.get('/api/menu/search', checkWarehouseAccess, searchMenus)
 router.post(
   '/api/menu/create',
   isAuthenticated,

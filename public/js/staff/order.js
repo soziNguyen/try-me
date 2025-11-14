@@ -22,35 +22,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       ajax('/api/menu/combos/active', {}, 'GET')
     ])
 
-    if (!Array.isArray(foods)) {
-      return
-    }
-
     allItems = mergeMenus(foods, combos)
-
     renderMenu(allItems)
     renderCategories(extractCategories(allItems))
 
     // Xử lý order nếu có orderId
-    if (orderId) {
-      const orderRes = await fetch(`/api/orders/${orderId}`)
-      searchInput.focus()
-      const orderData = await orderRes.json()
-      if (orderRes.ok) updateOrderUI(orderData.data)
-      await getTables(orderData.data)
-    } else {
-      const warningDiv = document.getElementById('orderWarning')
-      if (warningDiv) {
-        warningDiv.innerHTML = `
-          <div class="alert alert-warning">
-            ⚠️ Vui lòng chọn bàn trước khi thao tác gọi món.
-          </div>
-        `
-      }
-    }
-  } catch (error) {
-    console.error('Lỗi khi tải thực đơn và combo:', error)
+    await loadOrderInfo(orderId)
+    setInterval(() => loadOrderInfo(orderId), 30 * 1000)
+  } catch (e) {
+    console.error('Lỗi khi tải dữ liệu menu:', e)
   }
+
+  // Luôn fetch danh sách hóa đơn
+  await fetchEmptyOrders()
 
   // Xóa / cập nhật món trong hóa đơn
   const tbody = document.getElementById('orderItems')
@@ -73,6 +57,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     })
   }
 })
+
+async function loadOrderInfo(orderId) {
+  if (!orderId) {
+    const warningDiv = document.getElementById('orderWarning')
+    if (warningDiv) {
+      warningDiv.innerHTML = `
+        <div class="alert alert-warning">
+          ⚠️ Vui lòng chọn bàn trước khi thao tác gọi món.
+        </div>
+      `
+    }
+    return
+  }
+
+  try {
+    const orderRes = await fetch(`/api/orders/${orderId}`)
+    const orderData = await orderRes.json()
+
+    if (orderRes.ok) {
+      updateOrderUI(orderData.data)
+      await getTables(orderData.data)
+    }
+  } catch (e) {
+    console.error('Lỗi khi load order:', e)
+  }
+}
 
 // ===== hóa đơn trống ======
 const createOrderCard = document.getElementById('createOrderCard')
@@ -307,39 +317,27 @@ $('#table-select').on('change', async function () {
       return
     }
 
-    const assignResult = await ajax(
-      `/api/orders/${orderIdToAssign}/assign-table`,
-      { tableId },
-      'POST'
-    )
-    if (!assignResult?.orderId) {
-      toastr.error('Lỗi khi giao bàn')
-      return
+    const result = await ajax(`/api/orders/${orderIdToAssign}/assign-table`, { tableId }, 'POST')
+
+    if (result) {
+      toastr.success('Gán bàn thành công!')
+      await fetchEmptyOrders()
+
+      // Lấy thông tin bàn vừa chọn (tên)
+      const selectedOption = $(this).find(`option[value="${tableId}"]`)
+      const tableName = selectedOption.length ? selectedOption.text() : 'Bàn đã gán'
+
+      // Cập nhật lại select để hiển thị bàn đã gán
+      await getTables({
+        tableId: {
+          _id: tableId,
+          name: tableName
+        }
+      })
     }
-
-    toastr.success('Gán bàn thành công!')
-    await fetchEmptyOrders()
-
-    // Lấy thông tin bàn vừa chọn (tên)
-    const selectedOption = $(this).find(`option[value="${tableId}"]`)
-    const tableName = selectedOption.length ? selectedOption.text() : 'Bàn đã gán'
-
-    // Cập nhật lại select để hiển thị bàn đã gán
-    await getTables({
-      tableId: {
-        _id: tableId,
-        name: tableName
-      }
-    })
   } catch (err) {
-    toastr.error('Lỗi khi giao bàn: ' + err.message)
+    console.error('Lỗi khi giao bàn: ' + err.message)
   }
-})
-
-// Khi trang được load
-document.addEventListener('DOMContentLoaded', async () => {
-  await fetchEmptyOrders()
-  await loadOrder()
 })
 
 // ===== Categories =====
@@ -668,6 +666,7 @@ async function addToOrder(foodId, foodName, price) {
       toastr.error(result.message || 'Lỗi khi thêm món')
       return
     }
+    toastr.remove()
     toastr.success(`Đã thêm ${foodName} vào hóa đơn`)
     updateOrderUI(result.data)
   } catch (err) {
@@ -695,6 +694,7 @@ async function addComboToOrder(comboId, comboName, price) {
       toastr.error(result.message || 'Lỗi khi thêm combo')
       return
     }
+    toastr.remove()
     toastr.success(`Đã thêm combo ${comboName} vào hóa đơn`)
     updateOrderUI(result.data)
   } catch (err) {
@@ -819,7 +819,7 @@ $(async () => {
       const customer = order.customerId
 
       initSelect2()
-      const $select = $('#customerSelect') // giả sử select khách hàng có id này
+      const $select = $('#customerSelect')
 
       if (customer?._id) {
         const option = new Option(`${customer.name} - ${customer.phone}`, customer._id, true, true)

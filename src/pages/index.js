@@ -100,6 +100,8 @@ export const dashboard = async (req, res) => {
         headerClass: 'admin__header'
       })
     )
+  } else if (req.user && req.user.role === 'Kitchen') {
+    return res.redirect('/kitchen/orders')
   } else {
     return res.render(
       'users/staff_dashboard',
@@ -860,6 +862,20 @@ export const paymentMethodForAdminPage = async (req, res) => {
     getPageData(req, 'Quản lý phương thức thanh toán', 'Payment Method', {
       headerClass: 'admin__header',
       pageTitle: 'PHƯƠNG THỨC THANH TOÁN'
+    })
+  )
+}
+
+export const customerUI = async (req, res) => {
+  res.render('customer/index', getPageData(req, 'Đặt hàng'))
+}
+
+export const kitchenPage = async (req, res) => {
+  res.render(
+    'kitchen/index',
+    getPageData(req, 'Quản lý chế biến', 'Kitchen', {
+      headerClass: 'admin__header',
+      pageTitle: 'CHẾ BIẾN'
     })
   )
 }

@@ -19,6 +19,7 @@ router.get(
   orderController.getTopItems
 )
 router.post('/api/orders', isAuthenticated, checkWarehouseAccess, orderController.createOrder)
+router.get('/api/order/:orderId/public', orderController.getOrderByIdPublic)
 router.get(
   '/api/orders/:orderId',
   isAuthenticated,
@@ -73,4 +74,6 @@ router.post(
   checkWarehouseAccess,
   orderController.assignTableToOrder
 )
+
+router.post('/api/order/:orderId/add-items', orderController.submitOrderFromCustomer)
 export default router
