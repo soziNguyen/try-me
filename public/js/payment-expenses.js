@@ -114,7 +114,12 @@ $(function () {
           className: 'text-center',
           render: (data) => data || ''
         },
-
+        {
+          data: 'receiver',
+          title: 'Họ và tên người nhận',
+          className: 'text-center',
+          render: (data) => data || ''
+        },
         {
           data: 'note',
           title: 'Ghi chú',

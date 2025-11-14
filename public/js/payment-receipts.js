@@ -7,12 +7,12 @@ $(function () {
     .then(([whs]) => {
       warehouses = whs
       initDataTable()
-      initOrderTable()
+      initOrderTable('all')
     })
     .catch((err) => {
       toastr.error('Không load được danh sách kho', err)
       initDataTable()
-      initOrderTable()
+      initOrderTable('all')
     })
 
   // 2. Khởi tạo DataTable phiếu thu
@@ -48,10 +48,11 @@ $(function () {
   }
 
   // 3. Khởi tạo bảng đơn hàng
-  function initOrderTable() {
+  function initOrderTable(warehouseId = 'all') {
     $.ajax({
       url: '/api/orders/get',
       method: 'GET',
+      data: { warehouse: warehouseId },
       success: function (res) {
         const data = res.data || res
         const tbody = $('#receiptTableBody2')
@@ -195,21 +196,25 @@ $(function () {
     const rightGroup = $('.right-group')
 
     const html = `
-      <select id="warehouseFilter" class="form-select me-2" style="width: 200px;">
-        <option value="all">Tất cả kho</option>
-        ${warehouses.map((w) => `<option value="${w._id}">${w.name}</option>`).join('')}
-      </select>
-      <button class="btn btn-outline-danger me-2" id="deletePaymentReceiptBtn">
-        <i class="bi bi-trash"></i> Xóa
-      </button>
-      <button class="btn btn-outline-success" id="addPaymentReceiptBtn">
-        <i class="bi bi-plus-circle"></i> Thêm
-      </button>
-    `
+    <select id="warehouseFilter" class="form-select me-2" style="width: 200px;">
+      <option value="all">Tất cả kho</option>
+      ${warehouses.map((w) => `<option value="${w._id}">${w.name}</option>`).join('')}
+    </select>
+    <button class="btn btn-outline-danger me-2" id="deletePaymentReceiptBtn">
+      <i class="bi bi-trash"></i> Xóa
+    </button>
+    <button class="btn btn-outline-success" id="addPaymentReceiptBtn">
+      <i class="bi bi-plus-circle"></i> Thêm
+    </button>
+  `
 
     rightGroup.html(html).addClass('d-flex align-items-center')
 
-    $('#warehouseFilter').on('change', () => table.ajax.reload())
+    $('#warehouseFilter').on('change', () => {
+      const selectedWarehouse = $('#warehouseFilter').val() || 'all'
+      table.ajax.reload()
+      initOrderTable(selectedWarehouse)
+    })
 
     $('#addPaymentReceiptBtn').on('click', () => {
       const selectedWarehouse = $('#warehouseFilter').val()
