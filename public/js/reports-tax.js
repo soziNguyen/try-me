@@ -111,6 +111,7 @@ $(function () {
     loadTaxSummary(startDate, endDate)
     loadExpenseSummary(startDate, endDate)
     loadReceiptsSummary(startDate, endDate)
+    updateBalanceSummary(startDate, endDate)
   }
 
   // RENDER BẢNG DỮ LIỆU
@@ -268,6 +269,45 @@ $(function () {
       $receiptsTbody.html(
         '<tr><td colspan="4" class="text-center text-danger">Không thể tải dữ liệu</td></tr>'
       )
+    }
+  }
+
+  async function updateBalanceSummary(startDate, endDate) {
+    try {
+      const query = { start: 0, length: 10000 }
+
+      if (startDate) query.startDate = startDate
+      if (endDate) query.endDate = endDate
+
+      // Thêm filter warehouse
+      const warehouse = $warehouseFilter.val()
+      if (warehouse && warehouse !== 'all') {
+        query.warehouse = warehouse
+      }
+
+      const [receiptsRes, expensesRes] = await Promise.all([
+        fetch(`/api/payment-receipts?${new URLSearchParams(query)}`),
+        fetch(`/api/payment-expenses?${new URLSearchParams(query)}`)
+      ])
+
+      const receiptsData = await receiptsRes.json()
+      const expensesData = await expensesRes.json()
+
+      const totalReceipts = receiptsData.summary?.totalAmount || 0
+      const totalExpenses = expensesData.summary?.totalAmount || 0
+      const balance = totalReceipts - totalExpenses
+
+      $('#total-receipts').text(formatCurrency(totalReceipts))
+      $('#total-expenses').text(formatCurrency(totalExpenses))
+
+      const $result = $('#result-balance')
+      let color = balance >= 0 ? 'text-success' : 'text-danger'
+      let text = balance >= 0 ? 'Lãi' : 'Lỗ'
+
+      $result.html(`<span class="${color}">${text}: ${formatCurrency(Math.abs(balance))}</span>`)
+    } catch (err) {
+      console.error('Lỗi tính tổng thu chi:', err)
+      $('#result-balance').html('<span class="text-danger">Không tính được</span>')
     }
   }
 
