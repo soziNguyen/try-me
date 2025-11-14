@@ -875,7 +875,7 @@ export const kitchenPage = async (req, res) => {
     'kitchen/index',
     getPageData(req, 'Quản lý chế biến', 'Kitchen', {
       headerClass: 'admin__header',
-      pageTitle: 'CHẾ BIẾN MÓN ĂN'
+      pageTitle: 'CHẾ BIẾN'
     })
   )
 }

@@ -11,19 +11,15 @@ export const getKitchenOrders = async (req, res) => {
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const matchCondition = {}
-
-    if (req.warehouseFilter) {
-      matchCondition.warehouse = req.warehouseFilter
-    } else {
+    if (req.warehouseFilter) matchCondition.warehouse = req.warehouseFilter
+    else {
       const org = await Organization.findById(organizationId).select('defaultWarehouse')
       if (org?.defaultWarehouse) matchCondition.warehouse = org.defaultWarehouse
     }
 
-    // Lấy các order còn món chưa hoàn thành
     const orders = await Order.find({
       ...matchCondition,
-      'items.status': { $in: ['pending', 'cooking'] },
-      status: 'open' // chỉ open order
+      status: 'open'
     })
       .sort({ createdAt: 1 })
       .populate('items.foodId', 'name')
@@ -38,23 +34,44 @@ export const getKitchenOrders = async (req, res) => {
       })
       .lean()
 
-    const now = new Date()
+    const orderCards = []
+
     orders.forEach((order) => {
-      const itemStatuses = order.items.map((i) => i.status)
+      const batches = {}
 
-      if (itemStatuses.every((s) => s === 'done')) {
-        order.status = 'done'
-      } else if (itemStatuses.some((s) => s === 'cooking')) {
-        order.status = 'cooking'
-      } else {
-        order.status = 'pending'
-      }
+      // Gom items theo batch
+      order.items.forEach((item) => {
+        const batch = item.batch || 1
+        if (!batches[batch]) batches[batch] = []
+        batches[batch].push(item)
+      })
 
-      order.timeElapsed = Math.floor((now - new Date(order.createdAt)) / 60000)
-      order.isDelayed = order.timeElapsed > 10
+      Object.keys(batches).forEach((batchKey) => {
+        const batchItems = batches[batchKey]
+        const allDone = batchItems.every((item) => item.status === 'done')
+
+        if (!allDone) {
+          // Nếu còn món chưa done -> push cả batch (bao gồm món done + chưa done)
+          orderCards.push({
+            ...order,
+            items: batchItems,
+            batch: Number(batchKey)
+          })
+        }
+      })
     })
 
-    responseHelper.success(res, orders)
+    // sort theo thời gian tạo + batch
+    orderCards.sort((a, b) => {
+      // Lấy thời gian sent sớm nhất trong batch
+      const aSent = Math.min(...a.items.map((i) => new Date(i.sentAt || a.createdAt)))
+      const bSent = Math.min(...b.items.map((i) => new Date(i.sentAt || b.createdAt)))
+      const timeDiff = aSent - bSent
+      if (timeDiff !== 0) return timeDiff
+      return (a.batch || 1) - (b.batch || 1)
+    })
+
+    responseHelper.success(res, orderCards)
   } catch (error) {
     responseHelper.error(res, error.message)
   }
@@ -68,19 +85,21 @@ export const getKitchenOrderDetail = async (req, res) => {
     const warehouseId = await getWarehouse(req, organizationId)
 
     const { orderId } = req.params
-
     if (!mongoose.Types.ObjectId.isValid(orderId))
       return responseHelper.error(res, 'Mã đơn hàng không hợp lệ', 400)
 
-    const order = await Order.findOne({
-      _id: orderId,
-      warehouse: warehouseId
-    })
+    const order = await Order.findOne({ _id: orderId, warehouse: warehouseId })
       .populate('items.foodId', 'name')
-      .populate('items.comboId', 'name items  ')
+      .populate('items.comboId', 'name items')
       .lean()
 
     if (!order) return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
+
+    // sort items theo batch + sentAt
+    order.items = order.items.sort((a, b) => {
+      if ((a.batch || 1) !== (b.batch || 1)) return (a.batch || 1) - (b.batch || 1)
+      return new Date(a.sentAt || order.createdAt) - new Date(b.sentAt || order.createdAt)
+    })
 
     responseHelper.success(res, order)
   } catch (error) {

@@ -23,7 +23,9 @@ const OrderSchema = new Schema(
         comboId: { type: Schema.Types.ObjectId, ref: 'Combo' },
         quantity: { type: Number, default: 1 },
         price: { type: Number, required: true },
-        status: { type: String, enum: ['pending', 'cooking', 'done'], default: 'pending' }
+        status: { type: String, enum: ['pending', 'cooking', 'done'], default: 'pending' },
+        batch: { type: Number, default: 1 }, // Lần gửi
+        sentAt: { type: Date, default: Date.now } // Thời gian gửi
       }
     ],
     totalAmount: { type: Number, default: 0 }, // Tổng tiền gốc

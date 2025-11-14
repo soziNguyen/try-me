@@ -219,7 +219,6 @@ function createMenuItemHTML(item) {
   const name = item.name || (item.isCombo ? 'Combo không rõ tên' : 'Không rõ tên')
   const price = typeof item.price === 'number' ? item.price : 0
   const priceFormatted = price.toLocaleString()
-  // const comboItemsList = getComboItemsList(item)
 
   return `
     <div class="col">
@@ -228,9 +227,29 @@ function createMenuItemHTML(item) {
         <div class="card-body d-flex flex-column px-0 pb-0">
           <h5 class="card-title fw-semibold">${name}</h5>
           <p class="card-text text-secondary combo-text">${item.isCombo ? item.note || '' : item.description}</p>
-          <p class="card-text text-danger fw-bold fs-5 flex-grow-1">Giá: ${priceFormatted} đ</p>
+          
+          <div class="d-flex align-items-center justify-content-between flex-grow-1 mt-auto">
+            <p class="card-text text-danger fw-bold font18 mb-0">Giá: ${priceFormatted} đ</p>
+            
+            <div class="d-flex align-items-center rounded-2 me-1">
+              <button 
+                class="btn btn-quantity-menu btn-decrease-menu font18 pe-0"
+                data-id="${item._id}">
+                <i class="bi bi-dash-circle"></i>
+              </button>
+              
+              <span class="mx-3 fw-bold font18 quantity-display" data-id="${item._id}">1</span>
+              
+              <button 
+                class="btn btn-quantity-menu btn-increase-menu font18 px-0"
+                data-id="${item._id}">
+                <i class="bi bi-plus-circle"></i>
+              </button>
+            </div>
+          </div>
+          
           <button 
-            class="btn ${item.isCombo ? 'btn-success' : 'btn-primary'} rounded-1 px-4 py-2 py mt-auto ms-auto btn-add-to-order"
+            class="btn ${item.isCombo ? 'btn-success' : 'btn-primary'} rounded-1 px-4 py-2 ms-auto mt-1 btn-add-to-order"
             data-id="${item._id}"
             data-name="${name}"
             data-price="${price}"
@@ -248,14 +267,40 @@ function getImageSrc(image) {
   return image.startsWith('/') || image.startsWith('http') ? image : '/uploads/' + image
 }
 
-// function getComboItemsList(item) {
-//   if (!item.isCombo || !Array.isArray(item.items)) return ''
-//   return item.items.map((i) => i.menuItem?.name || 'Không rõ món').join(', ')
-// }
-
 function attachMenuEventListeners(menuDiv) {
+  // Nút giảm số lượng trên menu
+  menuDiv.querySelectorAll('.btn-decrease-menu').forEach((button) => {
+    button.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const itemId = button.dataset.id
+      const qtyDisplay = menuDiv.querySelector(`.quantity-display[data-id="${itemId}"]`)
+      let currentQty = parseInt(qtyDisplay.textContent)
+      if (currentQty > 1) {
+        currentQty -= 1
+        qtyDisplay.textContent = currentQty
+      }
+    })
+  })
+
+  // Nút tăng số lượng trên menu
+  menuDiv.querySelectorAll('.btn-increase-menu').forEach((button) => {
+    button.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const itemId = button.dataset.id
+      const qtyDisplay = menuDiv.querySelector(`.quantity-display[data-id="${itemId}"]`)
+      let currentQty = parseInt(qtyDisplay.textContent)
+      currentQty += 1
+      qtyDisplay.textContent = currentQty
+    })
+  })
+
+  // Nút thêm vào giỏ
   menuDiv.querySelectorAll('.btn-add-to-order').forEach((button) => {
     button.addEventListener('click', () => {
+      const itemId = button.dataset.id
+      const qtyDisplay = menuDiv.querySelector(`.quantity-display[data-id="${itemId}"]`)
+      const quantity = parseInt(qtyDisplay.textContent)
+
       const item = {
         _id: button.dataset.id,
         name: button.dataset.name,
@@ -263,7 +308,11 @@ function attachMenuEventListeners(menuDiv) {
         isCombo: button.dataset.isCombo === 'true',
         image: button.dataset.image || '/assets/images/default.png'
       }
-      addToCart(item)
+
+      addToCart(item, quantity)
+
+      // Reset về 1 sau khi thêm
+      qtyDisplay.textContent = '1'
     })
   })
 }
@@ -311,19 +360,19 @@ function updateCartQuantity() {
   }
 }
 
-function addToCart(item) {
+function addToCart(item, quantity = 1) {
   const cart = getCartItems()
 
   const index = cart.findIndex((i) => i._id === item._id && i.isCombo === item.isCombo)
   if (index >= 0) {
-    cart[index].quantity += 1
+    cart[index].quantity += quantity
   } else {
-    cart.push({ ...item, quantity: 1 })
+    cart.push({ ...item, quantity })
   }
 
   setCartItems(cart)
   toastr.remove()
-  toastr.success(`${item.name} đã được thêm vào giỏ`)
+  toastr.success(`x${quantity} ${item.name} đã được thêm vào giỏ`)
   renderCart()
   updateCartQuantity()
   updateTotalPrice()
@@ -472,7 +521,6 @@ function submitOrder() {
       }
     } catch (error) {
       console.error('Lỗi gửi đơn hàng:', error)
-      toastr.error('Gửi đơn hàng thất bại. Vui lòng thử lại.')
     }
   })
 }

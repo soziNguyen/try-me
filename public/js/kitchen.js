@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
   await fetchKitchenOrders()
-  setInterval(fetchKitchenOrders, 30000) // Tự động làm mới mỗi 30 giây
+  setInterval(fetchKitchenOrders, 30 * 1000) // Tự động làm mới mỗi 30 giây
   customeScrollbarInit()
 })
 
@@ -36,24 +36,30 @@ function renderKitchenOrders(orders) {
     col.className = 'col-md-6 col-lg-4'
 
     const card = document.createElement('div')
-    card.className = 'card border-0 shadow h-100'
+    card.className = 'card border-0 shadow h-100 cursor-pointer'
     card.dataset.orderId = order._id
 
-    const timeElapsed = Math.floor((Date.now() - new Date(order.createdAt)) / 60000)
+    // Lấy thời gian gửi sớm nhất trong batch
+    const sentTimes = order.items.map((item) => new Date(item.sentAt || order.createdAt))
+    const earliestSent = new Date(Math.min(...sentTimes))
+
+    const timeElapsed = Math.floor((Date.now() - earliestSent) / 60000)
     const urgencyClass = timeElapsed > 30 ? 'danger' : timeElapsed > 15 ? 'warning' : 'success'
 
     card.innerHTML = `
       <div class="card-header bg-white border-0 py-3">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <h5 class="mb-1 fw-bold text-primary">#${order.code}</h5>
+            <h5 class="mb-1 fw-bold text-primary">#${order.code} ${
+              order.batch ? `- Lần ${order.batch}` : ''
+            }</h5>
             <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
               <span class="badge bg-${urgencyClass} text-white px-2 py-1">
-                ${new Date(order.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                ${earliestSent.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
               </span>
               ${
                 order.tableId
-                  ? `<span class="badge bg-info text-white px-2 py-1">Bàn ${order.tableId ? order.tableId.name : 'Mang về'}</span>`
+                  ? `<span class="badge bg-info text-white px-2 py-1">Bàn ${order.tableId.name}</span>`
                   : `<span class="badge bg-secondary text-white px-2 py-1">Mang đi</span>`
               }
             </div>
