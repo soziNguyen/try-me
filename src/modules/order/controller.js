@@ -35,7 +35,7 @@ export const createOrder = async (req, res) => {
 
       const { tableId, isTakeaway, customerName } = req.body
       let customerPhone = req.body.customerPhone
-      let prefix = 'INV'
+      let prefix = 'HD'
 
       const matchCondition = {
         organizationId,

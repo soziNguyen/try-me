@@ -124,8 +124,10 @@ export const updateKitchenItemStatus = async (req, res) => {
     const order = await Order.findOne({
       _id: orderId,
       warehouse: warehouseId,
-      status: 'open' // chỉ cập nhật order đang mở
+      status: 'open'
     })
+      .populate('items.foodId items.comboId')
+      .populate('tableId')
 
     if (!order) return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
 
@@ -135,7 +137,39 @@ export const updateKitchenItemStatus = async (req, res) => {
     item.status = status
     order.updatedBy = req.user._id
 
+    console.log(order)
+
     await order.save()
+
+    const io = req.app.get('io')
+
+    // Lấy tên món từ foodId hoặc comboId
+    let itemName = 'Không rõ tên món'
+    if (item.foodId) {
+      itemName = item.foodId.name || itemName
+    } else if (item.comboId) {
+      itemName = item.comboId.name || itemName
+    }
+
+    const payload = {
+      type: 'kitchen_item_update',
+      orderId,
+      itemId,
+      itemName,
+      status,
+      time: new Date(),
+      isTakeaway: order.isTakeaway || false
+    }
+
+    if (order.isTakeaway) {
+      payload.tableId = null
+      payload.tableName = 'Mang về'
+    } else {
+      payload.tableId = order.tableId?._id || null
+      payload.tableName = order.tableId?.name || 'Không rõ bàn'
+    }
+
+    io.to('staff_room').emit('staff_notification', payload)
 
     responseHelper.success(res, item, 'Cập nhật trạng thái món thành công')
   } catch (error) {

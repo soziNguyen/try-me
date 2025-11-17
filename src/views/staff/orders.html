@@ -181,9 +181,7 @@
                           <div class="input-group">
                             <input type="text" id="discountCodeInput" class="form-control"
                               placeholder="Nhập mã giảm giá" />
-                            <button type="submit" id="applyDiscountBtn" class="btn btn-primary">
-                              <i class="bi bi-check2 me-1"></i>Áp dụng
-                            </button>
+                            <button type="submit" id="applyDiscountBtn" class="btn btn-primary">Áp dụng</button>
                           </div>
                           <small id="discountMessage" class="text-success d-block mt-1"></small>
                         </div>
@@ -203,9 +201,7 @@
                           </label>
                           <div class="input-group">
                             <input type="number" id="pointsInput" class="form-control" placeholder="0" min="0" />
-                            <button type="submit" id="applyPointsBtn" class="btn btn-primary">
-                              <i class="bi bi-check2 me-1"></i>Áp dụng
-                            </button>
+                            <button type="submit" id="applyPointsBtn" class="btn btn-primary">Áp dụng</button>
                           </div>
                           <small id="pointsMessage" class="text-success d-block mt-1"></small>
                         </div>
@@ -213,7 +209,7 @@
 
                       <div class="mb-2 d-none" id="pointsDiscountWrapper">
                         <label>
-                          <i class="bi bi-star-fill me-1 text-warning"></i>Giảm theo điểm (1 điểm = 500đ):
+                          Giảm theo điểm (1 điểm = 500đ):
                         </label>
                         <input type="number" id="pointsDiscountInput" class="form-control" placeholder="0" min="0"
                           readonly />
@@ -356,8 +352,9 @@
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
 
     <%- include('../partials/commonjs.html') %>
+      <script src="/js/library/socket.io.min.js"></script>
       <script src="/js/sidebar-toggle.js"></script>
       <script src="/js/notifications.js"></script>
-      <script src="/js/staff/order.js"></script>
       <script src="/js/staff/checkout.js"></script>
+      <script src="/js/staff/order.js"></script>
       <%- include('../partials/footer.html') %>
