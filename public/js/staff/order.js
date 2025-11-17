@@ -197,7 +197,7 @@ function renderEmptyOrders(orders) {
             role="tab" 
             aria-selected="${isActive}"
             ${isActive ? 'disabled' : ''}>
-            ${order.code}
+            ${formatOrderCode(order.code)}
           </button>
         `
       })
@@ -642,6 +642,8 @@ function updateOrderUI(order) {
   // Tổng tiền
   const total = calculateTotalAmount(order.items)
   totalAmountEl.textContent = `${total.toLocaleString()}đ`
+
+  syncCheckoutDetailTotal()
 }
 
 // ======== Các hàm xử lý thêm/xóa/sửa món ========
