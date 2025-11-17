@@ -356,7 +356,7 @@ export const upgradePlan = async (req, res) => {
     }
 
     // TẠO MÃ HÓA ĐƠN
-    const invoiceCode = await generateInvoiceCode(PlanTransaction, 'INV')
+    const invoiceCode = await generateInvoiceCode(PlanTransaction, 'HD')
 
     // TẠO TRANSACTION
     const transaction = await PlanTransaction.create({

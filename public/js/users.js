@@ -361,8 +361,6 @@ if (logInForm) {
       const user = await ajax(`/api/users/${userId}`, {}, 'GET')
       const businessType = user.organization?.businessType || null
 
-      console.log(businessType)
-
       const roleSelect = document.getElementById('new-role')
       const warehouseGroup = document.getElementById('warehouse-group')
       const warehouseSelect = document.getElementById('warehouse2')

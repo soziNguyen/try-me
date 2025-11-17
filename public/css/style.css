@@ -469,22 +469,12 @@ body {
   left: auto;
   right: 50px;
   width: 500px;
-  height: 600px;
   -webkit-transform: none;
           transform: none;
 }
-.admin__layout #notificationModal .modal-content {
-  height: 100%;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-}
 .admin__layout #notificationModal .modal-body {
-  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .staff__layout {
@@ -834,22 +824,12 @@ body {
   left: auto;
   right: 50px;
   width: 500px;
-  height: 600px;
   -webkit-transform: none;
           transform: none;
 }
-.staff__layout #notificationModal .modal-content {
-  height: 100%;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-}
 .staff__layout #notificationModal .modal-body {
-  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 #themeModal .modal-dialog {

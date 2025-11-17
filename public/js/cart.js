@@ -533,7 +533,21 @@ function initCallStaffSocket() {
   const btn = document.getElementById('btnContactToStaff')
   if (!btn) return
 
+  const COOLDOWN = 120000 // 2 phút
+  const KEY = `callStaff_${tableId}`
+
   btn.addEventListener('click', () => {
+    const lastTime = localStorage.getItem(KEY)
+    const now = Date.now()
+
+    // Kiểm tra cooldown
+    if (lastTime && now - lastTime < COOLDOWN) {
+      const remaining = Math.ceil((COOLDOWN - (now - lastTime)) / 1000)
+      toastr.remove()
+      toastr.warning(`Bạn đã gửi yêu cầu trước đó. Vui lòng chờ ${remaining} giây nữa để tiếp tục.`)
+      return
+    }
+
     const notification = {
       tableId,
       time: new Date().toISOString()
@@ -542,11 +556,15 @@ function initCallStaffSocket() {
     // Gửi lên server
     socket.emit('customer_call_staff', notification)
 
+    // Lưu thời gian gọi
+    localStorage.setItem(KEY, now.toString())
+
     // Lưu vào localStorage để giữ lịch sử
     let notifications = JSON.parse(localStorage.getItem('customerNotifications') || '[]')
     notifications.push(notification)
     localStorage.setItem('customerNotifications', JSON.stringify(notifications))
 
-    alert('Đã gửi yêu cầu! Nhân viên sẽ đến hỗ trợ bạn.')
+    toastr.remove()
+    toastr.success('Đã gửi yêu cầu! Nhân viên sẽ đến hỗ trợ bạn.')
   })
 }

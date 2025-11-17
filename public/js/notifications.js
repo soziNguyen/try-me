@@ -1,7 +1,7 @@
 const socket = io()
 
 const notificationBtn = document.getElementById('notificationBtn')
-const notificationModalBody = document.querySelector('#notificationModal .modal-body')
+const notificationModalBody = document.getElementById('notificationModalBody')
 const notificationBadge = document.getElementById('notificationBadge')
 
 // Tạo đối tượng Audio
@@ -9,33 +9,25 @@ const notificationSound = new Audio('/assets/sounds/sound.wav')
 notificationSound.preload = 'auto'
 notificationSound.volume = 1
 
-// Biến theo dõi trạng thái audio
 let audioEnabled = false
 
-// Enable audio sau lần tương tác đầu tiên của user
+// Enable audio sau lần đầu user click
 document.addEventListener(
   'click',
   function enableAudio() {
     audioEnabled = true
-    // Thử phát âm thanh với volume 0 để "unlock" audio context
     notificationSound.volume = 0
-    notificationSound
-      .play()
-      .then(() => {
-        notificationSound.pause()
-        notificationSound.currentTime = 0
-        notificationSound.volume = 1
-        // console.log('✅ Audio enabled')
-      })
-      .catch(() => {})
-
-    // Chỉ cần enable 1 lần
+    notificationSound.play().then(() => {
+      notificationSound.pause()
+      notificationSound.currentTime = 0
+      notificationSound.volume = 1
+    })
     document.removeEventListener('click', enableAudio)
   },
   { once: true }
 )
 
-// Khi nhân viên mở trang => join room staff
+// Nhân viên join room
 socket.emit('staff_join')
 
 // Nhận notification từ socket
@@ -45,90 +37,87 @@ socket.on('staff_notification', (data) => {
   saveUnseenNotification(data)
   showBadge()
 
-  // Phát âm thanh nếu đã được enable
   if (audioEnabled) {
-    notificationSound.currentTime = 0 // Reset về đầu
-    notificationSound
-      .play()
-      .then(() => console.log('🔔 Sound played'))
-      .catch((error) => {
-        console.error('Cannot play sound:', error.message)
-        if (error.name === 'NotAllowedError') {
-          console.warn('⚠️ User needs to interact with page first')
-        }
-      })
-  } else {
-    console.warn('⚠️ Audio not enabled yet. User needs to click on page first.')
+    notificationSound.currentTime = 0
+    notificationSound.play().catch(() => {})
   }
 })
 
-// Lưu tất cả notification vào localStorage
+// Lưu notification
 function saveNotification(data) {
-  let notifications = JSON.parse(localStorage.getItem('staff_notifications') || '[]')
-  notifications.push(data)
-  localStorage.setItem('staff_notifications', JSON.stringify(notifications))
+  const noti = JSON.parse(localStorage.getItem('staff_notifications') || '[]')
+  noti.push(data)
+  localStorage.setItem('staff_notifications', JSON.stringify(noti))
 }
 
 // Lưu notification chưa xem
 function saveUnseenNotification(data) {
-  let unseen = JSON.parse(localStorage.getItem('staff_notifications_unseen') || '[]')
+  const unseen = JSON.parse(localStorage.getItem('staff_notifications_unseen') || '[]')
   unseen.push(data)
   localStorage.setItem('staff_notifications_unseen', JSON.stringify(unseen))
 }
 
-// Append notification vào modal, gọi API nếu chưa có tableName
+// Append vào modal
 async function appendNotificationToModal(data) {
   if (!data.tableName && data.tableId) {
     try {
-      const result = await ajax(`/api/tables/${data.tableId}`, {}, 'GET')
-      if (result) {
-        const table = result
-        data.tableName = table.name ? `Bàn ${table.name}` : `Bàn ${data.tableId}`
-      } else {
-        data.tableName = `Bàn ${data.tableId}`
-      }
-    } catch (err) {
-      console.error(err)
+      const table = await ajax(`/api/tables/${data.tableId}`, {}, 'GET')
+      data.tableName = table?.name ? `Bàn ${table.name}` : `Bàn ${data.tableId}`
+    } catch {
       data.tableName = `Bàn ${data.tableId}`
     }
   }
 
-  const item = `
+  const html = `
     <div class="border-bottom py-2">
       <strong>${data.tableName}</strong> gửi yêu cầu hỗ trợ<br>
       <small>${new Date(data.time).toLocaleString()}</small>
     </div>
   `
-  notificationModalBody.insertAdjacentHTML('afterbegin', item)
+  notificationModalBody.insertAdjacentHTML('afterbegin', html)
+
+  const $modalBody = $('#notificationModalBody')
+  if ($modalBody.parent('.mCustomScrollbar').length) {
+    $modalBody.mCustomScrollbar('update')
+  }
 }
 
-// Khi load trang, render lại modal từ localStorage
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const saved = JSON.parse(localStorage.getItem('staff_notifications') || '[]')
-  saved.forEach(appendNotificationToModal)
 
-  // Nếu còn notification chưa đọc => hiện badge
+  for (const item of saved) {
+    await appendNotificationToModal(item)
+  }
+
   const unseen = JSON.parse(localStorage.getItem('staff_notifications_unseen') || '[]')
   if (unseen.length) showBadge()
 
-  if (notificationBtn) {
+  if (notificationBtn && !notificationBtn.dataset.bound) {
+    notificationBtn.dataset.bound = true
     notificationBtn.addEventListener('click', () => {
       showModal('notificationModal').show()
       hideBadge()
-      // Xóa tất cả notification chưa đọc khi mở modal
       localStorage.setItem('staff_notifications_unseen', '[]')
     })
   }
+
+  customScrollbarInit()
 })
 
-// Hiển thị chấm đỏ
+// Badge
 function showBadge() {
-  if (!notificationBadge) return
-  notificationBadge.classList.remove('d-none')
+  notificationBadge?.classList.remove('d-none')
 }
 
-// Ẩn chấm đỏ khi xem
 function hideBadge() {
-  if (!notificationBadge) return
-  notificationBadge.classList.add('d-none')
+  notificationBadge?.classList.add('d-none')
+}
+
+function customScrollbarInit() {
+  $('#notificationModalBody').mCustomScrollbar({
+    theme: 'minimal-dark',
+    axis: 'y',
+    scrollInertia: 200,
+    mouseWheel: { deltaFactor: 20, preventDefault: true }
+  })
 }
