@@ -68,8 +68,8 @@ function getStatusInfo(status) {
   return statusMap[status] || { text: status, color: 'secondary' }
 }
 
-// Render HTML cho notification (không thao tác DOM)
-async function renderNotificationHTML(data) {
+// Append vào modal
+async function appendNotificationToModal(data) {
   if (!data.tableName && data.tableId) {
     try {
       const table = await ajax(`/api/tables/${data.tableId}`, {}, 'GET')
@@ -81,7 +81,9 @@ async function renderNotificationHTML(data) {
 
   let html = ''
 
+  // Phân biệt loại thông báo
   if (data.type === 'kitchen_item_update') {
+    // Thông báo update status món
     const statusInfo = getStatusInfo(data.status)
     const tableDisplay = data.isTakeaway ? 'Mang về' : data.tableName
     const itemName = data.itemName || 'Không rõ tên món'
@@ -94,6 +96,7 @@ async function renderNotificationHTML(data) {
       </div>
     `
   } else {
+    // Thông báo gọi nhân viên (mặc định)
     html = `
       <div class="border-bottom py-2">
         <strong>${data.tableName}</strong> gửi yêu cầu hỗ trợ<br>
@@ -102,12 +105,6 @@ async function renderNotificationHTML(data) {
     `
   }
 
-  return html
-}
-
-// Append vào modal (dùng cho realtime notification)
-async function appendNotificationToModal(data) {
-  const html = await renderNotificationHTML(data)
   const $modalBody = $('#notificationModalBody')
 
   // Destroy scrollbar hoàn toàn
@@ -124,9 +121,10 @@ async function appendNotificationToModal(data) {
     axis: 'y',
     scrollInertia: 200,
     mouseWheel: { deltaFactor: 20, preventDefault: true },
-    setTop: 0,
+    setTop: 0, // Luôn scroll về top
     callbacks: {
       onInit: function () {
+        // Scroll về top sau khi init
         $modalBody.mCustomScrollbar('scrollTo', 'top', {
           scrollInertia: 0
         })
@@ -161,14 +159,8 @@ function deleteAllNotifications() {
 document.addEventListener('DOMContentLoaded', async () => {
   const saved = JSON.parse(localStorage.getItem('staff_notifications') || '[]')
 
-  // Render tất cả notification một lần
-  if (saved.length > 0) {
-    let allHTML = ''
-    for (const item of saved) {
-      const html = await renderNotificationHTML(item)
-      allHTML += html
-    }
-    notificationModalBody.innerHTML = allHTML
+  for (const item of saved) {
+    await appendNotificationToModal(item)
   }
 
   const unseen = JSON.parse(localStorage.getItem('staff_notifications_unseen') || '[]')
