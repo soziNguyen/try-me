@@ -16,6 +16,7 @@ const receiptSchema = new mongoose.Schema(
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     submitTer: { type: String, default: '' },
+    reviewer: { type: String, default: '' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
     organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },

@@ -16,7 +16,7 @@ export const createPaymentExpense = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const { reason, receiver, expenseAmount, note } = req.body
+    const { reason, receiver, expenseAmount, note, reviewer } = req.body
 
     const expense = await withTransaction(async (session) => {
       const code = await generateDocumentCode(ProductExpense, 'PE')
@@ -36,7 +36,8 @@ export const createPaymentExpense = async (req, res) => {
         reason,
         receiver,
         expenseAmount,
-        note
+        note,
+        reviewer
       }
 
       const doc = new ProductExpense(docData)
@@ -70,7 +71,6 @@ export const getPaymentExpensesById = async (req, res) => {
       .populate('createdBy', 'username')
       .populate('updatedBy', 'username')
       .populate('lockedBy', 'username')
-      .populate('receiver', 'username')
 
     if (!productExpense) return responseHelper.error(res, 'Không tìm thấy phiếu chi', 404)
 
@@ -217,12 +217,13 @@ export const updatePaymentExpenses = async (req, res) => {
       if (oldExpense.isLocked)
         throw new BusinessError('Phiếu chi đã bị khóa, không thể chỉnh sửa', 400)
 
-      const { expenseAmount, reason, note, receiver } = req.body
+      const { expenseAmount, reason, note, receiver, reviewer } = req.body
       const updateData = {
         reason,
         note,
         receiver,
         expenseAmount,
+        reviewer,
         updatedBy: req.user._id
       }
 

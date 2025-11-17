@@ -49,6 +49,7 @@ $(function () {
     $('#receiptAmount').val(receipt.receiptAmount || '')
     $('#note').val(receipt.note || '')
     $('#submitTer').val(receipt.submitTer || '')
+    $('#reviewer').val(receipt.reviewer || '')
   }
 
   function saveReceipt() {
@@ -66,7 +67,8 @@ $(function () {
       reason: $('#reason').val(),
       note: $('#note').val(),
       receiptAmount,
-      submitTer: $('#submitTer').val()
+      submitTer: $('#submitTer').val(),
+      reviewer: $('#reviewer').val()
     }
 
     const url = receiptId

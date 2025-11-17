@@ -16,6 +16,7 @@ const productExpenseSchema = new mongoose.Schema(
     note: { type: String, default: '' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     receiver: { type: String, default: '' },
+    reviewer: { type: String, default: '' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
     isLocked: { type: Boolean, default: false },
