@@ -1810,7 +1810,7 @@ export const submitOrderFromCustomer = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(orderId))
       return responseHelper.error(res, 'Mã đơn hàng không hợp lệ', 400)
 
-    const order = await Order.findById(orderId)
+    const order = await Order.findById(orderId).populate('tableId', '_id name')
     if (!order) return responseHelper.error(res, 'Không tìm thấy đơn hàng', 404)
     if (order.status !== 'open')
       return responseHelper.error(res, 'Đơn hàng đã đóng hoặc bị hủy', 400)
@@ -1832,6 +1832,17 @@ export const submitOrderFromCustomer = async (req, res) => {
     })
 
     await order.save()
+
+    const io = req.app.get('io')
+    io.to('staff_room').emit('staff_notification', {
+      type: 'new_order_items',
+      orderId,
+      table: order.tableId?.name || null,
+      batch: newBatch,
+      items,
+      time: new Date()
+    })
+
     return responseHelper.success(res, order, 'Gửi giỏ hàng thành công')
   } catch (error) {
     return responseHelper.error(res, error.message)

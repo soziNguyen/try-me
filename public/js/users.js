@@ -372,7 +372,7 @@ if (logInForm) {
       ]
 
       const roles =
-        businessType === 'restaurant'
+        businessType === 'food' || businessType === 'drink'
           ? allRoles // Nhà hàng thì có bếp
           : allRoles.filter((r) => r.value !== 'Kitchen')
 
