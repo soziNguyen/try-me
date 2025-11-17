@@ -19,7 +19,7 @@ export const createOrderForTable = async ({ tableId, req }) => {
   // Lấy thông tin kho khi quét QR tại bàn
   const warehouse = table.warehouse
 
-  let prefix = 'INV'
+  let prefix = 'HD'
   const invoiceOptions = await InvoiceOption.findOne({ organizationId, warehouseId: warehouse })
   if (invoiceOptions?.prefix?.trim()) {
     prefix = invoiceOptions.prefix.trim()

@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
   await fetchKitchenOrders()
   setInterval(fetchKitchenOrders, 30 * 1000) // Tự động làm mới mỗi 30 giây
-  customeScrollbarInit()
+  customScrollbarInit()
 })
 
 async function fetchKitchenOrders() {
@@ -338,7 +338,7 @@ async function updateItemStatus(orderId, itemId, status) {
   }
 }
 
-function customeScrollbarInit() {
+function customScrollbarInit() {
   $('.kitchen-orders .card-body').mCustomScrollbar({
     theme: 'minimal-dark',
     axis: 'y',

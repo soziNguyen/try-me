@@ -130,6 +130,12 @@ function removeAccents(str) {
     .replace(/Đ/g, 'D')
 }
 
+// format order code
+function formatOrderCode(code) {
+  const num = parseInt(code.replace('HD', ''))
+  return `HD${String(num).padStart(2, '0')}`
+}
+
 // debounce
 function debounce(fn, delay) {
   let timeoutId
