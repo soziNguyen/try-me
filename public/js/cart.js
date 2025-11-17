@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   submitOrder()
   document.getElementById('btnViewOrder').addEventListener('click', handleViewOrder)
   document.getElementById('btnBackToMenu').addEventListener('click', handleBackToMenu)
+  initCallStaffSocket()
 })
 
 async function handleViewOrder() {
@@ -522,5 +523,30 @@ function submitOrder() {
     } catch (error) {
       console.error('Lỗi gửi đơn hàng:', error)
     }
+  })
+}
+
+function initCallStaffSocket() {
+  const socket = io()
+  const tableId = getQueryParam('tableId') || ''
+
+  const btn = document.getElementById('btnContactToStaff')
+  if (!btn) return
+
+  btn.addEventListener('click', () => {
+    const notification = {
+      tableId,
+      time: new Date().toISOString()
+    }
+
+    // Gửi lên server
+    socket.emit('customer_call_staff', notification)
+
+    // Lưu vào localStorage để giữ lịch sử
+    let notifications = JSON.parse(localStorage.getItem('customerNotifications') || '[]')
+    notifications.push(notification)
+    localStorage.setItem('customerNotifications', JSON.stringify(notifications))
+
+    alert('Đã gửi yêu cầu! Nhân viên sẽ đến hỗ trợ bạn.')
   })
 }
