@@ -95,6 +95,19 @@ async function appendNotificationToModal(data) {
         <small>${new Date(data.time).toLocaleString()}</small>
       </div>
     `
+  } else if (data.type === 'new_order_items') {
+    // Thông báo đơn hàng mới từ khách
+    const tableDisplay = data.table ? `Bàn ${data.table}` : 'Không rõ bàn'
+    const itemCount = data.items?.length || 0
+    const itemsText = itemCount === 1 ? '1 món' : `${itemCount} món`
+
+    html = `
+      <div class="border-bottom py-2">
+        <strong>${tableDisplay}</strong> đã gửi đơn hàng mới -
+        <span class="badge bg-info">Đợt ${data.batch}</span> - ${itemsText}<br>
+        <small>${new Date(data.time).toLocaleString()}</small>
+      </div>
+    `
   } else {
     // Thông báo gọi nhân viên (mặc định)
     html = `
