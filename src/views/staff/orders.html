@@ -37,16 +37,16 @@
           <div class="col-lg-4 mt-3" id="orderSection">
 
             <!-- Accordion thông tin khách hàng -->
-            <div class="accordion mb-3" id="accordionClent">
+            <div class="accordion mb-3" id="accordionCustomer">
               <div class="accordion-item">
-                <h2 class="accordion-header" id="headingClent">
+                <h2 class="accordion-header" id="headingCustomer">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#collapseClent" aria-expanded="false" aria-controls="collapseClent">
+                    data-bs-target="#collapseCustomer" aria-expanded="false" aria-controls="collapseCustomer">
                     <i class="bi bi-person-circle me-2 text-info"></i>Thông tin khách hàng
                   </button>
                 </h2>
-                <div id="collapseClent" class="accordion-collapse collapse" aria-labelledby="headingClent"
-                  data-bs-parent="#accordionClent">
+                <div id="collapseCustomer" class="accordion-collapse collapse" aria-labelledby="headingCustomer"
+                  data-bs-parent="#accordionCustomer">
                   <div class="accordion-body ">
                     <form id="customerForm">
                       <div class="mb-3 form-control">
@@ -340,6 +340,25 @@
                           <i class="bi bi-check-circle me-1"></i>THANH TOÁN
                         </button>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion mt-3" id="accordionKitchen">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingKitchen">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseKitchen" aria-expanded="true" aria-controls="collapseKitchen">
+                    <i class="bi bi-egg me-2 text-primary"></i>Chế biến
+                  </button>
+                </h2>
+                <div id="collapseKitchen" class="accordion-collapse collapse" aria-labelledby="headingKitchen"
+                  data-bs-parent="#accordionKitchen">
+                  <div class="accordion-body p-0">
+                    <div id="kitchenStatus" class="card p-3 shadow-sm table-responsive m-0">
+                      
                     </div>
                   </div>
                 </div>

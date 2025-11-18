@@ -72,12 +72,13 @@ async function loadOrderInfo(orderId) {
   }
 
   try {
-    const orderRes = await fetch(`/api/orders/${orderId}`)
-    const orderData = await orderRes.json()
+    const result = await ajax(`/api/orders/${orderId}`, {}, 'GET')
+    console.log(result)
 
-    if (orderRes.ok) {
-      updateOrderUI(orderData.data)
-      await getTables(orderData.data)
+    if (result) {
+      updateOrderUI(result)
+      await getTables(result)
+      renderKitchenStatus(result)
     }
   } catch (e) {
     console.error('Lỗi khi load order:', e)
@@ -671,6 +672,7 @@ async function addToOrder(foodId, foodName, price) {
     toastr.remove()
     toastr.success(`Đã thêm ${foodName} vào hóa đơn`)
     updateOrderUI(result.data)
+    renderKitchenStatus(result.data)
   } catch (err) {
     console.error('Lỗi khi thêm món:', err)
     toastr.error('Lỗi kết nối server')
@@ -699,6 +701,7 @@ async function addComboToOrder(comboId, comboName, price) {
     toastr.remove()
     toastr.success(`Đã thêm combo ${comboName} vào hóa đơn`)
     updateOrderUI(result.data)
+    renderKitchenStatus(result.data)
   } catch (err) {
     console.error('Lỗi khi thêm combo:', err)
     toastr.error('Lỗi kết nối server')
@@ -929,3 +932,83 @@ $(async () => {
   window.loadOrder = loadOrder
   await loadOrder()
 })
+
+function renderKitchenStatus(order) {
+  const container = document.getElementById('kitchenStatus')
+  if (!container) return
+
+  const items = order.items || []
+
+  if (!items.length) {
+    container.innerHTML = `
+      <div class="text-center text-muted py-4">
+        <p class="mb-0">Không có món nào trong đơn.</p>
+      </div>
+    `
+    return
+  }
+
+  // Badge hiển thị trạng thái
+  const statusBadge = (status) => {
+    switch (status) {
+      case 'pending':
+        return `<span class="badge bg-warning text-dark">Chờ chế biến</span>`
+      case 'cooking':
+        return `<span class="badge bg-primary">Đang chế biến</span>`
+      case 'done':
+        return `<span class="badge bg-success">Hoàn thành</span>`
+      default:
+        return `<span class="badge bg-secondary">${status}</span>`
+    }
+  }
+
+  // Lấy tên món (combo hoặc món lẻ)
+  const getItemName = (item) => {
+    if (item.comboId) return item.comboId.name
+    if (item.foodId) return item.foodId.name
+    return 'Món không xác định'
+  }
+
+  // Nhóm theo batch (lượt gửi bếp)
+  const batches = {}
+
+  items.forEach((item) => {
+    const batch = item.batch || 1
+    if (!batches[batch]) batches[batch] = []
+    batches[batch].push(item)
+  })
+
+  let html = ''
+
+  Object.keys(batches).forEach((batch) => {
+    html += `
+      <div class="mb-3">
+        <h6 class="fw-bold text-primary">#${batch}</h6>
+        <table class="table table-bordered mb-0">
+          <thead class="table-light">
+            <tr>
+              <th width="55%">Món</th>
+              <th width="15%" class="text-center">SL</th>
+              <th>Tình trạng</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${batches[batch]
+              .map(
+                (item) => `
+                <tr>
+                  <td class="px-2">${getItemName(item)}</td>
+                  <td class="text-center px-2">${item.quantity}</td>
+                  <td class="px-2">${statusBadge(item.status)}</td>
+                </tr>
+              `
+              )
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    `
+  })
+
+  container.innerHTML = html
+}
