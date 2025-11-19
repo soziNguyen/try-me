@@ -73,7 +73,6 @@ async function loadOrderInfo(orderId) {
 
   try {
     const result = await ajax(`/api/orders/${orderId}`, {}, 'GET')
-    console.log(result)
 
     if (result) {
       updateOrderUI(result)
@@ -989,7 +988,7 @@ function renderKitchenStatus(order) {
             <tr>
               <th width="55%">Món</th>
               <th width="15%" class="text-center">SL</th>
-              <th>Tình trạng</th>
+              <th>Trạng thái</th>
             </tr>
           </thead>
           <tbody>

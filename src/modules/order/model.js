@@ -24,7 +24,7 @@ const OrderSchema = new Schema(
         quantity: { type: Number, default: 1 },
         price: { type: Number, required: true },
         status: { type: String, enum: ['pending', 'cooking', 'done'], default: 'pending' },
-        batch: { type: Number, default: 1 }, // Lần gửi
+        batch: { type: Number, default: null }, // Lần gửi
         sentAt: { type: Date, default: Date.now } // Thời gian gửi
       }
     ],

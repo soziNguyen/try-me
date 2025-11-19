@@ -259,6 +259,25 @@ export const getOrderById = async (req, res) => {
     if (!order) {
       return responseHelper.error(res, 'Order không tồn tại hoặc không có quyền truy cập', 404)
     }
+    // const merged = {}
+
+    // order.items.forEach((item) => {
+    //   const key = item.foodId?._id || item.comboId?._id
+    //   if (!key) return
+
+    //   if (!merged[key]) {
+    //     merged[key] = {
+    //       _id: key,
+    //       name: item.foodId?.name || item.comboId?.name,
+    //       price: item.price,
+    //       quantity: 0
+    //     }
+    //   }
+
+    //   merged[key].quantity += item.quantity
+    // })
+
+    // order.itemsMerged = Object.values(merged)
 
     responseHelper.success(res, order)
   } catch (error) {
@@ -420,7 +439,9 @@ export const addItemToOrder = async (req, res) => {
         order.items.push({
           comboId,
           quantity,
-          price: combo.price
+          price: combo.price,
+          batch: null,
+          sentAt: new Date()
         })
       }
     }
@@ -469,7 +490,9 @@ export const addItemToOrder = async (req, res) => {
         order.items.push({
           foodId,
           quantity,
-          price: menuItem.price
+          price: menuItem.price,
+          batch: null, // nhân viên thêm trực tiếp
+          sentAt: new Date()
         })
       }
     }
