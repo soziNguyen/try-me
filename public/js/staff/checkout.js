@@ -1,4 +1,4 @@
-const POINT_VALUE = 500
+let POINT_VALUE = 500
 let taxes = []
 let paymentMethods = []
 
@@ -773,8 +773,6 @@ document.addEventListener('click', async (e) => {
       paymentMethodValue.value = paymentBtn.dataset.value
     }
 
-    console.log(paymentMethodValue.value)
-
     const orderId = window.currentOrderId
     if (!orderId) {
       toastr.error('Không xác định được đơn hàng!')
@@ -798,7 +796,6 @@ document.addEventListener('click', async (e) => {
 async function loadOrderData(orderId) {
   try {
     const result = await ajax(`/api/orders/${orderId}`, {}, 'GET')
-    console.log(result)
 
     if (result) {
       document.getElementById('discountInput').value =
@@ -844,11 +841,23 @@ async function loadOrderData(orderId) {
   }
 }
 
+async function loadPointSetting() {
+  try {
+    const result = await ajax('/api/setting/point', {}, 'GET')
+    if (result) {
+      POINT_VALUE = result.pointValue
+    }
+  } catch (error) {
+    console.error(error.message)
+  }
+}
+
 // INITIALIZATION
 document.addEventListener('DOMContentLoaded', async () => {
   // Load dữ liệu từ API
   await getTaxes()
   await fillPaymentMethods()
+  await loadPointSetting()
 
   // Render UI
   renderTaxOptions()

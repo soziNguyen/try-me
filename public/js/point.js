@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const earnRateInput = document.getElementById('pointsEarnRate')
 
   try {
-    const result = ajax('/api/setting/point', {}, 'GET')
+    const result = await ajax('/api/setting/point', {}, 'GET')
 
     if (result) {
       pointInput.value = result.pointValue || 500

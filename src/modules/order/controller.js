@@ -798,8 +798,6 @@ export const checkoutOrder = async (req, res) => {
       customerPaid
     } = req.body
 
-    console.log(paymentMethodId)
-
     if (!orderId) return responseHelper.error(res, 'Thiếu orderId', 400)
     if (!paymentMethodId)
       return responseHelper.error(res, 'Phương thức thanh toán không hợp lệ', 400)
