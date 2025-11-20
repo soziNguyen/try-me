@@ -92,7 +92,7 @@ async function appendNotificationToModal(data) {
       <div class="border-bottom py-2">
         <strong>${tableDisplay}</strong> - Món <strong>${itemName}</strong> - 
         <span class="badge bg-${statusInfo.color}">${statusInfo.text}</span><br>
-        <small>${new Date(data.time).toLocaleString()}</small>
+        <small>${formatDateVN(data.time)}</small>
       </div>
     `
   } else if (data.type === 'new_order_items') {
@@ -105,7 +105,7 @@ async function appendNotificationToModal(data) {
       <div class="border-bottom py-2">
         <strong>${tableDisplay}</strong> đã gửi đơn hàng mới -
         <span class="badge bg-info">Đợt ${data.batch}</span> - ${itemsText}<br>
-        <small>${new Date(data.time).toLocaleString()}</small>
+        <small>${formatDateVN(data.time)}</small>
       </div>
     `
   } else {
@@ -113,7 +113,7 @@ async function appendNotificationToModal(data) {
     html = `
       <div class="border-bottom py-2">
         <strong>${data.tableName}</strong> gửi yêu cầu hỗ trợ<br>
-        <small>${new Date(data.time).toLocaleString()}</small>
+        <small>${formatDateVN(data.time)}</small>
       </div>
     `
   }

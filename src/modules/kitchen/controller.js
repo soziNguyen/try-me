@@ -41,9 +41,11 @@ export const getKitchenOrders = async (req, res) => {
 
       // Gom items theo batch
       order.items.forEach((item) => {
-        const batch = item.batch || 1
-        if (!batches[batch]) batches[batch] = []
-        batches[batch].push(item)
+        if (item.batch !== null) {
+          const batch = item.batch
+          if (!batches[batch]) batches[batch] = []
+          batches[batch].push(item)
+        }
       })
 
       Object.keys(batches).forEach((batchKey) => {

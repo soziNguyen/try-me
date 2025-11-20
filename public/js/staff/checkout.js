@@ -345,7 +345,8 @@ function getCurrentOrderFormData() {
     vatRate: Number(document.getElementById('vatInput')?.value || 0),
     customerPaid: Number(
       document.getElementById('customerPaidInput')?.value.replace(/[^\d]/g, '') || 0
-    )
+    ),
+    paymentMethodId: document.getElementById('paymentMethodValue').value
   }
 }
 
@@ -729,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 // MAIN CLICK EVENT HANDLER
-document.addEventListener('click', (e) => {
+document.addEventListener('click', async (e) => {
   // Xử lý click gợi ý tiền mặt (bao gồm cả dynamic suggestions)
   if (e.target.classList.contains('cash-suggestion')) {
     const value = parseInt(e.target.dataset.value, 10)
@@ -748,16 +749,15 @@ document.addEventListener('click', (e) => {
 
       const data = getCurrentOrderFormData()
 
-      ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
-        .then((result) => {
-          if (result) {
-            toastr.success('Cập nhật số tiền khách trả thành công!')
-          }
-        })
-        .catch((error) => {
-          console.error('Lỗi khi gọi API:', error)
-          toastr.error('Lỗi mạng hoặc server')
-        })
+      try {
+        const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+        if (result) {
+          toastr.remove()
+          toastr.success('Cập nhật số tiền khách trả thành công!')
+        }
+      } catch (error) {
+        console.error(error.message || 'Có lỗi khi cập nhật số tiền khách trả.')
+      }
     }
     return
   }
@@ -770,8 +770,10 @@ document.addEventListener('click', (e) => {
 
     const paymentMethodValue = document.getElementById('paymentMethodValue')
     if (paymentMethodValue) {
-      paymentMethodValue.value = paymentBtn.getAttribute('data-value')
+      paymentMethodValue.value = paymentBtn.dataset.value
     }
+
+    console.log(paymentMethodValue.value)
 
     const orderId = window.currentOrderId
     if (!orderId) {
@@ -781,24 +783,22 @@ document.addEventListener('click', (e) => {
 
     const data = getCurrentOrderFormData()
 
-    ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
-      .then((result) => {
-        if (result) {
-          toastr.success('Cập nhật phương thức thanh toán thành công!')
-        }
-      })
-      .catch((error) => {
-        console.error('Lỗi khi gọi API:', error)
-        toastr.error('Lỗi mạng hoặc server')
-      })
-
-    return
+    try {
+      const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+      if (result) {
+        toastr.remove()
+        toastr.success('Thay đổi phương thức thanh toán thành công!')
+      }
+    } catch (error) {
+      console.error(error.message || 'Có lỗi khi thay đổi phương thức thanh toán')
+    }
   }
 })
 
 async function loadOrderData(orderId) {
   try {
     const result = await ajax(`/api/orders/${orderId}`, {}, 'GET')
+    console.log(result)
 
     if (result) {
       document.getElementById('discountInput').value =
@@ -812,12 +812,16 @@ async function loadOrderData(orderId) {
       document.getElementById('vatInput').value = result.vatRate || '0'
       document.getElementById('customerPaidInput').value =
         result.customerPaid.toLocaleString('vi-VN') || '0'
-      document.getElementById('paymentMethodValue').value = result.paymentMethodId || ''
+      const method = result.paymentMethodId
+      const methodId =
+        method && typeof method === 'object' ? method._id : typeof method === 'string' ? method : ''
 
-      if (result.paymentMethodId) {
+      document.getElementById('paymentMethodValue').value = methodId
+
+      if (methodId) {
         const buttons = document.querySelectorAll('#paymentMethod button')
         buttons.forEach((btn) => {
-          if (btn.getAttribute('data-value') === result.paymentMethodId) {
+          if (btn.dataset.value === methodId) {
             btn.classList.add('active')
           } else {
             btn.classList.remove('active')

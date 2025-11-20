@@ -259,25 +259,6 @@ export const getOrderById = async (req, res) => {
     if (!order) {
       return responseHelper.error(res, 'Order không tồn tại hoặc không có quyền truy cập', 404)
     }
-    // const merged = {}
-
-    // order.items.forEach((item) => {
-    //   const key = item.foodId?._id || item.comboId?._id
-    //   if (!key) return
-
-    //   if (!merged[key]) {
-    //     merged[key] = {
-    //       _id: key,
-    //       name: item.foodId?.name || item.comboId?.name,
-    //       price: item.price,
-    //       quantity: 0
-    //     }
-    //   }
-
-    //   merged[key].quantity += item.quantity
-    // })
-
-    // order.itemsMerged = Object.values(merged)
 
     responseHelper.success(res, order)
   } catch (error) {
@@ -308,12 +289,12 @@ export const getOrderByIdPublic = async (req, res) => {
       return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
     }
 
-    // Format lại items để dễ hiển thị
-    const formattedItems = order.items
+    // Format items
+    const rawItems = order.items
       .map((item) => {
         if (item.foodId) {
           return {
-            _id: item.foodId._id,
+            _id: item.foodId._id.toString(),
             name: item.foodId.name,
             price: item.price || item.foodId.price,
             quantity: item.quantity,
@@ -322,7 +303,7 @@ export const getOrderByIdPublic = async (req, res) => {
           }
         } else if (item.comboId) {
           return {
-            _id: item.comboId._id,
+            _id: item.comboId._id.toString(),
             name: item.comboId.name,
             price: item.price || item.comboId.price,
             quantity: item.quantity,
@@ -334,9 +315,24 @@ export const getOrderByIdPublic = async (req, res) => {
       })
       .filter(Boolean)
 
+    // Group by _id và tính tổng số lượng
+    const formattedItems = Object.values(
+      rawItems.reduce((acc, item) => {
+        const key = item._id
+
+        if (acc[key]) {
+          acc[key].quantity += item.quantity
+        } else {
+          acc[key] = { ...item }
+        }
+
+        return acc
+      }, {})
+    )
+
     const recalculatedTotal = calcOrderTotal(formattedItems)
 
-    // Response với format đơn giản
+    // Response
     const response = {
       _id: order._id,
       code: order.code,
@@ -420,21 +416,25 @@ export const addItemToOrder = async (req, res) => {
       }
 
       // 3. Check số lượng yêu cầu
-      const existingCombo = order.items.find((item) => item.comboId?.toString() === comboId)
-      const currentOrderQuantity = existingCombo ? existingCombo.quantity : 0
-      const totalQuantity = currentOrderQuantity + quantity
+      const totalInOrder = order.items
+        .filter((i) => i.comboId?.toString() === comboId)
+        .reduce((sum, i) => sum + i.quantity, 0)
 
-      if (comboStock.quantity < totalQuantity) {
+      if (comboStock.quantity < totalInOrder + quantity) {
         return responseHelper.error(
           res,
-          `Combo "${combo.name}" không đủ số lượng. Còn lại: ${comboStock.quantity}${currentOrderQuantity > 0 ? `, đang có trong order: ${currentOrderQuantity}` : ''}`,
+          `Combo "${combo.name}" không đủ số lượng. Còn lại: ${comboStock.quantity}, đang có trong order: ${totalInOrder}`,
           400
         )
       }
 
-      // 4. Add to order
-      if (existingCombo) {
-        existingCombo.quantity += quantity
+      // 4. Add to order, gom những combo batch=null cùng loại
+      const existingNullBatch = order.items.find(
+        (i) => i.comboId?.toString() === comboId && i.batch === null
+      )
+
+      if (existingNullBatch) {
+        existingNullBatch.quantity += quantity
       } else {
         order.items.push({
           comboId,
@@ -471,27 +471,33 @@ export const addItemToOrder = async (req, res) => {
       }
 
       // 3. Check số lượng yêu cầu
-      const existingItem = order.items.find((item) => item.foodId?.toString() === foodId)
-      const currentOrderQuantity = existingItem ? existingItem.quantity : 0
-      const totalQuantity = currentOrderQuantity + quantity
+      const totalInOrder = order.items
+        .filter((i) => i.foodId?.toString() === foodId) // hoặc comboId tương ứng
+        .reduce((sum, i) => sum + i.quantity, 0)
 
-      if (productStock.quantity < totalQuantity) {
+      if (productStock.quantity < totalInOrder + quantity) {
         return responseHelper.error(
           res,
-          `Món ăn "${menuItem.name}" không đủ số lượng. Còn lại: ${productStock.quantity}${currentOrderQuantity > 0 ? `, đang có trong order: ${currentOrderQuantity}` : ''}`,
+          `Món ăn "${menuItem.name}" không đủ số lượng. Còn lại: ${productStock.quantity}, đang có trong order: ${totalInOrder}`,
           400
         )
       }
 
-      // 4. Add to order
-      if (existingItem) {
-        existingItem.quantity += quantity
+      // Gom những item batch=null cùng loại lại
+      const existingNullBatch = order.items.find(
+        (i) => i.foodId?.toString() === foodId && i.batch === null
+      )
+
+      if (existingNullBatch) {
+        // Nếu đã có món batch=null trước đó → cộng vào
+        existingNullBatch.quantity += quantity
       } else {
+        // Tạo mới batch=null
         order.items.push({
           foodId,
           quantity,
           price: menuItem.price,
-          batch: null, // nhân viên thêm trực tiếp
+          batch: null,
           sentAt: new Date()
         })
       }
@@ -533,7 +539,7 @@ export const addItemToOrder = async (req, res) => {
 export const updateItemQuantity = async (req, res) => {
   try {
     const { orderId } = req.params
-    const { itemId, quantity, type } = req.body
+    const { itemId, quantity, type, batch } = req.body
 
     if (!itemId || typeof quantity !== 'number' || quantity <= 0) {
       return responseHelper.error(res, 'Thông tin không hợp lệ', 400)
@@ -564,9 +570,16 @@ export const updateItemQuantity = async (req, res) => {
     }
 
     // Tìm item trong order
-    const item = order.items.find((item) => {
-      if (type === 'food') return item.foodId?.toString() === itemId
-      if (type === 'combo') return item.comboId?.toString() === itemId
+    const item = order.items.find((i) => {
+      const matchesTypeId =
+        type === 'food' ? i.foodId?.toString() === itemId : i.comboId?.toString() === itemId
+
+      // Chuẩn hóa batch
+      const itemBatch = i.batch == null ? null : Number(i.batch)
+      const reqBatch = batch == null || batch === 'null' ? null : Number(batch)
+      const matchesBatch = itemBatch === reqBatch
+
+      return matchesTypeId && matchesBatch
     })
 
     if (!item) {
@@ -677,7 +690,7 @@ export const updateItemQuantity = async (req, res) => {
 export const removeItemFromOrder = async (req, res) => {
   try {
     const { orderId, itemId } = req.params
-    const { type } = req.query
+    const { type, batch } = req.query
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -700,9 +713,13 @@ export const removeItemFromOrder = async (req, res) => {
     if (order.status !== 'open') return responseHelper.error(res, 'Order đã đóng', 400)
 
     // Tìm item cần xoá
+    const reqBatch = batch == null || batch === 'null' ? null : Number(batch)
     const itemIndex = order.items.findIndex((item) => {
-      if (type === 'food') return item.foodId?.toString() === itemId
-      if (type === 'combo') return item.comboId?.toString() === itemId
+      const matchesTypeId =
+        type === 'food' ? item.foodId?.toString() === itemId : item.comboId?.toString() === itemId
+      const itemBatch = item.batch == null ? null : Number(item.batch)
+      const matchesBatch = itemBatch === reqBatch
+      return matchesTypeId && matchesBatch
     })
 
     if (itemIndex === -1) {
@@ -753,6 +770,8 @@ export const checkoutOrder = async (req, res) => {
       paymentMethodId,
       customerPaid
     } = req.body
+
+    console.log(paymentMethodId)
 
     if (!orderId) return responseHelper.error(res, 'Thiếu orderId', 400)
     if (!paymentMethodId)
@@ -1061,7 +1080,8 @@ export const updateOrderDraft = async (req, res) => {
       serviceCharge = 0,
       extraDiscount = 0,
       vatRate = 0,
-      customerPaid = 0
+      customerPaid = 0,
+      paymentMethodId: newPaymentMethodId
     } = req.body
 
     if (!orderId) return responseHelper.error(res, 'Thiếu orderId', 400)
@@ -1142,12 +1162,29 @@ export const updateOrderDraft = async (req, res) => {
       const total = Math.round(totalPayable + vatAmount)
       const changeAmount = parsedCustomerPaid - total
 
-      // 5. Tìm/Gán payment method mặc định là Bank và Generate VietQR
+      // 5. Xử lý Payment Method
       let qrCodeUrl = null
       let receivingAccountId = null
       let paymentMethodId = order.paymentMethodId
 
-      // Nếu order chưa có paymentMethodId, tìm payment method Bank mặc định
+      // Nếu FE gửi paymentMethodId, validate và ghi đè
+      if (newPaymentMethodId) {
+        const pmExists = await PaymentMethod.findOne({
+          _id: newPaymentMethodId,
+          organization: order.organization,
+          isActive: true
+        })
+          .session(session)
+          .lean()
+
+        if (!pmExists) {
+          throw new BusinessError('Phương thức thanh toán không hợp lệ', 400)
+        }
+
+        paymentMethodId = newPaymentMethodId
+      }
+
+      // Nếu order chưa có phương thức thanh toán, lấy mặc định Bank
       if (!paymentMethodId) {
         const defaultBankPayment = await PaymentMethod.findOne({
           organization: order.organization,
@@ -1173,7 +1210,7 @@ export const updateOrderDraft = async (req, res) => {
         }
       }
 
-      // Nếu không có receiving account, tìm bank account mặc định
+      // Nếu chưa có receiving account -> lấy mặc định bank
       if (!receivingAccountId) {
         receivingAccountId = await ReceivingAccount.findOne({
           organization: order.organization,
@@ -1184,7 +1221,7 @@ export const updateOrderDraft = async (req, res) => {
           .sort({ createdAt: -1 })
       }
 
-      // Generate QR code cho bank transfer
+      // Generate VietQR
       if (receivingAccountId) {
         const bankCode = receivingAccountId.bankCode || 'MB'
         const accountNumber = receivingAccountId.accountNumber
@@ -1260,7 +1297,7 @@ export const updateOrderDraft = async (req, res) => {
     if (error instanceof BusinessError) {
       return responseHelper.error(res, error.message, error.statusCode)
     } else {
-      return responseHelper.error(res, 'Lỗi server nội bộ', 500)
+      return responseHelper.error(res, error.message)
     }
   }
 }
@@ -1854,9 +1891,16 @@ export const submitOrderFromCustomer = async (req, res) => {
       })
     })
 
+    // TỔNG TIỀN
+    order.totalAmount = order.items.reduce((sum, item) => {
+      return sum + item.price * item.quantity
+    }, 0)
+
     await order.save()
 
     const io = req.app.get('io')
+
+    // Emit đến staff room
     io.to('staff_room').emit('staff_notification', {
       type: 'new_order_items',
       orderId,

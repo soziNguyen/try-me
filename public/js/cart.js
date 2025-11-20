@@ -533,7 +533,7 @@ function initCallStaffSocket() {
   const btn = document.getElementById('btnContactToStaff')
   if (!btn) return
 
-  const COOLDOWN = 5 * 1000 // 2 phút
+  const COOLDOWN = 2 * 60 * 1000 // 2 phút
   const KEY = `callStaff_${tableId}`
 
   btn.addEventListener('click', () => {

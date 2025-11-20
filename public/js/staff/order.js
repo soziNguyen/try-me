@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (tbody) {
     tbody.addEventListener('click', (e) => {
       const btn = e.target.closest('.remove-item')
-      if (btn) removeItemFromOrder(btn.dataset.id, btn.dataset.type)
+      if (btn) removeItemFromOrder(btn.dataset.id, btn.dataset.type, btn.dataset.batch)
     })
 
     tbody.addEventListener('change', (e) => {
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (input) {
         const newQuantity = parseInt(input.value, 10)
         if (newQuantity > 0) {
-          updateItemQuantity(input.dataset.id, input.dataset.type, newQuantity)
+          updateItemQuantity(input.dataset.id, input.dataset.type, newQuantity, input.dataset.batch)
         } else {
           input.value = 1
         }
@@ -623,6 +623,7 @@ function updateOrderUI(order) {
             value="${quantity}" 
             data-id="${id}"
             data-type="${item.foodId ? 'food' : 'combo'}"
+            data-batch="${item.batch}"
           />
         </td>
         <td><span class="d-block w-100 number">${price.toLocaleString()}</span></td>
@@ -630,7 +631,9 @@ function updateOrderUI(order) {
         <td class="text-center">
           <button class="btn btn-sm btn-outline-danger remove-item" 
             data-id="${id}" 
-            data-type="${item.foodId ? 'food' : 'combo'}">
+            data-type="${item.foodId ? 'food' : 'combo'}"
+            data-batch="${item.batch}"
+            >
             <i class="bi bi-trash"></i>
           </button>
         </td>
@@ -643,7 +646,7 @@ function updateOrderUI(order) {
   const total = calculateTotalAmount(order.items)
   totalAmountEl.textContent = `${total.toLocaleString()}đ`
 
-  syncCheckoutDetailTotal()
+  calculateTotals()
 }
 
 // ======== Các hàm xử lý thêm/xóa/sửa món ========
@@ -655,23 +658,13 @@ async function addToOrder(foodId, foodName, price) {
     return
   }
   try {
-    const res = await fetch(`/api/orders/${orderId}/items`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-csrf-token': csrfToken
-      },
-      body: JSON.stringify({ foodId, quantity: 1 })
-    })
-    const result = await res.json()
-    if (!res.ok) {
-      toastr.error(result.message || 'Lỗi khi thêm món')
-      return
+    const result = await ajax(`/api/orders/${orderId}/items`, { foodId, quantity: 1 })
+    if (result) {
+      toastr.remove()
+      toastr.success(`Đã thêm ${foodName} vào hóa đơn`)
+      updateOrderUI(result)
+      renderKitchenStatus(result)
     }
-    toastr.remove()
-    toastr.success(`Đã thêm ${foodName} vào hóa đơn`)
-    updateOrderUI(result.data)
-    renderKitchenStatus(result.data)
   } catch (err) {
     console.error('Lỗi khi thêm món:', err)
     toastr.error('Lỗi kết nối server')
@@ -684,23 +677,13 @@ async function addComboToOrder(comboId, comboName, price) {
     return
   }
   try {
-    const res = await fetch(`/api/orders/${orderId}/items`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-csrf-token': csrfToken
-      },
-      body: JSON.stringify({ comboId, quantity: 1 })
-    })
-    const result = await res.json()
-    if (!res.ok) {
-      toastr.error(result.message || 'Lỗi khi thêm combo')
-      return
+    const result = await ajax(`/api/orders/${orderId}/items`, { comboId, quantity: 1 })
+    if (result) {
+      toastr.remove()
+      toastr.success(`Đã thêm combo ${comboName} vào hóa đơn`)
+      updateOrderUI(result)
+      renderKitchenStatus(result)
     }
-    toastr.remove()
-    toastr.success(`Đã thêm combo ${comboName} vào hóa đơn`)
-    updateOrderUI(result.data)
-    renderKitchenStatus(result.data)
   } catch (err) {
     console.error('Lỗi khi thêm combo:', err)
     toastr.error('Lỗi kết nối server')
@@ -708,27 +691,23 @@ async function addComboToOrder(comboId, comboName, price) {
 }
 
 // Cập nhật số lượng món ăn trong hóa đơn
-async function updateItemQuantity(itemId, type, newQuantity) {
+async function updateItemQuantity(itemId, type, newQuantity, batch) {
   if (!orderId) {
     toastr.error('Không tìm thấy hóa đơn.')
     return
   }
   try {
-    const res = await fetch(`/api/orders/${orderId}/items/${itemId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-csrf-token': csrfToken
-      },
-      body: JSON.stringify({ itemId, quantity: Number(newQuantity), type })
+    const result = await ajax(`/api/orders/${orderId}/items/${itemId}`, {
+      itemId,
+      quantity: Number(newQuantity),
+      type,
+      batch
     })
-    const result = await res.json()
-    if (!res.ok) {
-      toastr.error(result.message || 'Lỗi khi cập nhật số lượng')
-      return
+
+    if (result) {
+      toastr.success('Cập nhật số lượng thành công')
+      updateOrderUI(result)
     }
-    toastr.success('Cập nhật số lượng thành công')
-    updateOrderUI(result.data)
   } catch (err) {
     console.error('Lỗi khi cập nhật số lượng:', err)
     toastr.error('Lỗi kết nối server')
@@ -736,16 +715,19 @@ async function updateItemQuantity(itemId, type, newQuantity) {
 }
 
 // Xóa món khỏi hóa đơn
-async function removeItemFromOrder(itemId, type) {
+async function removeItemFromOrder(itemId, type, batch = null) {
   if (!orderId) {
     toastr.error('Không tìm thấy hóa đơn.')
     return
   }
   try {
-    const res = await fetch(`/api/orders/${orderId}/items/${itemId}?type=${type}`, {
-      method: 'DELETE',
-      headers: { 'x-csrf-token': csrfToken }
-    })
+    const res = await fetch(
+      `/api/orders/${orderId}/items/${itemId}?type=${type}&batch=${batch ?? null}`,
+      {
+        method: 'DELETE',
+        headers: { 'x-csrf-token': csrfToken }
+      }
+    )
     const result = await res.json()
     if (!res.ok) {
       toastr.error(result.message || 'Lỗi khi xóa món')
@@ -814,27 +796,30 @@ $(async () => {
     }
 
     try {
-      const res = await fetch(`/api/orders/${orderId}`)
+      const result = await ajax(`/api/orders/${orderId}`, {}, 'GET')
+      if (result) {
+        const order = result
+        const customer = order.customerId
 
-      if (!res.ok) throw new Error('Không lấy được dữ liệu hóa đơn')
-      const data = await res.json()
-      const order = data.data
+        initSelect2()
+        const $select = $('#customerSelect')
 
-      const customer = order.customerId
+        if (customer?._id) {
+          const option = new Option(
+            `${customer.name} - ${customer.phone}`,
+            customer._id,
+            true,
+            true
+          )
 
-      initSelect2()
-      const $select = $('#customerSelect')
+          $(option).data('points', customer.totalPoints || 0)
+          $select.append(option).trigger('change')
+          updatePoints(customer.totalPoints)
+        }
 
-      if (customer?._id) {
-        const option = new Option(`${customer.name} - ${customer.phone}`, customer._id, true, true)
-
-        $(option).data('points', customer.totalPoints || 0)
-        $select.append(option).trigger('change')
-        updatePoints(customer.totalPoints)
+        // Gọi getTables truyền order để hiển thị bàn đã gán
+        await getTables(order)
       }
-
-      // Gọi getTables truyền order để hiển thị bàn đã gán
-      await getTables(order)
     } catch (e) {
       console.error(e)
       initSelect2()
@@ -861,10 +846,10 @@ $(async () => {
           { customerId: customer.id || customer._id },
           'PUT'
         )
-        if (!result) return
-
-        toastr.success('Gán khách hàng thành công!')
-        updatePoints(result.customer.totalPoints)
+        if (result) {
+          toastr.success('Gán khách hàng thành công!')
+          updatePoints(result.customer.totalPoints)
+        }
       } catch (error) {
         console.error(error)
         toastr.error('Không thể gán khách hàng vào đơn.')
@@ -972,7 +957,7 @@ function renderKitchenStatus(order) {
   const batches = {}
 
   items.forEach((item) => {
-    const batch = item.batch || 1
+    const batch = item.batch == null ? 'Được yêu cầu thêm từ khách hàng' : Number(item.batch)
     if (!batches[batch]) batches[batch] = []
     batches[batch].push(item)
   })
