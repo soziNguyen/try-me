@@ -249,7 +249,9 @@ $(function () {
     const totalPayable = Number(order.totalPayable || 0).toLocaleString('vi-VN')
     const vatRate = order.vatRate ?? 0
     const total = Number(order.total || 0).toLocaleString('vi-VN')
-    const itemsList =
+
+    // ---- XỬ LÝ ITEMS HIỂN THỊ
+    const rawItems =
       order.items
         ?.map((i) =>
           i.foodName || i.comboName
@@ -257,6 +259,16 @@ $(function () {
             : ''
         )
         .filter(Boolean) || []
+
+    let itemsList = rawItems.slice(0, 3).join(', ')
+    if (rawItems.length > 3) {
+      itemsList += ` +${rawItems.length - 3} món`
+    }
+    if (rawItems.length === 0) {
+      itemsList = '0 món'
+    }
+
+    // ---- THỜI GIAN ----
     const time = order.updatedAt
       ? new Date(order.updatedAt).toLocaleString('vi-VN', {
           hour: '2-digit',
@@ -268,21 +280,21 @@ $(function () {
       : ''
 
     return `
-      <tr>
-        <td class="text-center px-2 py-2">${tableName}</td>
-        <td class="text-center px-2 py-2">${customerName}</td>
-        <td class="text-center px-2 py-2">${itemsList}</td>
-        <td class="text-center px-2 py-2">${totalPayable}</td>
-        <td class="text-center px-2 py-2">${vatRate} %</td>
-        <td class="text-center px-2 py-2">${total}</td>
-        <td class="text-center px-2 py-2">${time}</td>
-        <td class="text-center px-2 py-2">
-          <button class="btn btn-sm btn-outline-primary order-detail-btn" data-id="${order._id}">
-            <i class="bi bi-eye"></i> Chi tiết
-          </button>
-        </td>
-      </tr>
-    `
+    <tr>
+      <td class="text-center px-2 py-2">${tableName}</td>
+      <td class="text-center px-2 py-2">${customerName}</td>
+      <td class="text-center px-2 py-2">${itemsList}</td>
+      <td class="text-center px-2 py-2">${totalPayable}</td>
+      <td class="text-center px-2 py-2">${vatRate} %</td>
+      <td class="text-center px-2 py-2">${total}</td>
+      <td class="text-center px-2 py-2">${time}</td>
+      <td class="text-center px-2 py-2">
+        <button class="btn btn-sm btn-outline-primary order-detail-btn" data-id="${order._id}">
+          <i class="bi bi-eye"></i> Chi tiết
+        </button>
+      </td>
+    </tr>
+  `
   }
 
   // 7. Chi tiết đơn hàng
