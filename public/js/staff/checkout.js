@@ -481,6 +481,9 @@ function initDiscountCode() {
       window.appliedCouponId = null
       localStorage.removeItem(`appliedCouponId_${orderId}`)
       localStorage.removeItem(`appliedCouponCode_${orderId}`)
+
+      await ajax(`/api/orders/${orderId}/update-draft`, { discount: 0, couponId: null }, 'POST')
+
       discountInput.value = 0
       codeInput.value = ''
       codeInput.disabled = false
