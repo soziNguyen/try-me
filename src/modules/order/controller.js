@@ -363,6 +363,33 @@ function calcOrderTotal(items = []) {
   }, 0)
 }
 
+function recalculateOrder(order) {
+  // Tổng tiền hàng
+  order.totalAmount = calcOrderTotal(order.items)
+
+  // Các giá trị khác
+  const parsedDiscount = Number(order.discount || 0)
+  const parsedPointsUsed = Number(order.pointsUsed || 0)
+  const parsedServiceCharge = Number(order.serviceCharge || 0)
+  const parsedExtraDiscount = Number(order.extraDiscount || 0)
+  const parsedVatRate = Number(order.vatRate || 0)
+  const parsedCustomerPaid = Number(order.customerPaid || 0)
+
+  const pointsDiscount = parsedPointsUsed * POINT_VALUE
+  const totalPayable =
+    order.totalAmount - parsedDiscount - pointsDiscount - parsedExtraDiscount + parsedServiceCharge
+
+  const vatAmount = Math.round((totalPayable * parsedVatRate) / 100)
+  const total = Math.round(totalPayable + vatAmount)
+  const changeAmount = parsedCustomerPaid - total
+
+  order.pointsDiscount = pointsDiscount
+  order.totalPayable = totalPayable
+  order.vatAmount = vatAmount
+  order.total = total
+  order.changeAmount = changeAmount
+}
+
 export const addItemToOrder = async (req, res) => {
   try {
     const { orderId } = req.params
@@ -503,8 +530,8 @@ export const addItemToOrder = async (req, res) => {
       }
     }
 
-    // Tính tổng và lưu luôn vào order.totalAmount (cache)
-    order.totalAmount = calcOrderTotal(order.items)
+    // Tính tổng tiền đơn hàng
+    recalculateOrder(order)
 
     // Cập nhật updatedBy
     if (req.user && req.user._id) {
@@ -657,7 +684,7 @@ export const updateItemQuantity = async (req, res) => {
     item.quantity = quantity
 
     // Cập nhật total
-    order.totalAmount = calcOrderTotal(order.items)
+    recalculateOrder(order)
 
     // Cập nhật updatedBy
     if (req.user && req.user._id) {
@@ -730,7 +757,7 @@ export const removeItemFromOrder = async (req, res) => {
     order.items.splice(itemIndex, 1)
 
     // Cập nhật total
-    order.totalAmount = calcOrderTotal(order.items)
+    recalculateOrder(order)
 
     // Cập nhật updatedBy
     if (req.user && req.user._id) {

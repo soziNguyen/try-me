@@ -142,6 +142,11 @@ export function md5(string) {
   return crypto.createHash('md5').update(string).digest('hex')
 }
 
+// escape regex to avoid special chars breaking pattern
+export function escapeRegex(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 /**
  *  Check validate password
  */

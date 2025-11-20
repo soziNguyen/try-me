@@ -2,6 +2,7 @@ import Attendance from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { lookupUser, lookupRef } from '../../helpers/lookupHelper.js'
+import { escapeRegex } from '../../helpers/common.js'
 
 export const getAttendances = async (req, res) => {
   try {
@@ -28,39 +29,44 @@ export const getAttendances = async (req, res) => {
             name: '$sessionShift.name'
           }
         }
+      },
+      // add formattedDate as dd/MM/YYYY (adjust timezone if needed)
+      {
+        $addFields: {
+          formattedDate: {
+            $cond: [
+              { $ifNull: ['$date', false] },
+              {
+                $dateToString: { format: '%d/%m/%Y', date: '$date', timezone: 'Asia/Ho_Chi_Minh' }
+              },
+              null
+            ]
+          }
+        }
       }
     ]
 
     if (searchValue) {
-      basePipeline.push({
-        $match: {
-          $or: [
-            { 'user.username': { $regex: searchValue, $options: 'i' } },
-            { status: { $regex: searchValue, $options: 'i' } },
-            { note: { $regex: searchValue, $options: 'i' } },
-            { 'sessions.shift.name': { $regex: searchValue, $options: 'i' } },
-            // numeric totals (exact match)
-            {
-              totalDuration: Number(searchValue) >= 0 ? Number(searchValue) : undefined
-            },
-            {
-              totalRegular: Number(searchValue) >= 0 ? Number(searchValue) : undefined
-            },
-            // date formatted dd/mm/YYYY
-            {
-              $expr: {
-                $regexMatch: {
-                  input: {
-                    $dateToString: { format: '%d/%m/%Y', date: '$date' }
-                  },
-                  regex: searchValue,
-                  options: 'i'
-                }
-              }
-            }
-          ].filter(Boolean) // remove undefined entries from numeric attempts
-        }
-      })
+      const escaped = escapeRegex(searchValue)
+
+      const orConditions = [
+        { 'user.username': { $regex: escaped, $options: 'i' } },
+        { status: { $regex: escaped, $options: 'i' } },
+        { note: { $regex: escaped, $options: 'i' } },
+        { 'sessions.shift.name': { $regex: escaped, $options: 'i' } },
+        // match on formattedDate so "20", "20/11", "20/11/2025" all match "20/11/2025"
+        { formattedDate: { $regex: escaped, $options: 'i' } }
+      ]
+
+      const numericValue = Number(searchValue)
+      if (!isNaN(numericValue)) {
+        orConditions.push({ totalDuration: numericValue })
+        orConditions.push({ totalRegular: numericValue })
+        orConditions.push({ totalOvertime: numericValue })
+        orConditions.push({ totalHoliday: numericValue })
+      }
+
+      basePipeline.push({ $match: { $or: orConditions } })
     }
 
     // Rebuild attendance docs grouping back sessions into array
@@ -71,6 +77,7 @@ export const getAttendances = async (req, res) => {
           organization: { $first: '$organization' },
           user: { $first: '$user' },
           date: { $first: '$date' },
+          formattedDate: { $first: '$formattedDate' },
           status: { $first: '$status' },
           sessions: { $push: '$sessions' },
           totalRegular: { $first: '$totalRegular' },
@@ -135,7 +142,7 @@ export const getAttendances = async (req, res) => {
       { $limit: length },
       {
         $project: {
-          _id: '$_id',
+          _id: 1,
           organization: 1,
           user: {
             _id: '$user._id',
@@ -143,6 +150,7 @@ export const getAttendances = async (req, res) => {
             email: '$user.email'
           },
           date: 1,
+          formattedDate: 1,
           status: 1,
           sessions: 1, // each session has .shift { _id, name }
           totalRegular: 1,
