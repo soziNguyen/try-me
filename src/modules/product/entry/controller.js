@@ -86,6 +86,7 @@ export const getProductEntries = async (req, res) => {
     const colIdx = req.query['order[0][column]']
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
+    const flatten = req.query.flatten === 'true' // Flatten theo từng sản phẩm
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -107,7 +108,6 @@ export const getProductEntries = async (req, res) => {
       { $match: matchCondition },
       ...lookupRef('warehouse', 'Warehouses'),
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
-
       // Lookup cho cả MenuItem và Combo
       {
         $lookup: {
@@ -125,7 +125,6 @@ export const getProductEntries = async (req, res) => {
           as: 'comboProduct'
         }
       },
-      // Gộp kết quả từ cả 2 collection
       {
         $addFields: {
           product: {
@@ -137,10 +136,10 @@ export const getProductEntries = async (req, res) => {
           }
         }
       },
-
       ...lookupUser('createdBy')
     ]
 
+    // Search
     if (searchValue) {
       basePipeline.push({
         $match: {
@@ -173,38 +172,80 @@ export const getProductEntries = async (req, res) => {
       })
     }
 
-    // Group lại theo phiếu vì trước đó đã unwind items
-    basePipeline.push({
-      $group: {
-        _id: '$_id',
-        code: { $first: '$code' },
-        date: { $first: '$date' },
-        warehouse: { $first: '$warehouse' },
-        note: { $first: '$note' },
-        total: { $first: '$total' },
-        createdBy: { $first: '$createdBy.username' },
-        isLocked: { $first: '$isLocked' },
-        items: {
-          $push: {
-            $cond: {
-              if: { $ifNull: ['$items', false] },
-              then: {
-                productType: '$items.productType',
-                product: '$product',
-                quantity: '$items.quantity',
-                unit: '$items.unit',
-                unitPrice: '$items.unitPrice',
-                total: '$items.total'
-              },
-              else: '$REMOVE'
+    if (flatten) {
+      // Flatten: mỗi document là một item, giữ thông tin phiếu
+      basePipeline.push({
+        $addFields: {
+          entryId: '$_id',
+          entryCode: '$code',
+          entryDate: '$date',
+          entryWarehouse: '$warehouse',
+          entryNote: '$note',
+          entryCreatedBy: '$createdBy.username',
+          entryIsLocked: '$isLocked',
+          productType: '$items.productType',
+          product: '$product',
+          quantity: '$items.quantity',
+          unit: '$items.unit',
+          unitPrice: '$items.unitPrice',
+          total: '$items.total'
+        }
+      })
+
+      basePipeline.push({
+        $project: {
+          _id: 0,
+          entryId: 1,
+          entryCode: 1,
+          entryDate: 1,
+          entryWarehouse: 1,
+          entryNote: 1,
+          entryCreatedBy: 1,
+          entryIsLocked: 1,
+          productType: 1,
+          product: 1,
+          quantity: 1,
+          unit: 1,
+          unitPrice: 1,
+          total: 1
+        }
+      })
+    } else {
+      // Group theo phiếu (như hiện tại)
+      basePipeline.push({
+        $group: {
+          _id: '$_id',
+          code: { $first: '$code' },
+          date: { $first: '$date' },
+          warehouse: { $first: '$warehouse' },
+          note: { $first: '$note' },
+          total: { $first: '$total' },
+          createdBy: { $first: '$createdBy.username' },
+          isLocked: { $first: '$isLocked' },
+          items: {
+            $push: {
+              $cond: {
+                if: { $ifNull: ['$items', false] },
+                then: {
+                  productType: '$items.productType',
+                  product: '$product',
+                  quantity: '$items.quantity',
+                  unit: '$items.unit',
+                  unitPrice: '$items.unitPrice',
+                  total: '$items.total'
+                },
+                else: '$REMOVE'
+              }
             }
           }
         }
-      }
-    })
+      })
+    }
 
+    // Sort
     basePipeline.push({ $sort: { [sortField]: sortDir } })
 
+    // Count tổng số record
     const countPipeline = [...basePipeline, { $count: 'totalCount' }]
     const totalData = await ProductEntry.aggregate(countPipeline)
     const recordsTotal = totalData.length > 0 ? totalData[0].totalCount : 0

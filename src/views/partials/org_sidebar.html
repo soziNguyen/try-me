@@ -204,7 +204,9 @@
                     </li>
 
                     <!-- Reports Section -->
-                    <% const inReports=['SalesReport','InventoryReport','StaffReport','TaxReport'].includes(page); %>
+                    <% const
+                      inReports=['SalesReport','InventoryReport','StaffReport','TaxReport','ProductReport'].includes(page);
+                      %>
                       <li class="reports-accordion">
                         <div class="accordion" id="accordionReports">
                           <div class="accordion-item">
@@ -238,6 +240,11 @@
                                 <a class="<%= page === 'TaxReport' ? 'accordion-active' : '' %>" href="/reports/tax">
                                   <i class="bi bi-file-earmark-text text-warning me-2"></i>
                                   <span>Báo cáo thuế</span>
+                                </a>
+                                <a class="<%= page === 'ProductReport' ? 'accordion-active' : '' %>"
+                                  href="/reports/product-report">
+                                  <i class="bi bi-clipboard-data text-danger me-2"></i>
+                                  <span>Báo cáo kho sản phẩm </span>
                                 </a>
                               </div>
                             </div>

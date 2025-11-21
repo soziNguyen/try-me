@@ -83,6 +83,12 @@ router.get(
 router.get('/reports/performance', isAuthenticated, isPermit('Admin', 'Org'), page.staffReportPage)
 router.get('/reports/tax', isAuthenticated, isPermit('Admin', 'Org'), page.taxReportPage)
 router.get('/coupon', isAuthenticated, isPermit('Admin', 'Org'), page.couponPage)
+router.get(
+  '/reports/product-report',
+  isAuthenticated,
+  isPermit('Admin', 'Org'),
+  page.ProductReportPage
+)
 
 // Staff management
 router.get('/staff/shifts', isAuthenticated, isPermit('Admin', 'Org'), page.shiftPage)
