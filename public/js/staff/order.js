@@ -436,15 +436,17 @@ function renderMenu(items) {
           <div class="card-body d-flex flex-column">
             <h5 class="card-title fw-semibold">${name}</h5>
             ${item.isCombo ? `<p class="card-text text-secondary">Gồm: ${comboItemsList}</p>` : ''}
-            <p class="card-text text-danger fw-bold fs-5 flex-grow-1">Giá: ${priceFormatted} đ</p>
-            <button 
-              class="btn ${item.isCombo ? 'btn-success' : 'btn-primary'} btn-sm rounded-pill px-3 mt-auto btn-add-to-order"
-              data-id="${item._id}"
-              data-name="${name}"
-              data-price="${price}"
-              data-is-combo="${item.isCombo}">
-              <i class="bi bi-bag-plus"></i> Thêm${item.isCombo ? ' combo' : ''}
-            </button>
+            <div class="d-flex flex-column mt-auto">
+              <p class="card-text text-danger fw-bold fs-5 flex-grow-1">Giá: ${priceFormatted} đ</p>
+              <button 
+                class="btn ${item.isCombo ? 'btn-success' : 'btn-primary'} btn-sm rounded-pill px-3 mt-auto btn-add-to-order"
+                data-id="${item._id}"
+                data-name="${name}"
+                data-price="${price}"
+                data-is-combo="${item.isCombo}">
+                <i class="bi bi-bag-plus"></i> Thêm${item.isCombo ? ' combo' : ''}
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btnViewOrder').addEventListener('click', handleViewOrder)
   document.getElementById('btnBackToMenu').addEventListener('click', handleBackToMenu)
   initCallStaffSocket()
+  customScrollbarInit()
 })
 
 async function handleViewOrder() {
@@ -566,5 +567,17 @@ function initCallStaffSocket() {
 
     toastr.remove()
     toastr.success('Đã gửi yêu cầu! Nhân viên sẽ đến hỗ trợ bạn.')
+  })
+}
+
+function customScrollbarInit() {
+  $('.cart-items-scroll').mCustomScrollbar({
+    theme: 'minimal-dark',
+    axis: 'y',
+    scrollInertia: 200, // giảm thời gian animation -> bớt kéo quá
+    mouseWheel: {
+      deltaFactor: 20, // giảm tốc độ wheel nếu quá nhanh
+      preventDefault: true // tránh scroll container cha
+    }
   })
 }

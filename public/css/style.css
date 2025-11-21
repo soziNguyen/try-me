@@ -941,3 +941,43 @@ body {
             flex-direction: column;
   }
 }
+@media (max-width: 575px) {
+  .admin__content.border,
+  .admin__content .border-2 {
+    border: none !important;
+  }
+  .admin__content .status {
+    top: 153px !important;
+  }
+  .admin__content .checkout-info {
+    margin-bottom: 160px !important;
+  }
+  .admin__content .qr-code {
+    top: 32px !important;
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+            transform: translateX(-50%);
+  }
+  .admin__content .invoice-actions {
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    gap: 8px;
+  }
+  .admin__content .invoice-actions .action-buttons {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    gap: 8px;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
+    -webkit-box-ordinal-group: 0;
+        -ms-flex-order: -1;
+            order: -1;
+  }
+  .admin__content .invoice-actions .action-buttons .btn {
+    width: 50%;
+  }
+}

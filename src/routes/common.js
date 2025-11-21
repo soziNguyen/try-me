@@ -41,9 +41,11 @@ import paymentMethodAdminRoutes from '../modules/payment-method-admin/route.js'
 import stockReportRoutes from '../modules/reports/stock/route.js'
 import kitchenRoutes from '../modules/kitchen/route.js'
 import uploadRouter from '../modules/upload/route.js'
+import checkPlanAccess from '../helpers/checkPlanAccess.js'
 import pageRoute from '../pages/route.js'
 
 const router = express.Router()
+router.use(checkPlanAccess)
 
 const routes = [
   // Core

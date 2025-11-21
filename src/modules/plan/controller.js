@@ -347,14 +347,6 @@ export const upgradePlan = async (req, res) => {
     const vat = Math.round(subtotal * vatRate)
     const total = subtotal + vat
 
-    // NGÀY HẾT HẠN DỰ KIẾN
-    const expireAt = new Date()
-    if (mode === 'year') {
-      expireAt.setFullYear(expireAt.getFullYear() + durationNum)
-    } else {
-      expireAt.setMonth(expireAt.getMonth() + durationNum)
-    }
-
     // TẠO MÃ HÓA ĐƠN
     const invoiceCode = await generateInvoiceCode(PlanTransaction, 'HD')
 
@@ -372,7 +364,7 @@ export const upgradePlan = async (req, res) => {
       vat,
       total,
       paidAt: null,
-      expiredAt: expireAt,
+      expiredAt: null,
       paymentMethod: paymentMethodId,
       note: `Tổ chức ${org.name} nâng cấp gói ${plan.name} - ${durationNum} ${mode === 'year' ? 'năm' : 'tháng'}`,
       status: 'pending'
