@@ -19,8 +19,7 @@ import ProductStock from '../product/stock/model.js'
 import { generateInvoiceCode } from '../../helpers/generateInvoiceCode.js'
 import { formatPhoneNumber, validatePhoneNumber } from '../../helpers/validator.js'
 import mongoose from 'mongoose'
-
-const { POINT_VALUE, POINTS_EARN_RATE } = constants
+import { loadPointSetting } from '../../helpers/org-point.js'
 
 export const createOrder = async (req, res) => {
   try {
@@ -363,7 +362,8 @@ function calcOrderTotal(items = []) {
   }, 0)
 }
 
-function recalculateOrder(order) {
+async function recalculateOrder(order) {
+  const { pointValue } = await loadPointSetting(order.organization)
   // Tổng tiền hàng
   order.totalAmount = calcOrderTotal(order.items)
 
@@ -375,7 +375,7 @@ function recalculateOrder(order) {
   const parsedVatRate = Number(order.vatRate || 0)
   const parsedCustomerPaid = Number(order.customerPaid || 0)
 
-  const pointsDiscount = parsedPointsUsed * POINT_VALUE
+  const pointsDiscount = parsedPointsUsed * pointValue
   const totalPayable =
     order.totalAmount - parsedDiscount - pointsDiscount - parsedExtraDiscount + parsedServiceCharge
 
@@ -531,7 +531,7 @@ export const addItemToOrder = async (req, res) => {
     }
 
     // Tính tổng tiền đơn hàng
-    recalculateOrder(order)
+    await recalculateOrder(order)
 
     // Cập nhật updatedBy
     if (req.user && req.user._id) {
@@ -684,7 +684,7 @@ export const updateItemQuantity = async (req, res) => {
     item.quantity = quantity
 
     // Cập nhật total
-    recalculateOrder(order)
+    await recalculateOrder(order)
 
     // Cập nhật updatedBy
     if (req.user && req.user._id) {
@@ -757,7 +757,7 @@ export const removeItemFromOrder = async (req, res) => {
     order.items.splice(itemIndex, 1)
 
     // Cập nhật total
-    recalculateOrder(order)
+    await recalculateOrder(order)
 
     // Cập nhật updatedBy
     if (req.user && req.user._id) {
@@ -866,7 +866,9 @@ export const checkoutOrder = async (req, res) => {
       if (parsedDiscount > totalAmount)
         throw new BusinessError('Giảm giá không được vượt quá tổng tiền', 400)
 
-      const calculatedPointsDiscount = parsedPointsUsed * POINT_VALUE
+      const { pointValue, pointsEarnRate } = await loadPointSetting(order.organization)
+
+      const calculatedPointsDiscount = parsedPointsUsed * pointValue
       const totalPayable =
         totalAmount -
         parsedDiscount -
@@ -983,7 +985,7 @@ export const checkoutOrder = async (req, res) => {
         }
 
         // Calculate points earned
-        pointsEarned = Math.floor(total / POINTS_EARN_RATE)
+        pointsEarned = Math.floor(total / pointsEarnRate)
 
         // Atomic customer update
         const customerUpdateResult = await Customer.findOneAndUpdate(
@@ -1178,8 +1180,10 @@ export const updateOrderDraft = async (req, res) => {
         throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
       }
 
+      const { pointValue } = await loadPointSetting(order.organization)
+
       // 4. Tính toán các khoản tiền
-      const pointsDiscount = parsedPointsUsed * POINT_VALUE
+      const pointsDiscount = parsedPointsUsed * pointValue
       const totalPayable =
         totalAmount - parsedDiscount - pointsDiscount - parsedExtraDiscount + parsedServiceCharge
 
