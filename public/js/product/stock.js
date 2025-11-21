@@ -74,6 +74,11 @@ $(function () {
           }
         },
         {
+          data: 'quantity',
+          title: 'Số lượng',
+          render: (data) => `<span class="number">${data || 0}</span>`
+        },
+        {
           data: 'warehouse.name',
           title: 'Kho',
           render: (data, type, row) => {
@@ -83,11 +88,6 @@ $(function () {
             }
             return row.warehouse?.name || ''
           }
-        },
-        {
-          data: 'quantity',
-          title: 'Số lượng',
-          render: (data) => `<span class="number">${data || 0}</span>`
         }
       ],
       lengthMenu: [showList, showList],
