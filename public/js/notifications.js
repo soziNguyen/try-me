@@ -33,6 +33,13 @@ socket.emit('staff_join')
 
 // Nhận notification từ socket
 socket.on('staff_notification', (data) => {
+  console.log(data)
+
+  // Tạo ID cho notification mới
+  if (!data.id) {
+    data.id = `noti_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
+  }
+
   appendNotificationToModal(data)
   saveNotification(data)
   saveUnseenNotification(data)
@@ -79,6 +86,10 @@ async function appendNotificationToModal(data) {
     }
   }
 
+  // Tạo ID duy nhất cho mỗi thông báo (hoặc sử dụng ID có sẵn)
+  const notiId = data.id || `noti_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
+  data.id = notiId // Gán ID vào data để lưu vào localStorage
+
   let html = ''
 
   // Phân biệt loại thông báo
@@ -89,10 +100,14 @@ async function appendNotificationToModal(data) {
     const itemName = data.itemName || 'Không rõ tên món'
 
     html = `
-      <div class="border-bottom py-2">
+      <div class="border-bottom py-2 position-relative notification-item" data-noti-id="${notiId}">
         <strong>${tableDisplay}</strong> - Món <strong>${itemName}</strong> - 
         <span class="badge bg-${statusInfo.color}">${statusInfo.text}</span><br>
         <small>${formatDateVN(data.time)}</small>
+        <button type="button" class="btn-close position-absolute delete-noti-btn top-50 end-0 translate-middle-y" 
+                data-noti-id="${notiId}"
+                aria-label="Xóa thông báo">
+        </button>
       </div>
     `
   } else if (data.type === 'new_order_items') {
@@ -102,18 +117,26 @@ async function appendNotificationToModal(data) {
     const itemsText = itemCount === 1 ? '1 món' : `${itemCount} món`
 
     html = `
-      <div class="border-bottom py-2">
+      <div class="border-bottom py-2 position-relative notification-item" data-noti-id="${notiId}">
         <strong>${tableDisplay}</strong> đã gửi đơn hàng mới -
         <span class="badge bg-info">Đợt ${data.batch}</span> - ${itemsText}<br>
         <small>${formatDateVN(data.time)}</small>
+        <button type="button" class="btn-close position-absolute delete-noti-btn top-50 end-0 translate-middle-y" 
+                data-noti-id="${notiId}"
+                aria-label="Xóa thông báo">
+        </button>
       </div>
     `
   } else {
     // Thông báo gọi nhân viên (mặc định)
     html = `
-      <div class="border-bottom py-2">
+      <div class="border-bottom py-2 position-relative notification-item" data-noti-id="${notiId}">
         <strong>${data.tableName}</strong> gửi yêu cầu hỗ trợ<br>
         <small>${formatDateVN(data.time)}</small>
+        <button type="button" class="btn-close position-absolute delete-noti-btn top-50 end-0 translate-middle-y" 
+                data-noti-id="${notiId}"
+                aria-label="Xóa thông báo">
+        </button>
       </div>
     `
   }
@@ -127,6 +150,17 @@ async function appendNotificationToModal(data) {
 
   // Thêm nội dung mới
   notificationModalBody.insertAdjacentHTML('afterbegin', html)
+
+  // Thêm event listener cho nút xóa vừa tạo
+  const deleteBtn = notificationModalBody.querySelector(
+    `[data-noti-id="${notiId}"] .delete-noti-btn`
+  )
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      deleteSingleNotification(notiId)
+    })
+  }
 
   // Reinit scrollbar
   $modalBody.mCustomScrollbar({
@@ -144,6 +178,41 @@ async function appendNotificationToModal(data) {
       }
     }
   })
+}
+
+// Xóa từng thông báo
+function deleteSingleNotification(notiId) {
+  const $modalBody = $('#notificationModalBody')
+
+  // Destroy scrollbar
+  if ($modalBody.data('mCS')) {
+    $modalBody.mCustomScrollbar('destroy')
+  }
+
+  // Xóa element khỏi DOM
+  const notiElement = notificationModalBody.querySelector(`[data-noti-id="${notiId}"]`)
+  if (notiElement) {
+    notiElement.remove()
+  }
+
+  // Xóa khỏi localStorage
+  const notifications = JSON.parse(localStorage.getItem('staff_notifications') || '[]')
+  const updatedNotifications = notifications.filter((noti) => noti.id !== notiId)
+  localStorage.setItem('staff_notifications', JSON.stringify(updatedNotifications))
+
+  // Xóa khỏi unseen notifications
+  const unseenNotifications = JSON.parse(localStorage.getItem('staff_notifications_unseen') || '[]')
+  const updatedUnseenNotifications = unseenNotifications.filter((noti) => noti.id !== notiId)
+  localStorage.setItem('staff_notifications_unseen', JSON.stringify(updatedUnseenNotifications))
+
+  // Reinit scrollbar
+  customScrollbarInit()
+
+  // Kiểm tra nếu không còn thông báo nào thì ẩn badge
+  const remainingNotifications = notificationModalBody.querySelectorAll('.notification-item')
+  if (remainingNotifications.length === 0) {
+    hideBadge()
+  }
 }
 
 function deleteAllNotifications() {
@@ -169,8 +238,40 @@ function deleteAllNotifications() {
   hideBadge()
 }
 
+// Badge
+function showBadge() {
+  notificationBadge?.classList.remove('d-none')
+}
+
+function hideBadge() {
+  notificationBadge?.classList.add('d-none')
+}
+
+function customScrollbarInit() {
+  $('#notificationModalBody').mCustomScrollbar({
+    theme: 'minimal-dark',
+    axis: 'y',
+    scrollInertia: 200,
+    mouseWheel: { deltaFactor: 20, preventDefault: true }
+  })
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const saved = JSON.parse(localStorage.getItem('staff_notifications') || '[]')
+
+  // Thêm ID cho các thông báo cũ nếu chưa có
+  let hasUpdated = false
+  saved.forEach((item) => {
+    if (!item.id) {
+      item.id = `noti_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
+      hasUpdated = true
+    }
+  })
+
+  // Lưu lại nếu có cập nhật
+  if (hasUpdated) {
+    localStorage.setItem('staff_notifications', JSON.stringify(saved))
+  }
 
   for (const item of saved) {
     await appendNotificationToModal(item)
@@ -199,21 +300,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   customScrollbarInit()
 })
-
-// Badge
-function showBadge() {
-  notificationBadge?.classList.remove('d-none')
-}
-
-function hideBadge() {
-  notificationBadge?.classList.add('d-none')
-}
-
-function customScrollbarInit() {
-  $('#notificationModalBody').mCustomScrollbar({
-    theme: 'minimal-dark',
-    axis: 'y',
-    scrollInertia: 200,
-    mouseWheel: { deltaFactor: 20, preventDefault: true }
-  })
-}

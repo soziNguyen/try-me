@@ -251,7 +251,7 @@ function createMenuItemHTML(item) {
           </div>
           
           <button 
-            class="btn ${item.isCombo ? 'btn-success' : 'btn-primary'} rounded-1 px-4 py-2 ms-auto mt-1 btn-add-to-order"
+            class="btn btn-primary rounded-1 px-4 py-2 ms-auto mt-1 btn-add-to-order"
             data-id="${item._id}"
             data-name="${name}"
             data-price="${price}"
