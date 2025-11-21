@@ -712,6 +712,22 @@ input[type=text]::-ms-clear {
     left: 0 !important;
     width: 100% !important;
   }
+  #cartModal.modal {
+    border: none;
+  }
+  #cartModal.modal .modal-dialog {
+    margin: 0;
+  }
+  #cartModal.modal .modal-dialog .modal-content {
+    height: 100vh;
+    border: none;
+  }
+  #cartModal.modal .modal-dialog .modal-content .modal-body .cart-items-scroll {
+    max-height: 600px;
+  }
+  .modal-backdrop {
+    display: none !important;
+  }
 }
 @media (max-width: 576px) {
   .order-card #foodMenuCol #categoryList {

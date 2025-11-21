@@ -107,19 +107,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 6. DANH SÁCH MÓN ĂN
     const itemsContainer = document.getElementById('orderItems')
     itemsContainer.innerHTML = ''
-    if (order.items?.length) {
-      order.items.forEach((item, index) => {
-        const tr = document.createElement('tr')
-        tr.innerHTML = `
-          <td class="stt">${index + 1}</td>
-          <td class="name">${item.foodId?.name || item.comboId?.name || 'Không rõ'}</td>
-          <td class="price">${formatCurrency(item.price)}</td>
-          <td class="qty">${item.quantity}</td>
-          <td class="total text-end">${formatCurrency(item.price * item.quantity)}</td>
-        `
-        itemsContainer.appendChild(tr)
-      })
-    }
+    const groupedItems = {}
+
+    order.items.forEach((item) => {
+      const key = item.foodId?._id || item.comboId?._id || 'unknown'
+      if (!groupedItems[key]) {
+        groupedItems[key] = {
+          name: item.foodId?.name || item.comboId?.name || 'Không rõ',
+          price: item.price,
+          quantity: 0
+        }
+      }
+      groupedItems[key].quantity += item.quantity
+    })
+
+    // Chuyển thành mảng để render
+    const itemsToRender = Object.values(groupedItems)
+
+    // Render ra bảng
+    itemsContainer.innerHTML = ''
+    itemsToRender.forEach((item, index) => {
+      const tr = document.createElement('tr')
+      tr.innerHTML = `
+    <td class="stt">${index + 1}</td>
+    <td class="name">${item.name}</td>
+    <td class="price">${formatCurrency(item.price)}</td>
+    <td class="qty">${item.quantity}</td>
+    <td class="total text-end">${formatCurrency(item.price * item.quantity)}</td>
+  `
+      itemsContainer.appendChild(tr)
+    })
 
     function formatCurrencyWithSign(amount, sign) {
       const formatted = formatCurrency(Math.abs(amount))
@@ -160,7 +177,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('total').textContent = formatCurrency(order.total)
     document.getElementById('customerPaid').textContent = formatCurrency(order.customerPaid)
     document.getElementById('changeAmount').textContent = formatCurrency(order.changeAmount)
-    document.getElementById('totalInWords').textContent = numberToVietnameseWords(order.total)
+    document.getElementById('totalInWords').textContent = order.total
+      ? numberToVietnameseWords(order.total)
+      : numberToVietnameseWords(order.totalAmount)
 
     // 8. QR CODE
     await waitForQrToLoad(order)
@@ -195,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function waitForQrToLoad(order) {
   return new Promise((resolve) => {
-    const qrContainer = document.getElementById('qrCodeContainer')
+    const qrContainer = document.getElementById('qrCodeContainer') || ''
 
     if (!order.qrCode?.trim()) return resolve() // Không có QR thì resolve ngay
 

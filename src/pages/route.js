@@ -28,7 +28,8 @@ router.get('/change-password', isAuthenticated, page.changePasswordPage)
 router.get('/profile', isAuthenticated, page.profilePage)
 router.get('/receipts', isAuthenticated, page.receiptPage)
 router.get('/receipt/:id', isAuthenticated, page.receiptDetailPage)
-router.get('/invoice', isAuthenticated, page.invoicePage)
+router.get('/setting/invoice', isAuthenticated, page.invoicePage)
+router.get('/setting/point', isAuthenticated, isPermit('Admin', 'Org'), page.pointPage)
 
 // Inventory
 router.get('/inventory/ingredients', isAuthenticated, page.ingredientPage)

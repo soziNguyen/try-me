@@ -673,6 +673,10 @@ input[type='text']::-ms-clear {
   }
 }
 
+// .modal-backdrop {
+//   display: none !important;
+// }
+
 //================= Responsive =================//
 
 @media (max-width: 991px) {
@@ -692,6 +696,30 @@ input[type='text']::-ms-clear {
   .pagination-bar {
     left: 0 !important;
     width: 100% !important;
+  }
+
+  #cartModal {
+    &.modal {
+      border: none;
+      .modal-dialog {
+        margin: 0;
+
+        .modal-content {
+          height: 100vh;
+          border: none;
+
+          .modal-body {
+            .cart-items-scroll {
+              max-height: 600px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .modal-backdrop {
+    display: none !important;
   }
 }
 

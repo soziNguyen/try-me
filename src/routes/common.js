@@ -28,6 +28,7 @@ import activityRoutes from '../modules/activity-logs/route.js'
 import paymentRoutes from '../modules/payment/route.js'
 import receivingAccountRoutes from '../modules/receiving-account/route.js'
 import invoiceRoutes from '../modules/invoice/route.js'
+import pointRoutes from '../modules/point-setting/route.js'
 import customerRoutes from '../modules/customer/route.js'
 import productEntryRoutes from '../modules/product/entry/route.js'
 import productStockRoutes from '../modules/product/stock/route.js'
@@ -40,9 +41,11 @@ import paymentMethodAdminRoutes from '../modules/payment-method-admin/route.js'
 import stockReportRoutes from '../modules/reports/stock/route.js'
 import kitchenRoutes from '../modules/kitchen/route.js'
 import uploadRouter from '../modules/upload/route.js'
+import checkPlanAccess from '../helpers/checkPlanAccess.js'
 import pageRoute from '../pages/route.js'
 
 const router = express.Router()
+router.use(checkPlanAccess)
 
 const routes = [
   // Core
@@ -98,6 +101,9 @@ const routes = [
   receivingAccountRoutes,
   customerRoutes,
   invoiceRoutes,
+
+  // Point
+  pointRoutes,
 
   // Product
   productEntryRoutes,

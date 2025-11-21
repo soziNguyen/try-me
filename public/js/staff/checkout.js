@@ -1,4 +1,4 @@
-const POINT_VALUE = 500
+let POINT_VALUE = 500
 let taxes = []
 let paymentMethods = []
 
@@ -39,7 +39,7 @@ function calculateTotals() {
   const pointsInput = document.getElementById('pointsInput')
   const pointsDiscountInput = document.getElementById('pointsDiscountInput')
   const serviceChargeInput = document.getElementById('serviceChargeInput')
-  const extraDiscountInput = document.getElementById('extraDiscountInput') // CHIẾT KHẤU
+  const extraDiscountInput = document.getElementById('extraDiscountInput')
   const vatInput = document.getElementById('vatInput')
   const totalPayableEl = document.getElementById('totalPayable')
   const totalEl = document.getElementById('total')
@@ -50,7 +50,7 @@ function calculateTotals() {
     !pointsInput ||
     !pointsDiscountInput ||
     !serviceChargeInput ||
-    !extraDiscountInput || // CHIẾT KHẤU
+    !extraDiscountInput ||
     !vatInput ||
     !totalPayableEl ||
     !totalEl
@@ -60,24 +60,32 @@ function calculateTotals() {
   const totalAmount = parseCurrency(totalAmountEl.textContent)
   const discount = parseCurrency(discountInput.value)
   const pointsUsed = parseInt(pointsInput.value) || 0
-
-  // Tính điểm giảm giá theo backend logic
   const pointsDiscount = pointsUsed * POINT_VALUE
-
   const serviceCharge = parseCurrency(serviceChargeInput.value)
-  const extraDiscount = parseCurrency(extraDiscountInput.value) // CHIẾT KHẤU
+  const extraDiscount = parseCurrency(extraDiscountInput.value)
   const vatRate = Number(vatInput.value) || 0
+
+  // Tính tổng giảm giá + phí dịch vụ
+  const totalPayable = totalAmount - discount - pointsDiscount - extraDiscount + serviceCharge
+
+  // Nếu tổng âm => báo lỗi hoặc reset về 0
+  if (totalPayable < 0) {
+    totalPayableEl.value = '0'
+    totalEl.value = '0'
+    pointsDiscountInput.value = pointsDiscount
+    return
+  }
 
   // Cập nhật hiển thị pointsDiscount
   pointsDiscountInput.value = pointsDiscount
 
   // Tổng tiền trước thuế
-  const totalPayable = totalAmount - discount - pointsDiscount - extraDiscount + serviceCharge
+  const safeTotalPayable = Math.max(0, totalPayable)
 
   // Tổng tiền sau thuế
-  const totalWithVAT = Math.round(totalPayable + (totalPayable * vatRate) / 100)
+  const totalWithVAT = Math.round(safeTotalPayable + (safeTotalPayable * vatRate) / 100)
 
-  totalPayableEl.value = totalPayable.toLocaleString('vi-VN')
+  totalPayableEl.value = safeTotalPayable.toLocaleString('vi-VN')
   totalEl.value = totalWithVAT.toLocaleString('vi-VN')
 
   updateChangeAmount()
@@ -345,7 +353,8 @@ function getCurrentOrderFormData() {
     vatRate: Number(document.getElementById('vatInput')?.value || 0),
     customerPaid: Number(
       document.getElementById('customerPaidInput')?.value.replace(/[^\d]/g, '') || 0
-    )
+    ),
+    paymentMethodId: document.getElementById('paymentMethodValue').value
   }
 }
 
@@ -372,7 +381,7 @@ function initPointsInput() {
     applyPointsBtn.dataset.state = 'applied'
 
     // Hiển thị phần giảm điểm và tính số tiền giảm tương ứng
-    pointsDiscountInput.value = parseInt(storedPoints, 10) * 500
+    pointsDiscountInput.value = parseInt(storedPoints, 10) * POINT_VALUE
     pointsDiscountWrapper.classList.remove('d-none')
   } else {
     applyPointsBtn.dataset.state = 'idle'
@@ -481,6 +490,9 @@ function initDiscountCode() {
       window.appliedCouponId = null
       localStorage.removeItem(`appliedCouponId_${orderId}`)
       localStorage.removeItem(`appliedCouponCode_${orderId}`)
+
+      await ajax(`/api/orders/${orderId}/update-draft`, { discount: 0, couponId: null }, 'POST')
+
       discountInput.value = 0
       codeInput.value = ''
       codeInput.disabled = false
@@ -604,7 +616,7 @@ function initCheckoutConfirm() {
       return
     }
 
-    if (customerPaid <= 0) {
+    if (customerPaid < 0) {
       toastr.warning('Số tiền khách trả không hợp lệ!')
       return
     }
@@ -631,7 +643,7 @@ function initCheckoutConfirm() {
         }
       }
 
-      // Gọi API thanh toán (không gửi pointsDiscount vì backend tự tính)
+      // Gọi API thanh toán
       const response = await fetch(`/api/orders/${orderId}/checkout`, {
         method: 'POST',
         headers: {
@@ -655,8 +667,9 @@ function initCheckoutConfirm() {
         return
       }
 
+      toastr.remove()
       toastr.success('Thanh toán thành công!')
-      document.getElementById('checkoutDetail').style.display = 'none'
+      document.getElementById('checkoutDetail').classList.add = 'd-none'
 
       fetchEmptyOrders()
 
@@ -674,9 +687,149 @@ function initCheckoutConfirm() {
   })
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const printBtn = document.getElementById('btn-check-print')
+// MAIN CLICK EVENT HANDLER
+document.addEventListener('click', async (e) => {
+  // Xử lý click gợi ý tiền mặt (bao gồm cả dynamic suggestions)
+  if (e.target.classList.contains('cash-suggestion')) {
+    const value = parseInt(e.target.dataset.value, 10)
+    const input = document.getElementById('customerPaidInput')
+    if (input) {
+      input.value = value.toLocaleString()
+      input.dispatchEvent(new Event('input'))
 
+      calculateTotals()
+
+      const orderId = window.currentOrderId
+      if (!orderId) {
+        toastr.error('Không xác định được đơn hàng!')
+        return
+      }
+
+      const data = getCurrentOrderFormData()
+
+      try {
+        const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+        if (result) {
+          toastr.remove()
+          toastr.success('Cập nhật số tiền khách trả thành công!')
+        }
+      } catch (error) {
+        console.error(error.message || 'Có lỗi khi cập nhật số tiền khách trả.')
+      }
+    }
+    return
+  }
+
+  // Xử lý chọn phương thức thanh toán
+  const paymentBtn = e.target.closest('#paymentMethod button')
+  if (paymentBtn) {
+    document.querySelectorAll('#paymentMethod button').forEach((b) => b.classList.remove('active'))
+    paymentBtn.classList.add('active')
+
+    const paymentMethodValue = document.getElementById('paymentMethodValue')
+    if (paymentMethodValue) {
+      paymentMethodValue.value = paymentBtn.dataset.value
+    }
+
+    const orderId = window.currentOrderId
+    if (!orderId) {
+      toastr.error('Không xác định được đơn hàng!')
+      return
+    }
+
+    const data = getCurrentOrderFormData()
+
+    try {
+      const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+      if (result) {
+        toastr.remove()
+        toastr.success('Thay đổi phương thức thanh toán thành công!')
+      }
+    } catch (error) {
+      console.error(error.message || 'Có lỗi khi thay đổi phương thức thanh toán')
+    }
+  }
+})
+
+async function loadOrderData(orderId) {
+  try {
+    const result = await ajax(`/api/orders/${orderId}`, {}, 'GET')
+
+    if (result) {
+      document.getElementById('discountInput').value =
+        result.discount.toLocaleString('vi-VN') || '0'
+      document.getElementById('pointsInput').value = result.pointsUsed || '0'
+      document.getElementById('serviceChargeInput').value =
+        result.serviceCharge.toLocaleString('vi-VN') || '0'
+      document.getElementById('extraDiscountInput').value = Number(
+        result?.extraDiscount ?? 0
+      ).toLocaleString('vi-VN')
+      document.getElementById('vatInput').value = result.vatRate || '0'
+      document.getElementById('customerPaidInput').value =
+        result.customerPaid.toLocaleString('vi-VN') || '0'
+      const method = result.paymentMethodId
+      const methodId =
+        method && typeof method === 'object' ? method._id : typeof method === 'string' ? method : ''
+
+      document.getElementById('paymentMethodValue').value = methodId
+
+      if (methodId) {
+        const buttons = document.querySelectorAll('#paymentMethod button')
+        buttons.forEach((btn) => {
+          if (btn.dataset.value === methodId) {
+            btn.classList.add('active')
+          } else {
+            btn.classList.remove('active')
+          }
+        })
+      }
+
+      window.appliedCouponId = result.couponId || localStorage.getItem('appliedCouponId') || null
+
+      if (window.appliedCouponId) {
+        localStorage.setItem('appliedCouponId', window.appliedCouponId)
+      } else {
+        localStorage.removeItem('appliedCouponId')
+      }
+
+      calculateTotals()
+    }
+  } catch (error) {
+    console.error('Lỗi khi load dữ liệu đơn hàng:', error)
+  }
+}
+
+async function loadPointSetting() {
+  try {
+    const result = await ajax('/api/setting/point', {}, 'GET')
+    if (result) {
+      POINT_VALUE = result.pointValue
+    }
+  } catch (error) {
+    console.error(error.message)
+  }
+}
+
+// INITIALIZATION
+document.addEventListener('DOMContentLoaded', async () => {
+  // 1. LOAD DỮ LIỆU BAN ĐẦU
+  await getTaxes()
+  await fillPaymentMethods()
+  await loadPointSetting()
+
+  // Render UI
+  renderTaxOptions()
+
+  // Load dữ liệu đơn hàng nếu có orderId
+  if (window.currentOrderId) {
+    await loadOrderData(window.currentOrderId)
+  }
+
+  // Tính toán ban đầu
+  calculateTotals()
+
+  // NÚT IN HÓA ĐƠN
+  const printBtn = document.getElementById('btn-check-print')
   if (printBtn) {
     printBtn.addEventListener('click', () => {
       const orderId = window.currentOrderId
@@ -686,14 +839,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return
       }
 
-      // Mở tab mới để in hóa đơn
       window.open(`/orders/print/${orderId}`, '_blank')
     })
   }
-})
 
-// Xử lý click button%
-document.addEventListener('DOMContentLoaded', () => {
+  // 3. NÚT CHIẾT KHẤU
   const totalAmountEl = document.getElementById('totalAmount')
   const extraDiscountInput = document.getElementById('extraDiscountInput')
   const discountButtons = document.querySelectorAll('.discount-btn')
@@ -723,149 +873,16 @@ document.addEventListener('DOMContentLoaded', () => {
       extraDiscountInput.dispatchEvent(new Event('change'))
     })
   })
-})
 
-// MAIN CLICK EVENT HANDLER
-document.addEventListener('click', (e) => {
-  // Xử lý click gợi ý tiền mặt (bao gồm cả dynamic suggestions)
-  if (e.target.classList.contains('cash-suggestion')) {
-    const value = parseInt(e.target.dataset.value, 10)
-    const input = document.getElementById('customerPaidInput')
-    if (input) {
-      input.value = value.toLocaleString()
-      input.dispatchEvent(new Event('input'))
-
-      calculateTotals()
-
-      const orderId = window.currentOrderId
-      if (!orderId) {
-        toastr.error('Không xác định được đơn hàng!')
-        return
-      }
-
-      const data = getCurrentOrderFormData()
-
-      ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
-        .then((result) => {
-          if (result) {
-            toastr.success('Cập nhật số tiền khách trả thành công!')
-          }
-        })
-        .catch((error) => {
-          console.error('Lỗi khi gọi API:', error)
-          toastr.error('Lỗi mạng hoặc server')
-        })
-    }
-    return
-  }
-
-  // Xử lý chọn phương thức thanh toán
-  const paymentBtn = e.target.closest('#paymentMethod button')
-  if (paymentBtn) {
-    document.querySelectorAll('#paymentMethod button').forEach((b) => b.classList.remove('active'))
-    paymentBtn.classList.add('active')
-
-    const paymentMethodValue = document.getElementById('paymentMethodValue')
-    if (paymentMethodValue) {
-      paymentMethodValue.value = paymentBtn.getAttribute('data-value')
-    }
-
-    const orderId = window.currentOrderId
-    if (!orderId) {
-      toastr.error('Không xác định được đơn hàng!')
-      return
-    }
-
-    const data = getCurrentOrderFormData()
-
-    ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
-      .then((result) => {
-        if (result) {
-          toastr.success('Cập nhật phương thức thanh toán thành công!')
-        }
-      })
-      .catch((error) => {
-        console.error('Lỗi khi gọi API:', error)
-        toastr.error('Lỗi mạng hoặc server')
-      })
-
-    return
-  }
-})
-
-async function loadOrderData(orderId) {
-  try {
-    const result = await ajax(`/api/orders/${orderId}`, {}, 'GET')
-
-    if (result) {
-      document.getElementById('discountInput').value =
-        result.discount.toLocaleString('vi-VN') || '0'
-      document.getElementById('pointsInput').value = result.pointsUsed || '0'
-      document.getElementById('serviceChargeInput').value =
-        result.serviceCharge.toLocaleString('vi-VN') || '0'
-      document.getElementById('extraDiscountInput').value = Number(
-        result?.extraDiscount ?? 0
-      ).toLocaleString('vi-VN')
-      document.getElementById('vatInput').value = result.vatRate || '0'
-      document.getElementById('customerPaidInput').value =
-        result.customerPaid.toLocaleString('vi-VN') || '0'
-      document.getElementById('paymentMethodValue').value = result.paymentMethodId || ''
-
-      if (result.paymentMethodId) {
-        const buttons = document.querySelectorAll('#paymentMethod button')
-        buttons.forEach((btn) => {
-          if (btn.getAttribute('data-value') === result.paymentMethodId) {
-            btn.classList.add('active')
-          } else {
-            btn.classList.remove('active')
-          }
-        })
-      }
-
-      window.appliedCouponId = result.couponId || localStorage.getItem('appliedCouponId') || null
-
-      if (window.appliedCouponId) {
-        localStorage.setItem('appliedCouponId', window.appliedCouponId)
-      } else {
-        localStorage.removeItem('appliedCouponId')
-      }
-
-      calculateTotals()
-    }
-  } catch (error) {
-    console.error('Lỗi khi load dữ liệu đơn hàng:', error)
-  }
-}
-
-// INITIALIZATION
-document.addEventListener('DOMContentLoaded', async () => {
-  // Load dữ liệu từ API
-  await getTaxes()
-  await fillPaymentMethods()
-
-  // Render UI
-  renderTaxOptions()
-
-  // Load dữ liệu đơn hàng nếu có orderId
-  if (window.currentOrderId) {
-    await loadOrderData(window.currentOrderId)
-  } else {
-    calculateTotals()
-  }
-
-  // Tính toán ban đầu
-  calculateTotals()
-
-  // Khởi tạo event listeners
+  // 4. KHỞI TẠO CÁC FORM
   initCustomerPaidInput()
   initPointsInput()
   initDiscountCode()
   initCheckoutConfirm()
 
-  // Bind events cho các input tính toán
+  // INPUT LISTENERS
   const discountInput = document.getElementById('discountInput')
   const serviceChargeInput = document.getElementById('serviceChargeInput')
-  const extraDiscountInput = document.getElementById('extraDiscountInput') // CHIẾT KHẤU
   const vatInput = document.getElementById('vatInput')
 
   if (discountInput) {
@@ -877,55 +894,59 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (extraDiscountInput) {
-    extraDiscountInput.addEventListener('input', calculateTotals) // CHIẾT KHẤU
+    extraDiscountInput.addEventListener('input', calculateTotals)
   }
 
-  serviceChargeInput.addEventListener('change', async () => {
-    let val = serviceChargeInput.value.replace(/[^\d]/g, '')
-    if (val === '') val = '0'
+  // Change event (gọi API update)
+  if (serviceChargeInput) {
+    serviceChargeInput.addEventListener('change', async () => {
+      let val = serviceChargeInput.value.replace(/[^\d]/g, '')
+      if (val === '') val = '0'
 
-    const orderId = window.currentOrderId
-    if (!orderId) {
-      toastr.error('Không xác định được đơn hàng!')
-      return
-    }
-
-    const data = getCurrentOrderFormData()
-
-    try {
-      const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
-      if (result) {
-        toastr.success('Cập nhật phí dịch vụ thành công!')
+      const orderId = window.currentOrderId
+      if (!orderId) {
+        toastr.error('Không xác định được đơn hàng!')
+        return
       }
-    } catch (error) {
-      console.error('Lỗi khi gọi API:', error)
-      toastr.error('Lỗi mạng hoặc server')
-    }
-  })
 
-  // CHIẾT KHẤU
-  extraDiscountInput.addEventListener('change', async () => {
-    let val = extraDiscountInput.value.replace(/[^\d]/g, '')
-    if (val === '') val = '0'
+      const data = getCurrentOrderFormData()
 
-    const orderId = window.currentOrderId
-    if (!orderId) {
-      toastr.error('Không xác định được đơn hàng!')
-      return
-    }
-
-    const data = getCurrentOrderFormData()
-
-    try {
-      const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
-      if (result) {
-        toastr.success('Cập nhật triết khấu thành công!')
+      try {
+        const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+        if (result) {
+          toastr.success('Cập nhật phí dịch vụ thành công!')
+        }
+      } catch (error) {
+        console.error('Lỗi khi gọi API:', error)
+        toastr.error('Lỗi mạng hoặc server')
       }
-    } catch (error) {
-      console.error('Lỗi khi gọi API:', error)
-      toastr.error('Lỗi mạng hoặc server')
-    }
-  })
+    })
+  }
+
+  if (extraDiscountInput) {
+    extraDiscountInput.addEventListener('change', async () => {
+      let val = extraDiscountInput.value.replace(/[^\d]/g, '')
+      if (val === '') val = '0'
+
+      const orderId = window.currentOrderId
+      if (!orderId) {
+        toastr.error('Không xác định được đơn hàng!')
+        return
+      }
+
+      const data = getCurrentOrderFormData()
+
+      try {
+        const result = await ajax(`/api/orders/${orderId}/update-draft`, data, 'POST')
+        if (result) {
+          toastr.success('Cập nhật chiết khấu thành công!')
+        }
+      } catch (error) {
+        console.error('Lỗi khi gọi API:', error)
+        toastr.error('Lỗi mạng hoặc server')
+      }
+    })
+  }
 
   if (vatInput) {
     vatInput.addEventListener('change', async () => {

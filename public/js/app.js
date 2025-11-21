@@ -66,6 +66,12 @@ function formatDate(dateString) {
   return `${dd}/${mm}/${yyyy}`
 }
 
+function formatDateVN(time) {
+  const date = new Date(time)
+  const day = date.toLocaleDateString('vi-VN') // "20/11/2025"
+  const timeStr = date.toLocaleTimeString('vi-VN') // "08:15:30"
+  return `${timeStr}, ${day}` // "08:15:30, 20/11/2025"
+}
 /**
  * Format a given date string to a time string (HH:mm).
  *

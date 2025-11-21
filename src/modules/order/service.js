@@ -14,7 +14,7 @@ export const createOrderForTable = async ({ tableId, req }) => {
   if (!organizationId) throw new BusinessError('Thiếu thông tin tổ chức', 400)
 
   if (!table) throw new BusinessError('Bàn không tồn tại', 404)
-  if (table.status === 'occupied') throw new BusinessError('Bàn đã có khách', 400)
+  if (table.status === 'occupied') throw new BusinessError('Bàn đã có khách', 409)
 
   // Lấy thông tin kho khi quét QR tại bàn
   const warehouse = table.warehouse

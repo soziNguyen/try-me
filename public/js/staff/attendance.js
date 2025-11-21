@@ -53,7 +53,7 @@ $(function () {
           title: 'Ngày làm việc',
           render: (data, type, row) => {
             if (type === 'display') {
-              const dateValue = data ? new Date(data).toISOString().slice(0, 10) : ''
+              const dateValue = data ? formatDate(data) : ''
               return dateValue
             }
             return data
@@ -79,6 +79,7 @@ $(function () {
         {
           data: 'sessions',
           className: 'text-center',
+          orderable: false,
           title: 'Số ca',
           render: (sessions) => (Array.isArray(sessions) ? sessions.length : 0)
         },
@@ -91,6 +92,7 @@ $(function () {
         {
           data: 'note',
           className: 'text-center',
+          orderable: false,
           title: 'Ghi chú',
           render: (data) => data || ''
         },
@@ -98,6 +100,7 @@ $(function () {
           data: null,
           orderable: false,
           className: 'text-center',
+          title: 'Hành động',
           width: '100px',
           render: (data, type, row) => {
             if (type === 'display') {

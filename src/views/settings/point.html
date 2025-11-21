@@ -1,0 +1,49 @@
+<%- include('../partials/header.html') %>
+  <%- include('../partials/org_sidebar.html') %>
+    <div class="admin__content">
+      <div class="mw-600">
+        <h3 class="fw-bold"><%= pageTitle %></h3>
+        
+        <form id="pointsSettingsForm">
+          <!-- POINT VALUE -->
+          <div class="mb-3">
+            <label for="pointValue" class="form-label">Giá trị 1 điểm (VND)</label>
+            <input type="number" class="form-control" id="pointValue" name="pointValue" min="1">
+            <div class="form-text">
+              - Mỗi điểm đổi được bao nhiêu tiền. Ví dụ: nhập 500 → 1 điểm = 500 VND
+            </div>
+          </div>
+      
+          <!-- POINTS EARN RATE -->
+          <div class="mb-3">
+            <label for="pointsEarnRate" class="form-label">Tỷ lệ tích điểm (VND)</label>
+            <input type="number" class="form-control" id="pointsEarnRate" name="pointsEarnRate" min="1">
+            <div class="form-text">
+              - Khách chi tiêu bao nhiêu tiền sẽ nhận 1 điểm. Ví dụ: nhập 10000 → chi tiêu 10,000 VND nhận 1 điểm
+            </div>
+          </div>
+      
+          <!-- Realtime Example -->
+          <div class="mb-4">
+            <div class="border rounded p-3 bg-light">
+              <div class="fw-semibold mb-2">Mô phỏng:</div>
+              <p id="pointsExample" class="mb-0">
+                Khách chi tiêu 50,000đ → nhận 5 điểm → giảm 2,500đ khi dùng điểm
+              </p>
+            </div>
+          </div>
+      
+          <button type="submit" class="btn btn-primary">Lưu cài đặt</button>
+        </form>
+      </div>
+    </div>
+    </div>
+
+    <input type="hidden" id="currentOrgId"
+      value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
+
+    <%- include('../partials/commonjs.html') %>
+      <script src="/js/sidebar-toggle.js"></script>
+      <script src="/js/point.js"></script>
+      <%- include('../partials/footer.html') %>
