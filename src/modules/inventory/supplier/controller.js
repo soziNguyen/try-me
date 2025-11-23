@@ -2,6 +2,8 @@ import Supplier from './model.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupUser } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import { logActivity } from '../../activity-logs/service.js'
+import { buildChangeLog } from '../../../helpers/changeLog.js'
 
 export const getAllSuppliers = async (req, res) => {
   try {
@@ -104,6 +106,18 @@ export const createSupplier = async (req, res) => {
     }
     const newSupplier = new Supplier(data)
     await newSupplier.save()
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'CREATE',
+      'SUPPLIER',
+      `Thêm mới nhà cung cấp`,
+      newSupplier.name,
+      'SUCCESS'
+    )
+
     responseHelper.success(res, null, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -160,6 +174,35 @@ export const updateSupplier = async (req, res) => {
       dataUpdate,
       { new: true }
     ).populate('updatedBy', 'username')
+
+    const changeDetailsWh = buildChangeLog(
+      supplier,
+      updated,
+      [
+        { field: 'code', label: 'Mã NCC' },
+        { field: 'name', label: 'Tên NCC' },
+        { field: 'phone', label: 'SĐT' },
+        { field: 'email', label: 'Email' },
+        { field: 'country', label: 'Quốc gia' },
+        { field: 'address', label: 'Địa chỉ' },
+        { field: 'taxId', label: 'MST' },
+        { field: 'isActive', label: 'Trạng thái' },
+        { field: 'note', label: 'Ghi chú' }
+      ],
+      supplier.name,
+      'nhà cung cấp'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'Cập nhật nhà kho',
+      'WAREHOUSE',
+      changeDetailsWh || 'Không có thay đổi',
+      updated.name
+    )
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -206,6 +249,17 @@ export const forceDeleteSuppliers = async (req, res) => {
       _id: { $in: ids },
       organization: organizationId
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'SUPPLIER',
+      `Xóa ${result.deletedCount} nhà cung cấp`,
+      '',
+      'SUCCESS'
+    )
 
     responseHelper.success(res, result.deletedCount, 'Đã xóa vĩnh viễn các nhà cung cấp thành công')
   } catch (error) {

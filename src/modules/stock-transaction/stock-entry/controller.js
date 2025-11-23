@@ -12,6 +12,8 @@ import Supplier from '../../inventory/supplier/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import BusinessError from '../../error/BusinessError.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
+import { logActivity } from '../../activity-logs/service.js'
+import { buildChangeLog } from '../../../helpers/changeLog.js'
 
 // GET ALL
 export const getAllStockEntries = async (req, res) => {
@@ -278,6 +280,18 @@ export const createStockEntry = async (req, res) => {
       await doc.save({ session })
       return doc
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'CREATE',
+      'STOCK_ENTRY',
+      'Tạo phiếu nhập',
+      entry.code,
+      'SUCCESS',
+      warehouse?._id
+    )
 
     responseHelper.success(
       res,
