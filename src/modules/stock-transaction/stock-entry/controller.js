@@ -515,6 +515,18 @@ export const updateStockEntryFromForm = async (req, res) => {
       return newEntry
     })
 
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'STOCK_ENTRY',
+      `Cập nhật phiếu nhập kho`,
+      updatedDoc.code,
+      'SUCCESS',
+      updatedDoc.warehouse || null
+    )
+
     responseHelper.success(res, updatedDoc, 'Cập nhật phiếu nhập thành công')
   } catch (error) {
     if (error instanceof BusinessError) {
