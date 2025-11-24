@@ -13,6 +13,8 @@ export const getProductStockLists = async (req, res) => {
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
     const warehouse = req.query.warehouse
+    const startDate = req.query.startDate
+    const endDate = req.query.endDate
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -21,11 +23,23 @@ export const getProductStockLists = async (req, res) => {
       organization: organizationId
     }
 
-    if (warehouse !== 'all') {
+    if (warehouse && warehouse !== 'all') {
       matchCondition.warehouse = new mongoose.Types.ObjectId(String(warehouse))
     }
 
-    // Khởi tạo pipeline với match và lookup
+    if (startDate || endDate) {
+      matchCondition.updatedAt = {}
+      if (startDate) {
+        matchCondition.updatedAt.$gte = new Date(startDate)
+      }
+      if (endDate) {
+        const endOfDay = new Date(endDate)
+        endOfDay.setHours(23, 59, 59, 999)
+        matchCondition.updatedAt.$lte = endOfDay
+      }
+    }
+
+    // Pipeline
     const pipeline = [
       { $match: matchCondition },
       ...lookupRef('product', 'MenuItems'),
@@ -34,7 +48,7 @@ export const getProductStockLists = async (req, res) => {
       ...lookupUser('updatedBy')
     ]
 
-    // Thêm field item (gộp product và combo)
+    // Thêm field item
     pipeline.push({
       $addFields: {
         item: {
@@ -107,7 +121,19 @@ export const getProductStockLists = async (req, res) => {
         sortObj[sortField] = sortDir
     }
 
-    // Project dữ liệu
+    // Tính tổng tồn kho trước khi phân trang
+    const totalQuantityPipeline = [...pipeline]
+    totalQuantityPipeline.push({
+      $group: {
+        _id: null,
+        totalQuantity: { $sum: '$quantity' }
+      }
+    })
+
+    const totalQuantityResult = await ProductStock.aggregate(totalQuantityPipeline)
+    const totalQuantity = totalQuantityResult.length > 0 ? totalQuantityResult[0].totalQuantity : 0
+
+    // Project dữ liệu + phân trang
     pipeline.push(
       { $sort: sortObj },
       { $skip: start },
@@ -116,7 +142,7 @@ export const getProductStockLists = async (req, res) => {
         $project: {
           _id: 1,
           quantity: 1,
-          item: 1, // Sử dụng item thay vì product/combo
+          item: 1,
           warehouse: {
             _id: '$warehouse._id',
             name: '$warehouse.name',
@@ -133,7 +159,7 @@ export const getProductStockLists = async (req, res) => {
       }
     )
 
-    // Lấy dữ liệu và tổng bản ghi
+    // Lấy dữ liệu
     const data = await ProductStock.aggregate(pipeline)
     const recordsTotal = await ProductStock.countDocuments({
       organization: organizationId
@@ -143,6 +169,7 @@ export const getProductStockLists = async (req, res) => {
       draw,
       recordsTotal,
       recordsFiltered,
+      totalQuantity,
       data
     })
   } catch (err) {
