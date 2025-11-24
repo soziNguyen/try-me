@@ -86,29 +86,47 @@ export const getProductEntries = async (req, res) => {
     const colIdx = req.query['order[0][column]']
     const sortField = req.query[`columns[${colIdx}][data]`] || 'createdAt'
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
-    const flatten = req.query.flatten === 'true' // Flatten theo từng sản phẩm
+    const flatten = req.query.flatten === 'true'
+    const warehouse = req.query.warehouse
+    const startDate = req.query.startDate
+    const endDate = req.query.endDate
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     const matchCondition = { organization: organizationId }
 
-    // Warehouse filtering
-    if (req.warehouseFilter) {
-      matchCondition.warehouse = req.warehouseFilter
+    if (warehouse && warehouse !== 'all') {
+      matchCondition.warehouse = new mongoose.Types.ObjectId(String(warehouse))
+    } else if (warehouse === 'all') {
     } else {
-      const org = await Organization.findById(organizationId).select('defaultWarehouse')
-      if (org?.defaultWarehouse) {
-        matchCondition.warehouse = org.defaultWarehouse
+      if (req.warehouseFilter) {
+        matchCondition.warehouse = req.warehouseFilter
+      } else {
+        const org = await Organization.findById(organizationId).select('defaultWarehouse')
+        if (org?.defaultWarehouse) {
+          matchCondition.warehouse = org.defaultWarehouse
+        }
       }
-      // null -> xem tất cả
+    }
+
+    // Lọc theo ngày nhập
+    if (startDate || endDate) {
+      matchCondition.date = {}
+      if (startDate) {
+        matchCondition.date.$gte = new Date(startDate)
+      }
+      if (endDate) {
+        const endOfDay = new Date(endDate)
+        endOfDay.setHours(23, 59, 59, 999)
+        matchCondition.date.$lte = endOfDay
+      }
     }
 
     const basePipeline = [
       { $match: matchCondition },
       ...lookupRef('warehouse', 'Warehouses'),
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
-      // Lookup cho cả MenuItem và Combo
       {
         $lookup: {
           from: 'MenuItems',
@@ -173,7 +191,6 @@ export const getProductEntries = async (req, res) => {
     }
 
     if (flatten) {
-      // Flatten: mỗi document là một item, giữ thông tin phiếu
       basePipeline.push({
         $addFields: {
           entryId: '$_id',
@@ -211,7 +228,6 @@ export const getProductEntries = async (req, res) => {
         }
       })
     } else {
-      // Group theo phiếu (như hiện tại)
       basePipeline.push({
         $group: {
           _id: '$_id',
@@ -234,10 +250,15 @@ export const getProductEntries = async (req, res) => {
                   unitPrice: '$items.unitPrice',
                   total: '$items.total'
                 },
-                else: '$REMOVE'
+                else: '$$REMOVE'
               }
             }
           }
+        }
+      })
+      basePipeline.push({
+        $addFields: {
+          totalQuantity: { $sum: '$items.quantity' }
         }
       })
     }
@@ -245,7 +266,7 @@ export const getProductEntries = async (req, res) => {
     // Sort
     basePipeline.push({ $sort: { [sortField]: sortDir } })
 
-    // Count tổng số record
+    // Count
     const countPipeline = [...basePipeline, { $count: 'totalCount' }]
     const totalData = await ProductEntry.aggregate(countPipeline)
     const recordsTotal = totalData.length > 0 ? totalData[0].totalCount : 0
@@ -254,7 +275,7 @@ export const getProductEntries = async (req, res) => {
     basePipeline.push({ $skip: start })
     basePipeline.push({ $limit: length })
 
-    // Query dữ liệu
+    // Query
     const data = await ProductEntry.aggregate(basePipeline)
 
     return res.json({
