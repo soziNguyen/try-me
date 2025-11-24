@@ -550,3 +550,38 @@ body {
     }
   }
 }
+
+@media (max-width: 575px) {
+  .admin__content {
+    &.border,
+    .border-2 {
+      border: none !important;
+    }
+    .status {
+      top: 153px !important;
+    }
+    .checkout-info {
+      margin-bottom: 160px !important;
+    }
+    .qr-code {
+      top: 32px !important;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .invoice-actions {
+      flex-direction: column;
+      gap: 8px;
+
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: space-between;
+        order: -1;
+
+        .btn {
+          width: 50%;
+        }
+      }
+    }
+  }
+}

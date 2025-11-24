@@ -662,6 +662,18 @@ export const invoicePage = async (req, res) => {
   )
 }
 
+export const pointPage = async (req, res) => {
+  res.render(
+    'settings/point',
+    getPageData(req, 'Quy đổi điểm', 'Loyalty', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUY ĐỔI ĐIỂM',
+      userRole: req.user.role,
+      currentOrgId: req.user.organization
+    })
+  )
+}
+
 export const productEntryPage = async (req, res) => {
   res.render(
     'product/entry',

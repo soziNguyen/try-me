@@ -54,6 +54,11 @@ $(function () {
             `<span class="number">${meta.row + meta.settings._iDisplayStart + 1}</span>`
         },
         {
+          data: 'item.sku',
+          title: 'Mã',
+          render: (data) => (data ? `<span class="text">${data}</span>` : '')
+        },
+        {
           data: 'item.name',
           title: 'Tên sản phẩm',
           render: (data, type, row) => {
@@ -65,13 +70,8 @@ $(function () {
                 ? '<span class="badge bg-primary ms-2">Combo</span>'
                 : '<span class="badge bg-success ms-2">Món</span>'
 
-            return `<span class="text form-control">${row.item.name}${typeBadge}</span>`
+            return `<span class="text d-flex form-control">${row.item.name}${typeBadge}</span>`
           }
-        },
-        {
-          data: 'item.sku',
-          title: 'Mã',
-          render: (data) => (data ? `<span class="text">${data}</span>` : '')
         },
         {
           data: 'warehouse.name',

@@ -18,8 +18,8 @@ function handlerAddEvent(tableSelector, btnSelector, module) {
       method: 'POST',
       headers: { 'x-csrf-token': csrfToken },
       success(res) {
-        toastr.remove()
         if (res.success) {
+          toastr.remove()
           toastr.success(res.message)
           table.ajax.reload(null, false)
           $wrapper.find('#selectAll').prop('checked', false)
@@ -28,6 +28,7 @@ function handlerAddEvent(tableSelector, btnSelector, module) {
         }
       },
       error(xhr) {
+        toastr.remove()
         toastr.error(xhr.responseJSON?.message || 'Lỗi')
       },
       complete() {

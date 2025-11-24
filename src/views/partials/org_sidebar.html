@@ -347,21 +347,25 @@
                           <div class="accordion-item">
                             <h2 class="accordion-header">
                               <button
-                                class="accordion-button <%= ['Invoice'].includes(page) ? 'active' : '' %> <%= ['Invoice'].includes(page) ? '' : 'collapsed' %>"
+                                class="accordion-button <%= ['Invoice', 'Loyalty'].includes(page) ? 'active' : '' %> <%= ['Invoice', 'Loyalty'].includes(page) ? '' : 'collapsed' %>"
                                 type="button" data-bs-toggle="collapse" data-bs-target="#collapseSettings"
-                                aria-expanded="<%= ['Invoice'].includes(page) ? 'true' : 'false' %>"
+                                aria-expanded="<%= ['Invoice', 'Loyalty'].includes(page) ? 'true' : 'false' %>"
                                 aria-controls="collapseSettings">
                                 <i class="bi-gear text-danger me-2"></i>
                                 <span>Cài đặt chung</span>
                               </button>
                             </h2>
                             <div id="collapseSettings"
-                              class="accordion-collapse collapse <%= ['Invoice'].includes(page) ? 'show' : '' %>"
+                              class="accordion-collapse collapse <%= ['Invoice', 'Loyalty'].includes(page) ? 'show' : '' %>"
                               data-bs-parent="#accordionSettings">
                               <div class="accordion-body">
-                                <a class="<%= page === 'Invoice' ? 'accordion-active' : '' %>" href="/invoice">
-                                  <i class="bi bi-receipt-cutoff text-white-emphasis me-2"></i>
+                                <a class="<%= page === 'Invoice' ? 'accordion-active' : '' %>" href="/setting/invoice">
+                                  <i class="bi bi-receipt-cutoff me-2"></i>
                                   <span>Hóa đơn</span>
+                                </a>
+                                <a class="<%= page === 'Loyalty' ? 'accordion-active' : '' %>" href="/setting/point">
+                                  <i class="bi bi-star text-white-emphasis me-2"></i>
+                                  <span>Điểm thưởng</span>
                                 </a>
                               </div>
                             </div>
