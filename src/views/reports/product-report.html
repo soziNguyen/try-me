@@ -96,121 +96,19 @@
         </div>
       </div>
 
+      <div class="product-report mt-5">
+        <h4 class="mb-4 fw-bold text-dark">
+          <i class="bi bi-graph-up-arrow text-primary me-2"></i>
+          Quản lý kho sản phẩm
+        </h4>
+        <table id="product-dataTable" class="table table-bordered">
+          <thead>
 
-      <div class="container-fluid">
+          </thead>
+          <tbody id="product-data">
 
-        <!-- Báo cáo thu từ hóa đơn -->
-        <div class="card shadow-sm mb-4 tax-report">
-          <div
-            class="card-header bg-primary bg-gradient text-white d-flex justify-content-between align-items-center flex-wrap">
-            <h5 class="mb-0 fw-bold">
-              <i class="bi bi-graph-up-arrow me-2"></i>Báo cáo thu từ hóa đơn
-            </h5>
-            <button id="viewInvoiceBtn" class="btn btn-light text-primary fw-semibold px-4 py-2 mt-2 mt-md-0">
-              <i class="bi bi-receipt me-2"></i>Hóa đơn
-            </button>
-          </div>
-
-          <div class="card-body">
-            <div class="table-responsive">
-              <table id="tax-dataTable" class="table table-hover table-bordered align-middle table-info">
-                <thead class="table-primary bg-gradient text-center">
-                  <tr>
-                    <th>Thời gian</th>
-                    <th>Tổng tiền trước thuế</th>
-                    <th>Thuế đầu ra</th>
-                    <th>Tổng tiền sau thuế</th>
-                  </tr>
-                </thead>
-                <tbody id="tax-data">
-                  <!-- JS render dữ liệu -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tiền từ phiếu thu -->
-        <div class="card shadow-sm mb-4 tax-report">
-          <div class="card-header bg-success bg-gradient text-white">
-            <h5 class="mb-0 fw-bold">Tiền từ phiếu thu</h5>
-          </div>
-
-          <div class="card-body">
-            <div class="table-responsive">
-              <table id="tax-dataTable" class="table table-hover table-bordered align-middle table-info">
-                <thead class="table-primary bg-gradient text-center">
-                  <tr>
-                    <th>Thời gian</th>
-                    <th>Kho</th>
-                    <th>Tổng số phiếu</th>
-                    <th>Tổng chi phí</th>
-                  </tr>
-                </thead>
-                <tbody id="receipts-data">
-                  <!-- JS render dữ liệu -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tiền từ phiếu chi -->
-        <div class="card shadow-sm mb-4 tax-report">
-          <div class="card-header bg-danger bg-gradient text-white">
-            <h5 class="mb-0 fw-bold">Tiền từ phiếu chi</h5>
-          </div>
-
-          <div class="card-body">
-            <div class="table-responsive">
-              <table id="tax-dataTable" class="table table-hover table-bordered align-middle table-info">
-                <thead class="table-primary bg-gradient text-center">
-                  <tr>
-                    <th>Thời gian</th>
-                    <th>Kho</th>
-                    <th>Tổng số phiếu</th>
-                    <th>Tổng chi phí</th>
-                  </tr>
-                </thead>
-                <tbody id="expense-data">
-                  <!-- JS render dữ liệu -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-
-      <div class="tax-report mt-3">
-        <div class="card shadow-sm">
-          <div class="card-header bg-dark bg-gradient text-white d-flex align-items-center">
-            <i class="bi bi-cash-coin fs-4 me-2"></i>
-            <h5 class="mb-0 fw-bold">Kết quả thu - chi</h5>
-          </div>
-
-          <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-              <tbody>
-                <tr>
-                  <td class="fw-semibold text-dark px-4 py-3">Tổng thu</td>
-                  <td id="total-receipts" class="text-end text-success fw-bold px-4 py-3">0 ₫</td>
-                </tr>
-
-                <tr>
-                  <td class="fw-semibold text-dark px-4 py-3">Tổng chi</td>
-                  <td id="total-expenses" class="text-end text-danger fw-bold px-4 py-3">0 ₫</td>
-                </tr>
-
-                <tr class="table-active">
-                  <td class="fw-bold text-dark px-4 py-3">Kết quả</td>
-                  <td id="result-balance" class="text-end fw-bold fs-5 px-4 py-3"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
 
     </div>
@@ -220,6 +118,6 @@
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
     <%- include('../partials/commonjs.html') %>
       <script src="/js/sidebar-toggle.js"></script>
-      <script src="/js/reports-tax.js"></script>
+      <script src="/js/reports-product.js"></script>
       <script src="/js/data-table.js"></script>
       <%- include('../partials/footer.html') %>

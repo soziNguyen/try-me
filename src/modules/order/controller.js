@@ -1555,35 +1555,30 @@ export const getOrders = async (req, res) => {
     const countResult = await Order.aggregate(countPipeline)
     const recordsFiltered = countResult.length > 0 ? countResult[0].count : 0
 
-    // Tính thống kê đơn hàng (số lượng đơn, tổng tiền, trung bình, tổng món, tổng combo)
     const summaryPipeline = [
       { $match: match },
+      { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
       {
-        $addFields: {
-          // Tổng số món (bao gồm food + combo)
+        $group: {
+          _id: '$_id',
+          total: { $first: '$total' },
+          totalPayable: { $first: '$totalPayable' },
           orderTotalItems: {
             $sum: {
-              $map: {
-                input: '$items',
-                as: 'item',
-                in: { $ifNull: ['$$item.quantity', 0] }
-              }
+              $cond: [
+                { $ifNull: ['$items.comboId', false] },
+                0,
+                { $ifNull: ['$items.quantity', 0] }
+              ]
             }
           },
-          // Tổng combo đã bán
           orderTotalCombos: {
             $sum: {
-              $map: {
-                input: '$items',
-                as: 'item',
-                in: {
-                  $cond: [
-                    { $ifNull: ['$$item.comboId', false] }, // nếu có comboId
-                    { $ifNull: ['$$item.quantity', 0] },
-                    0
-                  ]
-                }
-              }
+              $cond: [
+                { $ifNull: ['$items.comboId', false] },
+                { $ifNull: ['$items.quantity', 0] },
+                0
+              ]
             }
           }
         }
@@ -1649,8 +1644,8 @@ export const getOrders = async (req, res) => {
         totalBeforeTax: summary.totalBeforeTax || 0,
         totalAmount: summary.totalAmount,
         avgAmount: summary.avgAmount,
-        totalItems: summary.totalItems,
-        totalCombos: summary.totalCombos || 0
+        totalItems: summary.totalItems || 0, // Tổng món thực tế
+        totalCombos: summary.totalCombos || 0 // Tổng combo
       }
     })
   } catch (error) {

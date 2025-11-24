@@ -478,6 +478,16 @@ export const taxReportPage = async (req, res) => {
   )
 }
 
+export const ProductReportPage = async (req, res) => {
+  res.render(
+    'reports/product-report',
+    getPageData(req, 'Báo cáo kho sản phẩm ', 'ProductReport', {
+      headerClass: 'admin__header',
+      pageTitle: 'BÁO CÁO KHO SẢN PHẨM'
+    })
+  )
+}
+
 export const couponPage = async (req, res) => {
   res.render(
     'coupon/coupon',

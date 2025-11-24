@@ -16,7 +16,7 @@ export const createReceipt = async (req, res) => {
       return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     }
 
-    const { reason, note, receiptAmount, submitTer } = req.body
+    const { reason, note, receiptAmount, submitTer, reviewer } = req.body
 
     const receipt = await withTransaction(async (session) => {
       const code = await generateDocumentCode(Receipt, 'RC')
@@ -36,7 +36,8 @@ export const createReceipt = async (req, res) => {
         reason,
         note,
         receiptAmount,
-        submitTer
+        submitTer,
+        reviewer
       }
 
       const doc = new Receipt(docData)
@@ -76,7 +77,6 @@ export const getReceiptById = async (req, res) => {
       .populate('createdBy', 'username fullName')
       .populate('updatedBy', 'username fullName')
       .populate('lockedBy', 'username fullName')
-      .populate('submitTer', 'username fullName') // Người nộp tiền
 
     if (!receipt) {
       return responseHelper.error(res, 'Không tìm thấy phiếu thu', 404)
@@ -234,13 +234,14 @@ export const updateReceipt = async (req, res) => {
       if (oldReceipt.isLocked)
         throw new BusinessError('Phiếu thu đã bị khóa, không thể chỉnh sửa', 400)
 
-      const { receiptAmount, reason, note, submitTer } = req.body
+      const { receiptAmount, reason, note, submitTer, reviewer } = req.body
 
       const updateData = {
         receiptAmount,
         reason,
         note,
         submitTer,
+        reviewer,
         updatedBy: req.user._id
       }
 
