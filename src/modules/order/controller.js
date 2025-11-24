@@ -1750,7 +1750,23 @@ export const getTopItems = async (req, res) => {
 
     const items = await Order.aggregate(pipeline)
 
-    // ===== Chia món ăn / combo =====
+    if (req.query.returnAll === 'true') {
+      const data = items.map((item) => ({
+        product: {
+          _id: item._id.foodId || item._id.comboId,
+          name: item.name
+        },
+        quantitySold: item.quantity,
+        totalRevenue: item.total
+      }))
+
+      return res.json({
+        data,
+        totalSold: items.reduce((sum, i) => sum + i.quantity, 0),
+        totalRevenue: items.reduce((sum, i) => sum + i.total, 0)
+      })
+    }
+
     const { foodItems, comboItems } = items.reduce(
       (acc, item) => {
         if (item._id.foodId) acc.foodItems.push(item)
