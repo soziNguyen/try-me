@@ -232,7 +232,7 @@ export const createIngredient = async (req, res) => {
       organizationId,
       req.user._id,
       req.user.username || 'Unknown',
-      'Tạo nguyên liệu',
+      'CREATE',
       'INGREDIENT',
       `Tạo nguyên liệu ${saved.name}`,
       saved.name,
@@ -467,18 +467,6 @@ export const deleteIngredients = async (req, res) => {
 
     responseHelper.success(res, result.deletedCount, 'Xóa nguyên liệu thành công')
   } catch (err) {
-    if (req?.user?._id) {
-      await logActivity(
-        getCurrentOrg(req),
-        req.user._id,
-        req.user.username || 'Unknown',
-        'DELETE',
-        'INGREDIENT',
-        `Lỗi khi xóa nguyên liệu: ${err.message}`,
-        req.body?.ids?.join(', ') || '',
-        'FAILED'
-      )
-    }
-    return responseHelper.error(res, err.message)
+    responseHelper.error(res, err.message)
   }
 }

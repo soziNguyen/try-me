@@ -12,6 +12,7 @@ import Organization from '../../organization/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import BusinessError from '../../error/BusinessError.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
+import { logActivity } from '../../activity-logs/service.js'
 
 // DATATABLE SERVER-SIDE
 export const getStockTransfers = async (req, res) => {
@@ -221,6 +222,18 @@ export const createStockTransfer = async (req, res) => {
       await doc.save({ session })
       return doc
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'CREATE',
+      'STOCK_TRANSFER',
+      'Tạo phiếu chuyển kho nguyên liệu',
+      transfer.code,
+      'SUCCESS',
+      fromWarehouse?._id
+    )
 
     responseHelper.success(
       res,
@@ -789,6 +802,21 @@ export const deleteStockTransfers = async (req, res) => {
       if (deleteResult.deletedCount !== transfers.length) {
         throw new BusinessError('Một số phiếu chuyển kho không thể xóa', 400)
       }
+
+      const deletedCodes = transfers.map((e) => e.code).join(', ')
+      const fromWarehouseId = transfers[0]?.fromWarehouse?._id
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'DELETE',
+        'STOCK_TRANSFER',
+        `Đã xóa phiếu chuyển kho: ${deletedCodes}`,
+        '',
+        'SUCCESS',
+        fromWarehouseId || null
+      )
     })
 
     responseHelper.success(
@@ -913,6 +941,18 @@ export const lockStockTransfer = async (req, res) => {
       .populate('fromWarehouse', '_id name')
       .populate('items.ingredient', 'name sku unit stock')
       .populate('items.toWarehouse', '_id name')
+
+    logActivity(
+      organizationId,
+      req.user?._id,
+      req.user?.username,
+      'LOCK',
+      'STOCK_TRANSFER',
+      `Đã khóa phiếu xuất "${finalTransfer.code}"`,
+      finalTransfer.code,
+      'SUCCESS',
+      finalTransfer.warehouse?._id || null
+    )
 
     responseHelper.success(res, finalTransfer, 'Đã khóa phiếu chuyển kho thành công')
   } catch (err) {

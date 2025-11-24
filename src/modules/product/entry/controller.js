@@ -9,18 +9,20 @@ import { lookupRef, lookupUser } from '../../../helpers/lookupHelper.js'
 import BusinessError from '../../error/BusinessError.js'
 import Organization from '../../organization/model.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
+import { logActivity } from '../../activity-logs/service.js'
 
 export const createProductEntry = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
+    const warehouse = await getWarehouse(req, organizationId)
+
     const entry = await withTransaction(async (session) => {
       const code = await generateDocumentCode(ProductEntry, 'PE')
       const date = new Date()
 
       // Warehouse logic
-      const warehouse = await getWarehouse(req, organizationId)
 
       const docData = {
         code: code,
@@ -34,6 +36,18 @@ export const createProductEntry = async (req, res) => {
       await doc.save({ session })
       return doc
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'CREATE',
+      'PRODUCT_ENTRY',
+      'Tạo phiếu nhập kho sản phẩm',
+      entry.code,
+      'SUCCESS',
+      warehouse?._id
+    )
 
     responseHelper.success(res, { id: entry._id, code: entry.code })
   } catch (error) {
@@ -594,6 +608,21 @@ export const deleteProductEntries = async (req, res) => {
 
       // Xóa phiếu
       await ProductEntry.deleteMany(findCondition).session(session)
+
+      const deletedCodes = entries.map((e) => e.code).join(', ')
+      const warehouseId = entries[0]?.warehouse?._id
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'DELETE',
+        'PRODUCT_ENTRY',
+        `Đã xóa phiếu nhập kho sản phẩm: ${deletedCodes}`,
+        '',
+        'SUCCESS',
+        warehouseId || null
+      )
     })
 
     responseHelper.success(res, null, 'Xóa và cập nhật tồn kho thành công')
@@ -682,6 +711,18 @@ export const lockProductEntry = async (req, res) => {
       .populate('items.product', 'name sku') // refPath tự động populate đúng model
       .populate('warehouse', 'name code location')
       .populate('createdBy updatedBy', 'username')
+
+    logActivity(
+      organizationId,
+      req.user?._id,
+      req.user?.username,
+      'LOCK',
+      'PRODUCT_ENTRY',
+      `Đã khóa phiếu nhập kho sản phẩm "${finalEntry.code}"`,
+      finalEntry.code,
+      'SUCCESS',
+      finalEntry.warehouse?._id || null
+    )
 
     responseHelper.success(res, finalEntry, 'Đã khóa phiếu nhập thành công')
   } catch (err) {

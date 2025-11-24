@@ -2,6 +2,8 @@ import Customer from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { formatPhoneNumber, validatePhoneNumber } from '../../helpers/validator.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 export const getCustomers = async (req, res) => {
   try {
@@ -87,7 +89,7 @@ export const getCustomers = async (req, res) => {
       sortObj['createdAt'] = -1 // Default sort by newest
     }
 
-    // Query song song để tiết kiệm thời gian
+    // Query song song
     const [recordsTotal, recordsFiltered, data] = await Promise.all([
       Customer.countDocuments({ organization: organizationId }),
       Customer.countDocuments(filter),
@@ -170,6 +172,15 @@ export const createCustomer = async (req, res) => {
       phone
     })
 
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'CREATE',
+      'CUSTOMER',
+      `Thêm mới khách hàng`
+    )
+
     return responseHelper.success(
       res,
       {
@@ -205,6 +216,8 @@ export const updateCustomer = async (req, res) => {
   try {
     const { id } = req.params
     let { name, phone } = req.body
+
+    const customerExist = await Customer.findById(id)
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -247,6 +260,27 @@ export const updateCustomer = async (req, res) => {
     })
 
     if (!updated) return responseHelper.error(res, 'Khách hàng không tồn tại', 404)
+
+    const changeDetailsCus = buildChangeLog(
+      customerExist,
+      updated,
+      [
+        { field: 'name', label: 'Tên khách hàng' },
+        { field: 'phone', label: 'Số điện thoại' }
+      ],
+      customerExist.name,
+      'khách hàng'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'CUSTOMER',
+      changeDetailsCus,
+      updated.name
+    )
 
     return responseHelper.success(res, updated, 'Cập nhật thông tin khách hàng thành công')
   } catch (error) {

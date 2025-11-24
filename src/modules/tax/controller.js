@@ -1,6 +1,8 @@
 import Tax from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 export const getActiveTaxes = async (req, res) => {
   try {
@@ -83,6 +85,16 @@ export const createTax = async (req, res) => {
 
     const tax = new Tax(data)
     await tax.save()
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'CREATE',
+      'TAX',
+      `Thêm mới loại thuế`
+    )
+
     responseHelper.success(res, tax, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -138,6 +150,30 @@ export const updateTax = async (req, res) => {
       dataUpdate,
       { new: true }
     )
+
+    const changeDetailsTax = buildChangeLog(
+      tax,
+      updated,
+      [
+        { field: 'name', label: 'Loại thuế' },
+        { field: 'rate', label: 'Tỷ lệ' },
+        { field: 'description', label: 'Mô tả' },
+        { field: 'isActive', label: 'Trạng thái' }
+      ],
+      tax.name,
+      'thuế'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'TAX',
+      changeDetailsTax,
+      updated.name
+    )
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -159,6 +195,15 @@ export const deleteTaxes = async (req, res) => {
       _id: { $in: ids },
       organization: organizationId
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'SHIFT',
+      `Đã xóa ${result.deletedCount} loại thuế`
+    )
 
     responseHelper.success(res, result.deletedCount, 'Xóa thành công')
   } catch (err) {

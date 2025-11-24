@@ -12,15 +12,22 @@ import { isValidPassword, generateSalt } from '../../helpers/common.js'
 import { parseShiftStart } from '../../helpers/dateHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 import paginationHelper from '../../helpers/paginationHelper.js'
+import mongoose from 'mongoose'
 
 // [CREATE] / User
 export const createUser = async (req, res) => {
   try {
     const { username, email, warehouse, password } = req.body
     const organizationId = getCurrentOrg(req)
+
     if (!organizationId) {
       return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+    }
+
+    if (!warehouse || !mongoose.isValidObjectId(warehouse)) {
+      return responseHelper.error(res, 'Vui lòng chọn kho làm việc hợp lệ cho nhân viên', 400)
     }
 
     // Lấy thông tin tổ chức + gói dịch vụ
@@ -56,17 +63,25 @@ export const createUser = async (req, res) => {
       return responseHelper.error(res, 'Tên đăng nhập hoặc email đã tồn tại.', 400)
     }
 
-    // Chuẩn hóa warehouse
-    const assignedWarehouse = warehouse === '' ? null : warehouse
-
     //  Tạo nhân viên mới
     const newUser = await User.create({
       username,
       email,
-      warehouse: assignedWarehouse,
+      warehouse,
       password,
       organization: organizationId
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'CREATE',
+      'USER',
+      `Thêm mới nhân viên`,
+      newUser.username,
+      warehouse
+    )
 
     responseHelper.success(res, newUser, 'Tạo nhân viên thành công')
   } catch (error) {
@@ -202,8 +217,11 @@ export const updateUser = async (req, res) => {
       return responseHelper.error(res, 'Vai trò Bếp không khả dụng cho loại hình này', 400)
     }
 
-    if (['Staff', 'Kitchen'].includes(role) && !warehouse)
-      return responseHelper.error(res, 'Vui lòng chọn kho', 400)
+    if (['Staff', 'Kitchen'].includes(role)) {
+      if (!warehouse || !mongoose.isValidObjectId(warehouse)) {
+        return responseHelper.error(res, 'Vui lòng chọn kho hợp lệ', 400)
+      }
+    }
 
     const updatedFields = { username, email, role }
     if (warehouse) updatedFields.warehouse = warehouse
@@ -227,8 +245,37 @@ export const updateUser = async (req, res) => {
     if (!updateUser) {
       return responseHelper.error(res, 'Cập nhật thất bại', 400)
     }
+
+    const changeDetailsUser = buildChangeLog(
+      userExist,
+      updateUser,
+      [
+        { field: 'username', label: 'Tên đăng nhập' },
+        { field: 'email', label: 'Email' },
+        { field: 'warehouse', label: 'Kho' },
+        { field: 'role', label: 'Vai trò' }
+      ],
+      userExist.username,
+      'nhân viên'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'USER',
+      changeDetailsUser,
+      updateUser.username,
+      'SUCCESS',
+      warehouse || null
+    )
+
     responseHelper.success(res, updateUser)
   } catch (error) {
+    if (error.code === 11000) {
+      return responseHelper.error(res, 'Username hoặc email đã tồn tại', 400)
+    }
     responseHelper.error(res, error.message)
   }
 }
@@ -259,6 +306,16 @@ export const deleteUsers = async (req, res) => {
     if (result.deletedCount === 0) {
       return responseHelper.error(res, 'Không có người dùng nào được chọn để xóa ', 404)
     }
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'USER',
+      `Đã xóa ${result.deletedCount} nhân viên`
+    )
+
     responseHelper.success(res, 'Xóa thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -278,7 +335,7 @@ export const logIn = async (req, res, next) => {
     if (!user) {
       // Log failed login attempt
       if (req.body?.username) {
-        await logActivity(
+        logActivity(
           null,
           null,
           req.body.username, // <-- truyền username trực tiếp
@@ -376,7 +433,7 @@ export const logIn = async (req, res, next) => {
       }
 
       // Log successful login
-      await logActivity(
+      logActivity(
         user.organization,
         user._id,
         user.username || user.email,
@@ -451,7 +508,7 @@ export const logOut = async (req, res) => {
         }
       }
     }
-    await logActivity(
+    logActivity(
       user.organization,
       user._id,
       user.username || user.email,
@@ -465,7 +522,7 @@ export const logOut = async (req, res) => {
 
     // Log logout failure nếu có user info
     if (req.user) {
-      await logActivity(
+      logActivity(
         req.user.organization,
         req.user._id,
         req.user.username || req.user.email,

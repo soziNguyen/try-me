@@ -13,7 +13,6 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import BusinessError from '../../error/BusinessError.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 import { logActivity } from '../../activity-logs/service.js'
-import { buildChangeLog } from '../../../helpers/changeLog.js'
 
 // GET ALL
 export const getAllStockEntries = async (req, res) => {
@@ -287,7 +286,7 @@ export const createStockEntry = async (req, res) => {
       req.user.username,
       'CREATE',
       'STOCK_ENTRY',
-      'Tạo phiếu nhập',
+      'Tạo phiếu nhập kho nguyên liệu',
       entry.code,
       'SUCCESS',
       warehouse?._id
@@ -627,6 +626,20 @@ export const deleteStockEntries = async (req, res) => {
 
       // Xóa phiếu
       await StockEntry.deleteMany(matchCondition).session(session)
+      const deletedCodes = entries.map((e) => e.code).join(', ')
+      const warehouseId = entries[0]?.warehouse?._id
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'DELETE',
+        'STOCK_ENTRY',
+        `Đã xóa phiếu nhập: ${deletedCodes}`,
+        '',
+        'SUCCESS',
+        warehouseId || null
+      )
 
       // Cập nhật tổng tồn kho trong Ingredient
       for (const ingId of affectedIngredients) {
@@ -761,6 +774,18 @@ export const lockStockEntry = async (req, res) => {
       .populate('items.ingredient', 'name sku unit stock')
       .populate('warehouse', 'name code')
       .populate('supplier', 'name code')
+
+    logActivity(
+      organizationId,
+      req.user?._id,
+      req.user?.username,
+      'LOCK',
+      'STOCK_ENTRY',
+      `Đã khóa phiếu nhập "${finalEntry.code}"`,
+      finalEntry.code,
+      'SUCCESS',
+      finalEntry.warehouse?._id || null
+    )
 
     responseHelper.success(res, finalEntry, 'Đã khóa phiếu nhập thành công')
   } catch (err) {

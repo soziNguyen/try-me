@@ -2,6 +2,7 @@ import { Recipe, units } from './model.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import { logActivity } from '../../activity-logs/service.js'
 
 export const getActiveRecipes = async (req, res) => {
   try {
@@ -144,6 +145,17 @@ export const createRecipe = async (req, res) => {
     })
 
     await recipe.save()
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'CREATE',
+      'RECIPE',
+      `Thêm mới công thức món ăn`,
+      recipe.name
+    )
+
     responseHelper.success(res, recipe, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -154,11 +166,13 @@ export const updateRecipe = async (req, res) => {
   try {
     const { id } = req.params
     const { menuItem, items, note } = req.body
+
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     if (!id) return responseHelper.error(res, 'Thiếu ID công thức', 400)
     if (!menuItem) return responseHelper.error(res, 'Thiếu món ăn', 400)
+
     if (!Array.isArray(items) || items.length === 0) {
       return responseHelper.error(res, 'Công thức phải có ít nhất 1 nguyên liệu', 400)
     }
@@ -167,7 +181,6 @@ export const updateRecipe = async (req, res) => {
       if (!it.ingredient || !it.quantity || !it.unit) {
         return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin', 400)
       }
-
       if (it.quantity <= 0) {
         return responseHelper.error(res, 'Số lượng phải lớn hơn 0', 400)
       }
@@ -204,6 +217,16 @@ export const deleteRecipes = async (req, res) => {
       _id: { $in: ids },
       organization: organizationId
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'RECIPE',
+      `Đã xóa ${result.deletedCount} công thức`
+    )
+
     responseHelper.success(res, result.deletedCount, 'Xóa thành công')
   } catch (error) {
     responseHelper.error(res, error.message)

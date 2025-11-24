@@ -12,6 +12,8 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import Organization from '../../organization/model.js'
 import BusinessError from '../../error/BusinessError.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
+import { logActivity } from '../../activity-logs/service.js'
+import { buildChangeLog } from '../../../helpers/changeLog.js'
 
 // DATATABLE SERVER-SIDE
 export const getStockIssues = async (req, res) => {
@@ -244,6 +246,18 @@ export const createStockIssue = async (req, res) => {
       await doc.save({ session })
       return doc
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'CREATE',
+      'STOCK_ISSUE',
+      'Tạo phiếu xuất kho nguyên liệu',
+      issue.code,
+      'SUCCESS',
+      warehouse?._id
+    )
 
     responseHelper.success(
       res,
@@ -483,6 +497,21 @@ export const deleteStockIssues = async (req, res) => {
       // Xóa các phiếu
       await StockIssue.deleteMany(matchCondition, { session })
 
+      const deletedCodes = issues.map((e) => e.code).join(', ')
+      const warehouseId = issues[0]?.warehouse?._id
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'DELETE',
+        'STOCK_ENTRY',
+        `Đã xóa phiếu xuất: ${deletedCodes}`,
+        '',
+        'SUCCESS',
+        warehouseId || null
+      )
+
       // Cập nhật tổng stock cho tất cả ingredients bị ảnh hưởng
       if (allAffectedIngredients.size > 0) {
         await updateIngredientTotalStock([...allAffectedIngredients], organizationId, session)
@@ -598,6 +627,18 @@ export const lockStockIssue = async (req, res) => {
 
       await StockHistory.create([stockHistory], { session })
     })
+
+    logActivity(
+      organizationId,
+      req.user?._id,
+      req.user?.username,
+      'LOCK',
+      'STOCK_ISSUE',
+      `Đã khóa phiếu xuất "${finalIssue.code}"`,
+      finalIssue.code,
+      'SUCCESS',
+      finalIssue.warehouse?._id || null
+    )
 
     responseHelper.success(res, finalIssue, 'Đã khóa phiếu xuất thành công')
   } catch (err) {

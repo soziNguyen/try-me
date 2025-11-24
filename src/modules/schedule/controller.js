@@ -2,6 +2,8 @@ import { Schedule } from './model.js'
 import { lookupUser, lookupRef } from '../../helpers/lookupHelper.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 export const getSchedules = async (req, res) => {
   try {
@@ -123,6 +125,16 @@ export const createSchedule = async (req, res) => {
     const schedule = new Schedule(data)
     await schedule.save()
 
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'CREATE',
+      'SCHEDULE',
+      `Thêm mới lịch làm việc`,
+      schedule.name
+    )
+
     responseHelper.success(res, schedule, 'Tạo lịch mới thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -161,6 +173,30 @@ export const updateSchedule = async (req, res) => {
       { new: true }
     )
 
+    const changeDetailsSchedule = buildChangeLog(
+      schedule,
+      updated,
+      [
+        { field: 'user', label: 'Nhân viên' },
+        { field: 'shift', label: 'Ca làm' },
+        { field: 'date', label: 'Ngày làm việc' },
+        { field: 'status', label: 'Trạng thái' },
+        { field: 'note', label: 'Ghi chú' }
+      ],
+      schedule.user.username,
+      'ca làm việc'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'SCHEDULE',
+      changeDetailsSchedule,
+      updated.name
+    )
+
     responseHelper.success(res, updated, 'Cập nhật lịch thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -181,6 +217,15 @@ export const deleteSchedule = async (req, res) => {
       _id: { $in: ids },
       organization: organizationId
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'SCHEDULE',
+      `Đã xóa ${result.deletedCount} bản ghi lịch làm việc`
+    )
 
     responseHelper.success(res, result.deletedCount, 'Xóa thành công')
   } catch (error) {

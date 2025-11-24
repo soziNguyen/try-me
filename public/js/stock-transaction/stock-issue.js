@@ -126,7 +126,7 @@ $(function () {
         {
           data: 'warehouse.name',
           className: 'text-center',
-          title: 'Kho nhập',
+          title: 'Kho xuất',
           render: (data) => data
         },
         {

@@ -1,6 +1,8 @@
 import { Shift } from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 export const getShiftOptions = async (req, res) => {
   try {
@@ -112,6 +114,15 @@ export const createShift = async (req, res) => {
     const shift = new Shift(data)
     await shift.save()
 
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'CREATE',
+      'SHIFT',
+      `Thêm mới ca làm việc`
+    )
+
     responseHelper.success(res, shift, 'Thêm ca thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -163,6 +174,31 @@ export const updateShift = async (req, res) => {
       dataUpdate,
       { new: true }
     )
+
+    const changeDetailsShift = buildChangeLog(
+      shift,
+      updated,
+      [
+        { field: 'name', label: 'Tên ca' },
+        { field: 'type', label: 'Loại ca' },
+        { field: 'startTime', label: 'Giờ vào' },
+        { field: 'endTime', label: 'Giờ kết thúc' },
+        { field: 'note', label: 'Ghi chú' }
+      ],
+      shift.name,
+      'ca làm việc'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'SHIFT',
+      changeDetailsShift,
+      updated.name
+    )
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -183,6 +219,15 @@ export const deleteShift = async (req, res) => {
       _id: { $in: ids },
       organization: organizationId
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'SHIFT',
+      `Đã xóa ${result.deletedCount} ca làm việc`
+    )
 
     responseHelper.success(res, result.deletedCount, 'Xóa thành công')
   } catch (error) {

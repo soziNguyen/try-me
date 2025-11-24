@@ -2,6 +2,8 @@ import PaymentMethod from '../payment/model.js'
 import ReceivingAccount from '../receiving-account/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import responseHelper from '../../helpers/responseHelper.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 export const getActivePaymentMethods = async (req, res) => {
   try {
@@ -26,6 +28,17 @@ export const createPaymentMethod = async (req, res) => {
     if (!organizationId) return responseHelper.error(res, 'Thiếu tổ chức', 400)
     const query = { ...req.body, organization: organizationId }
     const newPaymentMethod = await PaymentMethod.create(query)
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'CREATE',
+      'PAYMENT_METHOD',
+      `Thêm mới phương thức thanh toán`,
+      newPaymentMethod.name
+    )
+
     responseHelper.success(res, newPaymentMethod, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -133,6 +146,30 @@ export const updatePaymentMethod = async (req, res) => {
       { new: true }
     ).populate('receivingAccountId', 'name accountNumber bankName bankCode')
 
+    const changeDetailsPay = buildChangeLog(
+      paymentMethod,
+      updated,
+      [
+        { field: 'name', label: 'Tên phương thức' },
+        { field: 'type', label: 'Loại' },
+        { field: 'description', label: 'Mô tả' },
+        { field: 'isActive', label: 'Trạng thái' }
+        // { field: 'receivingAccountId', label: 'Tài khoản nhận' }
+      ],
+      paymentMethod.name,
+      'phương thức thanh toán'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'PAYMENT_METHOD',
+      changeDetailsPay,
+      updated.name
+    )
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -152,6 +189,15 @@ export const deletePaymentMethod = async (req, res) => {
       _id: { $in: ids },
       organization: organizationId
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'PAYMENT_METHOD',
+      `Đã xóa ${result.deletedCount} phương thức thanh toán`
+    )
 
     responseHelper.success(
       res,

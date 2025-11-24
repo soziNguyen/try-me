@@ -30,7 +30,7 @@ export const buildChangeLog = (oldObj, newObj, fields, targetName = '', targetTy
     }
   })
 
-  if (changes.length === 0) return 'Không có thay đổi'
+  if (changes.length === 0) return
 
   if (targetName) {
     return targetType

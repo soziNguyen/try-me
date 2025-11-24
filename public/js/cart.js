@@ -411,7 +411,7 @@ function renderCart() {
         <h5 class="mb-0 fw-bold">Tổng cộng:</h5>
         <h5 class="mb-0 text-danger fw-bold">${totalAmount.toLocaleString()} đ</h5>
       </div>
-      <div class="text-center text-success">Lưu ý: Giá trên chưa bao gồm phí VAT</div>
+      <div class="text-center text-success">Lưu ý: Giá trên chưa bao gồm thuế VAT</div>
     </div>
   `
   attachCartEventListeners(cartDiv)

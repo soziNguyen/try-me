@@ -585,7 +585,7 @@ function initCheckoutConfirm() {
     const discountInput = document.getElementById('discountInput')
     const pointsInput = document.getElementById('pointsInput')
     const serviceChargeInput = document.getElementById('serviceChargeInput')
-    const extraDiscountInput = document.getElementById('extraDiscountInput') // CHIẾT KHẤU
+    const extraDiscountInput = document.getElementById('extraDiscountInput')
     const vatInput = document.getElementById('vatInput')
     const paymentMethodValueEl = document.getElementById('paymentMethodValue')
     const customerPaidInput = document.getElementById('customerPaidInput')
@@ -606,7 +606,7 @@ function initCheckoutConfirm() {
     const discount = parseCurrency(discountInput.value)
     const pointsUsed = parseInt(pointsInput.value) || 0
     const serviceCharge = parseCurrency(serviceChargeInput.value)
-    const extraDiscount = parseCurrency(extraDiscountInput.value) // CHIẾT KHẤU
+    const extraDiscount = parseCurrency(extraDiscountInput.value)
     const vatRate = Number(vatInput.value) || 0
     const paymentMethod = paymentMethodValueEl.value
     const customerPaid = parseCurrency(customerPaidInput.value)
@@ -626,24 +626,6 @@ function initCheckoutConfirm() {
     const appliedCouponId = window.appliedCouponId
 
     try {
-      // Nếu có mã giảm giá thì gọi API confirm để tăng lượt sử dụng
-      if (appliedCouponId) {
-        const confirmResponse = await fetch('/api/coupon/confirm', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-csrf-token': csrfToken
-          },
-          body: JSON.stringify({ couponId: appliedCouponId })
-        })
-        const confirmData = await confirmResponse.json()
-        if (!confirmResponse.ok) {
-          toastr.error(confirmData.message || 'Xác nhận mã giảm giá thất bại!')
-          return
-        }
-      }
-
-      // Gọi API thanh toán
       const response = await fetch(`/api/orders/${orderId}/checkout`, {
         method: 'POST',
         headers: {
@@ -652,16 +634,18 @@ function initCheckoutConfirm() {
         },
         body: JSON.stringify({
           discount,
-          pointsUsed, // Chỉ gửi số điểm, backend sẽ tự tính pointsDiscount
+          pointsUsed,
           serviceCharge,
           extraDiscount,
           vatRate,
           paymentMethodId: paymentMethod,
-          customerPaid
+          customerPaid,
+          couponId: appliedCouponId
         })
       })
 
       const data = await response.json()
+
       if (!response.ok) {
         toastr.error(data.message || 'Thanh toán thất bại!')
         return
@@ -669,8 +653,11 @@ function initCheckoutConfirm() {
 
       toastr.remove()
       toastr.success('Thanh toán thành công!')
-      document.getElementById('checkoutDetail').classList.add = 'd-none'
 
+      // XÓA appliedCouponId SAU KHI THÀNH CÔNG
+      window.appliedCouponId = null
+
+      document.getElementById('checkoutDetail').classList.add = 'd-none'
       fetchEmptyOrders()
 
       if (printInvoice === 'yes') {
