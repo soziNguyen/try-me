@@ -83,13 +83,14 @@ $(function () {
     const today = new Date()
     const year = today.getFullYear()
     let startDate, endDate
+    const currentWarehouse = $('#warehouseFilter').val() || 'all'
 
     if (type === 'all') {
       $monthGroup.hide()
       $quarterGroup.hide()
       $startDate.val('')
       $endDate.val('')
-      loadSummary(null, null)
+      loadSummary(null, null, currentWarehouse)
       return
     }
 
@@ -113,14 +114,14 @@ $(function () {
       $monthGroup.hide()
       $quarterGroup.hide()
       if ($startDate.val() && $endDate.val()) {
-        loadSummary($startDate.val(), $endDate.val())
+        loadSummary($startDate.val(), $endDate.val(), currentWarehouse)
       }
       return
     }
 
     $startDate.val(formatDate(startDate))
     $endDate.val(formatDate(endDate))
-    loadSummary(formatDate(startDate), formatDate(endDate))
+    loadSummary(formatDate(startDate), formatDate(endDate), currentWarehouse)
   }
 
   // --- Hàm load dữ liệu ---
@@ -190,7 +191,7 @@ $(function () {
 
   loadWarehouses().then(() => {
     // Có thể load báo cáo mặc định ngay sau khi danh sách kho có sẵn
-    loadSummary($startDate.val(), $endDate.val(), $('#warehouseFilter').val())
+    // loadSummary($startDate.val(), $endDate.val(), $('#warehouseFilter').val())
   })
   // --- Khởi chạy mặc định ---
   $monthGroup.hide()
