@@ -12,6 +12,8 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import Organization from '../../organization/model.js'
 import BusinessError from '../../error/BusinessError.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
+import { logActivity } from '../../activity-logs/service.js'
+import { buildChangeLog } from '../../../helpers/changeLog.js'
 
 // DATATABLE SERVER-SIDE
 export const getStockIssues = async (req, res) => {
@@ -245,6 +247,18 @@ export const createStockIssue = async (req, res) => {
       return doc
     })
 
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'CREATE',
+      'STOCK_ISSUE',
+      'Tạo phiếu xuất kho nguyên liệu',
+      issue.code,
+      'SUCCESS',
+      warehouse?._id
+    )
+
     responseHelper.success(
       res,
       { id: issue._id, code: issue.code },
@@ -264,7 +278,7 @@ export const updateStockIssue = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const updatedDoc = await withTransaction(async (session) => {
+    const transactionResult = await withTransaction(async (session) => {
       const { id } = req.params
       if (!mongoose.isValidObjectId(id)) throw new BusinessError('ID không hợp lệ', 400)
 
@@ -276,7 +290,10 @@ export const updateStockIssue = async (req, res) => {
       if (req.warehouseFilter) {
         matchCondition.warehouse = req.warehouseFilter
       }
-      const oldIssue = await StockIssue.findOne(matchCondition).session(session)
+
+      const oldIssue = await StockIssue.findOne(matchCondition)
+        .populate('items.ingredient', 'name')
+        .session(session)
 
       if (!oldIssue) throw new BusinessError('Phiếu xuất không tồn tại', 404)
       if (oldIssue.isLocked)
@@ -308,12 +325,19 @@ export const updateStockIssue = async (req, res) => {
       if (oldIssue.warehouse && oldIssue.items.length > 0) {
         for (const oldItem of oldIssue.items) {
           if (oldItem.ingredient && oldItem.quantity > 0) {
-            const key = `${oldItem.ingredient}_${oldIssue.warehouse}`
+            const ingId = oldItem.ingredient._id
+              ? oldItem.ingredient._id.toString()
+              : oldItem.ingredient.toString()
+            const key = `${ingId}_${oldIssue.warehouse}`
             const existing = stockChanges.get(key) || {
-              ingredient: oldItem.ingredient,
+              ingredient: ingId,
               warehouse: oldIssue.warehouse,
+              name: oldItem.ingredient.name || 'N/A',
+              oldQty: 0,
+              newQty: 0,
               change: 0
             }
+            existing.oldQty = oldItem.quantity
             existing.change += oldItem.quantity // Hoàn trả (cộng vào)
             stockChanges.set(key, existing)
           }
@@ -323,14 +347,25 @@ export const updateStockIssue = async (req, res) => {
       // Trừ items mới
       for (const newItem of newItems) {
         if (newItem.ingredient && newItem.quantity > 0) {
-          const key = `${newItem.ingredient}_${warehouse}`
-          const existing = stockChanges.get(key) || {
-            ingredient: newItem.ingredient,
-            warehouse: warehouse,
-            change: 0
+          const ingId = newItem.ingredient.toString()
+          const key = `${ingId}_${warehouse}`
+          const existing = stockChanges.get(key)
+
+          if (existing) {
+            existing.newQty = newItem.quantity
+            existing.change -= newItem.quantity // Xuất kho (trừ đi)
+          } else {
+            // Nguyên liệu mới thêm - cần lấy tên
+            const ingredientDoc = await Ingredient.findById(ingId).select('name').session(session)
+            stockChanges.set(key, {
+              ingredient: ingId,
+              warehouse: warehouse,
+              name: ingredientDoc?.name || 'N/A',
+              oldQty: 0,
+              newQty: newItem.quantity,
+              change: -newItem.quantity
+            })
           }
-          existing.change -= newItem.quantity // Xuất kho (trừ đi)
-          stockChanges.set(key, existing)
         }
       }
 
@@ -413,9 +448,55 @@ export const updateStockIssue = async (req, res) => {
         { path: 'items.ingredient', select: 'name unit' }
       ])
 
-      return updatedIssue
+      return { updatedIssue, oldIssue, stockChanges }
     })
 
+    const { updatedIssue: updatedDoc, oldIssue, stockChanges } = transactionResult
+    const changes = []
+    // 1. Thay đổi lý do xuất kho
+    if ((oldIssue.reason || '') !== (updatedDoc.reason || '')) {
+      changes.push(`Lý do: "${oldIssue.reason || '(Trống)'}" → "${updatedDoc.reason || '(Trống)'}"`)
+    }
+
+    // 2. Thay đổi ghi chú
+    if ((oldIssue.note || '') !== (updatedDoc.note || '')) {
+      changes.push(`Ghi chú: "${oldIssue.note || '(Trống)'}" → "${updatedDoc.note || '(Trống)'}"`)
+    }
+
+    // 3. Thay đổi danh sách nguyên liệu
+    const itemChanges = []
+    for (const [, data] of stockChanges) {
+      const delta = data.newQty - data.oldQty
+      if (delta !== 0) {
+        if (data.oldQty === 0) {
+          itemChanges.push(`Thêm "${data.name}" (Số lượng: ${data.newQty})`)
+        } else if (data.newQty === 0) {
+          itemChanges.push(`Xóa "${data.name}" (Số lượng: ${data.oldQty})`)
+        } else {
+          itemChanges.push(`"${data.name}": ${data.oldQty} → ${data.newQty}`)
+        }
+      }
+    }
+
+    if (itemChanges.length > 0) {
+      changes.push(`Nguyên liệu: ${itemChanges.join('; ')}`)
+    }
+
+    if (changes.length > 0) {
+      const description = `Cập nhật phiếu xuất kho:${updatedDoc.code} - ${changes.join(' | ')}`
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'UPDATE',
+        'STOCK_ISSUE',
+        description,
+        updatedDoc.code,
+        'SUCCESS',
+        updatedDoc.warehouse._id || null
+      )
+    }
     responseHelper.success(res, updatedDoc, 'Cập nhật phiếu xuất thành công')
   } catch (error) {
     if (error instanceof BusinessError) {
@@ -482,6 +563,21 @@ export const deleteStockIssues = async (req, res) => {
 
       // Xóa các phiếu
       await StockIssue.deleteMany(matchCondition, { session })
+
+      const deletedCodes = issues.map((e) => e.code).join(', ')
+      const warehouseId = issues[0]?.warehouse?._id
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'DELETE',
+        'STOCK_ENTRY',
+        `Đã xóa phiếu xuất: ${deletedCodes}`,
+        '',
+        'SUCCESS',
+        warehouseId || null
+      )
 
       // Cập nhật tổng stock cho tất cả ingredients bị ảnh hưởng
       if (allAffectedIngredients.size > 0) {
@@ -598,6 +694,18 @@ export const lockStockIssue = async (req, res) => {
 
       await StockHistory.create([stockHistory], { session })
     })
+
+    logActivity(
+      organizationId,
+      req.user?._id,
+      req.user?.username,
+      'LOCK',
+      'STOCK_ISSUE',
+      `Đã khóa phiếu xuất "${finalIssue.code}"`,
+      finalIssue.code,
+      'SUCCESS',
+      finalIssue.warehouse?._id || null
+    )
 
     responseHelper.success(res, finalIssue, 'Đã khóa phiếu xuất thành công')
   } catch (err) {

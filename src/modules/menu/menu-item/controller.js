@@ -6,6 +6,8 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import Organization from '../../organization/model.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 import Table from '../../table/model.js'
+import { logActivity } from '../../activity-logs/service.js'
+import { buildChangeLog } from '../../../helpers/changeLog.js'
 
 export const getActiveMenusForRecipe = async (req, res) => {
   try {
@@ -268,6 +270,18 @@ export const createMenu = async (req, res) => {
       .populate('category', 'name')
       .populate('createdBy', 'username -_id')
 
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'CREATE',
+      'MENU_ITEM',
+      `Thêm mới thực đơn`,
+      saved.name,
+      'SUCCESS',
+      warehouse?._id || null
+    )
+
     responseHelper.success(res, saved, 'Tạo thực đơn thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -349,6 +363,33 @@ export const updateMenu = async (req, res) => {
       }
     }
 
+    const changeDetailsMenu = buildChangeLog(
+      menu,
+      updated,
+      [
+        { field: 'sku', label: 'SKU' },
+        { field: 'name', label: 'Tên thực đơn' },
+        { field: 'image', label: 'Ảnh' },
+        { field: 'description', label: 'Mô tả' },
+        { field: 'price', label: 'Giá' },
+        { field: 'isActive', label: 'Trạng thái' }
+      ],
+      menu.name,
+      'thực đơn'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'MENU_ITEM',
+      changeDetailsMenu,
+      updated.name,
+      'SUCCESS',
+      warehouse?._id || null
+    )
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -390,6 +431,18 @@ export const deleteMenus = async (req, res) => {
         }
       }
     }
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'MENU_ITEM',
+      `Đã xóa ${result.deletedCount} thực đơn`,
+      '',
+      'SUCCESS',
+      warehouse?._id || null
+    )
 
     responseHelper.success(res, result.deletedCount, 'Xóa thực đơn thành công')
   } catch (err) {

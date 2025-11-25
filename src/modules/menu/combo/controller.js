@@ -6,6 +6,7 @@ import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import Organization from '../../organization/model.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 import Table from '../../table/model.js'
+import { logActivity } from '../../activity-logs/service.js'
 
 export const getActiveCombos = async (req, res) => {
   try {
@@ -192,6 +193,18 @@ export const createCombo = async (req, res) => {
     await combo.save()
     await combo.populate('items.menuItem', '_id name')
 
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'RECIPE',
+      `Thêm mới combo`,
+      '',
+      'SUCCESS',
+      warehouse?._id || null
+    )
+
     responseHelper.success(res, combo, 'Tạo combo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -301,6 +314,18 @@ export const deleteCombos = async (req, res) => {
         }
       }
     }
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'RECIPE',
+      `Đã xóa ${result.deletedCount} công thức`,
+      '',
+      'SUCCESS',
+      warehouse?._id || null
+    )
 
     responseHelper.success(res, result.deletedCount, 'Xóa thành công')
   } catch (err) {

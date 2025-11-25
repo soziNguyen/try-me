@@ -1,6 +1,9 @@
 import Coupon from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
+import withTransaction from '../../helpers/withTransaction.js'
 
 export const getCoupons = async (req, res) => {
   try {
@@ -79,6 +82,15 @@ export const createCoupon = async (req, res) => {
     }
     const coupon = new Coupon(data)
     await coupon.save()
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'CREATE',
+      'COUPON',
+      `Thêm mới mã giảm giá`
+    )
 
     responseHelper.success(res, coupon, 'Tạo thành công')
   } catch (error) {
@@ -258,6 +270,15 @@ export const deleteCoupons = async (req, res) => {
       organization: organizationId
     })
 
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'COUPON',
+      `Đã xóa ${result.deletedCount} mã giảm giá`
+    )
+
     responseHelper.success(res, result.deletedCount, 'Xóa thành công')
   } catch (err) {
     return responseHelper.error(res, err.message)
@@ -285,7 +306,19 @@ export const applyCoupon = async (req, res) => {
       }
     })
 
-    if (!coupon) return responseHelper.error(res, 'Mã giảm giá không hợp lệ hoặc đã hết hạn', 400)
+    if (!coupon) {
+      logActivity(
+        organizationId,
+        req.user?._id || null,
+        req.user?.username || null,
+        'APPLY',
+        'COUPON',
+        `Áp dụng mã giảm giá ${code}, mã ${code} không hợp lệ hoặc hết hạn`,
+        code,
+        'FAILED'
+      )
+      return responseHelper.error(res, 'Mã giảm giá không hợp lệ hoặc đã hết hạn', 400)
+    }
 
     let discount = 0
     if (coupon.discountType === 'percent') {
@@ -296,6 +329,17 @@ export const applyCoupon = async (req, res) => {
 
     // Giảm không vượt quá tổng tiền
     if (discount > totalAmount) discount = totalAmount
+
+    logActivity(
+      organizationId,
+      req.user?._id || null,
+      req.user?.username || null,
+      'APPLY',
+      'COUPON',
+      `Áp dụng mã giảm giá ${code} với tổng tiền ${totalAmount}, giảm ${discount}`,
+      code,
+      'SUCCESS'
+    )
 
     // Trả về thông tin giảm giá
     responseHelper.success(res, {
@@ -336,12 +380,34 @@ export const confirmCouponUsage = async (req, res) => {
     )
 
     if (!coupon) {
+      logActivity(
+        organizationId,
+        req.user?._id || null,
+        req.user?.username || 'Guest',
+        'CONFIRM_USAGE',
+        'COUPON',
+        `Xác nhận sử dụng mã ${couponId} không thành công`,
+        couponId,
+        'FAILED'
+      )
+
       return responseHelper.error(
         res,
         'Mã giảm giá không còn hợp lệ hoặc đã vượt quá lượt sử dụng',
         400
       )
     }
+
+    logActivity(
+      organizationId,
+      req.user?._id || null,
+      req.user?.username || null,
+      'CONFIRM_USAGE',
+      'COUPON',
+      `Xác nhận sử dụng mã ${coupon.code}`,
+      coupon.code,
+      'SUCCESS'
+    )
 
     responseHelper.success(res, coupon, 'Xác nhận sử dụng mã giảm giá thành công')
   } catch (error) {

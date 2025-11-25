@@ -3,6 +3,8 @@ import Warehouse from './model.js'
 import Organization from '../../organization/model.js'
 import { lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import { logActivity } from '../../activity-logs/service.js'
+import { buildChangeLog } from '../../../helpers/changeLog.js'
 
 export const getActiveWarehouses = async (req, res) => {
   try {
@@ -155,6 +157,17 @@ export const createWareHouse = async (req, res) => {
     const newWareHouse = new Warehouse(data)
     await newWareHouse.save()
 
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'CREATE',
+      'WAREHOUSES',
+      `Tạo kho`,
+      newWareHouse.name,
+      'SUCCESS'
+    )
+
     responseHelper.success(res, null, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -217,6 +230,29 @@ export const updateWareHouse = async (req, res) => {
     )
       .populate('manager', 'username')
       .populate('updatedBy', 'username')
+
+    const changeDetailsWh = buildChangeLog(
+      warehouse,
+      updated,
+      [
+        { field: 'name', label: 'Tên kho' },
+        { field: 'location', label: 'Địa điểm' },
+        { field: 'manager', label: 'Quản lý' }
+      ],
+      warehouse.name,
+      'kho'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'Cập nhật nhà kho',
+      'WAREHOUSE',
+      changeDetailsWh || 'Không có thay đổi',
+      updated.name
+    )
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -273,6 +309,17 @@ export const forceDeleteWareHouses = async (req, res) => {
       _id: { $in: ids },
       organization: organizationId
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'WAREHOUSE',
+      `Xóa ${result.deletedCount} kho`,
+      '',
+      'SUCCESS'
+    )
 
     responseHelper.success(
       res,

@@ -1,6 +1,8 @@
 import ReceivingAccount from './model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import responseHelper from '../../helpers/responseHelper.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 // Lấy các tài khoản đang hoạt động
 export const getActiveAccounts = async (req, res) => {
@@ -29,6 +31,17 @@ export const createAccount = async (req, res) => {
 
     const query = { ...req.body, organization: organizationId }
     const newAccount = await ReceivingAccount.create(query)
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'CREATE',
+      'RECEIVING_ACCOUNT',
+      `Thêm mới tài khoản ngân hàng`,
+      newAccount.name
+    )
+
     responseHelper.success(res, newAccount, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -104,6 +117,32 @@ export const updateAccount = async (req, res) => {
       { $set: dataUpdate },
       { new: true }
     )
+
+    const changeDetailsRev = buildChangeLog(
+      account,
+      updated,
+      [
+        { field: 'name', label: 'Tên tài khoản' },
+        { field: 'type', label: 'Loại tài khoản' },
+        { field: 'accountNumber', label: 'Số tài khoản/ ID' },
+        { field: 'bankName', label: 'Tên ngân hàng' },
+        { field: 'bankCode', label: 'Mã ngân hàng' },
+        { field: 'isActive', label: 'Trạng thái' }
+      ],
+      account.name,
+      'tài khoản'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'RECEIVING_ACCOUNT',
+      changeDetailsRev,
+      updated.name
+    )
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -124,6 +163,15 @@ export const deleteAccount = async (req, res) => {
       _id: { $in: ids },
       organization: organizationId
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'RECEIVING_ACCOUNT',
+      `Đã xóa ${result.deletedCount} tài khoản ngân hàng`
+    )
 
     responseHelper.success(
       res,

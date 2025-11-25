@@ -12,6 +12,7 @@ import Supplier from '../../inventory/supplier/model.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import BusinessError from '../../error/BusinessError.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
+import { logActivity } from '../../activity-logs/service.js'
 
 // GET ALL
 export const getAllStockEntries = async (req, res) => {
@@ -279,6 +280,18 @@ export const createStockEntry = async (req, res) => {
       return doc
     })
 
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'CREATE',
+      'STOCK_ENTRY',
+      'Tạo phiếu nhập kho nguyên liệu',
+      entry.code,
+      'SUCCESS',
+      warehouse?._id
+    )
+
     responseHelper.success(
       res,
       { id: entry._id, code: entry.code },
@@ -298,7 +311,7 @@ export const updateStockEntryFromForm = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const updatedDoc = await withTransaction(async (session) => {
+    const transactionResult = await withTransaction(async (session) => {
       const { id } = req.params
       if (!mongoose.isValidObjectId(id)) {
         throw new BusinessError('ID không hợp lệ', 400)
@@ -315,7 +328,10 @@ export const updateStockEntryFromForm = async (req, res) => {
       }
 
       // Lấy phiếu nhập cũ
-      const oldEntry = await StockEntry.findOne(matchCondition).session(session)
+      const oldEntry = await StockEntry.findOne(matchCondition)
+        .populate('supplier', 'name')
+        .populate('items.ingredient', 'name')
+        .session(session)
 
       if (!oldEntry)
         throw new BusinessError('Phiếu nhập không tồn tại hoặc không có quyền truy cập', 404)
@@ -385,8 +401,9 @@ export const updateStockEntryFromForm = async (req, res) => {
       // Ghi nhận số lượng cũ
       for (const oldItem of oldEntry.items) {
         if (oldItem.ingredient) {
-          const ingId = oldItem.ingredient.toString()
+          const ingId = oldItem.ingredient._id.toString()
           deltaMap.set(ingId, {
+            name: oldItem.ingredient.name,
             old: oldItem.quantity,
             new: 0,
             delta: -oldItem.quantity
@@ -402,7 +419,9 @@ export const updateStockEntryFromForm = async (req, res) => {
           existing.new = newItem.quantity
           existing.delta = newItem.quantity - existing.old
         } else {
+          const ingredientDoc = await Ingredient.findById(ingId).select('name').session(session)
           deltaMap.set(ingId, {
+            name: ingredientDoc?.name || 'N/A',
             old: 0,
             new: newItem.quantity,
             delta: newItem.quantity
@@ -499,8 +518,57 @@ export const updateStockEntryFromForm = async (req, res) => {
         { path: 'items.ingredient', select: 'name unit' }
       ])
 
-      return newEntry
+      return { newEntry, oldEntry, deltaMap, supplierExists }
     })
+
+    const { newEntry: updatedDoc, oldEntry, deltaMap, supplierExists } = transactionResult
+
+    const changes = []
+
+    if (oldEntry.supplier?._id?.toString() !== supplierExists._id.toString()) {
+      changes.push(
+        `Nhà cung cấp: "${oldEntry.supplier?.name || '(Trống)'}" → "${supplierExists.name}"`
+      )
+    }
+
+    // Thay đổi ghi chú
+    if ((oldEntry.note || '') !== (updatedDoc.note || '')) {
+      changes.push(`Ghi chú: "${oldEntry.note || '(Trống)'}" → "${updatedDoc.note || '(Trống)'}"`)
+    }
+
+    // Thay đổi sản phẩm
+    const itemChanges = []
+    for (const [ingId, data] of deltaMap) {
+      if (data.delta !== 0) {
+        if (data.old === 0) {
+          itemChanges.push(`Thêm "${data.name}" (Số lượng: ${data.new})`)
+        } else if (data.new === 0) {
+          itemChanges.push(`Xóa "${data.name}" (Số lượng: ${data.old})`)
+        } else {
+          itemChanges.push(`"${data.name}": ${data.old} → ${data.new}`)
+        }
+      }
+    }
+
+    if (itemChanges.length > 0) {
+      changes.push(`Nguyên liệu: ${itemChanges.join('; ')}`)
+    }
+
+    if (changes.length > 0) {
+      const description = `Cập nhật phiếu nhập kho: ${updatedDoc.code} - ${changes.join(' | ')}`
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'UPDATE',
+        'STOCK_ENTRY',
+        description,
+        updatedDoc.code,
+        'SUCCESS',
+        updatedDoc.warehouse._id || null
+      )
+    }
 
     responseHelper.success(res, updatedDoc, 'Cập nhật phiếu nhập thành công')
   } catch (error) {
@@ -613,6 +681,20 @@ export const deleteStockEntries = async (req, res) => {
 
       // Xóa phiếu
       await StockEntry.deleteMany(matchCondition).session(session)
+      const deletedCodes = entries.map((e) => e.code).join(', ')
+      const warehouseId = entries[0]?.warehouse?._id
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'DELETE',
+        'STOCK_ENTRY',
+        `Đã xóa phiếu nhập: ${deletedCodes}`,
+        '',
+        'SUCCESS',
+        warehouseId || null
+      )
 
       // Cập nhật tổng tồn kho trong Ingredient
       for (const ingId of affectedIngredients) {
@@ -747,6 +829,18 @@ export const lockStockEntry = async (req, res) => {
       .populate('items.ingredient', 'name sku unit stock')
       .populate('warehouse', 'name code')
       .populate('supplier', 'name code')
+
+    logActivity(
+      organizationId,
+      req.user?._id,
+      req.user?.username,
+      'LOCK',
+      'STOCK_ENTRY',
+      `Đã khóa phiếu nhập "${finalEntry.code}"`,
+      finalEntry.code,
+      'SUCCESS',
+      finalEntry.warehouse?._id || null
+    )
 
     responseHelper.success(res, finalEntry, 'Đã khóa phiếu nhập thành công')
   } catch (err) {

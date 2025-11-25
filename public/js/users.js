@@ -289,10 +289,10 @@ if (logInForm) {
           return
         }
 
-        if (!warehouse.value) {
-          toastr.warning('Vui lòng chọn kho')
-          return
-        }
+        // if (!warehouse.value) {
+        //   toastr.warning('Vui lòng chọn kho')
+        //   return
+        // }
 
         const warehouseId = warehouse.value
 

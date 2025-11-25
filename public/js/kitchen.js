@@ -50,9 +50,7 @@ function renderKitchenOrders(orders) {
       <div class="card-header bg-white border-0 py-3">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <h5 class="mb-1 fw-bold text-primary">#${order.code} ${
-              order.batch ? `- Lần ${order.batch}` : ''
-            }</h5>
+            <h5 class="mb-1 fw-bold text-primary">#${order.code} ${order.batch ? `- Lần ${order.batch}` : ''}</h5>
             <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
               <span class="badge bg-${urgencyClass} text-white px-2 py-1">
                 ${earliestSent.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
@@ -68,7 +66,7 @@ function renderKitchenOrders(orders) {
         </div>
       </div>
       
-      <div class="card-body mh-300 overflow-auto pt-2">
+      <div class="card-body mh-200 overflow-auto pt-2">
         <h6 class="text-muted text-uppercase small mb-3">Món ăn</h6>
         <ul class="list-group list-group-flush">
           ${order.items
@@ -100,7 +98,6 @@ function renderKitchenOrders(orders) {
 
 function showOrderDetail(order) {
   const modalBody = document.getElementById('orderDetailContent')
-
   const timeElapsed = Math.floor((Date.now() - new Date(order.createdAt)) / 60000)
 
   let html = `
@@ -139,11 +136,8 @@ function showOrderDetail(order) {
 
   let idx = 1
   order.items.forEach((item) => {
-    if (item.foodId) {
-      html += renderFoodRow(idx++, order._id, item)
-    } else if (item.comboId) {
-      html += renderComboRow(idx++, order._id, item)
-    }
+    if (item.foodId) html += renderFoodRow(idx++, order._id, item)
+    else if (item.comboId) html += renderComboRow(idx++, order._id, item)
   })
 
   html += `
@@ -157,76 +151,90 @@ function showOrderDetail(order) {
   modalBody.querySelectorAll('.btn-item-status').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const { order: orderId, item: itemId, status } = btn.dataset
+      const oldStatus = btn.dataset.currentStatus || status
 
-      // Disable button đang click
-      btn.disabled = true
+      // Update UI
+      updateItemStatusUI(itemId, status)
 
-      const result = await updateItemStatus(orderId, itemId, status)
+      // Disable buttons
+      const rowButtons = modalBody.querySelectorAll(`[data-item="${itemId}"]`)
+      rowButtons.forEach((b) => (b.disabled = true))
 
-      if (result) {
-        // Lấy lại data order mới
-        const updatedOrders = await fetchKitchenOrders()
-        const updatedOrder = updatedOrders.find((o) => o._id === orderId)
-
-        if (updatedOrder) {
-          // Tìm item trong order mới
-          const updatedItem = updatedOrder.items.find((i) => i._id === itemId)
-
-          if (updatedItem) {
-            // Chỉ update status badge và button group của item này
-            updateItemStatusUI(itemId, updatedItem.status)
-          }
-        }
-      } else {
-        // Enable lại nếu fail
-        btn.disabled = false
+      try {
+        const result = await updateItemStatus(orderId, itemId, status)
+        if (!result) updateItemStatusUI(itemId, oldStatus) // rollback nếu fail
+      } catch (err) {
+        updateItemStatusUI(itemId, oldStatus)
+      } finally {
+        rowButtons.forEach((b) => (b.disabled = false))
       }
+
+      await fetchKitchenOrders() // card thêm/xóa tự động theo API
     })
   })
 
   const modalEl = document.getElementById('orderDetailModal')
   let modal = bootstrap.Modal.getInstance(modalEl)
-
-  if (!modal) {
-    modal = new bootstrap.Modal(modalEl)
-  }
-
+  if (!modal) modal = new bootstrap.Modal(modalEl)
   modal.show()
 }
 
-// Hàm update UI không reload toàn bộ modal
+// =================== UPDATE UI ===================
 function updateItemStatusUI(itemId, newStatus) {
   const modalBody = document.getElementById('orderDetailContent')
 
   // Tìm row chứa item này
   const row = modalBody.querySelector(`[data-item="${itemId}"]`)?.closest('tr')
+  if (!row) return
 
-  if (row) {
-    // Update badge status
-    const badge = row.querySelector('.badge')
-    if (badge) {
-      badge.className = `badge bg-${getStatusColor(newStatus)}`
-      badge.textContent = getStatusText(newStatus)
+  const badge = row.querySelector('.badge')
+  if (badge) {
+    badge.className = `badge bg-${getStatusColor(newStatus)} py-2`
+    badge.textContent = getStatusText(newStatus)
+  }
+
+  const buttons = row.querySelectorAll('.btn-item-status')
+  buttons.forEach((btn) => {
+    const btnStatus = btn.dataset.status
+    if (btnStatus === newStatus) {
+      btn.classList.remove(`btn-outline-${getStatusColor(btnStatus)}`)
+      btn.classList.add(`btn-${getStatusColor(btnStatus)}`)
+    } else {
+      btn.classList.remove(`btn-${getStatusColor(btnStatus)}`)
+      btn.classList.add(`btn-outline-${getStatusColor(btnStatus)}`)
     }
+    btn.dataset.currentStatus = newStatus
+  })
+}
 
-    // Update active state của buttons
-    const buttons = row.querySelectorAll('.btn-item-status')
-    buttons.forEach((btn) => {
-      const btnStatus = btn.dataset.status
-
-      if (btnStatus === newStatus) {
-        btn.classList.remove(`btn-outline-${getStatusColor(btnStatus)}`)
-        btn.classList.add(`btn-${getStatusColor(btnStatus)}`)
-      } else {
-        btn.classList.remove(`btn-${getStatusColor(btnStatus)}`)
-        btn.classList.add(`btn-outline-${getStatusColor(btnStatus)}`)
-      }
-
-      btn.disabled = false
-    })
+// =================== HỖ TRỢ ===================
+function getStatusColor(status) {
+  switch (status) {
+    case 'pending':
+      return 'warning'
+    case 'cooking':
+      return 'primary'
+    case 'done':
+      return 'success'
+    default:
+      return 'secondary'
   }
 }
 
+function getStatusText(status) {
+  switch (status) {
+    case 'pending':
+      return 'Chờ'
+    case 'cooking':
+      return 'Đang nấu'
+    case 'done':
+      return 'Xong'
+    default:
+      return status
+  }
+}
+
+// =================== RENDER FOOD / COMBO ===================
 function renderFoodRow(idx, orderId, item) {
   return `
     <tr>
@@ -281,48 +289,21 @@ function renderStatusButtons(orderId, itemId, currentStatus) {
           (s) => `
         <button 
           type="button"
-          class="btn btn-sm ${
-            currentStatus === s.value
-              ? `btn-${getStatusColor(s.value)}`
-              : `btn-outline-${getStatusColor(s.value)}`
-          } btn-item-status"
+          class="btn btn-sm ${currentStatus === s.value ? `btn-${getStatusColor(s.value)}` : `btn-outline-${getStatusColor(s.value)}`} btn-item-status"
           data-order="${orderId}"
           data-item="${itemId}"
-          data-status="${s.value}">
+          data-status="${s.value}"
+          data-current-status="${currentStatus}">
           ${s.label}
-        </button>`
+        </button>
+      `
         )
         .join('')}
     </div>
   `
 }
 
-function getStatusColor(status) {
-  switch (status) {
-    case 'pending':
-      return 'warning'
-    case 'cooking':
-      return 'primary'
-    case 'done':
-      return 'success'
-    default:
-      return 'secondary'
-  }
-}
-
-function getStatusText(status) {
-  switch (status) {
-    case 'pending':
-      return 'Chờ'
-    case 'cooking':
-      return 'Đang nấu'
-    case 'done':
-      return 'Xong'
-    default:
-      return status
-  }
-}
-
+// UPDATE STATUS
 async function updateItemStatus(orderId, itemId, status) {
   try {
     const result = await ajax(`/api/kitchen/order/${orderId}/item/${itemId}`, { status })

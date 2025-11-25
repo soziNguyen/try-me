@@ -2,6 +2,8 @@ import { MenuCategory } from './model.js'
 import responseHelper from '../../../helpers/responseHelper.js'
 import { lookupUser } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
+import { logActivity } from '../../activity-logs/service.js'
+import { buildChangeLog } from '../../../helpers/changeLog.js'
 
 export const getActiveMenuCategory = async (req, res) => {
   try {
@@ -141,6 +143,17 @@ export const createMenuCategory = async (req, res) => {
       _id: menuCategory._id,
       organization: organizationId
     }).populate('createdBy', 'username -_id')
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username || 'Unknown',
+      'CREATE',
+      'MENU_CATEGORY',
+      `Thêm mới danh mục thực đơn`,
+      saved.name
+    )
+
     responseHelper.success(res, saved, 'Tạo danh mục thực đơn thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -184,6 +197,29 @@ export const updateMenuCategory = async (req, res) => {
       dataUpdate,
       { new: true }
     ).populate('updatedBy', 'username -_id')
+
+    const changeDetailsMenu = buildChangeLog(
+      menuCategory,
+      updated,
+      [
+        { field: 'name', label: 'Tên thực đơn' },
+        { field: 'description', label: 'Mô tả' },
+        { field: 'isActive', label: 'Trạng thái' }
+      ],
+      menuCategory.name,
+      'danh mục thực đơn'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'MENU_CATEGORY',
+      changeDetailsMenu,
+      updated.name
+    )
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -204,6 +240,16 @@ export const deleteMenuCategory = async (req, res) => {
       _id: { $in: ids },
       organization: organizationId
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'DELETE',
+      'MENU_CATEGORY',
+      `Đã xóa ${result.deletedCount} danh mục thực đơn`,
+      ''
+    )
 
     responseHelper.success(res, result.deletedCount, 'Xóa thành công')
   } catch (error) {
