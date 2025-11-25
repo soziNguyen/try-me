@@ -10,7 +10,8 @@ import BusinessError from '../../error/BusinessError.js'
 import Organization from '../../organization/model.js'
 import { getWarehouse } from '../../../helpers/warehouseHelper.js'
 import { logActivity } from '../../activity-logs/service.js'
-
+import { MenuItem } from '../../menu/menu-item/model.js'
+import { Combo } from '../../menu/combo/model.js'
 export const createProductEntry = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
@@ -308,7 +309,7 @@ export const updateProductEntry = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const updatedDoc = await withTransaction(async (session) => {
+    const transactionResult = await withTransaction(async (session) => {
       const { id } = req.params
       if (!mongoose.isValidObjectId(id)) {
         throw new BusinessError('ID không hợp lệ', 400)
@@ -324,7 +325,9 @@ export const updateProductEntry = async (req, res) => {
         findCondition.warehouse = req.warehouseFilter
       }
 
-      const oldEntry = await ProductEntry.findOne(findCondition).session(session)
+      const oldEntry = await ProductEntry.findOne(findCondition)
+        .populate('items.product', 'name')
+        .session(session)
 
       if (!oldEntry) throw new BusinessError('Phiếu nhập không tồn tại', 404)
       if (oldEntry.isLocked)
@@ -383,12 +386,20 @@ export const updateProductEntry = async (req, res) => {
       // Ghi nhận số lượng cũ
       for (const oldItem of oldEntry.items) {
         if (oldItem.product) {
-          const key = `${oldItem.productType}:${oldItem.product.toString()}`
+          const productId = oldItem.product._id
+            ? oldItem.product._id.toString()
+            : oldItem.product.toString()
+          const key = `${oldItem.productType}:${productId}`
           deltaMap.set(key, {
             productType: oldItem.productType,
-            productId: oldItem.product.toString(),
+            productId: productId,
+            name: oldItem.product.name || 'N/A',
             old: oldItem.quantity,
+            oldUnit: oldItem.unit || '',
+            oldUnitPrice: oldItem.unitPrice || 0,
             new: 0,
+            newUnit: '',
+            newUnitPrice: 0,
             delta: -oldItem.quantity
           })
         }
@@ -400,13 +411,26 @@ export const updateProductEntry = async (req, res) => {
         const existing = deltaMap.get(key)
         if (existing) {
           existing.new = newItem.quantity
+          existing.newUnit = newItem.unit || ''
+          existing.newUnitPrice = newItem.unitPrice || 0
           existing.delta = newItem.quantity - existing.old
         } else {
+          let productDoc
+          if (newItem.productType === 'Combo') {
+            productDoc = await Combo.findById(newItem.product).select('name').session(session)
+          } else {
+            productDoc = await MenuItem.findById(newItem.product).select('name').session(session)
+          }
           deltaMap.set(key, {
             productType: newItem.productType,
             productId: newItem.product.toString(),
+            name: productDoc?.name || 'N/A',
             old: 0,
+            oldUnit: '',
+            oldUnitPrice: 0,
             new: newItem.quantity,
+            newUnit: newItem.unit || '',
+            newUnitPrice: newItem.unitPrice || 0,
             delta: newItem.quantity
           })
         }
@@ -501,8 +525,84 @@ export const updateProductEntry = async (req, res) => {
         { path: 'items.product', select: 'name' }
       ])
 
-      return newEntry
+      return { newEntry, oldEntry, deltaMap }
     })
+    const { newEntry: updatedDoc, oldEntry, deltaMap } = transactionResult
+
+    const changes = []
+
+    // Thay đổi ghi chú
+    if ((oldEntry.note || '') !== (updatedDoc.note || '')) {
+      changes.push(`Ghi chú: "${oldEntry.note || '(Trống)'}" → "${updatedDoc.note || '(Trống)'}"`)
+    }
+
+    // Thay đổi sản phẩm
+    const itemChanges = []
+    for (const [key, data] of deltaMap) {
+      const productLabel = data.productType === 'Combo' ? 'Combo' : 'Món'
+      const hasQuantityChange = data.delta !== 0
+      const hasUnitChange = data.oldUnit !== data.newUnit
+      const hasPriceChange = data.oldUnitPrice !== data.newUnitPrice
+
+      if (hasQuantityChange || hasUnitChange || hasPriceChange) {
+        const changeDetails = []
+
+        if (data.old === 0) {
+          // Thêm mới
+          changeDetails.push(`Thêm ${productLabel} "${data.name}"`)
+          changeDetails.push(`Số lượng: ${data.new}`)
+          if (data.newUnit) changeDetails.push(`Đơn vị: ${data.newUnit}`)
+          if (data.newUnitPrice > 0)
+            changeDetails.push(`Giá: ${data.newUnitPrice.toLocaleString()}đ`)
+        } else if (data.new === 0) {
+          // Xóa
+          changeDetails.push(`Xóa ${productLabel} "${data.name}"`)
+          changeDetails.push(`Số lượng: ${data.old}`)
+        } else {
+          // Sửa
+          changeDetails.push(`${productLabel} "${data.name}"`)
+
+          if (hasQuantityChange) {
+            changeDetails.push(`Số lượng: ${data.old} → ${data.new}`)
+          }
+
+          if (hasUnitChange) {
+            changeDetails.push(
+              `Đơn vị: "${data.oldUnit || '(trống)'}" → "${data.newUnit || '(trống)'}"`
+            )
+          }
+
+          if (hasPriceChange) {
+            changeDetails.push(
+              `Giá: ${data.oldUnitPrice.toLocaleString()}đ → ${data.newUnitPrice.toLocaleString()}đ`
+            )
+          }
+        }
+
+        itemChanges.push(changeDetails.join(', '))
+      }
+    }
+
+    if (itemChanges.length > 0) {
+      changes.push(`Sản phẩm: ${itemChanges.join('; ')}`)
+    }
+
+    // Ghi log nếu có thay đổi
+    if (changes.length > 0) {
+      const description = `Cập nhật phiếu nhập sản phẩm : ${updatedDoc.code} - ${changes.join(' | ')}`
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'UPDATE',
+        'PRODUCT_ENTRY',
+        description,
+        updatedDoc.code,
+        'SUCCESS',
+        updatedDoc.warehouse || null
+      )
+    }
 
     responseHelper.success(res, updatedDoc, 'Cập nhật phiếu nhập thành công')
   } catch (error) {
