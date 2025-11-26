@@ -149,19 +149,19 @@ $(function () {
         {
           data: 'product',
           title: 'Tên sản phẩm',
-          className: 'text-start fw-bold',
+          className: 'text-start fw-bold  py-2 px-3',
           render: (product) => product?.name || ''
         },
         {
           data: 'quantity',
           title: 'Số Lượng Nhập',
-          className: 'text-end py-2',
+          className: 'text-end  py-2 px-3',
           render: (val) => formatNumber(val, 'success', true)
         },
         {
           data: null,
           title: 'Đã bán',
-          className: 'text-end py-2',
+          className: 'text-end  py-2 px-3',
           render: (_, __, row) => {
             const productId = row.product?._id || row.productId
             const sold = salesData[productId] || 0
@@ -171,7 +171,7 @@ $(function () {
         {
           data: null,
           title: 'Tồn kho',
-          className: 'text-end py-2',
+          className: 'text-end  py-2 px-3',
           render: (_, __, row) => {
             const productId = row.product?._id || row.productId
             const stock = stocksData[productId] ?? (row.quantity || 0) - (row.sold || 0)

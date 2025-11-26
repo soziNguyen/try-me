@@ -186,6 +186,17 @@ export const updateRecipe = async (req, res) => {
       }
     }
 
+    const oldRecipe = await Recipe.findOne({
+      _id: id,
+      organization: organizationId
+    })
+      .populate('menuItem', '_id name')
+      .populate('items.ingredient', '_id name')
+
+    if (!oldRecipe) {
+      return responseHelper.error(res, 'Không tìm thấy công thức', 404)
+    }
+
     const recipe = await Recipe.findOneAndUpdate(
       { _id: id, organization: organizationId },
       { menuItem, items, note },
@@ -195,7 +206,97 @@ export const updateRecipe = async (req, res) => {
       .populate('items.ingredient', '_id name')
 
     if (!recipe) {
-      return responseHelper.error(res, 'Không tìm thấy công thức', 404)
+      return responseHelper.error(res, 'Cập nhật thất bại', 400)
+    }
+
+    const changes = []
+
+    if (oldRecipe.menuItem?._id?.toString() !== recipe.menuItem?._id?.toString()) {
+      changes.push(
+        `Món ăn: "${oldRecipe.menuItem?.name || '(Trống)'}" → "${recipe.menuItem?.name || '(Trống)'}"`
+      )
+    }
+
+    if ((oldRecipe.note || '') !== (recipe.note || '')) {
+      changes.push(`Ghi chú: "${oldRecipe.note || '(Trống)'}" → "${recipe.note || '(Trống)'}"`)
+    }
+
+    const deltaMap = new Map()
+
+    for (const oldItem of oldRecipe.items) {
+      if (oldItem.ingredient) {
+        const ingId = oldItem.ingredient._id.toString()
+        deltaMap.set(ingId, {
+          name: oldItem.ingredient.name,
+          unit: oldItem.unit,
+          old: oldItem.quantity,
+          new: 0,
+          delta: -oldItem.quantity
+        })
+      }
+    }
+
+    // Ghi nhận số lượng mới và tính delta
+    for (const newItem of items) {
+      const ingId = newItem.ingredient.toString()
+      const existing = deltaMap.get(ingId)
+
+      if (existing) {
+        existing.new = newItem.quantity
+        existing.unit = newItem.unit
+        existing.delta = newItem.quantity - existing.old
+      } else {
+        const ingredientName =
+          recipe.items.find((i) => i.ingredient._id.toString() === ingId)?.ingredient?.name || 'N/A'
+
+        deltaMap.set(ingId, {
+          name: ingredientName,
+          unit: newItem.unit,
+          old: 0,
+          new: newItem.quantity,
+          delta: newItem.quantity
+        })
+      }
+    }
+
+    const itemChanges = []
+    // Phần ghi lại thay đổi mới -> cũ
+    for (const [ingId, data] of deltaMap) {
+      if (data.delta !== 0) {
+        if (data.old === 0) {
+          itemChanges.push(`Thêm "${data.name}": ${data.new} ${data.unit}`)
+        } else if (data.new === 0) {
+          itemChanges.push(`Xóa "${data.name}": ${data.old} ${data.unit}`)
+        } else {
+          itemChanges.push(`"${data.name}": ${data.old} ${data.unit} →
+             ${data.new} ${data.unit}`)
+        }
+      } else {
+        const oldItem = oldRecipe.items.find((i) => i.ingredient._id.toString() === ingId)
+        if (oldItem && oldItem.unit !== data.unit) {
+          itemChanges.push(`"${data.name}": Đơn vị ${oldItem.unit} → ${data.unit}`)
+        }
+      }
+    }
+
+    if (itemChanges.length > 0) {
+      changes.push(`Nguyên liệu: ${itemChanges.join('; ')}`)
+    }
+
+    if (changes.length > 0) {
+      const description = `Cập nhật công thức: ${recipe.menuItem?.name || 'N/A'} - ${changes.join(' | ')}`
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'UPDATE',
+        'RECIPE',
+        description,
+        recipe._id.toString(),
+        'SUCCESS',
+        null
+      )
     }
     responseHelper.success(res, recipe, 'Cập nhật thành công')
   } catch (error) {

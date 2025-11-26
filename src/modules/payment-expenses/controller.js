@@ -9,6 +9,7 @@ import { generateDocumentCode } from '../../helpers/common.js'
 import withTransaction from '../../helpers/withTransaction.js'
 import { lookupRef, lookupUser } from '../../helpers/lookupHelper.js'
 import { getWarehouse } from '../../helpers/warehouseHelper.js'
+import { logActivity } from '../activity-logs/service.js'
 
 // Tạo phiếu chi
 export const createPaymentExpense = async (req, res) => {
@@ -45,6 +46,17 @@ export const createPaymentExpense = async (req, res) => {
       return doc
     })
 
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'CREATE',
+      'PAYMENT_EXPENSE',
+      'Tạo phiếu chi',
+      expense.code,
+      'SUCCESS',
+      expense.warehouse?._id
+    )
     responseHelper.success(res, { id: expense._id, code: expense.code })
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -218,11 +230,12 @@ export const updatePaymentExpenses = async (req, res) => {
         throw new BusinessError('Phiếu chi đã bị khóa, không thể chỉnh sửa', 400)
 
       const { expenseAmount, reason, note, receiver, reviewer } = req.body
+
       const updateData = {
+        expenseAmount,
         reason,
         note,
         receiver,
-        expenseAmount,
         reviewer,
         updatedBy: req.user._id
       }
@@ -237,16 +250,67 @@ export const updatePaymentExpenses = async (req, res) => {
 
       await updatedExpense.populate([
         { path: 'warehouse', select: 'name location' },
-        { path: 'createdBy updatedBy lockedBy receiver', select: 'username' }
+        { path: 'createdBy updatedBy lockedBy', select: 'username' }
       ])
 
-      return updatedExpense
+      return { updatedExpense, oldExpense }
     })
 
-    responseHelper.success(res, updatedDoc, 'Cập nhật phiếu chi thành công')
+    const { oldExpense, updatedExpense } = updatedDoc
+    const changes = []
+
+    // Phần ghi lại thay đổi mới -> cũ
+    if (oldExpense.expenseAmount !== updatedExpense.expenseAmount) {
+      changes.push(
+        `Số tiền: ${oldExpense.expenseAmount?.toLocaleString() || 0}đ → ${updatedExpense.expenseAmount?.toLocaleString() || 0}đ`
+      )
+    }
+
+    if ((oldExpense.reason || '') !== (updatedExpense.reason || '')) {
+      changes.push(
+        `Lý do: "${oldExpense.reason || '(Trống)'}" → "${updatedExpense.reason || '(Trống)'}"`
+      )
+    }
+
+    if ((oldExpense.note || '') !== (updatedExpense.note || '')) {
+      changes.push(
+        `Ghi chú: "${oldExpense.note || '(Trống)'}" → "${updatedExpense.note || '(Trống)'}"`
+      )
+    }
+
+    if ((oldExpense.receiver || '') !== (updatedExpense.receiver || '')) {
+      changes.push(
+        `Người nhận: "${oldExpense.receiver || '(Không có)'}" → "${updatedExpense.receiver || '(Không có)'}"`
+      )
+    }
+
+    if ((oldExpense.reviewer || '') !== (updatedExpense.reviewer || '')) {
+      changes.push(
+        `Người duyệt: "${oldExpense.reviewer || '(Không có)'}" → "${updatedExpense.reviewer || '(Không có)'}"`
+      )
+    }
+
+    if (changes.length > 0) {
+      const description = `Cập nhật phiếu chi: ${updatedExpense.code} - ${changes.join(' | ')}`
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'UPDATE',
+        'EXPENSE',
+        description,
+        updatedExpense.code,
+        'SUCCESS',
+        updatedExpense.warehouse || null
+      )
+    }
+
+    responseHelper.success(res, updatedExpense, 'Cập nhật phiếu chi thành công')
   } catch (error) {
     if (error instanceof BusinessError)
       return responseHelper.error(res, error.message, error.statusCode || 400)
+
     console.error('Error updating payment expense:', error)
     responseHelper.error(res, error.message)
   }
@@ -272,8 +336,20 @@ export const deletePaymentExpenses = async (req, res) => {
       const lockedExpenses = expenses.filter((e) => e.isLocked)
       if (lockedExpenses.length > 0)
         throw new BusinessError('Không thể xóa phiếu chi đã bị khóa', 400)
-
+      const deletedCodes = expenses.map((e) => e.code).join(', ')
       await ProductExpense.deleteMany(findCondition).session(session)
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'DELETE',
+        'PAYMENT_EXPENSE',
+        `Đã xóa phiếu chi: ${deletedCodes}`,
+        deletedCodes,
+        'SUCCESS',
+        null
+      )
     })
 
     responseHelper.success(res, null, 'Xóa phiếu chi thành công')
