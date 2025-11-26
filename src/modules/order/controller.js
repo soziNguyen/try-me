@@ -1360,7 +1360,9 @@ export const updateOrderDraft = async (req, res) => {
           .populate('receivingAccountId')
           .session(session)
 
-        if (paymentMethod && paymentMethod.type === 'bank') {
+        console.log(paymentMethod)
+
+        if (paymentMethod && (paymentMethod.type === 'bank' || paymentMethod.type === 'e-wallet')) {
           receivingAccountId = paymentMethod.receivingAccountId
         }
       }
