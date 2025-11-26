@@ -197,7 +197,7 @@ export const createCombo = async (req, res) => {
       organizationId,
       req.user._id,
       req.user.username,
-      'DELETE',
+      'CREATE',
       'RECIPE',
       `Thêm mới combo`,
       '',
@@ -252,14 +252,13 @@ export const updateCombo = async (req, res) => {
       }
     }
 
-    // Lấy combo cũ để so sánh ảnh
-    const combo = await Combo.findOne(matchCondition)
-    if (!combo) return responseHelper.error(res, 'Không tìm thấy công thức', 404)
+    // Lấy combo cũ
+    const oldCombo = await Combo.findOne(matchCondition).populate('items.menuItem', '_id name')
+    if (!oldCombo) return responseHelper.error(res, 'Không tìm thấy combo', 404)
 
-    // Xóa file cũ nếu có và khác file mới
-    if (combo.image && combo.image !== image) {
+    if (oldCombo.image && oldCombo.image !== image) {
       try {
-        await deleteFile(combo.image)
+        await deleteFile(oldCombo.image)
       } catch (_err) {
         console.error('Không xóa được file cũ:', _err)
       }
@@ -270,6 +269,105 @@ export const updateCombo = async (req, res) => {
       { sku, name, image, items, price, note, isActive },
       { new: true }
     ).populate('items.menuItem', '_id name')
+
+    if (!updated) return responseHelper.error(res, 'Cập nhật thất bại', 400)
+
+    const changes = []
+    // Phần ghi lại thay đổi mới -> cũ
+    if ((oldCombo.sku || '') !== (updated.sku || '')) {
+      changes.push(`SKU: "${oldCombo.sku || '(Trống)'}" → "${updated.sku || '(Trống)'}"`)
+    }
+
+    if ((oldCombo.name || '') !== (updated.name || '')) {
+      changes.push(`Tên: "${oldCombo.name || '(Trống)'}" → "${updated.name || '(Trống)'}"`)
+    }
+
+    if (oldCombo.price !== updated.price) {
+      changes.push(
+        `Giá: ${oldCombo.price?.toLocaleString() || 0}đ → ${updated.price?.toLocaleString() || 0}đ`
+      )
+    }
+
+    if ((oldCombo.note || '') !== (updated.note || '')) {
+      changes.push(`Ghi chú: "${oldCombo.note || '(Trống)'}" → "${updated.note || '(Trống)'}"`)
+    }
+
+    if (oldCombo.isActive !== updated.isActive) {
+      const oldStatus = oldCombo.isActive ? 'Kích hoạt' : 'Vô hiệu'
+      const newStatus = updated.isActive ? 'Kích hoạt' : 'Vô hiệu'
+      changes.push(`Trạng thái: ${oldStatus} → ${newStatus}`)
+    }
+
+    if ((oldCombo.image || '') !== (updated.image || '')) {
+      changes.push(`Ảnh: Đã thay đổi`)
+    }
+
+    const deltaMap = new Map()
+
+    for (const oldItem of oldCombo.items) {
+      if (oldItem.menuItem) {
+        const menuItemId = oldItem.menuItem._id.toString()
+        deltaMap.set(menuItemId, {
+          name: oldItem.menuItem.name,
+          old: oldItem.quantity,
+          new: 0,
+          delta: -oldItem.quantity
+        })
+      }
+    }
+
+    for (const newItem of updated.items) {
+      if (newItem.menuItem) {
+        const menuItemId = newItem.menuItem._id.toString()
+        const existing = deltaMap.get(menuItemId)
+
+        if (existing) {
+          existing.new = newItem.quantity
+          existing.delta = newItem.quantity - existing.old
+        } else {
+          deltaMap.set(menuItemId, {
+            name: newItem.menuItem.name,
+            old: 0,
+            new: newItem.quantity,
+            delta: newItem.quantity
+          })
+        }
+      }
+    }
+
+    const itemChanges = []
+    for (const [menuItemId, data] of deltaMap) {
+      if (data.delta !== 0) {
+        if (data.old === 0) {
+          itemChanges.push(`Thêm "${data.name}" (SL: ${data.new})`)
+        } else if (data.new === 0) {
+          itemChanges.push(`Xóa "${data.name}" (SL: ${data.old})`)
+        } else {
+          itemChanges.push(`"${data.name}": SL ${data.old} → ${data.new}`)
+        }
+      }
+    }
+
+    if (itemChanges.length > 0) {
+      changes.push(`Món ăn: ${itemChanges.join('; ')}`)
+    }
+
+    // Ghi log nếu có thay đổi
+    if (changes.length > 0) {
+      const description = `Cập nhật combo: ${updated.sku || updated._id} - ${changes.join(' | ')}`
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'UPDATE',
+        'COMBO',
+        description,
+        updated.sku || updated._id.toString(),
+        'SUCCESS',
+        warehouse || null
+      )
+    }
 
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
@@ -321,7 +419,7 @@ export const deleteCombos = async (req, res) => {
       req.user.username,
       'DELETE',
       'RECIPE',
-      `Đã xóa ${result.deletedCount} công thức`,
+      `Đã xóa ${result.deletedCount} combo`,
       '',
       'SUCCESS',
       warehouse?._id || null

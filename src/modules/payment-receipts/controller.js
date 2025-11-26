@@ -286,35 +286,31 @@ export const updateReceipt = async (req, res) => {
 
     if ((oldReceipt.reason || '') !== (updatedReceipt.reason || '')) {
       changes.push(
-        `Lý do: "${oldReceipt.reason || '(Trống)'}" →
-         "${updatedReceipt.reason || '(Trống)'}"`
+        `Lý do: "${oldReceipt.reason || '(Trống)'}" → "${updatedReceipt.reason || '(Trống)'}"`
       )
     }
 
     if ((oldReceipt.note || '') !== (updatedReceipt.note || '')) {
       changes.push(
-        `Ghi chú: "${oldReceipt.note || '(Trống)'}" → 
-        "${updatedReceipt.note || '(Trống)'}"`
+        `Ghi chú: "${oldReceipt.note || '(Trống)'}" → "${updatedReceipt.note || '(Trống)'}"`
       )
     }
 
     if ((oldReceipt.submitTer || '') !== (updatedReceipt.submitTer || '')) {
       changes.push(
-        `Người nộp: "${oldReceipt.submitTer || '(Không có)'}" →
-         "${updatedReceipt.submitTer || '(Không có)'}"`
+        `Người nộp: "${oldReceipt.submitTer || '(Không có)'}" → "${updatedReceipt.submitTer || '(Không có)'}"`
       )
     }
 
     if ((oldReceipt.reviewer || '') !== (updatedReceipt.reviewer || '')) {
       changes.push(
-        `Người duyệt: "${oldReceipt.reviewer || '(Không có)'}" → 
-        "${updatedReceipt.reviewer || '(Không có)'}"`
+        `Người duyệt: "${oldReceipt.reviewer || '(Không có)'}" → "${updatedReceipt.reviewer || '(Không có)'}"`
       )
     }
 
     // Ghi log nếu có thay đổi
     if (changes.length > 0) {
-      const description = `Cập nhật phiếu thu: ${updatedReceipt.code} - ${changes.join(' | ')}`
+      const description = `Cập nhật phiếu thu: ${oldReceipt.code} - ${changes.join(' | ')}`
 
       logActivity(
         organizationId,
@@ -323,7 +319,7 @@ export const updateReceipt = async (req, res) => {
         'UPDATE',
         'RECEIPT',
         description,
-        updatedReceipt.code,
+        oldReceipt.code,
         'SUCCESS',
         updatedReceipt.warehouse || null
       )
