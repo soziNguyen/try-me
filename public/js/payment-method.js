@@ -87,16 +87,6 @@ $(function () {
         }
       },
       {
-        data: 'description',
-        title: 'Mô tả',
-        render: (data, type, row) => {
-          if (type === 'display') {
-            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="description" value="${data ?? ''}">`
-          }
-          return data
-        }
-      },
-      {
         data: 'receivingAccountId',
         title: 'Tài khoản nhận',
         render: (data, type, row) => {
@@ -113,6 +103,16 @@ $(function () {
             }
           }
           return data?.name || ''
+        }
+      },
+      {
+        data: 'description',
+        title: 'Mô tả',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<input type="text" class="dataInput border-0 w-100 form-control" data-field="description" value="${data ?? ''}">`
+          }
+          return data
         }
       },
       {

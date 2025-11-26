@@ -2,6 +2,8 @@ import OrgPointSetting from './model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { has } from '../../helpers/common.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 export const getPointSetting = async (req, res) => {
   try {
@@ -12,6 +14,14 @@ export const getPointSetting = async (req, res) => {
     let orgPoint = await OrgPointSetting.findOne({ organizationId })
     if (!orgPoint) {
       orgPoint = await OrgPointSetting.create({ organizationId })
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username || 'Unknown',
+        'CREATE',
+        'INVOICE_OPTIONS',
+        'Tạo mới cài đặt điểm'
+      )
     }
 
     responseHelper.success(res, orgPoint)
@@ -45,10 +55,34 @@ export const editPoint = async (req, res) => {
       return responseHelper.error(res, 'Thông tin không hợp lệ', 400)
     }
 
+    const oldSetting = await OrgPointSetting.findOne({ organizationId }).lean()
+
     const updated = await OrgPointSetting.findOneAndUpdate(
       { organizationId },
       { pointValue: pointValueNum, pointsEarnRate: pointsEarnRateNum },
       { new: true, upsert: true }
+    )
+
+    const changeDetails = buildChangeLog(
+      oldSetting,
+      updated,
+      [
+        { field: 'pointValue', label: 'Giá trị điểm' },
+        { field: 'pointsEarnRate', label: 'Tỷ lệ tích điểm' }
+      ],
+      'cấu hình điểm'
+    )
+
+    // Log đầy đủ thay đổi
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'POINT_SETTING',
+      changeDetails,
+      'Cấu hình điểm',
+      'SUCCESS'
     )
 
     responseHelper.success(res, updated)

@@ -3,7 +3,6 @@ import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { logActivity } from '../activity-logs/service.js'
 import { buildChangeLog } from '../../helpers/changeLog.js'
-import withTransaction from '../../helpers/withTransaction.js'
 
 export const getCoupons = async (req, res) => {
   try {
@@ -248,6 +247,53 @@ export const updateCoupon = async (req, res) => {
       { new: true }
     )
 
+    const changeDetailsCou = buildChangeLog(
+      coupon,
+      updated,
+      [
+        { field: 'code', label: 'Mã giảm giá' },
+        {
+          field: 'discountType',
+          label: 'Loại giảm',
+          formatValue: (val) => {
+            const types = {
+              percent: 'Phần trăm',
+              amount: 'Số tiền cố định',
+              fixed: 'Số tiền cố định'
+            }
+            return types[val] || val
+          }
+        },
+        { field: 'discountValue', label: 'Giá trị giảm' },
+        { field: 'description', label: 'Mô tả' },
+        {
+          field: 'startDate',
+          label: 'Ngày bắt đầu',
+          formatValue: (val) => (val ? new Date(val).toLocaleDateString('vi-VN') : '')
+        },
+        {
+          field: 'endDate',
+          label: 'Ngày kết thúc',
+          formatValue: (val) => (val ? new Date(val).toLocaleDateString('vi-VN') : '')
+        },
+        { field: 'usageLimit', label: 'Giới hạn sử dụng' },
+        { field: 'usedCount', label: 'Lượt sử dụng' },
+        { field: 'isActive', label: 'Trạng thái' }
+      ],
+      coupon.code,
+      'mã giảm giá'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'CUSTOMER',
+      changeDetailsCou,
+      updated.name
+    )
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -349,67 +395,6 @@ export const applyCoupon = async (req, res) => {
       discountValue: coupon.discountValue,
       discountAmount: discount
     })
-  } catch (error) {
-    responseHelper.error(res, error.message)
-  }
-}
-
-export const confirmCouponUsage = async (req, res) => {
-  try {
-    const { couponId } = req.body
-    if (!couponId) return responseHelper.error(res, 'Thiếu mã giảm giá', 400)
-
-    const organizationId = getCurrentOrg(req)
-    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
-
-    const now = new Date()
-
-    const coupon = await Coupon.findOneAndUpdate(
-      {
-        _id: couponId,
-        isActive: true,
-        startDate: { $lte: now },
-        endDate: { $gte: now },
-        organization: organizationId,
-        $expr: {
-          $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
-        }
-      },
-      { $inc: { usedCount: 1 } },
-      { new: true }
-    )
-
-    if (!coupon) {
-      logActivity(
-        organizationId,
-        req.user?._id || null,
-        req.user?.username || 'Guest',
-        'CONFIRM_USAGE',
-        'COUPON',
-        `Xác nhận sử dụng mã ${couponId} không thành công`,
-        couponId,
-        'FAILED'
-      )
-
-      return responseHelper.error(
-        res,
-        'Mã giảm giá không còn hợp lệ hoặc đã vượt quá lượt sử dụng',
-        400
-      )
-    }
-
-    logActivity(
-      organizationId,
-      req.user?._id || null,
-      req.user?.username || null,
-      'CONFIRM_USAGE',
-      'COUPON',
-      `Xác nhận sử dụng mã ${coupon.code}`,
-      coupon.code,
-      'SUCCESS'
-    )
-
-    responseHelper.success(res, coupon, 'Xác nhận sử dụng mã giảm giá thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }

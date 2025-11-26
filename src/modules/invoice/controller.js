@@ -3,6 +3,8 @@ import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { deleteFile } from '../upload/helper.js'
 import Organization from '../organization/model.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 export const getInvoiceOptions = async (req, res) => {
   try {
@@ -32,6 +34,15 @@ export const getInvoiceOptions = async (req, res) => {
         header: '',
         footer: ''
       })
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username || 'Unknown',
+        'CREATE',
+        'INVOICE_OPTIONS',
+        'Tạo mới cài đặt hóa đơn'
+      )
     }
 
     responseHelper.success(res, options)
@@ -79,8 +90,40 @@ export const updateInvoiceOptions = async (req, res) => {
       }
     }
 
+    const changeDetailsInv = buildChangeLog(
+      oldOptions,
+      options,
+      [
+        { field: 'logo', label: 'Logo' },
+        { field: 'invoiceTitle', label: 'Tiêu đề' },
+        { field: 'prefix', label: 'Tiền tố' },
+        { field: 'header', label: 'Header' },
+        { field: 'footer', label: 'Footer' }
+      ],
+      'hóa đơn'
+    )
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPDATE',
+      'INVOICE_OPTIONS',
+      changeDetailsInv,
+      options.invoiceTitle || ''
+    )
+
     responseHelper.success(res, options, 'Cập nhật thành công')
   } catch (error) {
+    logActivity(
+      getCurrentOrg(req),
+      req.user?._id,
+      req.user?.username || 'Unknown',
+      'FAILED',
+      'INVOICE_OPTIONS',
+      error.message,
+      null
+    )
     responseHelper.error(res, error.message)
   }
 }

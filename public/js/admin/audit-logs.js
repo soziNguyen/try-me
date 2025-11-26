@@ -106,6 +106,7 @@ $(function () {
       }
     })
 
+    initTableCheckboxEvents('#auditLogsTable', 'logCheckbox')
     handlerDeleteEvent('#auditLogsTable', '#deleteLogBtn', 'logCheckbox', 'admin/audit-logs')
   }
 })

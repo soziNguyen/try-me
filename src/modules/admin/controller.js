@@ -7,6 +7,8 @@ import { lookupRef } from '../../helpers/lookupHelper.js'
 import ActivityLog from '../activity-logs/model.js'
 import dayjs from 'dayjs'
 import mongoose from 'mongoose'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -135,8 +137,30 @@ export const createUser = async (req, res) => {
 
     const newUser = new User({ username, email, password, organization })
     await newUser.save()
+
+    logActivity(
+      organization,
+      req.user?._id || null,
+      req.user?.username || null,
+      'CREATE',
+      'USER',
+      `Tạo người dùng "${username}" với email "${email}"`,
+      username,
+      'SUCCESS'
+    )
+
     responseHelper.success(res, newUser, 'Tạo người dùng thành công')
   } catch (error) {
+    logActivity(
+      req.body.organization || null,
+      req.user?._id || null,
+      req.user?.username || null,
+      'CREATE',
+      'USER',
+      `Tạo người dùng thất bại`,
+      req.body.username || '',
+      'FAILED'
+    )
     if (error.code === 11000) {
       return responseHelper.error(res, 'Username hoặc email đã tồn tại', 400)
     }
@@ -154,7 +178,7 @@ export const updateUser = async (req, res) => {
       return responseHelper.error(res, 'Email không hợp lệ', 400)
     }
 
-    const userToUpdate = await User.findById(id)
+    const userToUpdate = await User.findById(id).populate('organization', '_id name')
     if (!userToUpdate) {
       return responseHelper.error(res, 'Người dùng không tồn tại', 404)
     }
@@ -193,8 +217,44 @@ export const updateUser = async (req, res) => {
       runValidators: true
     }).populate('organization', '_id name')
 
+    const changeDetails = buildChangeLog(
+      userToUpdate.toObject(),
+      updated.toObject(),
+      [
+        { field: 'username', label: 'Tên đăng nhập' },
+        { field: 'email', label: 'Email' },
+        { field: 'role', label: 'Vai trò' },
+        { field: 'organization', label: 'Tổ chức', formatValue: (val) => val?.name || '' }
+      ],
+      updated.username,
+      'người dùng'
+    )
+
+    if (changeDetails) {
+      logActivity(
+        updated.organization?._id || null,
+        req.user?._id || null,
+        req.user?.username || null,
+        'UPDATE',
+        'USER',
+        changeDetails,
+        updated.username,
+        'SUCCESS'
+      )
+    }
+
     responseHelper.success(res, updated, 'Cập nhật người dùng thành công')
   } catch (error) {
+    logActivity(
+      req.body.organization || null,
+      req.user?._id || null,
+      req.user?.username || null,
+      'UPDATE',
+      'USER',
+      `Thất bại khi cập nhật người dùng`,
+      req.body.username || '',
+      'FAILED'
+    )
     responseHelper.error(res, error.message)
   }
 }
@@ -205,10 +265,34 @@ export const deleteUsers = async (req, res) => {
     if (!Array.isArray(ids) || ids.length === 0) {
       return responseHelper.error(res, 'Không có người dùng nào được chọn để xóa')
     }
-    const result = await User.deleteMany({ _id: { $in: ids } })
-    if (result.deletedCount === 0) {
+
+    // Lấy thông tin user trước khi xóa để log
+    const usersToDelete = await User.find({ _id: { $in: ids } }).select('username organization')
+    if (usersToDelete.length === 0) {
       return responseHelper.error(res, 'Không tìm thấy người dùng để xóa')
     }
+
+    await User.deleteMany({ _id: { $in: ids } })
+
+    // Log cho mỗi tổ chức liên quan
+    const orgMap = {}
+    usersToDelete.forEach((u) => {
+      const orgId = u.organization?.toString() || null
+      if (!orgMap[orgId]) orgMap[orgId] = []
+      orgMap[orgId].push(u.username)
+    })
+
+    for (const [orgId, usernames] of Object.entries(orgMap)) {
+      logActivity(
+        orgId,
+        req.user._id,
+        req.user.username,
+        'DELETE',
+        'USER',
+        `Đã xóa người dùng: ${usernames.join(', ')}`
+      )
+    }
+
     responseHelper.success(res, null, 'Xóa người dùng thành công')
   } catch (error) {
     responseHelper.error(res, error.message)

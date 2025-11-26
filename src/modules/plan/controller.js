@@ -5,6 +5,8 @@ import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import CouponPlan from '../coupon-plan/model.js'
 import PlanTransaction from '../plan-transaction/model.js'
 import { generateInvoiceCode } from '../../helpers/generateInvoiceCode.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 // Lấy tất cả các gói (chỉ hiển thị gói active)
 export const getActivePlans = async (req, res) => {
@@ -331,6 +333,16 @@ export const upgradePlan = async (req, res) => {
       )
 
       if (!coupon) {
+        logActivity(
+          organizationId,
+          req.user._id,
+          req.user.username,
+          'UPGRADE_PLAN',
+          'PLAN',
+          `Áp dụng mã giảm giá ${couponCode}`,
+          plan.name,
+          'FAILED'
+        )
         return responseHelper.error(res, 'Mã giảm giá không hợp lệ hoặc đã hết hạn', 400)
       }
 
@@ -369,6 +381,17 @@ export const upgradePlan = async (req, res) => {
       note: `Tổ chức ${org.name} nâng cấp gói ${plan.name} - ${durationNum} ${mode === 'year' ? 'năm' : 'tháng'}`,
       status: 'pending'
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'UPGRADE_PLAN',
+      'PLAN',
+      `Gửi yêu cầu nâng cấp gói: Mã gói ${plan.code}, Thời hạn: ${durationNum} ${mode === 'month' ? 'Tháng' : 'Năm'}, Tổng: ${total} đ`,
+      plan.name,
+      'SUCCESS'
+    )
 
     return responseHelper.success(
       res,
@@ -413,6 +436,17 @@ export const approvePlanTransaction = async (req, res) => {
     org.lastUpgradedAt = new Date()
     await org.save()
 
+    logActivity(
+      org._id,
+      req.user?._id || null,
+      req.user?.username || null,
+      'APPROVE_TRANSACTION',
+      'PLAN',
+      `Xác nhận giao dịch ${transaction.code}: Gói ${transaction.plan.code}, Thời hạn: ${transaction.duration} ${transaction.mode === 'month' ? 'Tháng' : 'Năm'}`,
+      transaction.plan.code,
+      'SUCCESS'
+    )
+
     responseHelper.success(res, 1, 'Thanh toán thành công. Gói đã được kích hoạt.')
   } catch (err) {
     responseHelper.error(res, err.message)
@@ -441,6 +475,17 @@ export const cancelPlanTransaction = async (req, res) => {
     transaction.cancelledAt = new Date()
     transaction.cancelledBy = userId || null
     await transaction.save()
+
+    logActivity(
+      transaction.organization._id,
+      req.user?._id || null,
+      req.user?.username || null,
+      'CANCEL_TRANSACTION',
+      'PLAN',
+      `Xác nhận hủy giao dịch ${transaction.code}`,
+      transaction.plan.code,
+      'SUCCESS'
+    )
 
     return responseHelper.success(res, transaction, 'Hủy giao dịch thành công')
   } catch (err) {

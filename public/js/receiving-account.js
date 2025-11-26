@@ -37,12 +37,20 @@ $(function () {
       emptyTable: 'Không có dữ liệu trong bảng'
     },
     pageLength: numRows,
+    columnDefs: [
+      { width: '50px', targets: 0 },
+      { width: '200px', targets: 1 },
+      { width: '260px', targets: 2 },
+      { width: '120px', targets: 3 },
+      { width: '180px', targets: 4 },
+      { width: '50px', targets: 6 }
+    ],
     columns: [
       {
         data: null,
         orderable: false,
         className: 'text-center',
-        title: '<input type="checkbox" id="selectAllAccounts">',
+        title: '<input type="checkbox" id="selectAll">',
         render: (data, type, row) =>
           `<input type="checkbox" class="receivingAccountCheckbox" data-id="${row._id}">`
       },
