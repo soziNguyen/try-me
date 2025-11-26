@@ -874,7 +874,7 @@ export const checkoutOrder = async (req, res) => {
             order.organization,
             req.user?._id || null,
             req.user?.username || 'Guest',
-            'VALIDATE_CHECKOUT',
+            'CHECKOUT',
             'COUPON',
             `Áp dụng mã giảm giá không hợp lệ cho đơn ${order.code}`,
             couponId,

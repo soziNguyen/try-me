@@ -97,6 +97,7 @@ $(function () {
       {
         data: 'qrCode',
         title: 'Mã QR',
+        orderable: false,
         className: 'text-center qr-cell position-relative',
         render: (data, type, row) => {
           if (type === 'display') {

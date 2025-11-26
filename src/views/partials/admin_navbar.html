@@ -12,14 +12,16 @@
         <a class="w-100 info__icon" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-person-circle fs-4"></i>
         </a>
-        <ul class="dropdown-menu dropdown-menu-end mt-2">
+        <ul class="dropdown-menu dropdown-menu-end dropdown-width mt-2 min-width-280">
             <li class="px-3 mb-3">
-                <span>
+                <div>
                     <%= user.username %>
-                </span>
-                <span>
-                    <%= user.email %>
-                </span>
+                </div>
+                <div>
+                    <small>
+                        <%= user.email %>
+                    </small>
+                </div>
             </li>
             <li id="change-password">
                 <a href="/change-password" class="w-100 dropdown-item">
