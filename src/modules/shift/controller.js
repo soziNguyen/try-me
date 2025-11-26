@@ -180,7 +180,18 @@ export const updateShift = async (req, res) => {
       updated,
       [
         { field: 'name', label: 'Tên ca' },
-        { field: 'type', label: 'Loại ca' },
+        {
+          field: 'type',
+          label: 'Loại ca',
+          formatValue: (val) => {
+            const types = {
+              day: 'Ngày',
+              night: 'Đêm'
+            }
+
+            return types[val] || ''
+          }
+        },
         { field: 'startTime', label: 'Giờ vào' },
         { field: 'endTime', label: 'Giờ kết thúc' },
         { field: 'note', label: 'Ghi chú' }

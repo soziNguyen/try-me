@@ -7,11 +7,16 @@
  * @param {string} [targetType] - loại đối tượng, ví dụ 'Danh mục', 'Nguyên liệu', ...
  * @returns {string} - chuỗi log chi tiết
  */
-const formatValue = (value) => {
+const formatValue = (value, customFormatter) => {
+  // Nếu có hàm format riêng, dùng nó trước
+  if (customFormatter && typeof customFormatter === 'function') {
+    return customFormatter(value) || ''
+  }
+
   if (value === true) return 'Kích hoạt'
   if (value === false) return 'Ẩn'
-
   if (value === null || value === undefined) return ''
+
   return String(value).trim()
 }
 
@@ -20,9 +25,9 @@ export const buildChangeLog = (oldObj, newObj, fields, targetName = '', targetTy
 
   const changes = []
 
-  fields.forEach(({ field, label }) => {
-    const oldValue = formatValue(oldObj[field])
-    const newValue = formatValue(newObj[field])
+  fields.forEach(({ field, label, formatValue: customFormatter }) => {
+    const oldValue = formatValue(oldObj[field], customFormatter)
+    const newValue = formatValue(newObj[field], customFormatter)
 
     if (oldValue !== newValue) {
       const displayLabel = label || field

@@ -153,6 +153,9 @@ export const updateSchedule = async (req, res) => {
       _id: id,
       organization: organizationId
     })
+      .populate('user', 'username')
+      .populate('shift', 'name')
+
     if (!schedule) return responseHelper.error(res, 'Lịch không tồn tại', 404)
 
     const dataUpdate = {}
@@ -172,19 +175,51 @@ export const updateSchedule = async (req, res) => {
       dataUpdate,
       { new: true }
     )
+      .populate('user', 'username')
+      .populate('shift', 'name')
 
     const changeDetailsSchedule = buildChangeLog(
       schedule,
       updated,
       [
-        { field: 'user', label: 'Nhân viên' },
-        { field: 'shift', label: 'Ca làm' },
-        { field: 'date', label: 'Ngày làm việc' },
-        { field: 'status', label: 'Trạng thái' },
+        {
+          field: 'user',
+          label: 'Nhân viên',
+          formatValue: (val) => {
+            if (!val) return 'Chưa chỉ định'
+            return val.username || 'Không rõ'
+          }
+        },
+        {
+          field: 'shift',
+          label: 'Ca làm',
+          formatValue: (val) => {
+            if (!val) return ''
+            if (val.name) return val.name
+            return val.toString()
+          }
+        },
+        {
+          field: 'date',
+          label: 'Ngày làm việc',
+          formatValue: (val) => (val ? new Date(val).toLocaleDateString('vi-VN') : '')
+        },
+        {
+          field: 'status',
+          label: 'Trạng thái',
+          formatValue: (val) => {
+            const types = {
+              scheduled: 'Chờ xác nhận',
+              confirmed: 'Đã xác nhận',
+              cancelled: 'Đã hủy'
+            }
+            return types[val] || val
+          }
+        },
         { field: 'note', label: 'Ghi chú' }
       ],
-      schedule.user.username,
-      'ca làm việc'
+      schedule.user?.username || 'Lịch làm việc',
+      'lịch làm việc'
     )
 
     logActivity(
