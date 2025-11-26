@@ -8,7 +8,7 @@ import { generateDocumentCode } from '../../helpers/common.js'
 import withTransaction from '../../helpers/withTransaction.js'
 import { lookupRef, lookupUser } from '../../helpers/lookupHelper.js'
 import { getWarehouse } from '../../helpers/warehouseHelper.js'
-
+import { logActivity } from '../activity-logs/service.js'
 export const createReceipt = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
@@ -44,6 +44,18 @@ export const createReceipt = async (req, res) => {
       await doc.save({ session })
       return doc
     })
+
+    logActivity(
+      organizationId,
+      req.user._id,
+      req.user.username,
+      'CREATE',
+      'PAYMENT_RECIP',
+      'Tạo phiếu thu',
+      receipt.code,
+      'SUCCESS',
+      receipt.warehouse?._id
+    )
 
     responseHelper.success(res, { id: receipt._id, code: receipt.code })
   } catch (error) {
@@ -255,13 +267,69 @@ export const updateReceipt = async (req, res) => {
 
       await updatedReceipt.populate([
         { path: 'warehouse', select: 'name location' },
-        { path: 'createdBy updatedBy lockedBy submitTer', select: 'username' }
+        { path: 'createdBy updatedBy lockedBy', select: 'username' }
       ])
 
-      return updatedReceipt
+      return { oldReceipt, updatedReceipt }
     })
 
-    responseHelper.success(res, updatedDoc, 'Cập nhật phiếu thu thành công')
+    const { oldReceipt, updatedReceipt } = updatedDoc
+    const changes = []
+
+    // Phần ghi lại thay đổi mới -> cũ
+    if (oldReceipt.receiptAmount !== updatedReceipt.receiptAmount) {
+      changes.push(
+        `Số tiền: ${oldReceipt.receiptAmount?.toLocaleString() || 0}đ →
+         ${updatedReceipt.receiptAmount?.toLocaleString() || 0}đ`
+      )
+    }
+
+    if ((oldReceipt.reason || '') !== (updatedReceipt.reason || '')) {
+      changes.push(
+        `Lý do: "${oldReceipt.reason || '(Trống)'}" →
+         "${updatedReceipt.reason || '(Trống)'}"`
+      )
+    }
+
+    if ((oldReceipt.note || '') !== (updatedReceipt.note || '')) {
+      changes.push(
+        `Ghi chú: "${oldReceipt.note || '(Trống)'}" → 
+        "${updatedReceipt.note || '(Trống)'}"`
+      )
+    }
+
+    if ((oldReceipt.submitTer || '') !== (updatedReceipt.submitTer || '')) {
+      changes.push(
+        `Người nộp: "${oldReceipt.submitTer || '(Không có)'}" →
+         "${updatedReceipt.submitTer || '(Không có)'}"`
+      )
+    }
+
+    if ((oldReceipt.reviewer || '') !== (updatedReceipt.reviewer || '')) {
+      changes.push(
+        `Người duyệt: "${oldReceipt.reviewer || '(Không có)'}" → 
+        "${updatedReceipt.reviewer || '(Không có)'}"`
+      )
+    }
+
+    // Ghi log nếu có thay đổi
+    if (changes.length > 0) {
+      const description = `Cập nhật phiếu thu: ${updatedReceipt.code} - ${changes.join(' | ')}`
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'UPDATE',
+        'RECEIPT',
+        description,
+        updatedReceipt.code,
+        'SUCCESS',
+        updatedReceipt.warehouse || null
+      )
+    }
+
+    responseHelper.success(res, updatedReceipt, 'Cập nhật phiếu thu thành công')
   } catch (error) {
     if (error instanceof BusinessError)
       return responseHelper.error(res, error.message, error.statusCode || 400)
@@ -291,8 +359,20 @@ export const deleteReceipts = async (req, res) => {
       const lockedReceipts = receipts.filter((r) => r.isLocked)
       if (lockedReceipts.length > 0)
         throw new BusinessError('Không thể xóa phiếu thu đã bị khóa', 400)
-
+      const deletedCodes = receipts.map((e) => e.code).join(', ')
       await Receipt.deleteMany(findCondition).session(session)
+
+      logActivity(
+        organizationId,
+        req.user._id,
+        req.user.username,
+        'DELETE',
+        'PAYMENT_RECIP',
+        `Đã xóa phiếu thu: ${deletedCodes}`,
+        deletedCodes,
+        'SUCCESS',
+        null
+      )
     })
 
     responseHelper.success(res, null, 'Xóa phiếu thu thành công')
