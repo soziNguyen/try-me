@@ -443,7 +443,7 @@ function initPointsInput() {
         applyPointsBtn.classList.add('btn-danger')
         applyPointsBtn.dataset.state = 'applied'
         pointsInput.disabled = true
-        pointsMessage.textContent = 'Điểm đã được áp dụng'
+        pointsMessage.textContent = `✓ Đã áp dụng ${result.pointsUsed} điểm`
         pointsMessage.className = 'text-success d-block mt-1'
 
         pointsDiscountInput.value = points * 500
@@ -468,28 +468,14 @@ function initDiscountCode() {
   const discountMessage = document.getElementById('discountMessage')
   const totalAmountEl = document.getElementById('totalAmount')
   const discountInputWrapper = document.getElementById('discountInputWrapper')
-  const storedCouponId = localStorage.getItem(`appliedCouponId_${orderId}`)
-  const storedCouponCode = localStorage.getItem(`appliedCouponCode_${orderId}`)
 
   if (!applyCouponForm) return
-  if (storedCouponId && storedCouponCode) {
-    codeInput.value = storedCouponCode
-    codeInput.disabled = true
-    applyDiscountBtn.textContent = 'X'
-    applyDiscountBtn.classList.remove('btn-primary')
-    applyDiscountBtn.classList.add('btn-danger')
-    applyDiscountBtn.dataset.state = 'applied'
-
-    discountInputWrapper.classList.remove('d-none')
-  }
 
   applyCouponForm.addEventListener('submit', async (e) => {
     e.preventDefault()
     if (applyDiscountBtn.dataset.state === 'applied') {
       // Xóa mã giảm giáa
       window.appliedCouponId = null
-      localStorage.removeItem(`appliedCouponId_${orderId}`)
-      localStorage.removeItem(`appliedCouponCode_${orderId}`)
 
       await ajax(`/api/orders/${orderId}/update-draft`, { discount: 0, couponId: null }, 'POST')
 
@@ -500,6 +486,7 @@ function initDiscountCode() {
       applyDiscountBtn.classList.add('btn-primary')
       applyDiscountBtn.classList.remove('btn-danger')
       applyDiscountBtn.dataset.state = 'idle'
+      discountMessage.textContent = ''
 
       discountInputWrapper.classList.add('d-none')
       calculateTotals()
@@ -542,9 +529,8 @@ function initDiscountCode() {
       const discountAmount = data.data.discountAmount || 0
       const couponId = data.data.couponId || null
       discountInput.value = discountAmount
-      window.appliedCouponId = data.data.couponId
-      localStorage.setItem(`appliedCouponId_${orderId}`, window.appliedCouponId)
-      localStorage.setItem(`appliedCouponCode_${orderId}`, code)
+      window.appliedCouponId = couponId
+
       await ajax(
         `/api/orders/${orderId}/update-draft`,
         { discount: discountAmount, couponId },
@@ -558,6 +544,8 @@ function initDiscountCode() {
       applyDiscountBtn.dataset.state = 'applied'
       codeInput.disabled = true
       discountMessage.className = 'text-danger d-none mt-1'
+      discountMessage.textContent = `✓ Đã áp dụng mã - ${data.data.code}`
+      discountMessage.className = 'text-success d-block mt-1'
 
       discountInputWrapper.classList.remove('d-none')
       calculateTotals()
@@ -771,12 +759,39 @@ async function loadOrderData(orderId) {
         })
       }
 
-      window.appliedCouponId = result.couponId || localStorage.getItem('appliedCouponId') || null
+      window.appliedCouponId = result.couponId || null
 
-      if (window.appliedCouponId) {
-        localStorage.setItem('appliedCouponId', window.appliedCouponId)
-      } else {
-        localStorage.removeItem('appliedCouponId')
+      if (result.couponId && result.discount > 0) {
+        const codeInput = document.getElementById('discountCodeInput')
+        const applyDiscountBtn = document.getElementById('applyDiscountBtn')
+        const discountInputWrapper = document.getElementById('discountInputWrapper')
+        const discountMessage = document.getElementById('discountMessage')
+
+        if (codeInput) {
+          codeInput.value = result.couponId.code
+          codeInput.disabled = true
+        }
+
+        if (applyDiscountBtn) {
+          applyDiscountBtn.textContent = 'X'
+          applyDiscountBtn.classList.remove('btn-primary')
+          applyDiscountBtn.classList.add('btn-danger')
+          applyDiscountBtn.dataset.state = 'applied'
+        }
+
+        if (discountInputWrapper) {
+          discountInputWrapper.classList.remove('d-none')
+        }
+
+        if (discountMessage) {
+          discountMessage.textContent = `✓ Đã áp dụng mã - ${result.couponId.code}`
+          discountMessage.className = 'text-success d-block mt-1'
+        }
+      }
+
+      if (result.pointsUsed && result.pointsDiscount > 0) {
+        const pointsMessage = document.getElementById('pointsMessage')
+        pointsMessage.textContent = `✓ Đã áp dụng ${result.pointsUsed} điểm`
       }
 
       calculateTotals()

@@ -1,8 +1,10 @@
+import mongoose from 'mongoose'
 import Order from './model.js'
 import Table from '../table/model.js'
 import { MenuItem } from '../menu/menu-item/model.js'
 import { Combo } from '../menu/combo/model.js'
 import Customer from '../customer/model.js'
+import Coupon from '../coupon/model.js'
 import PaymentMethod from '../payment/model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
@@ -18,8 +20,8 @@ import Organization from '../organization/model.js'
 import ProductStock from '../product/stock/model.js'
 import { generateInvoiceCode } from '../../helpers/generateInvoiceCode.js'
 import { formatPhoneNumber, validatePhoneNumber } from '../../helpers/validator.js'
-import mongoose from 'mongoose'
 import { loadPointSetting } from '../../helpers/org-point.js'
+import { logActivity } from '../activity-logs/service.js'
 
 export const createOrder = async (req, res) => {
   try {
@@ -245,6 +247,7 @@ export const getOrderById = async (req, res) => {
       .populate('customerId', 'name phone totalPoints')
       .populate('organization', 'name phone province commune street logo')
       .populate('warehouse', 'name location')
+      .populate('couponId', 'code')
       .populate({
         path: 'paymentMethodId',
         populate: {
@@ -798,7 +801,8 @@ export const checkoutOrder = async (req, res) => {
       extraDiscount = 0,
       vatRate = 0,
       paymentMethodId,
-      customerPaid
+      customerPaid,
+      couponId
     } = req.body
 
     if (!orderId) return responseHelper.error(res, 'Thiếu orderId', 400)
@@ -846,7 +850,45 @@ export const checkoutOrder = async (req, res) => {
         throw new BusinessError('Đơn hàng phải có ít nhất 1 sản phẩm ', 400)
       }
 
-      // 2. Validate payment method and get receiving account
+      // 2. VALIDATE COUPON (CHƯA INCREMENT)
+      let couponToConfirm = null
+      if (couponId && parsedDiscount > 0) {
+        const now = new Date()
+
+        // VALIDATE
+        const coupon = await Coupon.findOne({
+          _id: couponId,
+          isActive: true,
+          startDate: { $lte: now },
+          endDate: { $gte: now },
+          organization: order.organization,
+          $expr: {
+            $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
+          }
+        }).session(session)
+
+        console.log('coupon:', coupon)
+
+        if (!coupon) {
+          logActivity(
+            order.organization,
+            req.user?._id || null,
+            req.user?.username || 'Guest',
+            'VALIDATE_CHECKOUT',
+            'COUPON',
+            `Áp dụng mã giảm giá không hợp lệ cho đơn ${order.code}`,
+            couponId,
+            'FAILED'
+          )
+
+          throw new BusinessError('Mã giảm giá không hợp lệ hoặc đã hết lượt sử dụng', 400)
+        }
+
+        // LƯU LẠI ĐỂ INCREMENT
+        couponToConfirm = coupon
+      }
+
+      // 3. Validate payment method
       const paymentMethod = await PaymentMethod.findById(paymentMethodId)
         .populate('receivingAccountId')
         .session(session)
@@ -864,7 +906,7 @@ export const checkoutOrder = async (req, res) => {
         }).session(session)
       }
 
-      // 3. Calculate amounts first (before any updates)
+      // 4. Calculate amounts
       const totalAmount = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
       const { pointValue, pointsEarnRate } = await loadPointSetting(order.organization)
@@ -889,10 +931,9 @@ export const checkoutOrder = async (req, res) => {
           400
         )
 
-      // 4. VALIDATE & DEDUCT PRODUCT STOCK (BEFORE completing order)
+      // 5. VALIDATE & DEDUCT PRODUCT STOCK
       for (const item of order.items) {
         if (item.foodId) {
-          // Validate MenuItem stock
           const productStock = await ProductStock.findOne({
             product: item.foodId,
             warehouse: order.warehouse,
@@ -907,13 +948,12 @@ export const checkoutOrder = async (req, res) => {
             )
           }
 
-          // Deduct stock atomically
           const stockUpdateResult = await ProductStock.findOneAndUpdate(
             {
               product: item.foodId,
               warehouse: order.warehouse,
               organization: order.organization,
-              quantity: { $gte: item.quantity } // Ensure quantity is still enough
+              quantity: { $gte: item.quantity }
             },
             {
               $inc: { quantity: -item.quantity },
@@ -932,7 +972,6 @@ export const checkoutOrder = async (req, res) => {
         }
 
         if (item.comboId) {
-          // Validate Combo stock
           const comboStock = await ProductStock.findOne({
             combo: item.comboId,
             warehouse: order.warehouse,
@@ -947,7 +986,6 @@ export const checkoutOrder = async (req, res) => {
             )
           }
 
-          // Deduct stock atomically
           const stockUpdateResult = await ProductStock.findOneAndUpdate(
             {
               combo: item.comboId,
@@ -972,7 +1010,7 @@ export const checkoutOrder = async (req, res) => {
         }
       }
 
-      // 5. Handle customer points and updates
+      // 6. Handle customer points
       let customer = null
       let pointsEarned = 0
 
@@ -1020,17 +1058,15 @@ export const checkoutOrder = async (req, res) => {
         throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
       }
 
-      // 6. Generate VietQR URL
+      // 7. Generate VietQR
       let qrCodeUrl = null
       if (['bank', 'e-wallet'].includes(paymentType) && receivingAccountId) {
         const receivingAccount = receivingAccountId
-
         const bankCode = receivingAccount.bankCode || 'MB'
         const accountNumber = receivingAccount.accountNumber
 
         if (accountNumber && bankCode) {
           const description = order.code
-
           const baseUrl = 'https://vietqr.co/api/generate'
           const params = new URLSearchParams({
             style: '2',
@@ -1043,7 +1079,7 @@ export const checkoutOrder = async (req, res) => {
         }
       }
 
-      // 7. UPDATE ORDER
+      // 8. UPDATE ORDER
       order.discount = parsedDiscount
       order.pointsUsed = parsedPointsUsed
       order.pointsDiscount = calculatedPointsDiscount
@@ -1058,23 +1094,58 @@ export const checkoutOrder = async (req, res) => {
       order.changeAmount = parsedCustomerPaid - total
       order.status = 'completed'
 
-      // Thêm updatedBy
+      if (couponToConfirm) {
+        order.couponId = couponToConfirm._id
+      }
+
       if (req.user && req.user._id) {
         order.updatedBy = req.user._id
       }
 
       order.updatedAt = new Date()
-
       if (qrCodeUrl) order.qrCode = qrCodeUrl
 
       await order.save({ session })
 
-      // 8. RELEASE TABLE
+      // 9. RELEASE TABLE
       if (order.tableId) {
         await Table.findByIdAndUpdate(
           order.tableId,
           { status: 'available', currentOrderId: null, updatedAt: new Date() },
           { session }
+        )
+      }
+
+      // 10. INCREMENT COUPON
+      if (couponToConfirm) {
+        const confirmedCoupon = await Coupon.findOneAndUpdate(
+          {
+            _id: couponToConfirm._id,
+            isActive: true,
+            $expr: {
+              $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
+            }
+          },
+          {
+            $inc: { usedCount: 1 },
+            $set: { updatedAt: new Date() }
+          },
+          { new: true, session }
+        )
+
+        if (!confirmedCoupon) {
+          throw new BusinessError('Mã giảm giá đã hết lượt sử dụng trong khi xử lý giao dịch', 409)
+        }
+
+        logActivity(
+          order.organization,
+          req.user?._id || null,
+          req.user?.username || null,
+          'CONFIRM_USAGE',
+          'COUPON',
+          `Xác nhận sử dụng mã ${confirmedCoupon.code} cho đơn ${order.code}, giảm ${confirmedCoupon.discountValue} đ (Lượt sử dụng: ${confirmedCoupon.usedCount}/${confirmedCoupon.usageLimit || '∞'})`,
+          confirmedCoupon.code,
+          'SUCCESS'
         )
       }
 
@@ -1114,7 +1185,8 @@ export const updateOrderDraft = async (req, res) => {
       extraDiscount,
       vatRate,
       customerPaid,
-      paymentMethodId: newPaymentMethodId
+      paymentMethodId: newPaymentMethodId,
+      couponId
     } = req.body
 
     if (!orderId) return responseHelper.error(res, 'Thiếu orderId', 400)
@@ -1134,9 +1206,34 @@ export const updateOrderDraft = async (req, res) => {
         if (parsedDiscount < 0) {
           throw new BusinessError('Giảm giá không được âm', 400)
         }
-        order.discount = parsedDiscount
-      }
 
+        // NẾU CÓ DISCOUNT NHƯNG KHÔNG CÓ COUPON ID
+        if (parsedDiscount > 0 && !couponId) {
+          order.discount = parsedDiscount
+          order.couponId = null
+        }
+        // NẾU CÓ CẢ DISCOUNT VÀ COUPON ID
+        else if (parsedDiscount > 0 && couponId) {
+          // Validate coupon vẫn còn valid (không tăng usedCount)
+          const coupon = await Coupon.findOne({
+            _id: couponId,
+            isActive: true,
+            organization: order.organization
+          }).session(session)
+
+          if (!coupon) {
+            throw new BusinessError('Mã giảm giá không hợp lệ', 400)
+          }
+
+          order.discount = parsedDiscount
+          order.couponId = couponId // LƯU VÀO ORDER
+        }
+        // XÓA DISCOUNT
+        else {
+          order.discount = 0
+          order.couponId = null
+        }
+      }
       if (pointsUsed !== undefined) {
         const parsedPointsUsed = Number(pointsUsed) || 0
         if (parsedPointsUsed < 0) {

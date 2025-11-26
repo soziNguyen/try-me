@@ -29,6 +29,11 @@ const OrderSchema = new Schema(
       }
     ],
     totalAmount: { type: Number, default: 0 }, // Tổng tiền gốc
+    couponId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Coupon',
+      default: null
+    },
     discount: { type: Number, default: 0 }, // magiamgia (nếu có)
     pointsUsed: { type: Number, default: 0 }, // Số điểm khách dùng
     pointsDiscount: { type: Number, default: 0 }, // Số tiền giảm theo điểm
