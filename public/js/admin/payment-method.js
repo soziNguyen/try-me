@@ -10,12 +10,13 @@ $(function () {
 
   // Danh sách phương thức thanh toán
   const paymentCodes = [
-    { code: 'BANK', label: 'BANK - Chuyển khoản' }
+    { code: 'BANK', label: 'BANK - Chuyển khoản' },
     // { code: 'COD', label: 'COD - Thanh toán khi nhận hàng' },
-    // { code: 'MOMO', label: 'MOMO' },
+    { code: 'MOMO', label: 'MOMO' },
+    { code: 'VTLMONEY', label: 'ViettelMoney' }
     // { code: 'ZALOPAY', label: 'ZALOPAY' },
     // { code: 'VNPAY', label: 'VNPAY' },
-    // { code: 'PAYOS', label: 'PAYOS' }
+    // { code: 'PAYOS', label: 'PAYOS' }f
   ]
 
   // Hàm fill select

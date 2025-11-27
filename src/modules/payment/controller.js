@@ -105,7 +105,8 @@ export const updatePaymentMethod = async (req, res) => {
     const paymentMethod = await PaymentMethod.findOne({
       _id: id,
       organization: organizationId
-    })
+    }).populate('receivingAccountId', 'name')
+
     if (!paymentMethod)
       return responseHelper.error(res, 'Phương thức thanh toán không tồn tại', 404)
 
@@ -151,10 +152,29 @@ export const updatePaymentMethod = async (req, res) => {
       updated,
       [
         { field: 'name', label: 'Tên phương thức' },
-        { field: 'type', label: 'Loại' },
+        {
+          field: 'type',
+          label: 'Loại',
+          formatValue: (val) => {
+            const types = {
+              cash: 'Tiền mặt',
+              bank: 'Ngân hàng',
+              ['e-wallet']: 'Ví điện tử',
+              card: 'Thẻ'
+            }
+            return types[val] || val
+          }
+        },
         { field: 'description', label: 'Mô tả' },
-        { field: 'isActive', label: 'Trạng thái' }
-        // { field: 'receivingAccountId', label: 'Tài khoản nhận' }
+        { field: 'isActive', label: 'Trạng thái' },
+        {
+          field: 'receivingAccountId',
+          label: 'Tài khoản nhận',
+          formatValue: (val) => {
+            if (!val) return ''
+            return val.name || val
+          }
+        }
       ],
       paymentMethod.name,
       'phương thức thanh toán'

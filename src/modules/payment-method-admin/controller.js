@@ -83,6 +83,12 @@ export const createPaymentMethod = async (req, res) => {
       return responseHelper.error(res, 'Thiếu tên hoặc mã phương thức thanh toán')
     }
 
+    if (
+      !['BANK', 'COD', 'MOMO', 'ZALOPAY', 'VNPAY', 'PAYOS', 'VTLMONEY'].includes(code.toUpperCase())
+    ) {
+      return responseHelper.error(res, 'Mã phương thức thanh toán không hợp lệ', 400)
+    }
+
     const existing = await PaymentMethod.findOne({ code })
     if (existing) {
       return responseHelper.error(res, 'Mã phương thức này đã tồn tại')

@@ -60,7 +60,7 @@
         </div>
 
         <div class="fw-semibold fs-5 mb-3 checkout-info">Thông tin thanh toán</div>
-        <div class="lh-lg pe-4">
+        <div class="col-md-9 lh-lg pe-4">
           <div>Hình thức thanh toán: <strong><%= transaction.paymentMethod?.name || '—' %></strong></div>
 
           <% if (transaction.paymentMethod?.bankInfo) { %>

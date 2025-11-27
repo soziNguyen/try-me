@@ -153,7 +153,7 @@ $(function () {
 
         // HTML dropdown + nút
         const html = `
-        <select id="warehouseFilter" class="form-select me-2" style="width: 200px;">
+        <select id="warehouseFilter" class="form-select me-2 w-200">
           <option value="all">Tất cả kho</option>
           ${warehouses.map((w) => `<option value="${w._id}">${w.name}</option>`).join('')}
         </select>

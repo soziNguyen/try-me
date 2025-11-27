@@ -73,7 +73,7 @@ async function getTransactionPlanData(id) {
   const summaryRows = `
   <tr>
     <td colspan="5" class="text-end fw-semibold px-2">Giảm giá</td>
-    <td class="text-end text-danger px-2">${data.discountAmount ? -formatMoney(data.discountAmount) : 0}</td>
+    <td class="text-end text-danger px-2">${data.discountAmount ? `-${formatMoney(data.discountAmount)}` : 0}</td>
   </tr>
   <tr>
     <td colspan="5" class="text-end fw-semibold px-2">Tạm tính</td>

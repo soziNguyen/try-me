@@ -7,6 +7,8 @@ import { getWarehouse } from '../../helpers/warehouseHelper.js'
 import Organization from '../organization/model.js'
 import QRCode from 'qrcode'
 import { createOrderForTable } from '../order/service.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 // [CREATE] / table
 export const createTable = async (req, res) => {
@@ -35,6 +37,18 @@ export const createTable = async (req, res) => {
 
     newTable.qrCode = qrImage
     await newTable.save()
+
+    logActivity(
+      organizationId,
+      req.user._id || null,
+      req.user.username || null,
+      'CREATE',
+      'TABLE',
+      'Thêm bàn mới',
+      '',
+      'SUCCESS',
+      warehouse
+    )
 
     responseHelper.success(res, newTable, 'Tạo thành công')
   } catch (error) {
@@ -314,6 +328,31 @@ export const updateTable = async (req, res) => {
       }
     }
 
+    const changeDetails = buildChangeLog(
+      tableExist,
+      updatedTable,
+      [
+        { field: 'name', label: 'Tên bàn' },
+        { field: 'status', label: 'Trạng thái' },
+        { field: 'capacity', label: 'Sức chứa' },
+        { field: 'area', label: 'Khu vực' }
+      ],
+      updatedTable.name,
+      'bàn'
+    )
+
+    logActivity(
+      organizationId,
+      req.user?._id || null,
+      req.user?.username || null,
+      'UPDATE',
+      'TABLE',
+      changeDetails,
+      updatedTable.name,
+      'SUCCESS',
+      warehouse
+    )
+
     responseHelper.success(res, updatedTable, 'Cập nhật thành công')
   } catch (error) {
     console.error('Lỗi khi cập nhật bàn:', error)
@@ -343,6 +382,18 @@ export const deleteTables = async (req, res) => {
     if (result.deletedCount === 0) {
       return responseHelper.error(res, 'Không tìm thấy bàn nào để xóa.', 404)
     }
+
+    logActivity(
+      organizationId,
+      req.user._id || null,
+      req.user.username || null,
+      'DELETE',
+      'TABLE',
+      `Đã xóa ${result.deletedCount} bàn`,
+      '',
+      'SUCCESS',
+      warehouse
+    )
 
     responseHelper.success(res, `Đã xóa ${result.deletedCount} bản ghi`, 'Xóa thành công')
   } catch (error) {

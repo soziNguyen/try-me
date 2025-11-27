@@ -185,7 +185,7 @@ export const updateWareHouse = async (req, res) => {
     const warehouse = await Warehouse.findOne({
       _id: id,
       organization: organizationId
-    })
+    }).populate('manager', 'username')
     if (!warehouse) {
       return responseHelper.error(res, 'Nhà kho không tồn tại', 404)
     }
@@ -237,7 +237,15 @@ export const updateWareHouse = async (req, res) => {
       [
         { field: 'name', label: 'Tên kho' },
         { field: 'location', label: 'Địa điểm' },
-        { field: 'manager', label: 'Quản lý' }
+        {
+          field: 'manager',
+          label: 'Quản lý',
+          formatValue: (val) => {
+            if (!val) return 'Chưa chỉ định'
+            return val.username || 'Không rõ'
+          }
+        },
+        { field: 'isActive', label: 'Trạng thái' }
       ],
       warehouse.name,
       'kho'

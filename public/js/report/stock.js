@@ -8,6 +8,7 @@ $(function () {
       warehouses = whs
       populateWarehouseDropdown()
       initDataTable()
+      loadStockReport()
     })
     .catch((err) => {
       toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
