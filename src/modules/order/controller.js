@@ -22,6 +22,7 @@ import { generateInvoiceCode } from '../../helpers/generateInvoiceCode.js'
 import { formatPhoneNumber, validatePhoneNumber } from '../../helpers/validator.js'
 import { loadPointSetting } from '../../helpers/org-point.js'
 import { logActivity } from '../activity-logs/service.js'
+import { createPointHistory } from '../point-history/service.js'
 
 export const createOrder = async (req, res) => {
   try {
@@ -1046,6 +1047,7 @@ export const checkoutOrder = async (req, res) => {
 
         // Kiểm tra khách hàng có số điện thoại không -> mới được tích điểm
         const hasPhone = !!customer.phone
+        const balanceBefore = customer.totalPoints
 
         // Points validation (if using points)
         if (parsedPointsUsed > 0) {
@@ -1077,22 +1079,68 @@ export const checkoutOrder = async (req, res) => {
           }
         }
 
-        // Chỉ cập nhật điểm nếu khách hàng có SĐT
-        if (hasPhone) {
-          updateData.$inc.totalPoints = pointsEarned - parsedPointsUsed
+        let pointsChange = 0
+        if (pointsEarned > 0) {
+          pointsChange += pointsEarned
+        }
+        if (parsedPointsUsed > 0) {
+          pointsChange -= parsedPointsUsed
         }
 
-        const customerUpdateResult = await Customer.findOneAndUpdate(
-          {
-            _id: order.customerId,
-            ...(parsedPointsUsed > 0 ? { totalPoints: { $gte: parsedPointsUsed } } : {})
-          },
-          updateData,
-          { new: true, session, runValidators: true }
-        )
+        if (pointsChange !== 0) {
+          updateData.$inc.totalPoints = pointsChange
+        }
+
+        const updateQuery = {
+          _id: order.customerId
+        }
+
+        if (parsedPointsUsed > 0) {
+          updateQuery.totalPoints = { $gte: parsedPointsUsed }
+        }
+
+        const customerUpdateResult = await Customer.findOneAndUpdate(updateQuery, updateData, {
+          new: true,
+          session,
+          runValidators: true
+        })
 
         if (!customerUpdateResult) {
-          throw new BusinessError('Điểm khách hàng đã thay đổi, vui lòng thử lại', 409)
+          throw new BusinessError('Cập nhật thông tin khách hàng thất bại, vui lòng thử lại', 409)
+        }
+
+        const balanceAfter = customerUpdateResult.totalPoints
+
+        // Ghi lịch sử dùng điểm
+        if (parsedPointsUsed > 0) {
+          await createPointHistory({
+            customerId: order.customerId,
+            orderId: order._id,
+            type: 'redeem',
+            points: -parsedPointsUsed,
+            balanceBefore: balanceBefore,
+            balanceAfter: balanceBefore - parsedPointsUsed,
+            description: `Sử dụng ${parsedPointsUsed} điểm cho đơn hàng ${order.code}`,
+            organization: order.organization,
+            createdBy: req.user?._id,
+            session
+          })
+        }
+
+        // Ghi lịch sử tích điểm
+        if (pointsEarned > 0) {
+          await createPointHistory({
+            customerId: order.customerId,
+            orderId: order._id,
+            type: 'earn',
+            points: pointsEarned,
+            balanceBefore: parsedPointsUsed > 0 ? balanceBefore - parsedPointsUsed : balanceBefore,
+            balanceAfter: balanceAfter,
+            description: `Tích ${pointsEarned} điểm từ đơn hàng ${order.code}`,
+            organization: order.organization,
+            createdBy: req.user?._id,
+            session
+          })
         }
       } else if (parsedPointsUsed > 0) {
         throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)

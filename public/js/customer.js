@@ -1,6 +1,7 @@
 $(function () {
   initCustomerTable()
   initCustomerEvents()
+  customScrollbarInit()
 })
 
 function initCustomerTable() {
@@ -158,6 +159,20 @@ function initCustomerEvents() {
   // Xóa khách hàng
   handlerDeleteEvent('#customerTable', '#deleteCustomerBtn', 'customerCheckbox', 'customer')
   initTableCheckboxEvents('#customerTable', 'customerCheckbox')
+
+  $('#customerTable').on('click', '.detailBtn', async function () {
+    const id = $(this).closest('tr').data('id')
+
+    try {
+      const result = await ajax(`/api/customer/${id}/points/history`, {}, 'GET')
+
+      if (result) {
+        showPointHistoryModal(result)
+      }
+    } catch (error) {
+      toastr.error('Không thể tải lịch sử điểm')
+    }
+  })
 }
 
 // Hàm phụ trợ
@@ -223,4 +238,66 @@ function handleUpdateCustomer(e, csrfToken) {
 function resetForm(selector) {
   const form = $(selector)[0]
   if (form) form.reset()
+}
+
+function showPointHistoryModal(data) {
+  const { customer, history } = data
+
+  // Update modal title
+  $('#pointHistoryModal .modal-title').html(
+    `Lịch sử điểm - ${customer.name ? customer.name : customer.phone}`
+  )
+
+  $('.current-points').text(`
+    Điểm hiện tại: ${customer.currentPoints}
+    `)
+
+  // Render history table
+  const $tbody = $('#pointHistoryBody')
+  $tbody.empty()
+
+  if (history.length === 0) {
+    $tbody.append(`
+      <tr>
+        <td colspan="4" class="text-center text-muted">Chưa có lịch sử giao dịch</td>
+      </tr>
+    `)
+  } else {
+    history.forEach((item) => {
+      const typeText = {
+        earn: '<span class="badge bg-success">Tích điểm</span>',
+        redeem: '<span class="badge bg-danger">Dùng điểm</span>'
+      }
+
+      const pointsDisplay =
+        item.points > 0
+          ? `<span class="text-success">+${item.points}</span>`
+          : `<span class="text-danger">${item.points}</span>`
+
+      const date = formatDateTime(item.createdAt)
+
+      $tbody.append(`
+        <tr>
+          <td class="p-2">${date}</td>
+          <td class="p-2">${typeText[item.type]}</td>
+          <td class="text-end p-2">${pointsDisplay}</td>
+          <td class="p-2">${item.description}</td>
+        </tr>
+      `)
+    })
+  }
+
+  $('#pointHistoryModal').modal('show')
+}
+
+function customScrollbarInit() {
+  $('#pointHistoryModal .modal-body').mCustomScrollbar({
+    theme: 'minimal-dark',
+    axis: 'y',
+    scrollInertia: 200, // giảm thời gian animation -> bớt kéo quá
+    mouseWheel: {
+      deltaFactor: 20, // giảm tốc độ wheel nếu quá nhanh
+      preventDefault: true // tránh scroll container cha
+    }
+  })
 }

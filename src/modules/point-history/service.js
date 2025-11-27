@@ -1,4 +1,4 @@
-import PointHistory from './model'
+import PointHistory from './model.js'
 
 export const createPointHistory = async ({
   customerId,

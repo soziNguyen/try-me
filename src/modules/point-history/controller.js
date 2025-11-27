@@ -1,7 +1,7 @@
-import Customer from '../customer/model'
-import PointHistory from './model'
-import { getCurrentOrg } from '../../helpers/orgHelper'
-import responseHelper from '../../helpers/responseHelper'
+import Customer from '../customer/model.js'
+import PointHistory from './model.js'
+import { getCurrentOrg } from '../../helpers/orgHelper.js'
+import responseHelper from '../../helpers/responseHelper.js'
 
 export const getCustomerPointHistoryById = async (req, res) => {
   try {
