@@ -310,7 +310,7 @@ export const updateReceipt = async (req, res) => {
 
     // Ghi log nếu có thay đổi
     if (changes.length > 0) {
-      const description = `Cập nhật phiếu thu: ${oldReceipt.code} - ${changes.join(' | ')}`
+      const description = `Cập nhật phiếu thu: ${oldReceipt.code} - ${changes.join(' , ')}`
 
       logActivity(
         organizationId,

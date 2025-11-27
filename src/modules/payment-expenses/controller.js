@@ -291,7 +291,7 @@ export const updatePaymentExpenses = async (req, res) => {
     }
 
     if (changes.length > 0) {
-      const description = `Cập nhật phiếu chi: ${updatedExpense.code} - ${changes.join(' | ')}`
+      const description = `Cập nhật phiếu chi: ${updatedExpense.code} - ${changes.join(' , ')}`
 
       logActivity(
         organizationId,
