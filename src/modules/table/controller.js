@@ -333,7 +333,17 @@ export const updateTable = async (req, res) => {
       updatedTable,
       [
         { field: 'name', label: 'Tên bàn' },
-        { field: 'status', label: 'Trạng thái' },
+        {
+          field: 'status',
+          label: 'Trạng thái',
+          formatValue: (val) => {
+            const types = {
+              available: 'Có khách',
+              occupied: 'Trống'
+            }
+            return types[val] || val
+          }
+        },
         { field: 'capacity', label: 'Sức chứa' },
         { field: 'area', label: 'Khu vực' }
       ],

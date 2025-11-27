@@ -80,6 +80,32 @@
       </div>
     </div>
 
+    <div class="modal fade" id="pointHistoryModal">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Lịch sử điểm</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+    
+          <div class="modal-body">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Ngày</th>
+                  <th>Loại</th>
+                  <th>Điểm</th>
+                  <th>Ghi chú</th>
+                </tr>
+              </thead>
+              <tbody id="pointHistoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+
     <%- include('../partials/commonjs.html') %>
       <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
       <script src="/js/sidebar-toggle.js"></script>
