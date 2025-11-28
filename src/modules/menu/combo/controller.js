@@ -275,11 +275,11 @@ export const updateCombo = async (req, res) => {
     const changes = []
     // Phần ghi lại thay đổi mới -> cũ
     if ((oldCombo.sku || '') !== (updated.sku || '')) {
-      changes.push(`SKU: "${oldCombo.sku || '(Trống)'}" → "${updated.sku || '(Trống)'}"`)
+      changes.push(`SKU: "${oldCombo.sku || ''}" → "${updated.sku || ''}"`)
     }
 
     if ((oldCombo.name || '') !== (updated.name || '')) {
-      changes.push(`Tên: "${oldCombo.name || '(Trống)'}" → "${updated.name || '(Trống)'}"`)
+      changes.push(`Tên: "${oldCombo.name || ''}" → "${updated.name || ''}"`)
     }
 
     if (oldCombo.price !== updated.price) {
@@ -289,7 +289,7 @@ export const updateCombo = async (req, res) => {
     }
 
     if ((oldCombo.note || '') !== (updated.note || '')) {
-      changes.push(`Ghi chú: "${oldCombo.note || '(Trống)'}" → "${updated.note || '(Trống)'}"`)
+      changes.push(`Ghi chú: "${oldCombo.note || ''}" → "${updated.note || ''}"`)
     }
 
     if (oldCombo.isActive !== updated.isActive) {

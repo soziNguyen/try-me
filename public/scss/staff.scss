@@ -1,4 +1,8 @@
 $orange-800: #9a3412;
+.green-light-bg {
+  background-color: var(--green-light);
+}
+
 .table-card {
   transition:
     transform 0.2s ease,
@@ -11,6 +15,7 @@ $orange-800: #9a3412;
     cursor: pointer;
   }
 }
+
 .my-orange {
   background-color: $orange-800;
 }
@@ -46,20 +51,17 @@ $orange-800: #9a3412;
   td {
     padding: 6px 8px;
     border: none;
-  }
+    &.stt {
+      width: 5%;
+      text-align: center;
+      padding-left: 0;
+    }
 
-  th.stt,
-  td.stt {
-    width: 5%;
-    text-align: center;
-    padding-left: 0;
-  }
-
-  th.name,
-  td.name {
-    width: 35%;
-    text-align: left;
-    padding-left: 0;
+    &.name {
+      width: 35%;
+      text-align: left;
+      padding-left: 0;
+    }
   }
 
   th.price,
@@ -72,12 +74,10 @@ $orange-800: #9a3412;
     text-align: center;
   }
 
-  tbody tr {
-    border-bottom: 1px solid #000;
-  }
-
-  tbody tr:last-child {
-    border-bottom: 1px solid #000;
+  tbody {
+    tr {
+      border-bottom: 1px solid #000;
+    }
   }
 }
 
@@ -86,12 +86,41 @@ $orange-800: #9a3412;
     display: flex;
     align-items: center;
 
-    span:last-child,
-    strong:last-child {
-      margin-left: auto;
-      text-align: right;
+    span,
+    strong {
+      &:last-child {
+        margin-left: auto;
+        text-align: right;
+      }
     }
   }
+}
+
+#orderFull {
+  #foodMenu {
+    .card-img-top {
+      object-fit: cover;
+      height: 180px;
+    }
+  }
+
+  #customerForm {
+    .form-control {
+      padding: 0 !important;
+    }
+  }
+
+  .accordion-button {
+    &:focus {
+      box-shadow: none;
+    }
+  }
+}
+
+#createOrderCard {
+  cursor: pointer;
+  max-width: 500px;
+  display: none;
 }
 
 .qr-code {
@@ -99,45 +128,13 @@ $orange-800: #9a3412;
   height: 150px;
 }
 
-.table-button {
-  min-width: 80px;
-  height: 40px;
-  font-weight: 600;
-}
-
-.card-img-top {
-  object-fit: cover;
-  height: 180px;
-}
-
-.green-light-bg {
-  background-color: var(--green-light);
-}
-
-.card {
-  border-radius: 0;
-}
-
-.accordion-button:focus {
-  box-shadow: none;
-}
-
-#customerForm .form-control {
-  padding: 0 !important;
-}
-
 .border-dashed {
   border-style: dashed !important;
 }
-#createOrderCard {
-  cursor: pointer;
-  max-width: 500px;
-}
 
-#createOrderCard {
-  display: none;
-}
-.select2-container--default .select2-selection--single {
-  opacity: 1 !important;
-  cursor: pointer !important;
+.select2-container--default {
+  .select2-selection--single {
+    opacity: 1 !important;
+    cursor: pointer !important;
+  }
 }

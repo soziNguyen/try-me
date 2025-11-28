@@ -212,13 +212,11 @@ export const updateRecipe = async (req, res) => {
     const changes = []
 
     if (oldRecipe.menuItem?._id?.toString() !== recipe.menuItem?._id?.toString()) {
-      changes.push(
-        `Món ăn: "${oldRecipe.menuItem?.name || '(Trống)'}" → "${recipe.menuItem?.name || '(Trống)'}"`
-      )
+      changes.push(`Món ăn: "${oldRecipe.menuItem?.name || ''}" → "${recipe.menuItem?.name || ''}"`)
     }
 
     if ((oldRecipe.note || '') !== (recipe.note || '')) {
-      changes.push(`Ghi chú: "${oldRecipe.note || '(Trống)'}" → "${recipe.note || '(Trống)'}"`)
+      changes.push(`Ghi chú: "${oldRecipe.note || ''}" → "${recipe.note || ''}"`)
     }
 
     const deltaMap = new Map()
