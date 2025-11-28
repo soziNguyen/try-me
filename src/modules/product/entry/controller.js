@@ -206,40 +206,73 @@ export const getProductEntries = async (req, res) => {
     }
 
     if (flatten) {
+      // Group theo sản phẩm - gộp số lượng
       basePipeline.push({
-        $addFields: {
-          entryId: '$_id',
-          entryCode: '$code',
-          entryDate: '$date',
-          entryWarehouse: '$warehouse',
-          entryNote: '$note',
-          entryCreatedBy: '$createdBy.username',
-          entryIsLocked: '$isLocked',
-          productType: '$items.productType',
-          product: '$product',
-          quantity: '$items.quantity',
-          unit: '$items.unit',
-          unitPrice: '$items.unitPrice',
-          total: '$items.total'
+        $group: {
+          _id: '$product._id',
+          product: { $first: '$product' },
+          productType: { $first: '$items.productType' },
+          quantity: { $sum: '$items.quantity' },
+          unit: { $first: '$items.unit' },
+          totalValue: { $sum: '$items.total' }
         }
       })
 
+      // Lookup stock
+      basePipeline.push({
+        $lookup: {
+          from: 'ProductStocks',
+          let: {
+            productId: '$_id',
+            orgId: organizationId
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$organization', '$$orgId'] },
+                    {
+                      $or: [
+                        { $eq: ['$product', '$$productId'] },
+                        { $eq: ['$combo', '$$productId'] }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                totalStock: { $sum: '$quantity' }
+              }
+            }
+          ],
+          as: 'stockData'
+        }
+      })
+
+      // Add field stock
+      basePipeline.push({
+        $addFields: {
+          stock: {
+            $ifNull: [{ $arrayElemAt: ['$stockData.totalStock', 0] }, 0]
+          }
+        }
+      })
+
+      // Project final
       basePipeline.push({
         $project: {
           _id: 0,
-          entryId: 1,
-          entryCode: 1,
-          entryDate: 1,
-          entryWarehouse: 1,
-          entryNote: 1,
-          entryCreatedBy: 1,
-          entryIsLocked: 1,
-          productType: 1,
+          productId: '$_id',
           product: 1,
+          productType: 1,
           quantity: 1,
           unit: 1,
-          unitPrice: 1,
-          total: 1
+          totalValue: 1,
+          stock: 1
         }
       })
     } else {
@@ -278,8 +311,19 @@ export const getProductEntries = async (req, res) => {
       })
     }
 
-    // Sort
-    basePipeline.push({ $sort: { [sortField]: sortDir } })
+    // Sort - Map sort field để xử lý đúng
+    const sortFieldMapping = {
+      product: 'product.name',
+      'product.name': 'product.name',
+      quantity: 'quantity',
+      stock: 'stock',
+      entryDate: flatten ? 'entryDate' : 'date',
+      date: flatten ? 'entryDate' : 'date',
+      createdAt: flatten ? 'entryDate' : 'date'
+    }
+
+    const actualSortField = sortFieldMapping[sortField] || sortField
+    basePipeline.push({ $sort: { [actualSortField]: sortDir } })
 
     // Count
     const countPipeline = [...basePipeline, { $count: 'totalCount' }]
