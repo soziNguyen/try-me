@@ -17,6 +17,9 @@ import {
   validateTaxCode
 } from '../../helpers/validator.js'
 import { getPageData } from '../../helpers/pageDataHelper.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
+import { getProvinceName, getCommuneName } from '../../helpers/address.js'
 
 export const createOrganization = async (req, res) => {
   try {
@@ -332,6 +335,16 @@ export const createOrg = async (req, res) => {
   try {
     const newOrg = new Organization(req.body)
     await newOrg.save()
+
+    logActivity(
+      null,
+      req.user?._id || null,
+      req.user?.username || null,
+      'CREATE',
+      'ORGANIZATION',
+      'Thêm mới tổ chức'
+    )
+
     responseHelper.success(res, newOrg, 'Tạo tổ chức thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -360,12 +373,14 @@ export const updateOrg = async (req, res) => {
     const organization = await Organization.findById(id)
     if (!organization) return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
 
-    // VALIDATE PHONE
+    const oldOrg = organization.toObject()
+
+    // VALIDATE PHONE ...
     let processedPhone = phone
     if (phone !== undefined && phone.trim()) {
       const phoneError = validatePhoneNumber(phone)
       if (phoneError) return responseHelper.error(res, phoneError, 400)
-      processedPhone = formatPhoneNumber(phone) // Always 84xxxxxxxx
+      processedPhone = formatPhoneNumber(phone)
     }
 
     // Validate email
@@ -378,7 +393,7 @@ export const updateOrg = async (req, res) => {
       return responseHelper.error(res, 'Mã số thuế không hợp lệ (10-13 chữ số)', 400)
     }
 
-    // Check trùng email/phone/taxCode
+    // Check trùng email/phone/taxCode...
     const conditions = []
     if (email !== undefined && email.trim()) {
       conditions.push({ email: email.trim().toLowerCase() })
@@ -409,7 +424,7 @@ export const updateOrg = async (req, res) => {
       }
     }
 
-    // Chuẩn bị data update
+    // CHUẨN BỊ DATA UPDATE
     const data = {}
     if (logo !== undefined) data.logo = logo
     if (name !== undefined && name.trim()) data.name = name.trim()
@@ -435,7 +450,7 @@ export const updateOrg = async (req, res) => {
       return responseHelper.error(res, 'Không thể cập nhật tổ chức', 400)
     }
 
-    // Xóa file cũ nếu có logo mới
+    // XÓA FILE LOGO CŨ
     if (logo && oldLogo && oldLogo !== logo) {
       try {
         await deleteFile(oldLogo)
@@ -444,6 +459,47 @@ export const updateOrg = async (req, res) => {
       }
     }
 
+    // BUILD CHANGE LOG
+    const changeLog = buildChangeLog(
+      oldOrg,
+      updated.toObject(),
+      [
+        {
+          field: 'province',
+          label: 'Tỉnh/Thành',
+          formatValue: (id) => getProvinceName(id)
+        },
+        {
+          field: 'commune',
+          label: 'Phường/Xã',
+          formatValue: (id, obj) => getCommuneName(obj.province, id)
+        },
+        { field: 'name', label: 'Tên' },
+        { field: 'email', label: 'Email' },
+        { field: 'phone', label: 'Số điện thoại' },
+        { field: 'plan', label: 'Gói dịch vụ' },
+        { field: 'street', label: 'Địa chỉ' },
+        { field: 'isActive', label: 'Trạng thái' },
+        { field: 'taxCode', label: 'Mã số thuế' },
+        { field: 'logo', label: 'Logo' }
+      ],
+      updated.name,
+      'Tổ chức'
+    )
+
+    if (changeLog) {
+      logActivity(
+        updated._id,
+        req.user?._id,
+        req.user?.username,
+        'UPDATE',
+        'ORGANIZATION',
+        changeLog,
+        updated.name
+      )
+    }
+
+    // RESPONSE
     const responseData = {
       ...updated.toObject(),
       phoneDisplay: updated.phone
@@ -486,6 +542,15 @@ export const deleteOrgs = async (req, res) => {
     const result = await Organization.deleteMany({
       _id: { $in: ids }
     })
+
+    logActivity(
+      null,
+      req.user?._id || null,
+      req.user?.username || null,
+      'DELETE',
+      'ORGANIZATION',
+      `Đã xóa ${result.deletedCount} tổ chức`
+    )
 
     responseHelper.success(res, result.deletedCount, 'Xóa tổ chức thành công')
   } catch (error) {

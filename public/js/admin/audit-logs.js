@@ -13,7 +13,7 @@ $(function () {
 
   let showList = [10, 25, 50, 100]
   const numRows = Math.floor(
-    ($(window).height() - $('#auditLogsTableBody').offset().top - 120) / 45
+    ($(window).height() - $('#auditLogsTableBody').offset().top - 120) / 50
   )
   if (!showList.includes(numRows)) {
     showList.push(numRows)
@@ -45,6 +45,7 @@ $(function () {
       order: [[1, 'desc']],
       lengthMenu: [showList, showList],
       pageLength: numRows,
+      columnDefs: [{ width: '180px', target: 1 }],
       columns: [
         {
           data: null,

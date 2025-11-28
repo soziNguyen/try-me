@@ -12,7 +12,6 @@ const PaymentMethodSchema = new Schema(
     code: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
       trim: true,
       enum: ['BANK', 'COD', 'MOMO', 'ZALOPAY', 'VNPAY', 'PAYOS', 'VTLMONEY']
