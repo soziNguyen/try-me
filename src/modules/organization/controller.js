@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import User from '../user/model.js'
 import Organization from './model.js'
 import Plan from '../plan/model.js'
@@ -370,7 +371,7 @@ export const updateOrg = async (req, res) => {
 
     if (!id) return responseHelper.error(res, 'Id không hợp lệ', 400)
 
-    const organization = await Organization.findById(id)
+    const organization = await Organization.findById(id).populate('plan', 'name')
     if (!organization) return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
 
     const oldOrg = organization.toObject()
@@ -430,7 +431,19 @@ export const updateOrg = async (req, res) => {
     if (name !== undefined && name.trim()) data.name = name.trim()
     if (email !== undefined && email.trim()) data.email = email.trim().toLowerCase()
     if (phone !== undefined) data.phone = processedPhone
-    if (plan !== undefined) data.plan = plan
+    if (plan !== undefined) {
+      if (!plan) {
+        data.plan = null
+      } else if (!mongoose.isValidObjectId(plan)) {
+        return responseHelper.error(res, 'Gói dịch vụ không hợp lệ', 400)
+      } else {
+        const planExists = await Plan.findById(plan)
+        if (!planExists)
+          return responseHelper.error(res, 'Gói dịch vụ không tồn tại trên hệ thống', 404)
+        data.plan = plan
+      }
+    }
+
     if (province !== undefined) data.province = province
     if (commune !== undefined) data.commune = commune
     if (street !== undefined) data.street = street
@@ -444,7 +457,7 @@ export const updateOrg = async (req, res) => {
     const updated = await Organization.findByIdAndUpdate(id, data, {
       new: true,
       runValidators: true
-    })
+    }).populate('plan', 'name')
 
     if (!updated) {
       return responseHelper.error(res, 'Không thể cập nhật tổ chức', 400)
@@ -477,7 +490,14 @@ export const updateOrg = async (req, res) => {
         { field: 'name', label: 'Tên' },
         { field: 'email', label: 'Email' },
         { field: 'phone', label: 'Số điện thoại' },
-        { field: 'plan', label: 'Gói dịch vụ' },
+        {
+          field: 'plan',
+          label: 'Gói dịch vụ',
+          formatValue: (plan) => {
+            if (!plan) return ''
+            return plan.name || ''
+          }
+        },
         { field: 'street', label: 'Địa chỉ' },
         { field: 'isActive', label: 'Trạng thái' },
         { field: 'taxCode', label: 'Mã số thuế' },

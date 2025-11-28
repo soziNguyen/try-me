@@ -1,4 +1,5 @@
 import User from '../user/model.js'
+import Organization from '../organization/model.js'
 import bcrypt from 'bcryptjs'
 import validator from 'validator'
 import responseHelper from '../../helpers/responseHelper.js'
@@ -189,6 +190,23 @@ export const updateUser = async (req, res) => {
     })
 
     if (existingUser) return responseHelper.error(res, 'Tên hoặc email người dùng đã tồn tại', 400)
+
+    if (!mongoose.isValidObjectId(organization)) {
+      return responseHelper.error(res, 'Tổ chức không hợp lệ', 400)
+    }
+
+    if (role && role === 'Admin') {
+      return responseHelper.error(res, 'Không thể thay đổi vai trò người dùng thành Admin', 403)
+    }
+
+    if (!['Org', 'Staff', 'Kitchen'].includes(role)) {
+      return responseHelper.error(res, 'Vai trò không hợp lệ', 400)
+    }
+
+    const orgExists = await Organization.findById(organization)
+    if (!orgExists) {
+      return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
+    }
 
     const dataUpdates = {
       username,
@@ -450,6 +468,28 @@ export const deleteLogs = async (req, res) => {
     })
 
     responseHelper.success(res, `Xóa thành công ${result.deletedCount} bản ghi`)
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
+export const createAdminAccount = async (req, res) => {
+  try {
+    const existed = await User.findOne({ role: 'Admin' })
+    if (existed) {
+      return responseHelper.error(res, 'Admin đã tồn tại', 409)
+    }
+
+    const admin = new User({
+      username: 'admin',
+      email: 'nguyensonthanh1103@gmail.com',
+      role: 'Admin',
+      password: '1'
+    })
+
+    await admin.save()
+
+    responseHelper.success(res, admin, 'Tạo admin thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
   }

@@ -169,7 +169,7 @@ $(function () {
       // Handle update user
       $('#userTable_wrapper').on('click', '.updateUserBtn', function () {
         const userId = $(this).data('id')
-        const roles = ['Admin', 'Org', 'Staff']
+        const roles = ['Org', 'Staff', 'Kitchen']
         const $roleSelected = $('#new-role')
         $roleSelected.empty().append(
           roles
@@ -202,6 +202,8 @@ $(function () {
           toastr.error(xhr.responseJSON?.message || 'Đã có lỗi xảy ra')
         })
       })
+
+      //submit form
       $('#updateUserForm').on('submit', function (e) {
         e.preventDefault()
         const id = $(this).data('user-id')

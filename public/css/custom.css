@@ -291,7 +291,7 @@ table tbody td .editBtn {
   list-style: none;
   padding-left: 0px;
   margin: 0;
-  max-height: 200px;
+  max-height: 270px;
   overflow-y: auto;
   border: 1px solid var(--success);
   z-index: 10;

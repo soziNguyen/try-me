@@ -30,7 +30,7 @@ $(function () {
         '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
-      order: [[1, 'desc']],
+      order: [],
       ajax: {
         url: '/api/admin/coupons',
         method: 'GET'
@@ -227,12 +227,12 @@ $(function () {
             </button>
           </div>
         `)
-
-        $('.editBtn').on('click', function () {
-          const couponId = $(this).data('id')
-          window.location.href = `/coupon/${couponId}`
-        })
       }
+    })
+
+    $('#couponTable').on('click', '.editBtn', function () {
+      const couponId = $(this).data('id')
+      window.location.href = `/coupon/${couponId}`
     })
 
     // Event handlers

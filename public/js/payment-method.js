@@ -148,7 +148,7 @@ $(function () {
     const $row = $(this).closest('tr')
     const id = $row.data('id')
     const newType = $(this).val()
-    const $cell = $row.find('td').eq(4)
+    const $cell = $row.find('td').eq(3)
     const csrfToken = $('#_csrf').val()
 
     if (['bank', 'e-wallet'].includes(newType)) {

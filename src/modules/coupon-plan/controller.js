@@ -256,8 +256,6 @@ export const updateCouponPlan = async (req, res) => {
           field: 'applicablePlans',
           label: 'Gói áp dụng',
           formatValue: (plans) => {
-            console.log(plans)
-
             if (!plans) return ''
             if (Array.isArray(plans) && plans.length === 0) return 'Áp dụng toàn bộ gói'
             if (Array.isArray(plans)) return plans.map((p) => p.name || p).join(', ')

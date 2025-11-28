@@ -139,8 +139,6 @@ export const updateKitchenItemStatus = async (req, res) => {
     item.status = status
     order.updatedBy = req.user._id
 
-    console.log(order)
-
     await order.save()
 
     const io = req.app.get('io')

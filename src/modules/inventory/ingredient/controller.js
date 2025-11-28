@@ -1,4 +1,6 @@
+import mongoose from 'mongoose'
 import { Ingredient, units } from './model.js'
+import IngredientCategory from '../ingredient-category/model.js'
 import IngredientStock from '../ingredient-stock/model.js'
 import { deleteFile } from '../../upload/helper.js'
 import responseHelper from '../../../helpers/responseHelper.js'
@@ -6,6 +8,7 @@ import { lookupUser, lookupRef } from '../../../helpers/lookupHelper.js'
 import { getCurrentOrg } from '../../../helpers/orgHelper.js'
 import { normalizeValue } from '../../../helpers/common.js'
 import { logActivity } from '../../activity-logs/service.js'
+import { buildChangeLog } from '../../../helpers/changeLog.js'
 
 export const getActiveIngredientsForRecipe = async (req, res) => {
   try {
@@ -264,15 +267,15 @@ export const updateIngredient = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    // Sử dụng helper function
+    if (!mongoose.isValidObjectId(id))
+      return responseHelper.error(res, 'ID nguyên liệu không hợp lệ', 400)
 
-    // Build match condition
-    const matchCondition = {
-      _id: id,
-      organization: organizationId
-    }
+    const matchCondition = { _id: id, organization: organizationId }
 
-    const ingredient = await Ingredient.findOne(matchCondition).populate('category', 'name')
+    const ingredient = await Ingredient.findOne(matchCondition)
+      .populate('category', 'name')
+      .populate('updatedBy', 'username -_id')
+
     if (!ingredient)
       return responseHelper.error(
         res,
@@ -286,28 +289,43 @@ export const updateIngredient = async (req, res) => {
     if (name !== undefined) orConditions.push({ name })
 
     if (orConditions.length) {
-      const duplicateCondition = {
+      const existing = await Ingredient.findOne({
         _id: { $ne: id },
         organization: organizationId,
         $or: orConditions
-      }
-
-      const existing = await Ingredient.findOne(duplicateCondition)
+      })
       if (existing) return responseHelper.error(res, 'SKU hoặc tên nguyên liệu đã tồn tại', 400)
     }
 
+    // Build updateData
     const updateData = { updatedBy: req.user._id }
 
     if (sku !== undefined) updateData.sku = sku
     if (name !== undefined) updateData.name = name
     if (image !== undefined) updateData.image = image
-    if (unit !== undefined) updateData.unit = unit === '' ? null : unit
-    if (category !== undefined) updateData.category = category === '' ? null : category
+    if (unit !== undefined) updateData.unit = unit || null
+
+    if (category !== undefined) {
+      if (!category) {
+        updateData.category = null
+      } else if (!mongoose.isValidObjectId(category)) {
+        return responseHelper.error(res, 'Danh mục không hợp lệ', 400)
+      } else {
+        const catExists = await IngredientCategory.findOne({
+          _id: category,
+          organization: organizationId
+        })
+        if (!catExists)
+          return responseHelper.error(res, 'Danh mục không tồn tại trong tổ chức', 404)
+        updateData.category = category
+      }
+    }
+
     if (expirationDays !== undefined) updateData.expirationDays = expirationDays
     if (isActive !== undefined) updateData.isActive = Boolean(isActive)
     if (note !== undefined) updateData.note = note
 
-    // Lọc field thực sự thay đổi
+    // Chỉ lấy field thực sự thay đổi
     const actualChanges = {}
     for (const key in updateData) {
       if (normalizeValue(updateData[key]) !== normalizeValue(ingredient[key])) {
@@ -315,7 +333,9 @@ export const updateIngredient = async (req, res) => {
       }
     }
 
-    const updated = await Ingredient.findOneAndUpdate(matchCondition, actualChanges, { new: true })
+    const updated = await Ingredient.findOneAndUpdate(matchCondition, actualChanges, {
+      new: true
+    })
       .populate('category', 'name')
       .populate('createdBy', 'username -_id')
       .populate('updatedBy', 'username -_id')
@@ -329,44 +349,28 @@ export const updateIngredient = async (req, res) => {
       }
     }
 
-    // Gộp log các field thay đổi
-    const fieldLabels = {
-      name: 'Tên nguyên liệu',
-      sku: 'Mã SKU',
-      unit: 'Đơn vị',
-      category: 'Danh mục',
-      expirationDays: 'HSD (ngày)',
-      isActive: 'Kích hoạt',
-      note: 'Ghi chú',
-      image: 'Ảnh',
-      updatedBy: 'Người cập nhật'
-    }
-
-    let description = ''
-    if (ingredient && Object.keys(actualChanges).length) {
-      description =
-        `Cập nhật nguyên liệu "${ingredient.name}": ` +
-        Object.keys(actualChanges)
-          .map((key) => {
-            let oldVal = ingredient?.[key] ?? ''
-            let newVal = actualChanges[key]
-
-            // Xử lý category
-            if (key === 'category') {
-              oldVal = oldVal?.name || ''
-              newVal = updated?.category?.name || ''
-            }
-
-            // Xử lý updatedBy
-            if (key === 'updatedBy') {
-              oldVal = ingredient?.updatedBy?.username || ''
-              newVal = updated?.updatedBy?.username || ''
-            }
-
-            return `${fieldLabels[key] || key}: "${normalizeValue(oldVal)}" → "${normalizeValue(newVal)}"`
-          })
-          .join(', ')
-    }
+    // Build log thay đổi
+    const changeDetails = buildChangeLog(
+      ingredient,
+      updated,
+      [
+        { field: 'name', label: 'Tên nguyên liệu' },
+        { field: 'sku', label: 'Mã SKU' },
+        { field: 'unit', label: 'Đơn vị' },
+        { field: 'category', label: 'Danh mục', formatValue: (val) => val?.name || '' },
+        { field: 'expirationDays', label: 'HSD (ngày)' },
+        { field: 'isActive', label: 'Kích hoạt' },
+        { field: 'note', label: 'Ghi chú' },
+        { field: 'image', label: 'Ảnh' },
+        {
+          field: 'updatedBy',
+          label: 'Người cập nhật',
+          formatValue: (val) => val?.username || 'Chưa cập nhật'
+        }
+      ],
+      ingredient.name,
+      'nguyên liệu'
+    )
 
     logActivity(
       organizationId,
@@ -374,7 +378,7 @@ export const updateIngredient = async (req, res) => {
       req.user.username || 'Unknown',
       'UPDATE',
       'INGREDIENT',
-      description,
+      changeDetails,
       ingredient.name,
       'SUCCESS'
     )

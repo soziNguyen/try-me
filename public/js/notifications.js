@@ -33,8 +33,6 @@ socket.emit('staff_join')
 
 // Nhận notification từ socket
 socket.on('staff_notification', (data) => {
-  console.log(data)
-
   // Tạo ID cho notification mới
   if (!data.id) {
     data.id = `noti_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`

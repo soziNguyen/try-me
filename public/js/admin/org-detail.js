@@ -39,6 +39,10 @@ $(function () {
           submitBtn
             .prop('disabled', false)
             .html('<i class="bi bi-check-circle me-1"></i>Lưu thay đổi')
+        } else {
+          submitBtn
+            .prop('disabled', false)
+            .html('<i class="bi bi-check-circle me-1"></i>Lưu thay đổi')
         }
       })
       .catch((err) => {
