@@ -785,8 +785,8 @@ input[type=text]::-ms-clear {
 }
 #staffCallBell #staffCallBellIcon {
   width: 200px;
-  -webkit-animation: ringBounce 1.8s ease-out infinite;
-          animation: ringBounce 1.8s ease-out infinite;
+  -webkit-animation: ringBounce 3.1s ease-out infinite;
+          animation: ringBounce 3.1s ease-out infinite;
   -webkit-transform-origin: top center;
           transform-origin: top center;
 }

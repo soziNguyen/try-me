@@ -5,28 +5,47 @@ const notificationModalBody = document.getElementById('notificationModalBody')
 const notificationBadge = document.getElementById('notificationBadge')
 const deleteAllNotiBtn = document.querySelector('.delete-all-noti')
 
-// Tạo đối tượng Audio
-const notificationSound = new Audio('/assets/sounds/sound.wav')
-notificationSound.preload = 'auto'
-notificationSound.volume = 1
+/* WEB AUDIO API  */
+let audioCtx = null
+let bellBuffer = null
 
-let audioEnabled = false
-
-// Enable audio sau lần đầu user click
+// Unlock audio khi user click lần đầu
 document.addEventListener(
   'click',
-  function enableAudio() {
-    audioEnabled = true
-    notificationSound.volume = 0
-    notificationSound.play().then(() => {
-      notificationSound.pause()
-      notificationSound.currentTime = 0
-      notificationSound.volume = 1
-    })
-    document.removeEventListener('click', enableAudio)
+  async function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+      await audioCtx.resume()
+    }
+
+    if (!bellBuffer) {
+      const res = await fetch('/assets/sounds/sound.wav')
+      const buf = await res.arrayBuffer()
+      bellBuffer = await audioCtx.decodeAudioData(buf)
+      console.log(bellBuffer)
+    }
+
+    document.removeEventListener('click', initAudio)
+    console.log('Audio unlocked ✔')
   },
   { once: true }
 )
+
+// Resume khi quay lại tab
+document.addEventListener('visibilitychange', () => {
+  if (audioCtx && document.visibilityState === 'visible') {
+    audioCtx.resume()
+  }
+})
+
+// Hàm phát âm thanh
+function playNotificationSound() {
+  if (!audioCtx || !bellBuffer) return
+  const source = audioCtx.createBufferSource()
+  source.buffer = bellBuffer
+  source.connect(audioCtx.destination)
+  source.start(0)
+}
 
 // Nhân viên join room
 socket.emit('staff_join')
@@ -47,10 +66,8 @@ socket.on('staff_notification', async (data) => {
   saveUnseenNotification(data)
   showBadge()
 
-  if (audioEnabled) {
-    notificationSound.currentTime = 0
-    notificationSound.play().catch(() => {})
-  }
+  // PHÁT ÂM THANH BẰNG WEB AUDIO API
+  playNotificationSound()
 })
 
 // Lưu notification
@@ -103,12 +120,11 @@ async function appendNotificationToModal(data) {
 
     html = `
       <div class="border-bottom py-2 position-relative notification-item" data-noti-id="${notiId}">
-        <strong>${tableDisplay}</strong> - Món <strong>${itemName}</strong> - 
+        <strong>${tableDisplay}</strong> - Món <strong>${itemName}</strong> -
         <span class="badge bg-${statusInfo.color}">${statusInfo.text}</span><br>
         <small>${formatDateVN(data.time)}</small>
-        <button type="button" class="btn-close position-absolute delete-noti-btn top-50 end-0 translate-middle-y" 
-                data-noti-id="${notiId}"
-                aria-label="Xóa thông báo">
+        <button type="button" class="btn-close position-absolute delete-noti-btn top-50 end-0 translate-middle-y"
+                data-noti-id="${notiId}">
         </button>
       </div>
     `
@@ -123,9 +139,8 @@ async function appendNotificationToModal(data) {
         <strong>${tableDisplay}</strong> đã gửi đơn hàng mới -
         <span class="badge bg-info">Đợt ${data.batch}</span> - ${itemsText}<br>
         <small>${formatDateVN(data.time)}</small>
-        <button type="button" class="btn-close position-absolute delete-noti-btn top-50 end-0 translate-middle-y" 
-                data-noti-id="${notiId}"
-                aria-label="Xóa thông báo">
+        <button type="button" class="btn-close position-absolute delete-noti-btn top-50 end-0 translate-middle-y"
+                data-noti-id="${notiId}">
         </button>
       </div>
     `
@@ -135,9 +150,8 @@ async function appendNotificationToModal(data) {
       <div class="border-bottom py-2 position-relative notification-item" data-noti-id="${notiId}">
         <strong>${data.tableName}</strong> gửi yêu cầu hỗ trợ<br>
         <small>${formatDateVN(data.time)}</small>
-        <button type="button" class="btn-close position-absolute delete-noti-btn top-50 end-0 translate-middle-y" 
-                data-noti-id="${notiId}"
-                aria-label="Xóa thông báo">
+        <button type="button" class="btn-close position-absolute delete-noti-btn top-50 end-0 translate-middle-y"
+                data-noti-id="${notiId}">
         </button>
       </div>
     `
@@ -258,6 +272,7 @@ function customScrollbarInit() {
   })
 }
 
+// Chuông gọi nhân viên
 async function startBellAlert(data) {
   if (!data.tableName && data.tableId) {
     try {
