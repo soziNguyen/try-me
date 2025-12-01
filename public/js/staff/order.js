@@ -287,6 +287,10 @@ async function getTables(order = null) {
     let html = '<option value="">Chọn bàn</option>'
     const currentTableId = order?.tableId?._id || null
 
+    if (currentTableId) {
+      html += '<option value="empty">Trống</option>'
+    }
+
     tables.forEach((t) => {
       const selected = t._id === currentTableId ? 'selected' : ''
       const prefix = t._id === currentTableId ? 'Bàn: ' : ''
@@ -320,7 +324,8 @@ $('#table-select').on('change', async function () {
     const result = await ajax(`/api/orders/${orderIdToAssign}/assign-table`, { tableId }, 'POST')
 
     if (result) {
-      toastr.success('Gán bàn thành công!')
+      const message = tableId == 'empty' ? 'Đã bỏ gán bàn!' : 'Gán bàn thành công!'
+      toastr.success(message)
       await fetchEmptyOrders()
 
       // Lấy thông tin bàn vừa chọn (tên)
@@ -328,12 +333,16 @@ $('#table-select').on('change', async function () {
       const tableName = selectedOption.length ? selectedOption.text() : 'Bàn đã gán'
 
       // Cập nhật lại select để hiển thị bàn đã gán
-      await getTables({
-        tableId: {
-          _id: tableId,
-          name: tableName
-        }
-      })
+      if (tableId === 'empty') {
+        await getTables(null)
+      } else {
+        await getTables({
+          tableId: {
+            _id: tableId,
+            name: tableName
+          }
+        })
+      }
     }
   } catch (err) {
     console.error('Lỗi khi giao bàn: ' + err.message)
