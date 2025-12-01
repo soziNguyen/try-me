@@ -178,7 +178,7 @@ export const createCustomer = async (req, res) => {
       req.user.username || 'Unknown',
       'CREATE',
       'CUSTOMER',
-      `Thêm mới khách hàng`
+      `Thêm mới khách hàng ${name}, Số điện thoại: ${phone}`
     )
 
     return responseHelper.success(

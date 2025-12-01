@@ -248,9 +248,9 @@ $(function () {
                   ${options}
                 </select>
               </td>
-              <td><input type="number" class="form-control" name="quantity" value="${it.quantity || 1}"></td>
+              <td><input type="number" class="form-control text-center" name="quantity" value="${it.quantity || 1}"></td>
               <td class="text-center">
-                <button type="button" class="btn btn-outline-danger btn-sm removeItemRow">
+                <button type="button" class="btn btn-outline-danger btn-sm px-2 removeItemRow">
                   <i class="bi bi-trash"></i>
                 </button>
               </td>
@@ -543,8 +543,8 @@ $(function () {
 
   // Hiển thị / ẩn form — đồng thời resize DataTable column đúng
   function showForm() {
-    $('#tableContainer').removeClass('col-md-12').addClass('col-md-7')
-    $('#formContainer').removeClass('d-none').addClass('col-md-5')
+    $('#tableContainer').removeClass('col-md-12').addClass('col-md-8')
+    $('#formContainer').removeClass('d-none').addClass('col-md-4')
     $('#comboFormContainer').removeClass('d-none')
 
     setTimeout(() => {
@@ -557,9 +557,9 @@ $(function () {
   }
 
   function hideForm() {
-    $('#tableContainer').removeClass('col-md-7').addClass('col-md-12')
+    $('#tableContainer').removeClass('col-md-8').addClass('col-md-12')
     $('#comboFormContainer').addClass('d-none')
-    $('#formContainer').addClass('d-none').removeClass('col-md-5')
+    $('#formContainer').addClass('d-none').removeClass('col-md-4')
 
     setTimeout(() => {
       if (typeof table !== 'undefined' && table) {

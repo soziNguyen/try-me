@@ -14,7 +14,7 @@ $(function () {
 
   // Render dataTable
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#menuTableBody').offset().top - 100) / 70)
+  const numRows = Math.floor(($(window).height() - $('#menuTableBody').offset().top - 100) / 75)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }

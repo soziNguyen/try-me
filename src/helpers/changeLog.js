@@ -26,8 +26,17 @@ export const buildChangeLog = (oldObj, newObj, fields, targetName = '', targetTy
   const changes = []
 
   fields.forEach(({ field, label, formatValue: customFormatter }) => {
-    const oldValue = formatValue(oldObj[field], customFormatter)
-    const newValue = formatValue(newObj[field], customFormatter)
+    const oldValueRaw = oldObj[field]
+    const newValueRaw = newObj[field]
+
+    // Nếu có customFormatter, truyền value và toàn bộ object
+    const oldValue = customFormatter
+      ? customFormatter(oldValueRaw, oldObj)
+      : formatValue(oldValueRaw)
+
+    const newValue = customFormatter
+      ? customFormatter(newValueRaw, newObj)
+      : formatValue(newValueRaw)
 
     if (oldValue !== newValue) {
       const displayLabel = label || field
@@ -35,7 +44,7 @@ export const buildChangeLog = (oldObj, newObj, fields, targetName = '', targetTy
     }
   })
 
-  if (changes.length === 0) return
+  if (changes.length === 0) return ''
 
   if (targetName) {
     return targetType

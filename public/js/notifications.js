@@ -32,12 +32,14 @@ document.addEventListener(
 socket.emit('staff_join')
 
 // Nhận notification từ socket
-socket.on('staff_notification', (data) => {
-  console.log(data)
-
+socket.on('staff_notification', async (data) => {
   // Tạo ID cho notification mới
   if (!data.id) {
     data.id = `noti_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
+  }
+
+  if (data.type === 'customer_call_staff') {
+    await startBellAlert(data)
   }
 
   appendNotificationToModal(data)
@@ -256,6 +258,53 @@ function customScrollbarInit() {
   })
 }
 
+async function startBellAlert(data) {
+  if (!data.tableName && data.tableId) {
+    try {
+      const table = await ajax(`/api/tables/${data.tableId}`, {}, 'GET')
+      data.tableName = table?.name ? `Bàn ${table.name}` : `Bàn ${data.tableId}`
+    } catch {
+      data.tableName = `Bàn ${data.tableId}`
+    }
+  }
+
+  const overlay = document.getElementById('staffCallOverlay')
+  const bell = document.getElementById('staffCallBell')
+  const sound = document.getElementById('staffCallBellSound')
+  const staffTitle = document.getElementById('staffTitle')
+
+  if (staffTitle && data.tableName) {
+    staffTitle.textContent = `${data.tableName} yêu cầu hỗ trợ!`
+  }
+
+  if (overlay && bell) {
+    overlay.classList.remove('d-none')
+    bell.classList.remove('d-none')
+  }
+
+  if (sound) {
+    sound.currentTime = 0
+    sound.play().catch(() => {})
+  }
+}
+
+// Tắt popup chuông
+function stopBellAlert() {
+  const overlay = document.getElementById('staffCallOverlay')
+  const bell = document.getElementById('staffCallBell')
+  const sound = document.getElementById('staffCallBellSound')
+
+  if (overlay && bell) {
+    overlay.classList.add('d-none')
+    bell.classList.add('d-none')
+  }
+
+  if (sound) {
+    sound.pause()
+    sound.currentTime = 0
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const saved = JSON.parse(localStorage.getItem('staff_notifications') || '[]')
 
@@ -299,4 +348,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   customScrollbarInit()
+
+  const ackBtn = document.getElementById('staffCallBellAcknowledge')
+  if (ackBtn) ackBtn.addEventListener('click', stopBellAlert)
 })

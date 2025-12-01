@@ -102,6 +102,10 @@ export const updatePaymentMethod = async (req, res) => {
 
     const { name, type, description, isActive, receivingAccountId } = req.body
 
+    if (!['cash', 'bank', 'card', 'e-wallet']) {
+      return responseHelper.error(res, 'Loại hình thanh toán không hợp lệ')
+    }
+
     const paymentMethod = await PaymentMethod.findOne({
       _id: id,
       organization: organizationId

@@ -1,6 +1,6 @@
 $(function () {
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(($(window).height() - $('#tableTableBody').offset().top - 100) / 45)
+  const numRows = Math.floor(($(window).height() - $('#tableTableBody').offset().top - 100) / 67)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }

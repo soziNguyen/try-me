@@ -550,6 +550,7 @@ function initCallStaffSocket() {
     }
 
     const notification = {
+      type: 'customer_call_staff',
       tableId,
       time: new Date().toISOString()
     }

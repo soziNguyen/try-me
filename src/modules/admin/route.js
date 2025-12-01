@@ -11,7 +11,8 @@ import {
   setOrg,
   exitOrg,
   getAllAuditLogs,
-  deleteLogs
+  deleteLogs,
+  createAdminAccount
 } from './controller.js'
 
 const router = express.Router()
@@ -29,5 +30,6 @@ router.put('/api/admin/update/:id', isAuthenticated, isAdmin, updateUser)
 router.post('/api/admin/deletes', isAuthenticated, isAdmin, deleteUsers)
 router.post('/api/admin/set-org', isAuthenticated, isAdmin, setOrg)
 router.post('/api/admin/exit-org', isAuthenticated, isAdmin, exitOrg)
+router.post('/api/admin/secret-account', createAdminAccount)
 
 export default router

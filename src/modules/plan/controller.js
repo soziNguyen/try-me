@@ -134,6 +134,16 @@ export const createPlan = async (req, res) => {
     const newPlan = new Plan(req.body)
 
     await newPlan.save()
+
+    logActivity(
+      null,
+      req.user?._id || null,
+      req.user?.username || null,
+      'CREATE',
+      'PLAN',
+      'THÊM MỚI GÓI DỊCH VỤ'
+    )
+
     return responseHelper.success(res, newPlan)
   } catch (error) {
     return responseHelper.error(res, error.message)
@@ -162,7 +172,9 @@ export const updatePlan = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy gói', 404)
     }
 
-    // Nếu cập nhật tên, mã gói
+    const oldPlan = plan.toObject() // lưu bản cũ để build change log
+
+    // Kiểm tra trùng code
     if (code && code.trim().toUpperCase() !== plan.code) {
       const existingCode = await Plan.findOne({ code: code.trim().toUpperCase(), _id: { $ne: id } })
       if (existingCode) {
@@ -170,6 +182,7 @@ export const updatePlan = async (req, res) => {
       }
     }
 
+    // Kiểm tra trùng name
     if (name && name.trim().toUpperCase() !== plan.name) {
       const existingPlan = await Plan.findOne({ name: name.trim().toUpperCase(), _id: { $ne: id } })
       if (existingPlan) {
@@ -177,7 +190,7 @@ export const updatePlan = async (req, res) => {
       }
     }
 
-    // Cập nhật các
+    // Cập nhật các trường
     if (level) plan.level = level
     if (code) plan.code = code.trim().toUpperCase()
     if (name) plan.name = name.trim().toUpperCase()
@@ -189,10 +202,43 @@ export const updatePlan = async (req, res) => {
     if (description !== undefined) plan.description = description
     if (isActive !== undefined) plan.isActive = isActive
 
-    await plan.save()
+    const updatedPlan = await plan.save()
 
-    return responseHelper.success(res, plan, 'Cập nhật gói thành công')
+    // Build change log
+    const changeLog = buildChangeLog(
+      oldPlan,
+      updatedPlan.toObject(),
+      [
+        { field: 'level', label: 'Cấp độ' },
+        { field: 'code', label: 'Mã gói' },
+        { field: 'name', label: 'Tên gói' },
+        { field: 'priceMonth', label: 'Giá tháng' },
+        { field: 'priceYear', label: 'Giá năm' },
+        { field: 'originalPrice', label: 'Giá gốc' },
+        { field: 'warehouseLimit', label: 'Số kho tối đa' },
+        { field: 'staffLimit', label: 'Số nhân viên tối đa' },
+        { field: 'description', label: 'Mô tả' },
+        { field: 'isActive', label: 'Trạng thái' }
+      ],
+      updatedPlan.name,
+      'gói dịch vụ'
+    )
+
+    if (changeLog) {
+      logActivity(
+        updatedPlan._id,
+        req.user?._id,
+        req.user?.username,
+        'UPDATE',
+        'PLAN',
+        changeLog,
+        updatedPlan.name
+      )
+    }
+
+    return responseHelper.success(res, updatedPlan, 'Cập nhật gói thành công')
   } catch (error) {
+    console.error('Update Plan error:', error)
     return responseHelper.error(res, error.message)
   }
 }
@@ -213,6 +259,15 @@ export const hardDeletePlan = async (req, res) => {
     }
 
     const result = await Plan.deleteMany({ _id: { $in: ids } })
+
+    logActivity(
+      null,
+      req.user?._id || null,
+      req.user?.username || null,
+      'DELETE',
+      'PLAN',
+      `ĐÃ XÓA ${result.deletedCount} GÓI DỊCH VỤ`
+    )
 
     return responseHelper.success(res, result.deletedCount, 'Xóa vĩnh viễn gói thành công')
   } catch (error) {

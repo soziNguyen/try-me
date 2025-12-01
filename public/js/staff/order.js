@@ -774,8 +774,8 @@ $(async () => {
           return {
             results: data.map((c) => ({
               id: c._id,
-              text: `${c.name} - ${c.phone}`,
-              points: c.totalPoints || 0
+              text: c.phone ? `${c.name} - ${c.phone}` : c.name,
+              points: c.phone ? c.totalPoints || 0 : 0
             }))
           }
         },
@@ -807,16 +807,23 @@ $(async () => {
         const $select = $('#customerSelect')
 
         if (customer?._id) {
-          const option = new Option(
-            `${customer.name} - ${customer.phone}`,
-            customer._id,
-            true,
-            true
-          )
+          // Hiển thị tên + SĐT nếu có, hoặc chỉ tên nếu không có SĐT
+          const displayText = customer.phone
+            ? `${customer.name} - ${customer.phone}`
+            : customer.name
 
-          $(option).data('points', customer.totalPoints || 0)
+          const option = new Option(displayText, customer._id, true, true)
+
+          // Chỉ có điểm nếu có SĐT
+          $(option).data('points', customer.phone ? customer.totalPoints || 0 : 0)
           $select.append(option).trigger('change')
-          updatePoints(customer.totalPoints)
+
+          // Update UI điểm nếu có SĐT
+          if (customer.phone) {
+            updatePoints(customer.totalPoints)
+          } else {
+            updatePoints(0) // reset điểm về 0
+          }
         }
 
         // Gọi getTables truyền order để hiển thị bàn đã gán
@@ -884,11 +891,12 @@ $(async () => {
       const data = await ajax('/api/customer/create', { name, phone }, 'POST')
       if (!data) return
 
-      const newOption = new Option(`${data.name} - ${data.phone}`, data._id, true, true)
-      $(newOption).data('points', data.totalPoints || 0)
+      const displayCustomer = data.phone ? `${data.name} - ${data.phone}` : data.name
 
+      const newOption = new Option(displayCustomer, data._id, true, true)
+      $(newOption).data('points', data.phone ? data.totalPoints || 0 : 0)
       $select.empty().append(newOption).trigger('change')
-      updatePoints(data.totalPoints)
+      updatePoints(data.phone ? data.totalPoints || 0 : 0)
 
       if (orderId) {
         try {
@@ -898,7 +906,8 @@ $(async () => {
             'PUT'
           )
           if (result) {
-            updatePoints(result.customer.totalPoints)
+            const points = result.customer?.phone ? result.customer.totalPoints || 0 : 0
+            updatePoints(points)
           }
         } catch (error) {
           console.error(error)

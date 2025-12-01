@@ -1,6 +1,8 @@
 import CouponPlan from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { lookupRef } from '../../helpers/lookupHelper.js'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 export const getCouponPlans = async (req, res) => {
   try {
@@ -112,6 +114,15 @@ export const createCouponPlan = async (req, res) => {
     const coupon = new CouponPlan(req.body)
     await coupon.save()
 
+    logActivity(
+      null,
+      req.user?._id || null,
+      req.user?.username || null,
+      'CREATE',
+      'COUPON_PLAN',
+      'THÊM MỚI MÃ GIẢM GIÁ CHO GÓI DỊCH VỤ'
+    )
+
     responseHelper.success(res, coupon, 'Tạo thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -134,7 +145,7 @@ export const updateCouponPlan = async (req, res) => {
       isActive
     } = req.body
 
-    const coupon = await CouponPlan.findById(id)
+    const coupon = await CouponPlan.findById(id).populate('applicablePlans', '_id name code')
     if (!coupon) return responseHelper.error(res, 'Không tìm thấy mã giảm giá', 400)
 
     const normalizedDiscountValue = discountValue === '' ? null : discountValue
@@ -206,7 +217,10 @@ export const updateCouponPlan = async (req, res) => {
 
     // Kiểm tra trùng code
     if (code) {
-      const existed = await CouponPlan.findOne({ code, _id: { $ne: id } })
+      const existed = await CouponPlan.findOne({ code, _id: { $ne: id } }).populate(
+        'applicablePlans',
+        '_id name code'
+      )
       if (existed) return responseHelper.error(res, 'Mã giảm giá đã tồn tại', 400)
     }
 
@@ -223,10 +237,53 @@ export const updateCouponPlan = async (req, res) => {
     if (usedCount !== undefined) dataUpdate.usedCount = usedCount
     if (isActive !== undefined) dataUpdate.isActive = isActive
 
+    const oldCoupon = coupon.toObject()
+
     const updated = await CouponPlan.findByIdAndUpdate(id, dataUpdate, { new: true }).populate(
       'applicablePlans',
       '_id name code'
     )
+
+    const changeLog = buildChangeLog(
+      oldCoupon,
+      updated.toObject(),
+      [
+        { field: 'code', label: 'Mã giảm giá' },
+        { field: 'discountType', label: 'Loại giảm giá' },
+        { field: 'discountValue', label: 'Giá trị giảm giá' },
+        { field: 'description', label: 'Mô tả' },
+        {
+          field: 'applicablePlans',
+          label: 'Gói áp dụng',
+          formatValue: (plans) => {
+            if (!plans) return ''
+            if (Array.isArray(plans) && plans.length === 0) return 'Áp dụng toàn bộ gói'
+            if (Array.isArray(plans)) return plans.map((p) => p.name || p).join(', ')
+            return String(plans)
+          }
+        },
+        { field: 'startDate', label: 'Ngày bắt đầu', formatValue: (d) => d?.toLocaleDateString() },
+        { field: 'endDate', label: 'Ngày kết thúc', formatValue: (d) => d?.toLocaleDateString() },
+        { field: 'usageLimit', label: 'Giới hạn sử dụng' },
+        { field: 'usedCount', label: 'Số lượt đã dùng' },
+        { field: 'isActive', label: 'Trạng thái' }
+      ],
+      coupon.code,
+      'mã giảm giá'
+    )
+
+    if (changeLog) {
+      logActivity(
+        updated._id,
+        req.user?._id,
+        req.user?.username,
+        'UPDATE',
+        'COUPON_PLAN',
+        changeLog,
+        updated.code
+      )
+    }
+
     responseHelper.success(res, updated, 'Cập nhật thành công')
   } catch (error) {
     responseHelper.error(res, error.message)
@@ -242,6 +299,16 @@ export const deleteCouponPlan = async (req, res) => {
     }
 
     const result = await CouponPlan.deleteMany({ _id: { $in: ids } })
+
+    logActivity(
+      null,
+      req.user?._id || null,
+      req.user?.username || null,
+      'DELETE',
+      'COUPON_PLAN',
+      `XÓA ${result.deletedCount} GÓI DỊCH VỤ`
+    )
+
     responseHelper.success(res, { deletedCount: result.deletedCount }, 'Xóa thành công')
   } catch (err) {
     responseHelper.error(res, err.message)

@@ -1,8 +1,6 @@
 $(function () {
   let showList = [10, 25, 50, 100]
-  const numRows = Math.floor(
-    ($(window).height() - $('#activityLogsTable').offset().top - 160) / 45
-  )
+  const numRows = Math.floor(($(window).height() - $('#activityLogsTable').offset().top - 160) / 45)
   if (!showList.includes(numRows)) {
     showList.push(numRows)
   }
@@ -17,6 +15,7 @@ $(function () {
     },
     lengthMenu: [showList, showList],
     pageLength: numRows,
+    columnDefs: [{ width: '170px', targets: 0 }],
     columns: [
       { data: 'time', className: 'p-2' },
       { data: 'userName', className: 'p-2' },

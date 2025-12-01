@@ -1,4 +1,7 @@
+import mongoose from 'mongoose'
 import { Schedule } from './model.js'
+import User from '../user/model.js'
+import { Shift } from '../shift/model.js'
 import { lookupUser, lookupRef } from '../../helpers/lookupHelper.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
@@ -160,8 +163,29 @@ export const updateSchedule = async (req, res) => {
 
     const dataUpdate = {}
 
-    if (user !== undefined) dataUpdate.user = user || null
-    if (shift !== undefined) dataUpdate.shift = shift || null
+    if (user !== undefined) {
+      if (user === null || user === '') {
+        dataUpdate.user = null
+      } else if (!mongoose.isValidObjectId(user)) {
+        return responseHelper.error(res, 'Nhân viên không hợp lệ', 400)
+      } else {
+        const userExists = await User.findOne({ _id: user, organization: organizationId })
+        if (!userExists)
+          return responseHelper.error(res, 'Nhân viên không tồn tại trong tổ chức', 404)
+        dataUpdate.user = user
+      }
+    }
+    if (shift !== undefined) {
+      if (shift === null || shift === '') {
+        dataUpdate.shift = null
+      } else if (!mongoose.isValidObjectId(shift)) {
+        return responseHelper.error(res, 'Ca làm không hợp lệ', 400)
+      } else {
+        const shiftExists = await Shift.findById(shift)
+        if (!shiftExists) return responseHelper.error(res, 'Ca làm không tồn tại', 404)
+        dataUpdate.shift = shift
+      }
+    }
     if (date !== undefined) dataUpdate.date = date ? new Date(date) : null
     if (status !== undefined && ['scheduled', 'confirmed', 'cancelled'].includes(status))
       dataUpdate.status = status

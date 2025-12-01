@@ -22,6 +22,7 @@ import { generateInvoiceCode } from '../../helpers/generateInvoiceCode.js'
 import { formatPhoneNumber, validatePhoneNumber } from '../../helpers/validator.js'
 import { loadPointSetting } from '../../helpers/org-point.js'
 import { logActivity } from '../activity-logs/service.js'
+import { createPointHistory } from '../point-history/service.js'
 
 export const createOrder = async (req, res) => {
   try {
@@ -49,23 +50,24 @@ export const createOrder = async (req, res) => {
         prefix = invoiceOptions.prefix.trim()
       }
 
-      // Chuẩn hóa số điện thoại
+      // Chuẩn hóa số điện thoại - nếu có
       if (customerPhone) {
         const phoneError = validatePhoneNumber(customerPhone)
         if (phoneError) throw new BusinessError(phoneError, 400)
         customerPhone = formatPhoneNumber(customerPhone)
       }
 
-      // 1. Xử lý khách hàng theo organization + phone
+      // 1. Xử lý khách hàng
       let customer = null
-      if (customerPhone) {
-        const nameToUpdate = customerName?.trim()
-        const query = { organization: organizationId, phone: customerPhone }
+      const nameToUpdate = customerName?.trim()
 
+      // Trường hợp có số điện thoại
+      if (customerPhone) {
+        const query = { organization: organizationId, phone: customerPhone }
         customer = await Customer.findOne(query).session(session)
 
         if (customer) {
-          // Customer đã tồn tại - chỉ update name nếu cần
+          // Customer đã tồn tại - chỉ update name - nếu cần
           if (nameToUpdate && nameToUpdate !== customer.name) {
             customer = await Customer.findOneAndUpdate(
               query,
@@ -92,6 +94,20 @@ export const createOrder = async (req, res) => {
           )
           customer = newCustomer
         }
+      }
+      // Trường hợp không có SĐT nhưng có tên - tạo khách hàng không SĐT
+      else if (nameToUpdate) {
+        const [newCustomer] = await Customer.create(
+          [
+            {
+              organization: organizationId,
+              phone: null,
+              name: nameToUpdate
+            }
+          ],
+          { session }
+        )
+        customer = newCustomer
       }
 
       // Generate order code
@@ -828,13 +844,25 @@ export const checkoutOrder = async (req, res) => {
     if (parsedCustomerPaid < 0)
       return responseHelper.error(res, 'Số tiền khách trả không hợp lệ', 400)
 
+    // Validate points usage - chỉ cho phép KH có SĐT
     if (parsedPointsUsed > 0) {
-      const orderCheck = await Order.findById(orderId).select('customerId').lean()
+      const orderCheck = await Order.findById(orderId)
+        .select('customerId')
+        .populate('customerId', 'phone')
+        .lean()
+
       if (!orderCheck) {
         return responseHelper.error(res, 'Đơn hàng không tồn tại', 404)
       }
       if (!orderCheck.customerId) {
         return responseHelper.error(res, 'Khách lẻ không thể sử dụng điểm giảm giá', 400)
+      }
+      if (!orderCheck.customerId.phone) {
+        return responseHelper.error(
+          res,
+          'Khách hàng chưa có số điện thoại, không thể sử dụng điểm',
+          400
+        )
       }
     }
 
@@ -866,8 +894,6 @@ export const checkoutOrder = async (req, res) => {
             $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
           }
         }).session(session)
-
-        console.log('coupon:', coupon)
 
         if (!coupon) {
           logActivity(
@@ -1010,16 +1036,24 @@ export const checkoutOrder = async (req, res) => {
         }
       }
 
-      // 6. Handle customer points
+      // 6. Handle customer points - CHỈ CHO KHÁCH HÀNG CÓ SĐT
       let customer = null
       let pointsEarned = 0
 
       if (order.customerId) {
         customer = await Customer.findById(order.customerId).session(session)
+
         if (!customer) throw new BusinessError('Khách hàng không tồn tại', 404)
+
+        // Kiểm tra khách hàng có số điện thoại không -> mới được tích điểm
+        const hasPhone = !!customer.phone
+        const balanceBefore = customer.totalPoints
 
         // Points validation (if using points)
         if (parsedPointsUsed > 0) {
+          if (!hasPhone) {
+            throw new BusinessError('Khách hàng chưa có số điện thoại, không thể sử dụng điểm', 400)
+          }
           if (customer.totalPoints < parsedPointsUsed) {
             throw new BusinessError(
               `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`,
@@ -1028,31 +1062,85 @@ export const checkoutOrder = async (req, res) => {
           }
         }
 
-        // Calculate points earned
-        pointsEarned = Math.floor(total / pointsEarnRate)
+        // Calculate points earned - CHỈ TÍNH NẾU CÓ SĐT
+        if (hasPhone) {
+          pointsEarned = Math.floor(totalPayable / pointsEarnRate)
+        }
 
         // Atomic customer update
-        const customerUpdateResult = await Customer.findOneAndUpdate(
-          {
-            _id: order.customerId,
-            totalPoints: { $gte: parsedPointsUsed }
+        const updateData = {
+          $inc: {
+            totalOrders: 1,
+            totalSpent: total
           },
-          {
-            $inc: {
-              totalOrders: 1,
-              totalSpent: total,
-              totalPoints: pointsEarned - parsedPointsUsed
-            },
-            $set: {
-              lastOrderDate: new Date(),
-              updatedAt: new Date()
-            }
-          },
-          { new: true, session, runValidators: true }
-        )
+          $set: {
+            lastOrderDate: new Date(),
+            updatedAt: new Date()
+          }
+        }
+
+        let pointsChange = 0
+        if (pointsEarned > 0) {
+          pointsChange += pointsEarned
+        }
+        if (parsedPointsUsed > 0) {
+          pointsChange -= parsedPointsUsed
+        }
+
+        if (pointsChange !== 0) {
+          updateData.$inc.totalPoints = pointsChange
+        }
+
+        const updateQuery = {
+          _id: order.customerId
+        }
+
+        if (parsedPointsUsed > 0) {
+          updateQuery.totalPoints = { $gte: parsedPointsUsed }
+        }
+
+        const customerUpdateResult = await Customer.findOneAndUpdate(updateQuery, updateData, {
+          new: true,
+          session,
+          runValidators: true
+        })
 
         if (!customerUpdateResult) {
-          throw new BusinessError('Điểm khách hàng đã thay đổi, vui lòng thử lại', 409)
+          throw new BusinessError('Cập nhật thông tin khách hàng thất bại, vui lòng thử lại', 409)
+        }
+
+        const balanceAfter = customerUpdateResult.totalPoints
+
+        // Ghi lịch sử dùng điểm
+        if (parsedPointsUsed > 0) {
+          await createPointHistory({
+            customerId: order.customerId,
+            orderId: order._id,
+            type: 'redeem',
+            points: -parsedPointsUsed,
+            balanceBefore: balanceBefore,
+            balanceAfter: balanceBefore - parsedPointsUsed,
+            description: `Sử dụng ${parsedPointsUsed} điểm cho đơn hàng ${order.code}`,
+            organization: order.organization,
+            createdBy: req.user?._id,
+            session
+          })
+        }
+
+        // Ghi lịch sử tích điểm
+        if (pointsEarned > 0) {
+          await createPointHistory({
+            customerId: order.customerId,
+            orderId: order._id,
+            type: 'earn',
+            points: pointsEarned,
+            balanceBefore: parsedPointsUsed > 0 ? balanceBefore - parsedPointsUsed : balanceBefore,
+            balanceAfter: balanceAfter,
+            description: `Tích ${pointsEarned} điểm từ đơn hàng ${order.code}`,
+            organization: order.organization,
+            createdBy: req.user?._id,
+            session
+          })
         }
       } else if (parsedPointsUsed > 0) {
         throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
@@ -1117,6 +1205,9 @@ export const checkoutOrder = async (req, res) => {
       }
 
       // 10. INCREMENT COUPON
+
+      let message = `Hoàn tất thanh toán đơn ${order.code}. Tổng thanh toán: ${total}đ.`
+
       if (couponToConfirm) {
         const confirmedCoupon = await Coupon.findOneAndUpdate(
           {
@@ -1137,24 +1228,29 @@ export const checkoutOrder = async (req, res) => {
           throw new BusinessError('Mã giảm giá đã hết lượt sử dụng trong khi xử lý giao dịch', 409)
         }
 
-        logActivity(
-          order.organization,
-          req.user?._id || null,
-          req.user?.username || null,
-          'CONFIRM_USAGE',
-          'COUPON',
-          `Xác nhận sử dụng mã ${confirmedCoupon.code} cho đơn ${order.code}, giảm ${confirmedCoupon.discountValue} đ (Lượt sử dụng: ${confirmedCoupon.usedCount}/${confirmedCoupon.usageLimit || '∞'})`,
-          confirmedCoupon.code,
-          'SUCCESS'
-        )
+        if (confirmedCoupon) {
+          message += ` Xác nhận sử dụng mã giảm giá - ${confirmedCoupon.code}, giảm ${confirmedCoupon.discountValue}đ.`
+        }
       }
+
+      logActivity(
+        order.organization,
+        req.user?._id || null,
+        req.user?.username || null,
+        'CHECKOUT',
+        'ORDER',
+        message,
+        order.code,
+        'SUCCESS',
+        order.warehouse
+      )
 
       return {
         totalAmount,
         discount: parsedDiscount,
         pointsUsed: parsedPointsUsed,
         pointsDiscount: calculatedPointsDiscount,
-        pointsEarned,
+        pointsEarned, // Sẽ = 0 nếu khách hàng không có SĐT
         serviceCharge: parsedServiceCharge,
         extraDiscount: parsedExtraDiscount,
         vatRate: parsedVatRate,
@@ -1193,7 +1289,8 @@ export const updateOrderDraft = async (req, res) => {
 
     const result = await withTransaction(async (session) => {
       // 1. Lấy order
-      const order = await Order.findById(orderId).session(session)
+      const order = await Order.findById(orderId).populate('customerId', 'phone').session(session)
+
       if (!order) throw new BusinessError('Order không tồn tại', 404)
 
       if (!Array.isArray(order.items) || order.items.length === 0) {
@@ -1246,7 +1343,13 @@ export const updateOrderDraft = async (req, res) => {
             throw new BusinessError('Khách lẻ không thể sử dụng điểm', 400)
           }
           const customer = await Customer.findById(order.customerId).session(session)
+
           if (!customer) throw new BusinessError('Khách hàng không tồn tại', 404)
+
+          if (!customer.phone) {
+            throw new BusinessError('Khách hàng chưa có số điện thoại, không thể sử dụng điểm', 400)
+          }
+
           if (customer.totalPoints < parsedPointsUsed) {
             throw new BusinessError(
               `Không đủ điểm tích lũy. Hiện có: ${customer.totalPoints}, cần: ${parsedPointsUsed}`,
@@ -1359,8 +1462,6 @@ export const updateOrderDraft = async (req, res) => {
         const paymentMethod = await PaymentMethod.findById(paymentMethodId)
           .populate('receivingAccountId')
           .session(session)
-
-        console.log(paymentMethod)
 
         if (paymentMethod && (paymentMethod.type === 'bank' || paymentMethod.type === 'e-wallet')) {
           receivingAccountId = paymentMethod.receivingAccountId

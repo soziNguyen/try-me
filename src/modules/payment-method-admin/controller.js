@@ -1,6 +1,8 @@
 import PaymentMethod from './model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { mongoose } from 'mongoose'
+import { logActivity } from '../activity-logs/service.js'
+import { buildChangeLog } from '../../helpers/changeLog.js'
 
 export const getActivePaymentMethods = async (req, res) => {
   try {
@@ -105,6 +107,15 @@ export const createPaymentMethod = async (req, res) => {
       bankInfo: bankInfo || null // default null nếu không có
     })
 
+    logActivity(
+      null,
+      req.user?._id || null,
+      req.user?.username || null,
+      'CREATE',
+      'PAYMENT-METHOD',
+      'THÊM MỚI PHƯƠNG THỨC THANH TOÁN'
+    )
+
     return responseHelper.success(res, newMethod, 'Tạo phương thức thanh toán thành công')
   } catch (error) {
     return responseHelper.error(res, error.message)
@@ -125,14 +136,9 @@ export const updatePaymentMethod = async (req, res) => {
       return responseHelper.error(res, 'Không tìm thấy phương thức thanh toán')
     }
 
-    if (code && code !== existing.code) {
-      const codeExists = await PaymentMethod.findOne({ code, _id: { $ne: id } })
-      if (codeExists) {
-        return responseHelper.error(res, 'Mã phương thức thanh toán đã tồn tại')
-      }
-      existing.code = code
-    }
+    const oldPaymentMethod = existing.toObject() // lưu bản cũ để build change log
 
+    // Cập nhật các trường
     if (name !== undefined) existing.name = name
     if (code !== undefined) existing.code = code
     if (description !== undefined) existing.description = description
@@ -142,10 +148,48 @@ export const updatePaymentMethod = async (req, res) => {
     if (bankInfo !== undefined) existing.bankInfo = bankInfo
     if (config !== undefined) existing.config = { ...existing.config, ...config }
 
-    await existing.save()
+    const updated = await existing.save()
 
-    return responseHelper.success(res, existing, 'Cập nhật phương thức thành công')
+    // Build change log
+    const changeLog = buildChangeLog(
+      oldPaymentMethod,
+      updated.toObject(),
+      [
+        { field: 'name', label: 'Tên' },
+        { field: 'code', label: 'Mã phương thức' },
+        { field: 'description', label: 'Mô tả' },
+        { field: 'icon', label: 'Icon' },
+        { field: 'isActive', label: 'Trạng thái' },
+        { field: 'sortOrder', label: 'Thứ tự' },
+        {
+          field: 'bankInfo',
+          label: 'Thông tin ngân hàng',
+          formatValue: (value) => {
+            if (!value) return ''
+            return `Ngân hàng: ${value.bankName || ''}, Chi nhánh: ${value.branchName || ''}, Số TK: ${value.accountNumber || ''}, Chủ TK: ${value.accountName || ''}, Mã ngân hàng: ${value.bankCode || ''}`
+          }
+        },
+        { field: 'config', label: 'Cấu hình', formatValue: (value) => JSON.stringify(value) }
+      ],
+      updated.name,
+      'phương thức thanh toán'
+    )
+
+    if (changeLog) {
+      logActivity(
+        null,
+        req.user?._id,
+        req.user?.username,
+        'UPDATE',
+        'PAYMENT_METHOD',
+        changeLog,
+        updated.name
+      )
+    }
+
+    return responseHelper.success(res, updated, 'Cập nhật phương thức thành công')
   } catch (err) {
+    console.error('Update PaymentMethod error:', err)
     return responseHelper.error(res, err.message)
   }
 }
@@ -159,6 +203,16 @@ export const deletePaymentMethods = async (req, res) => {
     const result = await PaymentMethod.deleteMany({
       _id: { $in: ids }
     })
+
+    logActivity(
+      null,
+      req.user?._id || null,
+      req.user?.username || null,
+      'DELETE',
+      'PAYMENT-METHOD',
+      `ĐÃ XÓA ${result.deletedCount} PHƯƠNG THỨC THANH TOÁN`
+    )
+
     responseHelper.success(res, 1, `Đã xóa ${result.deletedCount} bản ghi`)
   } catch (error) {
     responseHelper.error(res, error.message)

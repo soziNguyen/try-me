@@ -12533,6 +12533,10 @@
   cursor: pointer;
 }
 
+.h-100vh {
+  height: 100vh !important;
+}
+
 .layout {
   display: flex;
   align-items: center;
