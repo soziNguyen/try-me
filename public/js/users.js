@@ -430,7 +430,7 @@ if (logInForm) {
 
         // Bắt buộc kho nếu là Staff
         if (['Staff', 'Kitchen'].includes(role) && !warehouse) {
-          return toastr.warning('Vui lòng chọn kho cho vai nhân viên')
+          return toastr.warning('Vui lòng chọn kho cho nhân viên')
         }
         if (['Staff', 'Kitchen'].includes(role)) dataUpdate.warehouse = warehouse
 

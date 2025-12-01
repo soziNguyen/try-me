@@ -13,6 +13,7 @@ const OrganizationSchema = new Schema(
     businessType: {
       type: String,
       enum: ['shop', 'food', 'drink'],
+      default: 'shop',
       require: true
     },
     defaultWarehouse: {

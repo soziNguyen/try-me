@@ -368,12 +368,14 @@
         </div>
       </div>
     </div>
-    <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
+    </div>
+    </div>
 
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
     <%- include('../partials/commonjs.html') %>
-      <script src="/js/library/socket.io.min.js"></script>
-      <script src="/js/sidebar-toggle.js"></script>
-      <script src="/js/notifications.js"></script>
-      <script src="/js/staff/checkout.js"></script>
-      <script src="/js/staff/order.js"></script>
-      <%- include('../partials/footer.html') %>
+    <script src="/js/library/socket.io.min.js"></script>
+    <script src="/js/sidebar-toggle.js"></script>
+    <script src="/js/notifications.js"></script>
+    <script src="/js/staff/checkout.js"></script>
+    <script src="/js/staff/order.js"></script>
+    <%- include('../partials/staff_footer.html') %>
