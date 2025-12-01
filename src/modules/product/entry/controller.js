@@ -337,11 +337,28 @@ export const getProductEntries = async (req, res) => {
     // Query
     const data = await ProductEntry.aggregate(basePipeline)
 
+    let totalReceived = 0
+    if (flatten) {
+      const totalPipeline = [
+        { $match: matchCondition },
+        { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
+        {
+          $group: {
+            _id: null,
+            totalQuantity: { $sum: '$items.quantity' }
+          }
+        }
+      ]
+      const totalResult = await ProductEntry.aggregate(totalPipeline)
+      totalReceived = totalResult.length > 0 ? totalResult[0].totalQuantity : 0
+    }
+
     return res.json({
       draw,
       recordsTotal,
       recordsFiltered: recordsTotal,
-      data
+      data,
+      totalReceived
     })
   } catch (error) {
     responseHelper.error(res, error.message)
