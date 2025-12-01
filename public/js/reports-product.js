@@ -10,8 +10,7 @@ $(function () {
   const $warehouseFilter = $('#warehouseFilter')
 
   let table,
-    warehouses = [],
-    cachedTotalReceived = null
+    warehouses = []
   const stocksData = {},
     salesData = {}
 
@@ -116,11 +115,8 @@ $(function () {
           return d
         },
         dataSrc: (json) => {
-          if (json.draw === 1 || cachedTotalReceived === null) {
-            cachedTotalReceived =
-              json.totalReceived ??
-              (json.data || []).reduce((sum, item) => sum + (item.quantity || 0), 0)
-            $('#totalReceived').text(cachedTotalReceived.toLocaleString('vi-VN'))
+          if (json.totalReceived !== undefined) {
+            $('#totalReceived').text(json.totalReceived.toLocaleString('vi-VN'))
           }
           return json.data
         }
@@ -226,7 +222,6 @@ $(function () {
   }
 
   function reloadData() {
-    cachedTotalReceived = null
     Promise.all([fetchStocksData(), fetchSalesData()])
       .then(() => {
         if (table) {
