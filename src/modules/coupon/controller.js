@@ -111,6 +111,7 @@ export const updateCoupon = async (req, res) => {
       usedCount,
       isActive
     } = req.body
+
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
@@ -202,8 +203,9 @@ export const updateCoupon = async (req, res) => {
       return responseHelper.error(res, 'Số lượt đã sử dụng không thể âm', 400)
     }
 
-    const finalUsageLimit = usageLimit !== undefined ? usageLimit : coupon.usageLimit
+    let finalUsageLimit = usageLimit !== undefined ? usageLimit : coupon.usageLimit
     const finalUsedCount = usedCount !== undefined ? usedCount : coupon.usedCount
+    if (finalUsageLimit === '') finalUsageLimit = null
 
     if (finalUsageLimit !== null && finalUsedCount > finalUsageLimit) {
       return responseHelper.error(
