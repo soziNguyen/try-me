@@ -1193,6 +1193,16 @@ export const checkoutOrder = async (req, res) => {
       order.updatedAt = new Date()
       if (qrCodeUrl) order.qrCode = qrCodeUrl
 
+      for (const item of order.items) {
+        if (item.status !== 'done') {
+          item.status = 'done'
+          item.doneAt = new Date()
+          if (req.user && req.user._id) {
+            item.doneBy = req.user._id
+          }
+        }
+      }
+
       await order.save({ session })
 
       // 9. RELEASE TABLE
@@ -1425,6 +1435,10 @@ export const updateOrderDraft = async (req, res) => {
 
       // Nếu FE gửi paymentMethodId, validate và ghi đè
       if (newPaymentMethodId) {
+        if (!mongoose.isValidObjectId(newPaymentMethodId)) {
+          throw new BusinessError('Phương thức thanh toán không hợp lệ', 400)
+        }
+
         const pmExists = await PaymentMethod.findOne({
           _id: newPaymentMethodId,
           organization: order.organization,
@@ -1434,7 +1448,7 @@ export const updateOrderDraft = async (req, res) => {
           .lean()
 
         if (!pmExists) {
-          throw new BusinessError('Phương thức thanh toán không hợp lệ', 400)
+          throw new BusinessError('Phương thức thanh toán không tồn tại', 400)
         }
 
         paymentMethodId = newPaymentMethodId

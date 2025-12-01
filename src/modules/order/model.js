@@ -25,7 +25,9 @@ const OrderSchema = new Schema(
         price: { type: Number, required: true },
         status: { type: String, enum: ['pending', 'cooking', 'done'], default: 'pending' },
         batch: { type: Number, default: null }, // Lần gửi
-        sentAt: { type: Date, default: Date.now } // Thời gian gửi
+        sentAt: { type: Date, default: Date.now }, // Thời gian gửi
+        doneAt: { type: Date, default: null }, // Thời gian hoàn thành
+        doneBy: { type: Schema.Types.ObjectId, ref: 'User', default: null } // Người hoàn tất
       }
     ],
     totalAmount: { type: Number, default: 0 }, // Tổng tiền gốc

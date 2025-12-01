@@ -382,6 +382,12 @@ body {
           }
         }
       }
+      .order {
+        #orderSummary,
+        #kitchenStatus {
+          border-radius: 0;
+        }
+      }
     }
 
     ##{$role}__sidebar.collapsed ~ .#{$role}__content {

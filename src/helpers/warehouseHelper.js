@@ -29,7 +29,7 @@ export const getWarehouse = async (req, organizationId) => {
     const org = await Organization.findById(organizationId).select('defaultWarehouse')
     if (!org?.defaultWarehouse) {
       throw new BusinessError(
-        'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật trong profile.',
+        'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật kho trong phần hồ sơ.',
         400
       )
     }

@@ -137,6 +137,14 @@ export const updateKitchenItemStatus = async (req, res) => {
     if (!item) return responseHelper.error(res, 'Món trong đơn không tồn tại', 404)
 
     item.status = status
+
+    if (status === 'done') {
+      item.doneAt = new Date()
+      item.doneBy = req.user._id
+    } else {
+      item.doneAt = null
+      item.doneBy = null
+    }
     order.updatedBy = req.user._id
 
     await order.save()
