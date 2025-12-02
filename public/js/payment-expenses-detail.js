@@ -42,7 +42,7 @@ $(function () {
 
   function populatePaymentExpenseForm(expense) {
     $('#code').val(expense.code || '')
-    $('#date').val(expense.date ? new Date(expense.date).toLocaleDateString('vi-VN') : '')
+    $('#date').val(expense.date ? formatDate(expense.date) : '')
     $('#warehouse').val(expense.warehouse?.name || '')
     $('#createdBy').val(expense.createdBy?.username || '')
     $('#reason').val(expense.reason || '')
@@ -100,11 +100,6 @@ $(function () {
   $btnBack.on('click', (e) => {
     e.preventDefault()
     window.location.href = '/payment-expenses'
-  })
-
-  $btnPrint.on('click', (e) => {
-    e.preventDefault()
-    window.print()
   })
 
   $btnSave.on('click', (e) => {

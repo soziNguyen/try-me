@@ -15,7 +15,7 @@ const receiptSchema = new mongoose.Schema(
     note: { type: String, default: '' },
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
-    submitTer: { type: String, default: '' },
+    submitter: { type: String, default: '' },
     reviewer: { type: String, default: '' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
@@ -25,7 +25,7 @@ const receiptSchema = new mongoose.Schema(
     lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
   },
   {
-    collection: 'Receipts', // Tên collection
+    collection: 'PaymentReceipts', // Tên collection
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
   }
 )
@@ -33,6 +33,6 @@ const receiptSchema = new mongoose.Schema(
 // Đảm bảo mã phiếu duy nhất trong cùng tổ chức
 receiptSchema.index({ organization: 1, code: 1 }, { unique: true })
 
-const Receipt = mongoose.model('Receipt', receiptSchema)
+const Receipt = mongoose.model('PaymentReceipt', receiptSchema)
 
 export { Receipt }

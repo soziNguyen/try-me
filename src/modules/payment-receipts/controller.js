@@ -16,8 +16,6 @@ export const createReceipt = async (req, res) => {
       return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
     }
 
-    const { reason, note, receiptAmount, submitTer, reviewer } = req.body
-
     const receipt = await withTransaction(async (session) => {
       const code = await generateDocumentCode(Receipt, 'RC')
       const date = new Date()
@@ -32,12 +30,7 @@ export const createReceipt = async (req, res) => {
         date,
         createdBy: req.user._id,
         organization: organizationId,
-        warehouse,
-        reason,
-        note,
-        receiptAmount,
-        submitTer,
-        reviewer
+        warehouse
       }
 
       const doc = new Receipt(docData)
@@ -176,7 +169,7 @@ export const getReceipts = async (req, res) => {
         date: { $first: '$date' },
         warehouse: { $first: '$warehouse' },
         reason: { $first: '$reason' },
-        submitTer: { $first: '$submitTer' },
+        submitter: { $first: '$submitter' },
         note: { $first: '$note' },
         receiptAmount: { $first: '$receiptAmount' },
         createdBy: { $first: '$createdBy.username' }
@@ -246,13 +239,13 @@ export const updateReceipt = async (req, res) => {
       if (oldReceipt.isLocked)
         throw new BusinessError('Phiếu thu đã bị khóa, không thể chỉnh sửa', 400)
 
-      const { receiptAmount, reason, note, submitTer, reviewer } = req.body
+      const { receiptAmount, reason, note, submitter, reviewer } = req.body
 
       const updateData = {
         receiptAmount,
         reason,
         note,
-        submitTer,
+        submitter,
         reviewer,
         updatedBy: req.user._id
       }
@@ -296,9 +289,9 @@ export const updateReceipt = async (req, res) => {
       )
     }
 
-    if ((oldReceipt.submitTer || '') !== (updatedReceipt.submitTer || '')) {
+    if ((oldReceipt.submitter || '') !== (updatedReceipt.submitter || '')) {
       changes.push(
-        `Người nộp: "${oldReceipt.submitTer || '(Không có)'}" → "${updatedReceipt.submitTer || '(Không có)'}"`
+        `Người nộp: "${oldReceipt.submitter || '(Không có)'}" → "${updatedReceipt.submitter || '(Không có)'}"`
       )
     }
 
