@@ -35,7 +35,9 @@ $(function () {
         method: 'GET',
         data: (d) => ({
           ...d,
-          warehouse: $('#warehouseFilter').val() || 'all'
+          warehouse: $('#warehouseFilter').val() || 'all',
+          startDate: $('#startDate').val() || '',
+          endDate: $('#endDate').val() || ''
         })
       },
       lengthMenu: [showList, showList],
@@ -49,25 +51,50 @@ $(function () {
 
   // 3. Khởi tạo bảng đơn hàng
   function initOrderTable(warehouseId = 'all') {
+    const startDate = $('#startDate').val() || ''
+    const endDate = $('#endDate').val() || ''
+
     $.ajax({
       url: '/api/orders/get',
       method: 'GET',
-      data: { warehouse: warehouseId },
+      data: {
+        warehouse: warehouseId,
+        startDate: startDate,
+        endDate: endDate
+      },
       success: function (res) {
         const data = res.data || res
         const tbody = $('#receiptTableBody2')
         tbody.empty()
 
-        updateOrderSummary(res.summary)
-
         if (!data.length) {
           tbody.append(
             `<tr><td colspan="8" class="text-center text-muted">Không có đơn hàng nào</td></tr>`
           )
-          return
+        } else {
+          data.forEach((order) => tbody.append(buildOrderRow(order)))
         }
 
-        data.forEach((order) => tbody.append(buildOrderRow(order)))
+        // Lấy tổng phiếu thu từ DataTable
+        const totalOrders = res.summary?.totalAmount || 0
+        let totalReceipts = 0
+
+        // Tính tổng từ dữ liệu DataTable đã load
+        if (table && table.ajax && table.ajax.json()) {
+          const receiptsData = table.ajax.json()
+          if (receiptsData && receiptsData.data) {
+            totalReceipts = receiptsData.data.reduce((sum, item) => {
+              return sum + (Number(item.receiptAmount) || 0)
+            }, 0)
+          }
+        }
+
+        const grandTotal = totalOrders + totalReceipts
+
+        updateOrderSummary({
+          totalOrders: res.summary?.totalOrders || 0,
+          totalAmount: grandTotal
+        })
       },
       error: function (xhr) {
         console.error('Lỗi tải đơn hàng:', xhr)
@@ -234,6 +261,29 @@ $(function () {
       'payment-receipts'
     )
     initTableCheckboxEvents('#receiptTable1', 'paymentReceiptsCheckbox')
+
+    $('#filetdate').on('click', function (e) {
+      e.stopPropagation()
+    })
+
+    $('#filterDateBtn').on('click', function () {
+      const startDate = $('#startDate').val()
+      const endDate = $('#endDate').val()
+
+      if (new Date(startDate) > new Date(endDate)) {
+        toastr.error('Ngày bắt đầu phải trước ngày kết thúc')
+        return
+      }
+
+      // Reload cả 2 bảng
+      table.ajax.reload()
+      const selectedWarehouse = $('#warehouseFilter').val() || 'all'
+      initOrderTable(selectedWarehouse)
+
+      $('#toggleFilterBtn').dropdown('hide')
+
+      toastr.success('Đã áp dụng bộ lọc ngày')
+    })
   }
 
   // 6. Tiện ích bảng đơn hàng
