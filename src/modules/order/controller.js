@@ -2229,3 +2229,200 @@ export const cancelledOrder = async (req, res) => {
     responseHelper.error(res, error.message)
   }
 }
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const warehouse = req.query.warehouse
+    const now = new Date()
+
+    // HÔM NAY
+    const startOfToday = new Date(now.setHours(0, 0, 0, 0))
+    const endOfToday = new Date(now.setHours(23, 59, 59, 999))
+
+    // 7 NGÀY GẦN NHẤT
+    const last7Days = new Date()
+    last7Days.setDate(last7Days.getDate() - 6)
+    last7Days.setHours(0, 0, 0, 0)
+
+    // Base match hôm nay
+    const todayMatch = {
+      organization: organizationId,
+      status: 'completed',
+      updatedAt: { $gte: startOfToday, $lte: endOfToday }
+    }
+
+    // Base match 7 ngày
+    const last7DaysMatch = {
+      organization: organizationId,
+      status: 'completed',
+      updatedAt: { $gte: last7Days }
+    }
+
+    // Warehouse filter
+    if (req.warehouseFilter) {
+      todayMatch.warehouse = req.warehouseFilter
+      last7DaysMatch.warehouse = req.warehouseFilter
+    } else if (warehouse && warehouse !== 'all') {
+      const warehouseId = new mongoose.Types.ObjectId(String(warehouse))
+      todayMatch.warehouse = warehouseId
+      last7DaysMatch.warehouse = warehouseId
+    }
+
+    // 1. DOANH THU HÔM NAY + SỐ LƯỢNG ĐơN HÔM NAY
+    const todayOverviewPipeline = [
+      { $match: todayMatch },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$total' }
+        }
+      }
+    ]
+
+    // 2. MÓN BÁN CHẠY NHẤT HÔM NAY (bao gồm cả menu và combo)
+    const topItemTodayPipeline = [
+      { $match: todayMatch },
+      { $unwind: '$items' },
+      ...lookupRef('items.foodId', 'MenuItems', { as: 'food' }),
+      ...lookupRef('items.comboId', 'Combos', { as: 'combo' }),
+      { $unwind: { path: '$food', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$combo', preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          itemId: {
+            $cond: [{ $ifNull: ['$food._id', false] }, '$food._id', '$combo._id']
+          },
+          itemName: {
+            $cond: [{ $ifNull: ['$food.name', false] }, '$food.name', '$combo.name']
+          },
+          itemType: {
+            $cond: [{ $ifNull: ['$food._id', false] }, 'menu', 'combo']
+          },
+          itemCategory: '$food.category'
+        }
+      },
+      {
+        $group: {
+          _id: '$itemId',
+          name: { $first: '$itemName' },
+          type: { $first: '$itemType' },
+          category: { $first: '$itemCategory' },
+          totalQuantity: { $sum: '$items.quantity' },
+          totalRevenue: { $sum: { $multiply: ['$items.quantity', '$items.price'] } }
+        }
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 1 }
+    ]
+
+    // 3. DOANH THU 7 NGÀY GẦN NHẤT (theo từng ngày)
+    const last7DaysRevenuePipeline = [
+      { $match: last7DaysMatch },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$updatedAt',
+              timezone: '+07:00'
+            }
+          },
+          date: {
+            $first: {
+              $dateToString: {
+                format: '%d/%m',
+                date: '$updatedAt',
+                timezone: '+07:00'
+              }
+            }
+          },
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$total' }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          date: 1,
+          totalOrders: 1,
+          totalRevenue: 1
+        }
+      }
+    ]
+
+    // 4. TOP 5 MÓN BÁN CHẠY NHẤT (bao gồm cả menu và combo - 7 ngày)
+    const top5ItemsPipeline = [
+      { $match: last7DaysMatch },
+      { $unwind: '$items' },
+      ...lookupRef('items.foodId', 'MenuItems', { as: 'food' }),
+      ...lookupRef('items.comboId', 'Combos', { as: 'combo' }),
+      { $unwind: { path: '$food', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$combo', preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          itemId: {
+            $cond: [{ $ifNull: ['$food._id', false] }, '$food._id', '$combo._id']
+          },
+          itemName: {
+            $cond: [{ $ifNull: ['$food.name', false] }, '$food.name', '$combo.name']
+          },
+          itemType: {
+            $cond: [{ $ifNull: ['$food._id', false] }, 'menu', 'combo']
+          },
+          itemCategory: '$food.category'
+        }
+      },
+      {
+        $group: {
+          _id: '$itemId',
+          name: { $first: '$itemName' },
+          type: { $first: '$itemType' },
+          category: { $first: '$itemCategory' },
+          totalQuantity: { $sum: '$items.quantity' },
+          totalRevenue: { $sum: { $multiply: ['$items.quantity', '$items.price'] } }
+        }
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 5 }
+    ]
+
+    // Execute all pipelines
+    const [todayOverview, topItemToday, last7DaysRevenue, top5Items] = await Promise.all([
+      Order.aggregate(todayOverviewPipeline),
+      Order.aggregate(topItemTodayPipeline),
+      Order.aggregate(last7DaysRevenuePipeline),
+      Order.aggregate(top5ItemsPipeline)
+    ])
+
+    return res.json({
+      success: true,
+      data: {
+        // Doanh thu hôm nay
+        todayRevenue: todayOverview[0]?.totalRevenue || 0,
+
+        // Số lượng đơn hôm nay
+        todayOrders: todayOverview[0]?.totalOrders || 0,
+
+        // Món bán chạy nhất hôm nay
+        topItemToday: topItemToday[0] || null,
+
+        // Doanh thu 7 ngày gần nhất (biểu đồ)
+        last7DaysRevenue,
+
+        // Top 5 món bán chạy nhất
+        top5Items
+      }
+    })
+  } catch (error) {
+    console.error('Dashboard stats error:', error)
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    })
+  }
+}

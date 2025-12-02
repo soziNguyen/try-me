@@ -7,6 +7,7 @@
   --link: #0d6efd;
   --tooltip-bg: rgba(0, 0, 0, 0.8);
   --shadow-color: rgba(0, 0, 0, 0.3);
+  --light-blue: #f6f8fc;
 
   /* Background */
   --bg: #ffffff;
@@ -42,6 +43,10 @@
 
 .bg-purple {
   background-color: var(--purple) !important;
+}
+
+.bg-light-blue {
+  background-color: var(--light-blue) !important;
 }
 
 /* Dark theme overrides */
