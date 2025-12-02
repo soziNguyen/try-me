@@ -42,13 +42,13 @@ $(function () {
 
   function populateReceiptForm(receipt) {
     $('#code').val(receipt.code || '')
-    $('#date').val(receipt.date ? new Date(receipt.date).toLocaleDateString('vi-VN') : '')
+    $('#date').val(receipt.date ? formatDate(receipt.date) : '')
     $('#warehouse').val(receipt.warehouse?.name || '')
     $('#createdBy').val(receipt.createdBy?.username || '')
     $('#reason').val(receipt.reason || '')
     $('#receiptAmount').val(receipt.receiptAmount || '')
     $('#note').val(receipt.note || '')
-    $('#submitTer').val(receipt.submitTer || '')
+    $('#submitter').val(receipt.submitter || '')
     $('#reviewer').val(receipt.reviewer || '')
   }
 
@@ -67,7 +67,7 @@ $(function () {
       reason: $('#reason').val(),
       note: $('#note').val(),
       receiptAmount,
-      submitTer: $('#submitTer').val(),
+      submitter: $('#submitter').val(),
       reviewer: $('#reviewer').val()
     }
 
@@ -100,11 +100,6 @@ $(function () {
   $btnBack.on('click', (e) => {
     e.preventDefault()
     window.location.href = '/payment-receipts'
-  })
-
-  $btnPrint.on('click', (e) => {
-    e.preventDefault()
-    window.print()
   })
 
   $btnSave.on('click', (e) => {

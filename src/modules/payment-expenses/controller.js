@@ -1,6 +1,5 @@
 import mongoose from 'mongoose'
-import { ProductExpense, units } from './model.js'
-// import Organization from '../organization/model.js'
+import { PaymentExpense, units } from './model.js'
 import BusinessError from '../error/BusinessError.js'
 
 import responseHelper from '../../helpers/responseHelper.js'
@@ -17,10 +16,8 @@ export const createPaymentExpense = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const { reason, receiver, expenseAmount, note, reviewer } = req.body
-
     const expense = await withTransaction(async (session) => {
-      const code = await generateDocumentCode(ProductExpense, 'PE')
+      const code = await generateDocumentCode(PaymentExpense, 'PE')
       const date = new Date()
 
       let warehouse = req.body.warehouse
@@ -33,15 +30,10 @@ export const createPaymentExpense = async (req, res) => {
         date,
         createdBy: req.user._id,
         organization: organizationId,
-        warehouse,
-        reason,
-        receiver,
-        expenseAmount,
-        note,
-        reviewer
+        warehouse
       }
 
-      const doc = new ProductExpense(docData)
+      const doc = new PaymentExpense(docData)
       await doc.save({ session })
       return doc
     })
@@ -78,7 +70,7 @@ export const getPaymentExpensesById = async (req, res) => {
       matchCondition.warehouse = req.warehouseFilter
     }
 
-    const productExpense = await ProductExpense.findOne(matchCondition)
+    const productExpense = await PaymentExpense.findOne(matchCondition)
       .populate('warehouse', 'name location')
       .populate('createdBy', 'username')
       .populate('updatedBy', 'username')
@@ -185,8 +177,8 @@ export const getPaymentExpenses = async (req, res) => {
     const countPipeline = [...basePipeline, { $count: 'totalCount' }]
 
     const [totalAmountResult, totalData] = await Promise.all([
-      ProductExpense.aggregate(totalAmountPipeline),
-      ProductExpense.aggregate(countPipeline)
+      PaymentExpense.aggregate(totalAmountPipeline),
+      PaymentExpense.aggregate(countPipeline)
     ])
 
     const totalAmount = totalAmountResult.length > 0 ? totalAmountResult[0].totalAmount : 0
@@ -194,7 +186,7 @@ export const getPaymentExpenses = async (req, res) => {
 
     basePipeline.push({ $sort: { [sortField]: sortDir } }, { $skip: start }, { $limit: length })
 
-    const data = await ProductExpense.aggregate(basePipeline)
+    const data = await PaymentExpense.aggregate(basePipeline)
 
     return res.json({
       draw,
@@ -224,7 +216,7 @@ export const updatePaymentExpenses = async (req, res) => {
       const findCondition = { _id: id, organization: organizationId }
       if (req.warehouseFilter) findCondition.warehouse = req.warehouseFilter
 
-      const oldExpense = await ProductExpense.findOne(findCondition).session(session)
+      const oldExpense = await PaymentExpense.findOne(findCondition).session(session)
       if (!oldExpense) throw new BusinessError('Phiếu chi không tồn tại', 404)
       if (oldExpense.isLocked)
         throw new BusinessError('Phiếu chi đã bị khóa, không thể chỉnh sửa', 400)
@@ -240,7 +232,7 @@ export const updatePaymentExpenses = async (req, res) => {
         updatedBy: req.user._id
       }
 
-      const updatedExpense = await ProductExpense.findOneAndUpdate(
+      const updatedExpense = await PaymentExpense.findOneAndUpdate(
         { _id: id, organization: organizationId },
         updateData,
         { new: true, session }
@@ -330,14 +322,14 @@ export const deletePaymentExpenses = async (req, res) => {
       const findCondition = { _id: { $in: ids }, organization: organizationId }
       if (req.warehouseFilter) findCondition.warehouse = req.warehouseFilter
 
-      const expenses = await ProductExpense.find(findCondition).session(session)
+      const expenses = await PaymentExpense.find(findCondition).session(session)
       if (!expenses.length) throw new BusinessError('Không tìm thấy phiếu chi', 404)
 
       const lockedExpenses = expenses.filter((e) => e.isLocked)
       if (lockedExpenses.length > 0)
         throw new BusinessError('Không thể xóa phiếu chi đã bị khóa', 400)
       const deletedCodes = expenses.map((e) => e.code).join(', ')
-      await ProductExpense.deleteMany(findCondition).session(session)
+      await PaymentExpense.deleteMany(findCondition).session(session)
 
       logActivity(
         organizationId,
