@@ -22,11 +22,10 @@ document.addEventListener(
       const res = await fetch('/assets/sounds/sound.wav')
       const buf = await res.arrayBuffer()
       bellBuffer = await audioCtx.decodeAudioData(buf)
-      console.log(bellBuffer)
     }
 
     document.removeEventListener('click', initAudio)
-    console.log('Audio unlocked ✔')
+    // console.log('Audio unlocked ✔')
   },
   { once: true }
 )

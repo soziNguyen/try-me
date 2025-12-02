@@ -795,6 +795,13 @@ async function loadOrderData(orderId) {
       }
 
       calculateTotals()
+
+      if (result.status === 'cancelled') {
+        $('#btn-cancelled')
+          .prop('disabled', true)
+          .html('<i class="bi bi-x-circle-fill me-1"></i> Đã hủy')
+        $('#confirmCheckoutBtn').prop('disabled', true)
+      }
     }
   } catch (error) {
     console.error('Lỗi khi load dữ liệu đơn hàng:', error)
@@ -812,12 +819,38 @@ async function loadPointSetting() {
   }
 }
 
+async function cancellOrder(orderId) {
+  $('#btn-cancelled').on('click', async function () {
+    const btn = $(this)
+    try {
+      showConfirmModal({
+        title: 'Xác nhận hủy đơn hàng',
+        message: 'Bạn có chắc muốn hủy đơn hàng này?',
+        okBtnColor: 'danger',
+        confirmed: 'Xác nhận',
+        onConfirm: async function () {
+          const data = await ajax(`/api/order/${orderId}/cancelled`, {})
+          if (data) {
+            toastr.success('Hủy giao dịch thành công')
+            btn.prop('disabled', true).html('<i class="bi bi-x-circle-fill"></i> Đã hủy')
+            $('#confirmCheckoutBtn').prop('disabled', true)
+          }
+        }
+      })
+    } catch (error) {}
+  })
+}
+
 // INITIALIZATION
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. LOAD DỮ LIỆU BAN ĐẦU
   await getTaxes()
   await fillPaymentMethods()
   await loadPointSetting()
+  await cancellOrder(window.currentOrderId)
+
+  const btn = document.getElementById('btn-cancelled')
+  btn.addEventListener('click', async function () {})
 
   // Render UI
   renderTaxOptions()
