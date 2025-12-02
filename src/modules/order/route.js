@@ -75,5 +75,12 @@ router.post(
   orderController.assignTableToOrder
 )
 
+router.post(
+  '/api/order/:orderId/cancelled',
+  isAuthenticated,
+  checkWarehouseAccess,
+  orderController.cancelledOrder
+)
+
 router.post('/api/order/:orderId/add-items', orderController.submitOrderFromCustomer)
 export default router

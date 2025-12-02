@@ -1305,6 +1305,10 @@ export const updateOrderDraft = async (req, res) => {
 
       if (!order) throw new BusinessError('Order không tồn tại', 404)
 
+      if (order.status !== 'open') {
+        throw new BusinessError('Order đã được thanh toán hoặc đã đóng', 400)
+      }
+
       if (!Array.isArray(order.items) || order.items.length === 0) {
         throw new BusinessError('Đơn hàng phải có ít nhất 1 sản phẩm', 400)
       }
@@ -1650,7 +1654,7 @@ export const getOrders = async (req, res) => {
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // Base match object
-    const match = { organization: organizationId }
+    const match = { organization: organizationId, status: 'completed' }
 
     const warehouse = req.query.warehouse
 
@@ -2186,5 +2190,42 @@ export const submitOrderFromCustomer = async (req, res) => {
     return responseHelper.success(res, order, 'Gửi giỏ hàng thành công')
   } catch (error) {
     return responseHelper.error(res, error.message)
+  }
+}
+
+export const cancelledOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const warehouse = await getWarehouse(req, organizationId)
+
+    if (!mongoose.isValidObjectId(orderId)) {
+      return responseHelper.error(res, 'Mã đơn hàng không hợp lệ', 400)
+    }
+
+    const isExistOrder = await Order.findOne({
+      _id: orderId,
+      organization: organizationId,
+      warehouse
+    })
+
+    if (!isExistOrder) {
+      return responseHelper.error(res, 'Đơn hàng không tồn tại', 400)
+    }
+
+    const updated = await Order.updateOne(
+      { _id: orderId, organization: organizationId, warehouse },
+      { $set: { status: 'cancelled' } }
+    )
+
+    if (updated.modifiedCount === 0) {
+      return responseHelper.error(res, 'Cập nhật thất bại', 400)
+    }
+
+    responseHelper.success(res, updated, 'Đơn hàng đã được hủy')
+  } catch (error) {
+    responseHelper.error(res, error.message)
   }
 }
