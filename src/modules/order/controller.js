@@ -245,14 +245,16 @@ export const getOrderById = async (req, res) => {
       organization: organizationId
     }
 
+    const selectedWarehouse = req.query.warehouse
+
     if (req.warehouseFilter) {
       // Staff user - chỉ thấy kho được gán
       matchCondition.warehouse = req.warehouseFilter
     } else {
-      // Admin/Org - sử dụng defaultWarehouse
-      const org = await Organization.findById(organizationId).select('defaultWarehouse')
-      if (org?.defaultWarehouse) {
-        matchCondition.warehouse = org.defaultWarehouse
+      // ADMIN / ORG USER
+      if (selectedWarehouse && selectedWarehouse !== 'all') {
+        // Nếu FE chọn 1 kho cụ thể
+        matchCondition.warehouse = selectedWarehouse
       }
     }
 
@@ -1876,16 +1878,17 @@ export const getOrders = async (req, res) => {
 export const getTopItems = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
-    if (!organizationId) {
-      return res.status(400).json({ error: 'Thiếu thông tin tổ chức' })
-    }
+
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
     // ===== Base match =====
     const match = { organization: organizationId }
 
     // ===== Filter warehouse =====
     const warehouse = req.query.warehouse
-    if (warehouse && warehouse !== 'all') {
+
+    if (warehouse === 'all') {
+    } else if (warehouse) {
       match.warehouse = new mongoose.Types.ObjectId(String(warehouse))
     } else if (req.warehouseFilter) {
       // Nếu user là staff → chỉ thấy kho được gán
@@ -1995,18 +1998,18 @@ export const getTopItems = async (req, res) => {
       if (!list.length) return { top: [], slow: [] }
 
       const sorted = [...list].sort((a, b) => b.quantity - a.quantity)
+      const top = sorted.slice(0, Math.min(limit, sorted.length))
 
-      const top = sorted.slice(0, limit)
-      const topIds = new Set(top.map((i) => i._id.foodId || i._id.comboId))
+      // Ngưỡng: món bán chậm phải <= 50% món top thứ 3
+      const thresholdQty = top.length > 0 ? top[top.length - 1].quantity * 0.5 : 0
 
-      const slow = sorted
-        .filter(
-          (i) =>
-            !(i._id.foodId && topIds.has(i._id.foodId)) &&
-            !(i._id.comboId && topIds.has(i._id.comboId))
-        )
-        .slice(-limit)
-        .reverse()
+      // Chỉ lấy món có quantity <= ngưỡng
+      const candidatesForSlow = sorted.filter((item) => item.quantity <= thresholdQty)
+
+      const slow =
+        candidatesForSlow.length > 0
+          ? candidatesForSlow.slice(-Math.min(limit, candidatesForSlow.length)).reverse()
+          : []
 
       return { top, slow }
     }
