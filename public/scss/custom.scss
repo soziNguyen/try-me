@@ -861,50 +861,130 @@ input[type='text']::-ms-clear {
   body {
     margin: 0;
     font-size: 12px;
+
+    h1,
+    h5,
+    p {
+      margin: 2px 0 !important;
+    }
+
+    .container,
+    .container-xxl {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 0;
+      margin: 0;
+
+      .card {
+        border: none;
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+
+        &.shadow {
+          box-shadow: none !important;
+        }
+
+        .card-header {
+          i {
+            &.bi {
+              display: none;
+            }
+          }
+        }
+
+        .card-body {
+          padding: 8px !important;
+
+          .row {
+            .col-6 {
+              display: flex;
+              align-items: center;
+              margin-top: 0;
+
+              .form-label {
+                font-size: 14px !important;
+                margin-bottom: 0;
+
+                span {
+                  display: none;
+                }
+
+                &::after {
+                  content: ':';
+                }
+              }
+
+              .form-control,
+              .form-control-sm {
+                font-size: 14px !important;
+                border: none;
+                width: auto;
+              }
+            }
+
+            .col-12 {
+              .form-label {
+                span {
+                  display: none;
+                }
+              }
+            }
+
+            .col-6 {
+              .form-label {
+                &.supplier {
+                  width: 40%;
+                }
+              }
+            }
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse !important;
+            font-size: 12px !important;
+
+            .select2-container,
+            .select2-selection--single,
+            .select2-selection__rendered {
+              font-size: inherit !important;
+            }
+
+            .form-control,
+            .form-control-sm {
+              font-size: inherit !important;
+              padding-top: 0 !important;
+              padding-bottom: 0 !important;
+            }
+
+            th {
+              padding-top: 0.25rem;
+              padding-bottom: 0.25rem;
+            }
+          }
+
+          textarea {
+            font-size: 14px;
+
+            &::placeholder {
+              color: transparent !important;
+            }
+          }
+
+          .no-print,
+          .btn,
+          a,
+          i.bi {
+            display: none !important;
+          }
+        }
+      }
+    }
   }
 
-  .container,
-  .container-xxl {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0;
-    margin: 0;
-  }
-
-  .card {
-    border: none;
-    box-shadow: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .card-header,
-  .card-body {
-    padding: 8px !important;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse !important;
-    font-size: 12px;
-  }
-
-  table th,
-  table td {
-    padding: 4px !important;
-  }
-
-  .no-print,
-  .btn,
-  a,
-  i.bi {
-    display: none !important;
-  }
-
-  h1,
-  h5,
-  p {
-    margin: 2px 0 !important;
+  #toast-container {
+    display: none;
   }
 
   @page {
