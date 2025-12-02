@@ -451,6 +451,10 @@ body {
 .admin__layout .admin__main .admin__content .qr-cell .qr-wrapper:hover .qr-img {
   opacity: 0.3;
 }
+.admin__layout .admin__main .admin__content .order #orderSummary,
+.admin__layout .admin__main .admin__content .order #kitchenStatus {
+  border-radius: 0;
+}
 .admin__layout .admin__main #admin__sidebar.collapsed ~ .admin__content .pagination-bar {
   left: 60px;
   width: calc(100% - 60px);
@@ -805,6 +809,10 @@ body {
 }
 .staff__layout .staff__main .staff__content .qr-cell .qr-wrapper:hover .qr-img {
   opacity: 0.3;
+}
+.staff__layout .staff__main .staff__content .order #orderSummary,
+.staff__layout .staff__main .staff__content .order #kitchenStatus {
+  border-radius: 0;
 }
 .staff__layout .staff__main #staff__sidebar.collapsed ~ .staff__content .pagination-bar {
   left: 60px;

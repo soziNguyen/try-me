@@ -16,7 +16,7 @@ export const getInvoiceOptions = async (req, res) => {
     if (!org?.defaultWarehouse) {
       return responseHelper.error(
         res,
-        'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật trong profile.',
+        'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật kho trong phần hồ sơ.',
         400
       )
     }
@@ -61,7 +61,7 @@ export const updateInvoiceOptions = async (req, res) => {
     if (!org?.defaultWarehouse) {
       return responseHelper.error(
         res,
-        'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật trong profile.',
+        'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật kho trong phần hồ sơ.',
         400
       )
     }

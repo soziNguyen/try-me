@@ -465,7 +465,8 @@ export const searchCombos = async (req, res) => {
       warehouse: warehouseFilter,
       $or: [
         { name: { $regex: keyword, $options: 'i' } },
-        { sku: { $regex: keyword, $options: 'i' } }
+        { sku: { $regex: keyword, $options: 'i' } },
+        { note: { $regex: keyword, $options: 'i' } }
       ]
     })
       .populate('items.menuItem', '_id name')

@@ -4,12 +4,11 @@
       <h1>Welcome, <%= user.username %>
       </h1>
     </div>
-
-    </div>
-    </div>
-    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
-    <%- include('../partials/commonjs.html') %>
-    <script src="/js/library/socket.io.min.js"></script>
-    <script src="/js/notifications.js"></script>
-    <script src="/js/sidebar-toggle.js"></script>
-      <%- include('../partials/footer.html') %>
+  </div>
+</div>
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<%- include('../partials/commonjs.html') %>
+<script src="/js/library/socket.io.min.js"></script>
+<script src="/js/notifications.js"></script>
+<script src="/js/sidebar-toggle.js"></script>
+<%- include('../partials/staff_footer.html') %>

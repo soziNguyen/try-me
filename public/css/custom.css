@@ -785,8 +785,8 @@ input[type=text]::-ms-clear {
 }
 #staffCallBell #staffCallBellIcon {
   width: 200px;
-  -webkit-animation: ringBounce 1.8s ease-out infinite;
-          animation: ringBounce 1.8s ease-out infinite;
+  -webkit-animation: ringBounce 3.1s ease-out infinite;
+          animation: ringBounce 3.1s ease-out infinite;
   -webkit-transform-origin: top center;
           transform-origin: top center;
 }
@@ -917,43 +917,137 @@ input[type=text]::-ms-clear {
     margin: 0;
     font-size: 12px;
   }
-  .container,
-  .container-xxl {
+  body h1,
+  body h5,
+  body p {
+    margin: 2px 0 !important;
+  }
+  body .container,
+  body .container-xxl {
     width: 100% !important;
     max-width: 100% !important;
     padding: 0;
     margin: 0;
   }
-  .card {
+  body .container .card,
+  body .container-xxl .card {
     border: none;
     -webkit-box-shadow: none;
             box-shadow: none;
     margin: 0;
     padding: 0;
   }
-  .card-header,
-  .card-body {
+  body .container .card.shadow,
+  body .container-xxl .card.shadow {
+    -webkit-box-shadow: none !important;
+            box-shadow: none !important;
+  }
+  body .container .card .card-header i.bi,
+  body .container-xxl .card .card-header i.bi {
+    display: none;
+  }
+  body .container .card .card-body,
+  body .container-xxl .card .card-body {
     padding: 8px !important;
   }
-  table {
+  body .container .card .card-body .row .col-6,
+  body .container-xxl .card .card-body .row .col-6 {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    margin-top: 0;
+  }
+  body .container .card .card-body .row .col-6 .form-label,
+  body .container-xxl .card .card-body .row .col-6 .form-label {
+    font-size: 14px !important;
+    margin-bottom: 0;
+  }
+  body .container .card .card-body .row .col-6 .form-label span,
+  body .container-xxl .card .card-body .row .col-6 .form-label span {
+    display: none;
+  }
+  body .container .card .card-body .row .col-6 .form-label::after,
+  body .container-xxl .card .card-body .row .col-6 .form-label::after {
+    content: ":";
+  }
+  body .container .card .card-body .row .col-6 .form-control,
+  body .container .card .card-body .row .col-6 .form-control-sm,
+  body .container-xxl .card .card-body .row .col-6 .form-control,
+  body .container-xxl .card .card-body .row .col-6 .form-control-sm {
+    font-size: 14px !important;
+    border: none;
+    width: auto;
+  }
+  body .container .card .card-body .row .col-12 .form-label span,
+  body .container-xxl .card .card-body .row .col-12 .form-label span {
+    display: none;
+  }
+  body .container .card .card-body .row .col-6 .form-label.supplier,
+  body .container-xxl .card .card-body .row .col-6 .form-label.supplier {
+    width: 40%;
+  }
+  body .container .card .card-body table,
+  body .container-xxl .card .card-body table {
     width: 100%;
     border-collapse: collapse !important;
-    font-size: 12px;
+    font-size: 12px !important;
   }
-  table th,
-  table td {
-    padding: 4px !important;
+  body .container .card .card-body table .select2-container,
+  body .container .card .card-body table .select2-selection--single,
+  body .container .card .card-body table .select2-selection__rendered,
+  body .container-xxl .card .card-body table .select2-container,
+  body .container-xxl .card .card-body table .select2-selection--single,
+  body .container-xxl .card .card-body table .select2-selection__rendered {
+    font-size: inherit !important;
   }
-  .no-print,
-  .btn,
-  a,
-  i.bi {
+  body .container .card .card-body table .form-control,
+  body .container .card .card-body table .form-control-sm,
+  body .container-xxl .card .card-body table .form-control,
+  body .container-xxl .card .card-body table .form-control-sm {
+    font-size: inherit !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  body .container .card .card-body table th,
+  body .container-xxl .card .card-body table th {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+  body .container .card .card-body textarea,
+  body .container-xxl .card .card-body textarea {
+    font-size: 14px;
+  }
+  body .container .card .card-body textarea::-webkit-input-placeholder, body .container-xxl .card .card-body textarea::-webkit-input-placeholder {
+    color: transparent !important;
+  }
+  body .container .card .card-body textarea::-moz-placeholder, body .container-xxl .card .card-body textarea::-moz-placeholder {
+    color: transparent !important;
+  }
+  body .container .card .card-body textarea:-ms-input-placeholder, body .container-xxl .card .card-body textarea:-ms-input-placeholder {
+    color: transparent !important;
+  }
+  body .container .card .card-body textarea::-ms-input-placeholder, body .container-xxl .card .card-body textarea::-ms-input-placeholder {
+    color: transparent !important;
+  }
+  body .container .card .card-body textarea::placeholder,
+  body .container-xxl .card .card-body textarea::placeholder {
+    color: transparent !important;
+  }
+  body .container .card .card-body .no-print,
+  body .container .card .card-body .btn,
+  body .container .card .card-body a,
+  body .container .card .card-body i.bi,
+  body .container-xxl .card .card-body .no-print,
+  body .container-xxl .card .card-body .btn,
+  body .container-xxl .card .card-body a,
+  body .container-xxl .card .card-body i.bi {
     display: none !important;
   }
-  h1,
-  h5,
-  p {
-    margin: 2px 0 !important;
+  #toast-container {
+    display: none;
   }
   @page {
     size: A4 portrait;

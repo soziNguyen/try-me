@@ -150,7 +150,7 @@ $(function () {
             return `
               <input type="number"
                 class="dataInput form-control w-100 border-0 number" 
-                placeholder="Số lượng" 
+                placeholder="0" 
                 data-field="usageLimit"
                 value="${data ?? ''}"
               >
