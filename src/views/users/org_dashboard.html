@@ -88,16 +88,16 @@
             <div class="card-body">
               <h5 class="card-title mb-3">Đơn hàng hôm nay</h5>
               <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                <span><i class="bi bi-check-circle text-success"></i> Hoàn thành</span>
-                <span class="fw-bold fs-5 orderCompleted">0</span>
+                <span><i class="bi bi-check-circle text-success me-1"></i> Hoàn thành</span>
+                <span class="fw-bold fs-5 text-success orderCompleted">0</span>
               </div>
               <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                <span><i class="bi bi-clock-history text-warning"></i> Đang xử lý</span>
-                <span class="fw-bold fs-5 orderPending">0</span>
+                <span><i class="bi bi-clock-history text-warning me-1"></i> Đang xử lý</span>
+                <span class="fw-bold fs-5 text-warning orderPending">0</span>
               </div>
               <div class="d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-x-circle text-danger"></i> Đã hủy</span>
-                <span class="fw-bold fs-5 orderCancelled">0</span>
+                <span><i class="bi bi-x-circle text-danger me-1"></i> Đã hủy</span>
+                <span class="fw-bold fs-5 text-danger orderCancelled">0</span>
               </div>
             </div>
           </div>
@@ -109,21 +109,50 @@
             <div class="card-body">
               <h5 class="card-title mb-3">Thống kê nhanh</h5>
               <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                <span><i class="bi bi-receipt"></i> Giá trị đơn TB</span>
+                <span><i class="bi bi-receipt me-1"></i> Giá trị đơn TB</span>
                 <span class="fw-bold fs-5 avgOrderValue">0 đ</span>
               </div>
               <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                <span><i class="bi bi-basket"></i> Số món/đơn TB</span>
+                <span><i class="bi bi-basket me-1"></i> Số món/đơn TB</span>
                 <span class="fw-bold fs-5 avgItemsPerOrder">0</span>
               </div>
               <div class="d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-people"></i> Khách hàng mới</span>
+                <span><i class="bi bi-people me-1"></i> Khách hàng mới</span>
                 <span class="fw-bold fs-5 newCustomers">0</span>
               </div>
             </div>
           </div>
         </div>
-      
+      </div>
+
+      <div class="row gap-3 gap-md-2 mt-4">
+        <div class="col-md-12">
+          <div class="card border-0">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Đơn hàng gần đây</h5>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th>#Mã đơn</th>
+                      <th>Bàn/Mang về</th>
+                      <th>Thời gian</th>
+                      <th class="text-center">Số món</th>
+                      <th>Tổng tiền</th>
+                      <th>Trạng thái</th>
+                      <th class="text-center">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentOrdersTable">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 </div>
 </div>

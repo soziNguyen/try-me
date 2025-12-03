@@ -25,8 +25,23 @@ const getSaleInfomation = async () => {
       )
       updateChangeIndicator('.revenueThisMonth', result.thisMonthRevenueChange)
 
+      // Trạng thái đơn hàng
+      document.querySelector('.orderCompleted').textContent = result.todayOrderStatus.completed
+      document.querySelector('.orderPending').textContent = result.todayOrderStatus.pending
+      document.querySelector('.orderCancelled').textContent = result.todayOrderStatus.cancelled
+
+      // Thống kê nhanh
+      document.querySelector('.avgOrderValue').textContent = formatCurrencyToVnd(
+        result.todayStats.avgOrderValue
+      )
+      document.querySelector('.avgItemsPerOrder').textContent = Math.round(
+        result.todayStats.avgItemsPerOrder
+      )
+      document.querySelector('.newCustomers').textContent = result.todayStats.newCustomers
+
       renderRevenueChart(result.last7DaysRevenue)
       renderTop5Items(result.top5Items)
+      renderRecentOrders(result.recentOrders)
     }
   } catch (error) {
     console.error('Error:', error)
@@ -120,4 +135,62 @@ function renderTop5Items(items) {
       `
     })
     .join('')
+}
+
+function renderRecentOrders(orders) {
+  const tbody = document.getElementById('recentOrdersTable')
+
+  if (!orders || orders.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center text-muted">Chưa có đơn hàng nào hôm nay</td>
+      </tr>
+    `
+    return
+  }
+
+  tbody.innerHTML = orders
+    .map((order) => {
+      const statusBadge =
+        {
+          open: '<span class="badge bg-warning">Đang xử lý</span>',
+          completed: '<span class="badge bg-success">Hoàn thành</span>',
+          cancelled: '<span class="badge bg-danger">Đã hủy</span>'
+        }[order.status] || '<span class="badge bg-secondary">Không rõ</span>'
+
+      const timeAgo = getTimeAgo(new Date(order.createdAt))
+
+      return `
+      <tr>
+        <td class="p-2"><strong>#${order.code}</strong></td>
+        <td class="p-2">
+          ${
+            order.isTakeaway
+              ? '<i class="bi bi-bag text-primary"></i> Mang về'
+              : `<i class="bi bi-grid-3x3-gap text-info"></i> ${order.tableName}`
+          }
+        </td>
+        <td class="p-2"><small class="text-muted">${timeAgo}</small></td>
+        <td class="text-center">${order.itemCount}</td>
+        <td class="p-2"><strong>${formatCurrencyToVnd(order.total)}</strong></td>
+        <td class="p-2">${statusBadge}</td>
+        <td class="p-2 text-center">
+          <a href="/receipt/${order._id}?from=report" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-eye"></i>
+          </a>
+        </td>
+      </tr>
+    `
+    })
+    .join('')
+}
+
+function getTimeAgo(date) {
+  const now = new Date()
+  const diff = Math.floor((now - date) / 1000) // seconds
+
+  if (diff < 60) return 'Vừa xong'
+  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`
+  return date.toLocaleDateString('vi-VN')
 }

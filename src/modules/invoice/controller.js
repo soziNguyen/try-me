@@ -11,18 +11,31 @@ export const getInvoiceOptions = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    // Lấy defaultWarehouse của Org/Admin
-    const org = await Organization.findById(organizationId).select('defaultWarehouse')
-    if (!org?.defaultWarehouse) {
-      return responseHelper.error(
-        res,
-        'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật kho trong phần hồ sơ.',
-        400
-      )
-    }
-    const warehouseId = org.defaultWarehouse
+    // Xác định warehouse
+    let warehouseId = null
 
-    let options = await InvoiceOptions.findOne({ organizationId, warehouseId })
+    if (req.warehouseFilter) {
+      // Staff user - chỉ thấy kho được gán
+      warehouseId = req.warehouseFilter
+    } else {
+      // Admin/Org - sử dụng defaultWarehouse
+      const org = await Organization.findById(organizationId).select('defaultWarehouse')
+      if (org?.defaultWarehouse) {
+        warehouseId = org.defaultWarehouse
+      }
+    }
+
+    if (!warehouseId) {
+      return responseHelper.error(res, 'Không tìm thấy warehouse', 400)
+    }
+
+    // Query
+    const baseMatch = {
+      organizationId: organizationId,
+      warehouseId: warehouseId
+    }
+
+    let options = await InvoiceOptions.findOne(baseMatch)
 
     if (!options) {
       options = await InvoiceOptions.create({

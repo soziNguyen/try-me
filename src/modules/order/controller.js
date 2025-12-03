@@ -2235,7 +2235,7 @@ export const getDashboardStats = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const warehouse = req.query.warehouse
+    const warehouse = req.query.warehouse ?? null
     const now = new Date()
 
     // HÔM NAY
@@ -2472,6 +2472,94 @@ export const getDashboardStats = async (req, res) => {
       { $limit: 5 }
     ]
 
+    // TRẠNG THÁI ĐƠN HÀNG HÔM NAY
+    const todayOrderStatusPipeline = [
+      {
+        $match: {
+          ...todayMatch,
+          status: { $exists: true }
+        }
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]
+
+    // THỐNG KÊ NHANH
+    const todayStatsPipeline = [
+      { $match: todayMatch },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$total' },
+          totalItems: {
+            $sum: {
+              $size: { $ifNull: ['$items', []] }
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          avgOrderValue: {
+            $cond: [{ $eq: ['$totalOrders', 0] }, 0, { $divide: ['$totalRevenue', '$totalOrders'] }]
+          },
+          avgItemsPerOrder: {
+            $cond: [{ $eq: ['$totalOrders', 0] }, 0, { $divide: ['$totalItems', '$totalOrders'] }]
+          }
+        }
+      }
+    ]
+
+    // KHÁCH HÀNG MỚI
+    const newCustomersPipeline = [
+      {
+        $match: {
+          organization: organizationId,
+          createdAt: { $gte: startOfToday, $lte: endOfToday }
+        }
+      },
+      {
+        $count: 'total'
+      }
+    ]
+
+    // ĐƠN HÀNG GẦN ĐÂY (10 đơn)
+    const recentOrdersPipeline = [
+      {
+        $match: {
+          ...todayMatch,
+          status: { $exists: true }
+        }
+      },
+      {
+        $lookup: {
+          from: 'Tables',
+          localField: 'tableId',
+          foreignField: '_id',
+          as: 'table'
+        }
+      },
+      { $unwind: { path: '$table', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          code: 1,
+          tableName: { $ifNull: ['$table.name', 'Mang về'] },
+          isTakeaway: 1,
+          createdAt: 1,
+          itemCount: { $size: '$items' },
+          total: 1,
+          status: 1
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      { $limit: 10 }
+    ]
+
     // Execute all pipelines
     const [
       todayOverview,
@@ -2481,7 +2569,11 @@ export const getDashboardStats = async (req, res) => {
       thisMonthRevenue,
       thisMonthOverview,
       lastMonthOverview,
-      top5Items
+      top5Items,
+      todayOrdersByStatus,
+      todayStats,
+      newCustomers,
+      recentOrders
     ] = await Promise.all([
       Order.aggregate(createOverviewPipeline(todayMatch)),
       Order.aggregate(createOverviewPipeline(yesterdayMatch)),
@@ -2490,13 +2582,23 @@ export const getDashboardStats = async (req, res) => {
       Order.aggregate(thisMonthRevenuePipeline),
       Order.aggregate(createOverviewPipeline(thisMonthMatch)),
       Order.aggregate(createOverviewPipeline(lastMonthMatch)),
-      Order.aggregate(top5ItemsPipeline)
+      Order.aggregate(top5ItemsPipeline),
+      Order.aggregate(todayOrderStatusPipeline),
+      Order.aggregate(todayStatsPipeline),
+      Customer.aggregate(newCustomersPipeline),
+      Order.aggregate(recentOrdersPipeline)
     ])
 
     // Helper function để tính % thay đổi
     const calculateChange = (current, previous) => {
       if (!previous || previous === 0) return 0
       return (((current - previous) / previous) * 100).toFixed(1)
+    }
+
+    // Func đếm trạng thái đơn hàng
+    const getStatusCount = (statusArray, status) => {
+      const found = statusArray.find((s) => s._id === status)
+      return found ? found.count : 0
     }
 
     const todayRevenue = todayOverview[0]?.totalRevenue || 0
@@ -2525,7 +2627,22 @@ export const getDashboardStats = async (req, res) => {
       thisMonthTotalOrders: thisMonthOverview[0]?.totalOrders || 0,
 
       // TOP
-      top5Items
+      top5Items,
+
+      // ORDER STATUS
+      todayOrderStatus: {
+        completed: getStatusCount(todayOrdersByStatus, 'completed'),
+        pending: getStatusCount(todayOrdersByStatus, 'open'),
+        cancelled: getStatusCount(todayOrdersByStatus, 'cancelled')
+      },
+
+      // THỐNG KÊ NHANH
+      todayStats: {
+        avgOrderValue: todayStats[0]?.avgOrderValue || 0,
+        avgItemsPerOrder: todayStats[0]?.avgItemsPerOrder || 0,
+        newCustomers: newCustomers[0]?.total || 0
+      },
+      recentOrders
     })
   } catch (error) {
     responseHelper.error(res, error.message)
