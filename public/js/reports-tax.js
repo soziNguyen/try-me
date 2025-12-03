@@ -146,7 +146,7 @@ $(function () {
         const period = startDate && endDate ? `${startDate} - ${endDate}` : 'Tất cả'
 
         $taxTbody.append(`
-          <tr>
+          <tr class="clickable-row cursor-pointer">
             <td class="text-center px-3 py-2">${period}</td>
             <td class="text-center px-3 py-2">${formatNumber(totalBeforeTax)}</td>
             <td class="text-center px-3 py-2">${formatNumber(vat)}</td>
@@ -349,7 +349,7 @@ $(function () {
     loadAllTables(start, end)
   })
 
-  $('#viewInvoiceBtn').on('click', () => {
+  $(document).on('click', '.clickable-row', function () {
     window.location.href = '/payment-receipts'
   })
 
