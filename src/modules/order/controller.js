@@ -2271,7 +2271,7 @@ export const getDashboardStats = async (req, res) => {
       last7DaysMatch.warehouse = warehouseId
     }
 
-    // 1. DOANH THU HÔM NAY + SỐ LƯỢNG ĐơN HÔM NAY
+    // DOANH THU HÔM NAY + SỐ LƯỢNG ĐƠN HÔM NAY
     const todayOverviewPipeline = [
       { $match: todayMatch },
       {
@@ -2283,7 +2283,7 @@ export const getDashboardStats = async (req, res) => {
       }
     ]
 
-    // 2. MÓN BÁN CHẠY NHẤT HÔM NAY (bao gồm cả menu và combo)
+    // MÓN BÁN CHẠY NHẤT HÔM NAY (bao gồm cả menu và combo)
     const topItemTodayPipeline = [
       { $match: todayMatch },
       { $unwind: '$items' },
@@ -2319,7 +2319,7 @@ export const getDashboardStats = async (req, res) => {
       { $limit: 1 }
     ]
 
-    // 3. DOANH THU 7 NGÀY GẦN NHẤT (theo từng ngày)
+    // DOANH THU 7 NGÀY GẦN NHẤT (theo từng ngày)
     const last7DaysRevenuePipeline = [
       { $match: last7DaysMatch },
       {
@@ -2355,7 +2355,7 @@ export const getDashboardStats = async (req, res) => {
       }
     ]
 
-    // 4. TOP 5 MÓN BÁN CHẠY NHẤT (bao gồm cả menu và combo - 7 ngày)
+    // TOP 5 MÓN BÁN CHẠY NHẤT (7 ngày)
     const top5ItemsPipeline = [
       { $match: last7DaysMatch },
       { $unwind: '$items' },
@@ -2399,30 +2399,14 @@ export const getDashboardStats = async (req, res) => {
       Order.aggregate(top5ItemsPipeline)
     ])
 
-    return res.json({
-      success: true,
-      data: {
-        // Doanh thu hôm nay
-        todayRevenue: todayOverview[0]?.totalRevenue || 0,
-
-        // Số lượng đơn hôm nay
-        todayOrders: todayOverview[0]?.totalOrders || 0,
-
-        // Món bán chạy nhất hôm nay
-        topItemToday: topItemToday[0] || null,
-
-        // Doanh thu 7 ngày gần nhất (biểu đồ)
-        last7DaysRevenue,
-
-        // Top 5 món bán chạy nhất
-        top5Items
-      }
+    responseHelper.success(res, {
+      todayRevenue: todayOverview[0]?.totalRevenue || 0,
+      todayOrders: todayOverview[0]?.totalOrders || 0, // Số lượng đơn hôm nay
+      topItemToday: topItemToday[0] || null, // Món bán chạy nhất hôm nay
+      last7DaysRevenue, // Doanh thu 7 ngày gần nhất
+      top5Items // Top 5 món bán chạy nhất
     })
   } catch (error) {
-    console.error('Dashboard stats error:', error)
-    return res.status(500).json({
-      success: false,
-      error: error.message
-    })
+    responseHelper.error(res, error.message)
   }
 }

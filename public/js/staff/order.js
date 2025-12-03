@@ -536,25 +536,18 @@ if (searchInput) {
     }
   }
 
+  const debouncedSearch = debounce(runSearch, 300)
+
   searchInput.addEventListener('input', () => {
     const keyword = searchInput.value.trim()
 
     if (!keyword) {
-      if (searchTimeout) clearTimeout(searchTimeout)
       renderMenu(allItems)
       currentSearchResults = allItems
       return
     }
 
-    if (searchTimeout) clearTimeout(searchTimeout)
-
-    if (keyword.length >= 6) {
-      runSearch(keyword)
-    } else {
-      searchTimeout = setTimeout(() => {
-        runSearch(keyword)
-      }, 300)
-    }
+    debouncedSearch(keyword)
   })
 
   searchInput.addEventListener('keydown', (event) => {

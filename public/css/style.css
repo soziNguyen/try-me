@@ -460,6 +460,25 @@ body {
 .admin__layout .admin__main .admin__content .order #kitchenStatus {
   border-radius: 0;
 }
+.admin__layout .admin__main .admin__content .row .card-item.col-md-3 {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  width: calc(25% - 8px);
+}
+.admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {
+  width: calc(58.33333333% - 4px);
+}
+.admin__layout .admin__main .admin__content .row .top5Items.col-md-5 {
+  width: calc(41.66666667% - 4px);
+}
+.admin__layout .admin__main .admin__content .row .top5Items.col-md-5 .progress {
+  height: 1.5rem;
+}
 .admin__layout .admin__main #admin__sidebar.collapsed ~ .admin__content .pagination-bar {
   left: 60px;
   width: calc(100% - 60px);
@@ -819,6 +838,25 @@ body {
 .staff__layout .staff__main .staff__content .order #kitchenStatus {
   border-radius: 0;
 }
+.staff__layout .staff__main .staff__content .row .card-item.col-md-3 {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  width: calc(25% - 8px);
+}
+.staff__layout .staff__main .staff__content .row .revenueLast7days.col-md-7 {
+  width: calc(58.33333333% - 4px);
+}
+.staff__layout .staff__main .staff__content .row .top5Items.col-md-5 {
+  width: calc(41.66666667% - 4px);
+}
+.staff__layout .staff__main .staff__content .row .top5Items.col-md-5 .progress {
+  height: 1.5rem;
+}
 .staff__layout .staff__main #staff__sidebar.collapsed ~ .staff__content .pagination-bar {
   left: 60px;
   width: calc(100% - 60px);
@@ -954,31 +992,42 @@ body {
             flex-direction: column;
   }
 }
+@media (max-width: 768px) {
+  .admin__layout .admin__main .admin__content .row .card-item.col-md-3 {
+    width: calc(50% - 16px);
+  }
+  .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {
+    width: 100%;
+  }
+  .admin__layout .admin__main .admin__content .row .top5Items.col-md-5 {
+    width: 100%;
+  }
+}
 @media (max-width: 575px) {
-  .admin__content.border,
-  .admin__content .border-2 {
+  .admin__layout .admin__main .admin__content.border,
+  .admin__layout .admin__main .admin__content .border-2 {
     border: none !important;
   }
-  .admin__content .status {
+  .admin__layout .admin__main .admin__content .status {
     top: 153px !important;
   }
-  .admin__content .checkout-info {
+  .admin__layout .admin__main .admin__content .checkout-info {
     margin-bottom: 160px !important;
   }
-  .admin__content .qr-code {
+  .admin__layout .admin__main .admin__content .qr-code {
     top: 32px !important;
     left: 50%;
     -webkit-transform: translateX(-50%);
             transform: translateX(-50%);
   }
-  .admin__content .invoice-actions {
+  .admin__layout .admin__main .admin__content .invoice-actions {
     -webkit-box-orient: vertical;
     -webkit-box-direction: normal;
         -ms-flex-direction: column;
             flex-direction: column;
     gap: 8px;
   }
-  .admin__content .invoice-actions .action-buttons {
+  .admin__layout .admin__main .admin__content .invoice-actions .action-buttons {
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
@@ -990,7 +1039,18 @@ body {
         -ms-flex-order: -1;
             order: -1;
   }
-  .admin__content .invoice-actions .action-buttons .btn {
+  .admin__layout .admin__main .admin__content .invoice-actions .action-buttons .btn {
     width: 50%;
+  }
+  .admin__layout .admin__main .admin__content .row .card-item.col-md-3 {
+    width: 100%;
+  }
+  .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {
+    display: block;
+    width: 100%;
+  }
+  .admin__layout .admin__main .admin__content .row .top5Items.col-md-5 {
+    display: block;
+    width: 100%;
   }
 }
