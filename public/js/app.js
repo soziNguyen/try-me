@@ -136,6 +136,13 @@ function removeAccents(str) {
     .replace(/Đ/g, 'D')
 }
 
+const formatCurrencyToVnd = (currency) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(currency)
+}
+
 // format order code
 function formatOrderCode(code) {
   const num = parseInt(code.replace('HD', ''))

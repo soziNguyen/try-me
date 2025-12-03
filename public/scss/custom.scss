@@ -987,6 +987,10 @@ input[type='text']::-ms-clear {
     display: none;
   }
 
+  .btn-back {
+    display: none;
+  }
+
   @page {
     size: A4 portrait;
     margin: 10mm;

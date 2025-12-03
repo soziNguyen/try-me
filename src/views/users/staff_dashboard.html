@@ -1,8 +1,46 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/staff_sidebar.html') %>
-    <div class="staff__content">
-      <h1>Welcome, <%= user.username %>
-      </h1>
+    <div class="staff__content bg-light-blue">
+      <div class="row gap-3 gap-md-2 mt-3">
+        <div class="col-md-3">
+          <div class="card border-0">
+            <div class="card-body">
+              <div class="card-icon fs-4">
+                <i class="bi bi-currency-dollar rounded-circle bg-success bg-opacity-25 p-2 text-success"></i>
+              </div>
+              <div class="card-title mt-2 fs-5">Doanh thu hôm nay</div>
+              <div class="card-value fs-4 fw-bold">5 420 000 đ</div>
+              <div class="card-change mt-2 text-success fs-5">12,5% ▲</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-0">
+            <div class="card-body">
+              <div class="card-icon blue fs-4">
+                <i class="bi bi-cart3 rounded-circle bg-primary bg-opacity-25 p-2 text-primary"></i>
+              </div>
+              <div class="card-title mt-2 fs-5">Số lượng đơn hôm nay</div>
+              <div class="card-value fs-4 fw-bold fs-5">24</div>
+              <div class="card-change text-success mt-2 fs-5">2,2% ▲</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-0">
+            <div class="card-body">
+              <div class="card-icon fs-4">
+                <i class="bi bi-award rounded-circle bg-danger bg-opacity-25 p-2 text-danger"></i>
+              </div>
+              <div class="card-title mt-2 fs-5">Món bán chạy nhất hôm nay</div>
+              <div class="card-value fs-4 fw-bold fs-5">Chưa có</div>
+              <div class="card-change text-success mt-2 fs-5">18,8% ▲</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

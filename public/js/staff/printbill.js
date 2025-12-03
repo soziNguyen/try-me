@@ -200,6 +200,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (from === 'payment-receipt') {
           window.location.href = '/payment-receipts'
+        } else if (from === 'report') {
+          window.location.href = '/'
         } else if (window.location.href.includes('receipt')) {
           window.location.href = '/receipts'
         } else {

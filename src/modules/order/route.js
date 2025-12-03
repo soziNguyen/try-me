@@ -13,6 +13,12 @@ router.get('/orders/:id', isAuthenticated, checkWarehouseAccess, ordersPage)
 // --- Đặt món và quản lý đơn hàng ---
 router.get('/api/orders/get', isAuthenticated, checkWarehouseAccess, orderController.getOrders)
 router.get(
+  '/api/order/report',
+  isAuthenticated,
+  checkWarehouseAccess,
+  orderController.getDashboardStats
+)
+router.get(
   '/api/orders/getTopItems',
   isAuthenticated,
   checkWarehouseAccess,

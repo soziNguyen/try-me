@@ -2229,3 +2229,422 @@ export const cancelledOrder = async (req, res) => {
     responseHelper.error(res, error.message)
   }
 }
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const organizationId = getCurrentOrg(req)
+    if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
+
+    const warehouse = req.query.warehouse ?? null
+    const now = new Date()
+
+    // HÔM NAY
+    const startOfToday = new Date(now.setHours(0, 0, 0, 0))
+    const endOfToday = new Date(now.setHours(23, 59, 59, 999))
+
+    // HÔM QUA
+    const startOfYesterday = new Date(startOfToday)
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1)
+    const endOfYesterday = new Date(startOfToday)
+    endOfYesterday.setMilliseconds(-1)
+
+    // 7 NGÀY GẦN NHẤT
+    const last7Days = new Date()
+    last7Days.setDate(last7Days.getDate() - 6)
+    last7Days.setHours(0, 0, 0, 0)
+
+    // THÁNG NÀY
+    const startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0, 0, 0, 0)
+
+    const endOfMonth = new Date()
+    endOfMonth.setMonth(endOfMonth.getMonth() + 1)
+    endOfMonth.setDate(0)
+    endOfMonth.setHours(23, 59, 59, 999)
+
+    // THÁNG TRƯỚC
+    const startOfLastMonth = new Date(startOfMonth)
+    startOfLastMonth.setMonth(startOfLastMonth.getMonth() - 1)
+    const endOfLastMonth = new Date(startOfMonth)
+    endOfLastMonth.setMilliseconds(-1)
+
+    // Base matches
+    const todayMatch = {
+      organization: organizationId,
+      status: 'completed',
+      updatedAt: { $gte: startOfToday, $lte: endOfToday }
+    }
+
+    const yesterdayMatch = {
+      organization: organizationId,
+      status: 'completed',
+      updatedAt: { $gte: startOfYesterday, $lte: endOfYesterday }
+    }
+
+    const last7DaysMatch = {
+      organization: organizationId,
+      status: 'completed',
+      updatedAt: { $gte: last7Days }
+    }
+
+    const thisMonthMatch = {
+      organization: organizationId,
+      status: 'completed',
+      updatedAt: { $gte: startOfMonth, $lte: endOfMonth }
+    }
+
+    const lastMonthMatch = {
+      organization: organizationId,
+      status: 'completed',
+      updatedAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+    }
+
+    // Warehouse filter
+    if (req.warehouseFilter) {
+      todayMatch.warehouse = req.warehouseFilter
+      yesterdayMatch.warehouse = req.warehouseFilter
+      last7DaysMatch.warehouse = req.warehouseFilter
+      thisMonthMatch.warehouse = req.warehouseFilter
+      lastMonthMatch.warehouse = req.warehouseFilter
+    } else if (warehouse && warehouse !== 'all') {
+      const warehouseId = new mongoose.Types.ObjectId(String(warehouse))
+      todayMatch.warehouse = warehouseId
+      yesterdayMatch.warehouse = warehouseId
+      last7DaysMatch.warehouse = warehouseId
+      thisMonthMatch.warehouse = warehouseId
+      lastMonthMatch.warehouse = warehouseId
+    }
+
+    // Overview pipeline
+    const createOverviewPipeline = (match) => [
+      { $match: match },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$total' }
+        }
+      }
+    ]
+
+    // MÓN BÁN CHẠY NHẤT HÔM NAY
+    const topItemTodayPipeline = [
+      { $match: todayMatch },
+      { $unwind: '$items' },
+      ...lookupRef('items.foodId', 'MenuItems', { as: 'food' }),
+      ...lookupRef('items.comboId', 'Combos', { as: 'combo' }),
+      { $unwind: { path: '$food', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$combo', preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          itemId: {
+            $cond: [{ $ifNull: ['$food._id', false] }, '$food._id', '$combo._id']
+          },
+          itemName: {
+            $cond: [{ $ifNull: ['$food.name', false] }, '$food.name', '$combo.name']
+          },
+          itemType: {
+            $cond: [{ $ifNull: ['$food._id', false] }, 'menu', 'combo']
+          },
+          itemCategory: '$food.category'
+        }
+      },
+      {
+        $group: {
+          _id: '$itemId',
+          name: { $first: '$itemName' },
+          type: { $first: '$itemType' },
+          category: { $first: '$itemCategory' },
+          totalQuantity: { $sum: '$items.quantity' },
+          totalRevenue: { $sum: { $multiply: ['$items.quantity', '$items.price'] } }
+        }
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 1 }
+    ]
+
+    // DOANH THU 7 NGÀY GẦN NHẤT
+    const last7DaysRevenuePipeline = [
+      { $match: last7DaysMatch },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$updatedAt',
+              timezone: '+07:00'
+            }
+          },
+          date: {
+            $first: {
+              $dateToString: {
+                format: '%d/%m',
+                date: '$updatedAt',
+                timezone: '+07:00'
+              }
+            }
+          },
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$total' }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          date: 1,
+          totalOrders: 1,
+          totalRevenue: 1
+        }
+      }
+    ]
+
+    // DOANH THU THÁNG NÀY
+    const thisMonthRevenuePipeline = [
+      { $match: thisMonthMatch },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$updatedAt',
+              timezone: '+07:00'
+            }
+          },
+          date: {
+            $first: {
+              $dateToString: {
+                format: '%d/%m',
+                date: '$updatedAt',
+                timezone: '+07:00'
+              }
+            }
+          },
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$total' }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          date: 1,
+          totalOrders: 1,
+          totalRevenue: 1
+        }
+      }
+    ]
+
+    // TOP 5 MÓN BÁN CHẠY NHẤT
+    const top5ItemsPipeline = [
+      { $match: last7DaysMatch },
+      { $unwind: '$items' },
+      ...lookupRef('items.foodId', 'MenuItems', { as: 'food' }),
+      ...lookupRef('items.comboId', 'Combos', { as: 'combo' }),
+      { $unwind: { path: '$food', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$combo', preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          itemId: {
+            $cond: [{ $ifNull: ['$food._id', false] }, '$food._id', '$combo._id']
+          },
+          itemName: {
+            $cond: [{ $ifNull: ['$food.name', false] }, '$food.name', '$combo.name']
+          },
+          itemType: {
+            $cond: [{ $ifNull: ['$food._id', false] }, 'menu', 'combo']
+          },
+          itemCategory: '$food.category'
+        }
+      },
+      {
+        $group: {
+          _id: '$itemId',
+          name: { $first: '$itemName' },
+          type: { $first: '$itemType' },
+          category: { $first: '$itemCategory' },
+          totalQuantity: { $sum: '$items.quantity' },
+          totalRevenue: { $sum: { $multiply: ['$items.quantity', '$items.price'] } }
+        }
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 5 }
+    ]
+
+    // TRẠNG THÁI ĐƠN HÀNG HÔM NAY
+    const todayOrderStatusPipeline = [
+      {
+        $match: {
+          ...todayMatch,
+          status: { $exists: true }
+        }
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]
+
+    // THỐNG KÊ NHANH
+    const todayStatsPipeline = [
+      { $match: todayMatch },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$total' },
+          totalItems: {
+            $sum: {
+              $size: { $ifNull: ['$items', []] }
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          avgOrderValue: {
+            $cond: [{ $eq: ['$totalOrders', 0] }, 0, { $divide: ['$totalRevenue', '$totalOrders'] }]
+          },
+          avgItemsPerOrder: {
+            $cond: [{ $eq: ['$totalOrders', 0] }, 0, { $divide: ['$totalItems', '$totalOrders'] }]
+          }
+        }
+      }
+    ]
+
+    // KHÁCH HÀNG MỚI
+    const newCustomersPipeline = [
+      {
+        $match: {
+          organization: organizationId,
+          createdAt: { $gte: startOfToday, $lte: endOfToday }
+        }
+      },
+      {
+        $count: 'total'
+      }
+    ]
+
+    // ĐƠN HÀNG GẦN ĐÂY (10 đơn)
+    const recentOrdersPipeline = [
+      {
+        $match: {
+          ...todayMatch,
+          status: { $exists: true }
+        }
+      },
+      {
+        $lookup: {
+          from: 'Tables',
+          localField: 'tableId',
+          foreignField: '_id',
+          as: 'table'
+        }
+      },
+      { $unwind: { path: '$table', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          code: 1,
+          tableName: { $ifNull: ['$table.name', 'Mang về'] },
+          isTakeaway: 1,
+          createdAt: 1,
+          itemCount: { $size: '$items' },
+          total: 1,
+          status: 1
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      { $limit: 10 }
+    ]
+
+    // Execute all pipelines
+    const [
+      todayOverview,
+      yesterdayOverview,
+      topItemToday,
+      last7DaysRevenue,
+      thisMonthRevenue,
+      thisMonthOverview,
+      lastMonthOverview,
+      top5Items,
+      todayOrdersByStatus,
+      todayStats,
+      newCustomers,
+      recentOrders
+    ] = await Promise.all([
+      Order.aggregate(createOverviewPipeline(todayMatch)),
+      Order.aggregate(createOverviewPipeline(yesterdayMatch)),
+      Order.aggregate(topItemTodayPipeline),
+      Order.aggregate(last7DaysRevenuePipeline),
+      Order.aggregate(thisMonthRevenuePipeline),
+      Order.aggregate(createOverviewPipeline(thisMonthMatch)),
+      Order.aggregate(createOverviewPipeline(lastMonthMatch)),
+      Order.aggregate(top5ItemsPipeline),
+      Order.aggregate(todayOrderStatusPipeline),
+      Order.aggregate(todayStatsPipeline),
+      Customer.aggregate(newCustomersPipeline),
+      Order.aggregate(recentOrdersPipeline)
+    ])
+
+    // Helper function để tính % thay đổi
+    const calculateChange = (current, previous) => {
+      if (!previous || previous === 0) return 0
+      return (((current - previous) / previous) * 100).toFixed(1)
+    }
+
+    // Func đếm trạng thái đơn hàng
+    const getStatusCount = (statusArray, status) => {
+      const found = statusArray.find((s) => s._id === status)
+      return found ? found.count : 0
+    }
+
+    const todayRevenue = todayOverview[0]?.totalRevenue || 0
+    const yesterdayRevenue = yesterdayOverview[0]?.totalRevenue || 0
+    const todayOrders = todayOverview[0]?.totalOrders || 0
+    const yesterdayOrders = yesterdayOverview[0]?.totalOrders || 0
+
+    const thisMonthTotalRevenue = thisMonthOverview[0]?.totalRevenue || 0
+    const lastMonthTotalRevenue = lastMonthOverview[0]?.totalRevenue || 0
+
+    responseHelper.success(res, {
+      // HÔM NAY (so với hôm qua)
+      todayRevenue,
+      todayRevenueChange: calculateChange(todayRevenue, yesterdayRevenue),
+      todayOrders,
+      todayOrdersChange: calculateChange(todayOrders, yesterdayOrders),
+      topItemToday: topItemToday[0] || null,
+
+      // 7 NGÀY
+      last7DaysRevenue,
+
+      // THÁNG NÀY (so với tháng trước)
+      thisMonthRevenue,
+      thisMonthTotalRevenue,
+      thisMonthRevenueChange: calculateChange(thisMonthTotalRevenue, lastMonthTotalRevenue),
+      thisMonthTotalOrders: thisMonthOverview[0]?.totalOrders || 0,
+
+      // TOP
+      top5Items,
+
+      // ORDER STATUS
+      todayOrderStatus: {
+        completed: getStatusCount(todayOrdersByStatus, 'completed'),
+        pending: getStatusCount(todayOrdersByStatus, 'open'),
+        cancelled: getStatusCount(todayOrdersByStatus, 'cancelled')
+      },
+
+      // THỐNG KÊ NHANH
+      todayStats: {
+        avgOrderValue: todayStats[0]?.avgOrderValue || 0,
+        avgItemsPerOrder: todayStats[0]?.avgItemsPerOrder || 0,
+        newCustomers: newCustomers[0]?.total || 0
+      },
+      recentOrders
+    })
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
