@@ -169,7 +169,7 @@ $(function () {
         render: (data) => data || ''
       },
       {
-        data: 'submitTer',
+        data: 'submitter',
         title: 'Họ và tên người nộp',
         className: 'text-center',
         render: (data) => data || ''
