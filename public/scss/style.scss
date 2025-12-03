@@ -401,6 +401,16 @@ body {
             flex-direction: column;
             width: calc(25% - 8px);
 
+            .card {
+              flex: 1;
+
+              .card-body {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-evenly;
+              }
+            }
+
             i {
               padding-top: 8px;
               padding-bottom: 8px;

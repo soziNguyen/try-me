@@ -2242,6 +2242,12 @@ export const getDashboardStats = async (req, res) => {
     const startOfToday = new Date(now.setHours(0, 0, 0, 0))
     const endOfToday = new Date(now.setHours(23, 59, 59, 999))
 
+    // HÔM QUA
+    const startOfYesterday = new Date(startOfToday)
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1)
+    const endOfYesterday = new Date(startOfToday)
+    endOfYesterday.setMilliseconds(-1)
+
     // 7 NGÀY GẦN NHẤT
     const last7Days = new Date()
     last7Days.setDate(last7Days.getDate() - 6)
@@ -2257,42 +2263,62 @@ export const getDashboardStats = async (req, res) => {
     endOfMonth.setDate(0)
     endOfMonth.setHours(23, 59, 59, 999)
 
-    // Base match hôm nay
+    // THÁNG TRƯỚC
+    const startOfLastMonth = new Date(startOfMonth)
+    startOfLastMonth.setMonth(startOfLastMonth.getMonth() - 1)
+    const endOfLastMonth = new Date(startOfMonth)
+    endOfLastMonth.setMilliseconds(-1)
+
+    // Base matches
     const todayMatch = {
       organization: organizationId,
       status: 'completed',
       updatedAt: { $gte: startOfToday, $lte: endOfToday }
     }
 
-    // Base match 7 ngày
+    const yesterdayMatch = {
+      organization: organizationId,
+      status: 'completed',
+      updatedAt: { $gte: startOfYesterday, $lte: endOfYesterday }
+    }
+
     const last7DaysMatch = {
       organization: organizationId,
       status: 'completed',
       updatedAt: { $gte: last7Days }
     }
 
-    // Base match tháng này
     const thisMonthMatch = {
       organization: organizationId,
       status: 'completed',
       updatedAt: { $gte: startOfMonth, $lte: endOfMonth }
     }
 
+    const lastMonthMatch = {
+      organization: organizationId,
+      status: 'completed',
+      updatedAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+    }
+
     // Warehouse filter
     if (req.warehouseFilter) {
       todayMatch.warehouse = req.warehouseFilter
+      yesterdayMatch.warehouse = req.warehouseFilter
       last7DaysMatch.warehouse = req.warehouseFilter
       thisMonthMatch.warehouse = req.warehouseFilter
+      lastMonthMatch.warehouse = req.warehouseFilter
     } else if (warehouse && warehouse !== 'all') {
       const warehouseId = new mongoose.Types.ObjectId(String(warehouse))
       todayMatch.warehouse = warehouseId
+      yesterdayMatch.warehouse = warehouseId
       last7DaysMatch.warehouse = warehouseId
       thisMonthMatch.warehouse = warehouseId
+      lastMonthMatch.warehouse = warehouseId
     }
 
-    // DOANH THU HÔM NAY + SỐ LƯỢNG ĐƠN HÔM NAY
-    const todayOverviewPipeline = [
-      { $match: todayMatch },
+    // Overview pipeline
+    const createOverviewPipeline = (match) => [
+      { $match: match },
       {
         $group: {
           _id: null,
@@ -2302,7 +2328,7 @@ export const getDashboardStats = async (req, res) => {
       }
     ]
 
-    // MÓN BÁN CHẠY NHẤT HÔM NAY (bao gồm cả menu và combo)
+    // MÓN BÁN CHẠY NHẤT HÔM NAY
     const topItemTodayPipeline = [
       { $match: todayMatch },
       { $unwind: '$items' },
@@ -2338,7 +2364,7 @@ export const getDashboardStats = async (req, res) => {
       { $limit: 1 }
     ]
 
-    // DOANH THU 7 NGÀY GẦN NHẤT (theo từng ngày)
+    // DOANH THU 7 NGÀY GẦN NHẤT
     const last7DaysRevenuePipeline = [
       { $match: last7DaysMatch },
       {
@@ -2374,7 +2400,7 @@ export const getDashboardStats = async (req, res) => {
       }
     ]
 
-    // DOANH THU THÁNG NÀY (theo từng ngày)
+    // DOANH THU THÁNG NÀY
     const thisMonthRevenuePipeline = [
       { $match: thisMonthMatch },
       {
@@ -2410,19 +2436,7 @@ export const getDashboardStats = async (req, res) => {
       }
     ]
 
-    // TỔNG DOANH THU THÁNG NÀY
-    const thisMonthOverviewPipeline = [
-      { $match: thisMonthMatch },
-      {
-        $group: {
-          _id: null,
-          totalOrders: { $sum: 1 },
-          totalRevenue: { $sum: '$total' }
-        }
-      }
-    ]
-
-    // TOP 5 MÓN BÁN CHẠY NHẤT (7 ngày)
+    // TOP 5 MÓN BÁN CHẠY NHẤT
     const top5ItemsPipeline = [
       { $match: last7DaysMatch },
       { $unwind: '$items' },
@@ -2461,28 +2475,56 @@ export const getDashboardStats = async (req, res) => {
     // Execute all pipelines
     const [
       todayOverview,
+      yesterdayOverview,
       topItemToday,
       last7DaysRevenue,
       thisMonthRevenue,
       thisMonthOverview,
+      lastMonthOverview,
       top5Items
     ] = await Promise.all([
-      Order.aggregate(todayOverviewPipeline),
+      Order.aggregate(createOverviewPipeline(todayMatch)),
+      Order.aggregate(createOverviewPipeline(yesterdayMatch)),
       Order.aggregate(topItemTodayPipeline),
       Order.aggregate(last7DaysRevenuePipeline),
       Order.aggregate(thisMonthRevenuePipeline),
-      Order.aggregate(thisMonthOverviewPipeline),
+      Order.aggregate(createOverviewPipeline(thisMonthMatch)),
+      Order.aggregate(createOverviewPipeline(lastMonthMatch)),
       Order.aggregate(top5ItemsPipeline)
     ])
 
+    // Helper function để tính % thay đổi
+    const calculateChange = (current, previous) => {
+      if (!previous || previous === 0) return 0
+      return (((current - previous) / previous) * 100).toFixed(1)
+    }
+
+    const todayRevenue = todayOverview[0]?.totalRevenue || 0
+    const yesterdayRevenue = yesterdayOverview[0]?.totalRevenue || 0
+    const todayOrders = todayOverview[0]?.totalOrders || 0
+    const yesterdayOrders = yesterdayOverview[0]?.totalOrders || 0
+
+    const thisMonthTotalRevenue = thisMonthOverview[0]?.totalRevenue || 0
+    const lastMonthTotalRevenue = lastMonthOverview[0]?.totalRevenue || 0
+
     responseHelper.success(res, {
-      todayRevenue: todayOverview[0]?.totalRevenue || 0,
-      todayOrders: todayOverview[0]?.totalOrders || 0,
+      // HÔM NAY (so với hôm qua)
+      todayRevenue,
+      todayRevenueChange: calculateChange(todayRevenue, yesterdayRevenue),
+      todayOrders,
+      todayOrdersChange: calculateChange(todayOrders, yesterdayOrders),
       topItemToday: topItemToday[0] || null,
+
+      // 7 NGÀY
       last7DaysRevenue,
-      thisMonthRevenue, // Doanh thu tháng này theo từng ngày
-      thisMonthTotalRevenue: thisMonthOverview[0]?.totalRevenue || 0, // Tổng doanh thu tháng này
-      thisMonthTotalOrders: thisMonthOverview[0]?.totalOrders || 0, // Tổng số đơn tháng này
+
+      // THÁNG NÀY (so với tháng trước)
+      thisMonthRevenue,
+      thisMonthTotalRevenue,
+      thisMonthRevenueChange: calculateChange(thisMonthTotalRevenue, lastMonthTotalRevenue),
+      thisMonthTotalOrders: thisMonthOverview[0]?.totalOrders || 0,
+
+      // TOP
       top5Items
     })
   } catch (error) {

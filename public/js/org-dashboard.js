@@ -6,17 +6,47 @@ const getSaleInfomation = async () => {
   try {
     const result = await ajax('/api/order/report', {}, 'GET')
     if (result) {
-      document.querySelector('.revenueToday').textContent = formatCurrencyToVnd(result.todayRevenue)
-      document.querySelector('.numOfOrderToday').textContent = result.todayOrders
-      document.querySelector('.bestSellerOrderToday').textContent = result.topItemToday.name
+      document.querySelector('.revenueToday').textContent = formatCurrencyToVnd(result.todayRevenue) // Doanh thu hôm nay (so với hôm qua)
+      updateChangeIndicator('.revenueToday', result.todayRevenueChange)
+
+      document.querySelector('.numOfOrderToday').textContent = result.todayOrders // Số đơn hôm nay (so với hôm qua)
+      updateChangeIndicator('.numOfOrderToday', result.todayOrdersChange)
+
+      document.querySelector('.bestSellerOrderToday').textContent = // Món bán chạy nhất
+        result.topItemToday?.name || 'Chưa có'
+
+      document.querySelector('.numOfBestMenuToday').textContent = result.topItemToday // Số lượng món bán chạy nhất
+        ? `${result.topItemToday.totalQuantity} món`
+        : '0'
+
+      // Doanh thu tháng này (so với tháng trước)
       document.querySelector('.revenueThisMonth').textContent = formatCurrencyToVnd(
         result.thisMonthTotalRevenue
       )
+      updateChangeIndicator('.revenueThisMonth', result.thisMonthRevenueChange)
 
       renderRevenueChart(result.last7DaysRevenue)
       renderTop5Items(result.top5Items)
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error('Error:', error)
+  }
+}
+
+// Helper function update % thay đổi
+function updateChangeIndicator(selector, changePercent) {
+  const card = document.querySelector(selector).closest('.card-body')
+  const changeElement = card.querySelector('.card-change')
+
+  if (!changeElement) return
+
+  const percent = parseFloat(changePercent)
+  const isPositive = percent >= 0
+  const arrow = isPositive ? '▲' : '▼'
+  const colorClass = isPositive ? 'text-success' : 'text-danger'
+
+  changeElement.className = `card-change mt-2 fs-5 ${colorClass}`
+  changeElement.textContent = `${Math.abs(percent)}% ${arrow}`
 }
 
 function renderRevenueChart(data) {
@@ -24,9 +54,10 @@ function renderRevenueChart(data) {
   const revenues = data.map((item) => item.totalRevenue)
 
   const ctx = document.getElementById('chartRevenue7Days').getContext('2d')
+  const isBar = labels.length < 2
 
   new Chart(ctx, {
-    type: 'line',
+    type: isBar ? 'bar' : 'line',
     data: {
       labels: labels,
       datasets: [
@@ -36,7 +67,11 @@ function renderRevenueChart(data) {
           borderWidth: 3,
           tension: 0.3,
           borderColor: 'rgb(255, 0, 0)',
-          backgroundColor: 'rgb(255, 0, 0)'
+          backgroundColor: 'rgb(255, 0, 0)',
+          ...(isBar && {
+            barPercentage: 0.5, // Độ rộng bar so với category (0-1)
+            categoryPercentage: 0.6 // Độ rộng category so với toàn bộ (0-1)
+          })
         }
       ]
     },
@@ -62,7 +97,6 @@ function renderTop5Items(items) {
     return
   }
 
-  // Lấy số lượng cao nhất để tính %
   const maxQty = Math.max(...items.map((i) => i.totalQuantity))
 
   list.innerHTML = items
