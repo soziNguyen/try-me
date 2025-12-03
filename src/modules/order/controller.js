@@ -2247,6 +2247,16 @@ export const getDashboardStats = async (req, res) => {
     last7Days.setDate(last7Days.getDate() - 6)
     last7Days.setHours(0, 0, 0, 0)
 
+    // THÁNG NÀY
+    const startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0, 0, 0, 0)
+
+    const endOfMonth = new Date()
+    endOfMonth.setMonth(endOfMonth.getMonth() + 1)
+    endOfMonth.setDate(0)
+    endOfMonth.setHours(23, 59, 59, 999)
+
     // Base match hôm nay
     const todayMatch = {
       organization: organizationId,
@@ -2261,14 +2271,23 @@ export const getDashboardStats = async (req, res) => {
       updatedAt: { $gte: last7Days }
     }
 
+    // Base match tháng này
+    const thisMonthMatch = {
+      organization: organizationId,
+      status: 'completed',
+      updatedAt: { $gte: startOfMonth, $lte: endOfMonth }
+    }
+
     // Warehouse filter
     if (req.warehouseFilter) {
       todayMatch.warehouse = req.warehouseFilter
       last7DaysMatch.warehouse = req.warehouseFilter
+      thisMonthMatch.warehouse = req.warehouseFilter
     } else if (warehouse && warehouse !== 'all') {
       const warehouseId = new mongoose.Types.ObjectId(String(warehouse))
       todayMatch.warehouse = warehouseId
       last7DaysMatch.warehouse = warehouseId
+      thisMonthMatch.warehouse = warehouseId
     }
 
     // DOANH THU HÔM NAY + SỐ LƯỢNG ĐƠN HÔM NAY
@@ -2355,6 +2374,54 @@ export const getDashboardStats = async (req, res) => {
       }
     ]
 
+    // DOANH THU THÁNG NÀY (theo từng ngày)
+    const thisMonthRevenuePipeline = [
+      { $match: thisMonthMatch },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$updatedAt',
+              timezone: '+07:00'
+            }
+          },
+          date: {
+            $first: {
+              $dateToString: {
+                format: '%d/%m',
+                date: '$updatedAt',
+                timezone: '+07:00'
+              }
+            }
+          },
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$total' }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          date: 1,
+          totalOrders: 1,
+          totalRevenue: 1
+        }
+      }
+    ]
+
+    // TỔNG DOANH THU THÁNG NÀY
+    const thisMonthOverviewPipeline = [
+      { $match: thisMonthMatch },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$total' }
+        }
+      }
+    ]
+
     // TOP 5 MÓN BÁN CHẠY NHẤT (7 ngày)
     const top5ItemsPipeline = [
       { $match: last7DaysMatch },
@@ -2392,19 +2459,31 @@ export const getDashboardStats = async (req, res) => {
     ]
 
     // Execute all pipelines
-    const [todayOverview, topItemToday, last7DaysRevenue, top5Items] = await Promise.all([
+    const [
+      todayOverview,
+      topItemToday,
+      last7DaysRevenue,
+      thisMonthRevenue,
+      thisMonthOverview,
+      top5Items
+    ] = await Promise.all([
       Order.aggregate(todayOverviewPipeline),
       Order.aggregate(topItemTodayPipeline),
       Order.aggregate(last7DaysRevenuePipeline),
+      Order.aggregate(thisMonthRevenuePipeline),
+      Order.aggregate(thisMonthOverviewPipeline),
       Order.aggregate(top5ItemsPipeline)
     ])
 
     responseHelper.success(res, {
       todayRevenue: todayOverview[0]?.totalRevenue || 0,
-      todayOrders: todayOverview[0]?.totalOrders || 0, // Số lượng đơn hôm nay
-      topItemToday: topItemToday[0] || null, // Món bán chạy nhất hôm nay
-      last7DaysRevenue, // Doanh thu 7 ngày gần nhất
-      top5Items // Top 5 món bán chạy nhất
+      todayOrders: todayOverview[0]?.totalOrders || 0,
+      topItemToday: topItemToday[0] || null,
+      last7DaysRevenue,
+      thisMonthRevenue, // Doanh thu tháng này theo từng ngày
+      thisMonthTotalRevenue: thisMonthOverview[0]?.totalRevenue || 0, // Tổng doanh thu tháng này
+      thisMonthTotalOrders: thisMonthOverview[0]?.totalOrders || 0, // Tổng số đơn tháng này
+      top5Items
     })
   } catch (error) {
     responseHelper.error(res, error.message)

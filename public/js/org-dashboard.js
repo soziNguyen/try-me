@@ -9,6 +9,9 @@ const getSaleInfomation = async () => {
       document.querySelector('.revenueToday').textContent = formatCurrencyToVnd(result.todayRevenue)
       document.querySelector('.numOfOrderToday').textContent = result.todayOrders
       document.querySelector('.bestSellerOrderToday').textContent = result.topItemToday.name
+      document.querySelector('.revenueThisMonth').textContent = formatCurrencyToVnd(
+        result.thisMonthTotalRevenue
+      )
 
       renderRevenueChart(result.last7DaysRevenue)
       renderTop5Items(result.top5Items)
@@ -23,7 +26,7 @@ function renderRevenueChart(data) {
   const ctx = document.getElementById('chartRevenue7Days').getContext('2d')
 
   new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
       labels: labels,
       datasets: [

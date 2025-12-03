@@ -309,7 +309,6 @@ body {
 }
 .admin__layout .admin__main #admin__sidebar.collapsed {
   width: 60px;
-  padding: 1rem 0;
 }
 .admin__layout .admin__main #admin__sidebar.collapsed ul > li,
 .admin__layout .admin__main #admin__sidebar.collapsed ul li > .accordion {
@@ -469,6 +468,12 @@ body {
       -ms-flex-direction: column;
           flex-direction: column;
   width: calc(25% - 8px);
+}
+.admin__layout .admin__main .admin__content .row .card-item.col-md-3 i {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {
   width: calc(58.33333333% - 4px);
@@ -687,7 +692,6 @@ body {
 }
 .staff__layout .staff__main #staff__sidebar.collapsed {
   width: 60px;
-  padding: 1rem 0;
 }
 .staff__layout .staff__main #staff__sidebar.collapsed ul > li,
 .staff__layout .staff__main #staff__sidebar.collapsed ul li > .accordion {
@@ -847,6 +851,12 @@ body {
       -ms-flex-direction: column;
           flex-direction: column;
   width: calc(25% - 8px);
+}
+.staff__layout .staff__main .staff__content .row .card-item.col-md-3 i {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 .staff__layout .staff__main .staff__content .row .revenueLast7days.col-md-7 {
   width: calc(58.33333333% - 4px);
