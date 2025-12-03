@@ -285,16 +285,28 @@ $(function () {
         query.warehouse = warehouse
       }
 
-      const [receiptsRes, expensesRes] = await Promise.all([
+      // Gọi cả 3 API: phiếu thu, phiếu chi, hóa đơn
+      const [receiptsRes, expensesRes, ordersRes] = await Promise.all([
         fetch(`/api/payment-receipts?${new URLSearchParams(query)}`),
-        fetch(`/api/payment-expenses?${new URLSearchParams(query)}`)
+        fetch(`/api/payment-expenses?${new URLSearchParams(query)}`),
+        fetch(`/api/orders/get?${new URLSearchParams(query)}`)
       ])
 
       const receiptsData = await receiptsRes.json()
       const expensesData = await expensesRes.json()
+      const ordersData = await ordersRes.json()
 
-      const totalReceipts = receiptsData.summary?.totalAmount || 0
+      const totalReceiptsFromReceipts = receiptsData.summary?.totalAmount || 0
+
+      const totalFromOrders = ordersData.summary?.totalAmount || 0
+
+      // Tổng thu = Phiếu thu + Hóa đơn
+      const totalReceipts = totalReceiptsFromReceipts + totalFromOrders
+
+      // Tổng chi
       const totalExpenses = expensesData.summary?.totalAmount || 0
+
+      // Kết quả
       const balance = totalReceipts - totalExpenses
 
       $('#total-receipts').text(formatCurrency(totalReceipts))
