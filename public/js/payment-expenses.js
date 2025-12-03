@@ -86,7 +86,13 @@ $(function () {
           data: 'reason',
           title: 'Lý do chi',
           className: 'text-center',
-          render: (data) => data || ''
+          render: (data) => {
+            if (!data) return ''
+            const maxLength = 15
+            return data.length > maxLength
+              ? `<span title="${data}">${data.substring(0, maxLength)}...</span>`
+              : data
+          }
         },
         {
           data: 'expenseAmount',
@@ -117,12 +123,6 @@ $(function () {
         {
           data: 'receiver',
           title: 'Họ và tên người nhận',
-          className: 'text-center',
-          render: (data) => data || ''
-        },
-        {
-          data: 'note',
-          title: 'Ghi chú',
           className: 'text-center',
           render: (data) => data || ''
         },

@@ -146,7 +146,7 @@ $(function () {
         const period = startDate && endDate ? `${startDate} - ${endDate}` : 'Tất cả'
 
         $taxTbody.append(`
-          <tr>
+          <tr class="clickable-row cursor-pointer">
             <td class="text-center px-3 py-2">${period}</td>
             <td class="text-center px-3 py-2">${formatNumber(totalBeforeTax)}</td>
             <td class="text-center px-3 py-2">${formatNumber(vat)}</td>
@@ -166,7 +166,7 @@ $(function () {
 
   // Bảng phiếu chi
   async function loadExpenseSummary(startDate, endDate) {
-    $expenseTbody.html('<tr><td colspan="4" class="text-center">Đang tải...</td></tr>')
+    $expenseTbody.html('<tr><td colspan="5" class="text-center">Đang tải...</td></tr>')
 
     try {
       let url = '/api/payment-expenses'
@@ -189,7 +189,8 @@ $(function () {
       if (result.data && result.data.length > 0) {
         result.data.forEach((item) => {
           $expenseTbody.append(`
-            <tr>
+            <tr class="expense-clickable-row cursor-pointer" data-id="${item._id}">
+              <td class="text-center px-3 py-2">${item.code || 'N/A'}</td>
               <td class="text-center px-3 py-2">${formatDisplayDate(item.date)}</td>
               <td class="text-center px-3 py-2">${item.warehouse?.name || 'N/A'}</td>
               <td class="text-center px-3 py-2">1</td>
@@ -201,26 +202,26 @@ $(function () {
         if (result.summary) {
           $expenseTbody.append(`
             <tr class="table-warning fw-bold">
-              <td colspan="2" class="px-3 py-2">Tổng cộng:</td>
+              <td colspan="3" class="px-3 py-2">Tổng cộng:</td>
               <td class="text-center px-3 py-2">${result.summary.totalExpenses}</td>
               <td class="text-center px-3 py-2">${formatCurrency(result.summary.totalAmount)}</td>
             </tr>
           `)
         }
       } else {
-        $expenseTbody.html('<tr><td colspan="4" class="text-center">Không có dữ liệu</td></tr>')
+        $expenseTbody.html('<tr><td colspan="5" class="text-center">Không có dữ liệu</td></tr>')
       }
     } catch (err) {
       console.error('Lỗi load báo cáo phiếu chi:', err)
       $expenseTbody.html(
-        '<tr><td colspan="4" class="text-center text-danger">Không thể tải dữ liệu</td></tr>'
+        '<tr><td colspan="5" class="text-center text-danger">Không thể tải dữ liệu</td></tr>'
       )
     }
   }
 
   // Bảng phiếu thu
   async function loadReceiptsSummary(startDate, endDate) {
-    $receiptsTbody.html('<tr><td colspan="4" class="text-center">Đang tải...</td></tr>')
+    $receiptsTbody.html('<tr><td colspan="5" class="text-center">Đang tải...</td></tr>')
 
     try {
       let url = '/api/payment-receipts'
@@ -243,7 +244,8 @@ $(function () {
       if (result.data && result.data.length > 0) {
         result.data.forEach((item) => {
           $receiptsTbody.append(`
-            <tr>
+            <tr class="receipt-clickable-row cursor-pointer" data-id="${item._id}">
+              <td class="text-center px-3 py-2">${item.code || 'N/A'}</td>
               <td class="text-center px-3 py-2">${formatDisplayDate(item.date)}</td>
               <td class="text-center px-3 py-2">${item.warehouse?.name || 'N/A'}</td>
               <td class="text-center px-3 py-2">1</td>
@@ -255,19 +257,19 @@ $(function () {
         if (result.summary) {
           $receiptsTbody.append(`
             <tr class="table-success fw-bold">
-              <td colspan="2" class="px-3 py-2">Tổng cộng:</td>
+              <td colspan="3" class="px-3 py-2">Tổng cộng:</td>
               <td class="text-center px-3 py-2">${result.summary.totalReceipts}</td>
               <td class="text-center px-3 py-2">${formatCurrency(result.summary.totalAmount)}</td>
             </tr>
           `)
         }
       } else {
-        $receiptsTbody.html('<tr><td colspan="4" class="text-center">Không có dữ liệu</td></tr>')
+        $receiptsTbody.html('<tr><td colspan="5" class="text-center">Không có dữ liệu</td></tr>')
       }
     } catch (err) {
       console.error('Lỗi load báo cáo phiếu thu:', err)
       $receiptsTbody.html(
-        '<tr><td colspan="4" class="text-center text-danger">Không thể tải dữ liệu</td></tr>'
+        '<tr><td colspan="5" class="text-center text-danger">Không thể tải dữ liệu</td></tr>'
       )
     }
   }
@@ -347,8 +349,18 @@ $(function () {
     loadAllTables(start, end)
   })
 
-  $('#viewInvoiceBtn').on('click', () => {
+  $(document).on('click', '.clickable-row', function () {
     window.location.href = '/payment-receipts'
+  })
+
+  $(document).on('click', '.receipt-clickable-row', function () {
+    const id = $(this).data('id')
+    window.location.href = `/payment-receipts/${id}`
+  })
+
+  $(document).on('click', '.expense-clickable-row', function () {
+    const id = $(this).data('id')
+    window.location.href = `/payment-expenses/${id}`
   })
 
   // KHỞI TẠO
