@@ -169,7 +169,7 @@ $(function () {
         render: (data) => data || ''
       },
       {
-        data: 'submitTer',
+        data: 'submitter',
         title: 'Họ và tên người nộp',
         className: 'text-center',
         render: (data) => data || ''
@@ -200,9 +200,14 @@ $(function () {
         data: 'reason',
         title: 'Lý do thu',
         className: 'text-center',
-        render: (data) => data || ''
+        render: (data) => {
+          if (!data) return ''
+          const maxLength = 15
+          return data.length > maxLength
+            ? `<span title="${data}">${data.substring(0, maxLength)}...</span>`
+            : data
+        }
       },
-      { data: 'note', title: 'Ghi chú', className: 'text-center', render: (data) => data || '' },
       {
         data: null,
         orderable: false,
