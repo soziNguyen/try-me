@@ -168,16 +168,25 @@
       </div>
     </div>
 
-    <!-- Sales Report -->
-    <div class="sales-report mt-5">
-      <h4 class="mb-4 fw-bold text-dark">
-        <i class="bi bi-graph-up-arrow text-primary me-2"></i>
-        Quản lý bán hàng
-      </h4>
-      <table id="sales-dataTable" class="table table-bordered">
-        <thead></thead>
-        <tbody id="sales-data"></tbody>
-      </table>
+    <div class="row gap-3 gap-md-2 mt-4">
+      <!-- Các món đã bán  -->
+      <div class="saleReport col-md-6">
+        <div class="card border-0">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Doanh thu đã bán</h5>
+            <canvas id="chartMenu" height="350"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="saleReport col-md-6">
+        <div class="card border-0">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Số lượng món đã bán</h5>
+            <canvas id="chartQuantity" height="350"></canvas>
+          </div>
+        </div>
+      </div>  
     </div>
   </div>
 </div>

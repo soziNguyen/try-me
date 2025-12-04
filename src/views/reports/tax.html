@@ -127,58 +127,69 @@
           </div>
         </div>
 
-        <!-- Tiền từ phiếu thu -->
-        <div class="card shadow-sm mb-4 tax-report">
-          <div class="card-header bg-success bg-gradient text-white">
-            <h5 class="mb-0 fw-bold">Tiền từ phiếu thu</h5>
-          </div>
+        <div class="row">
 
-          <div class="card-body">
-            <div class="table-responsive">
-              <table id="tax-dataTable" class="table table-hover table-bordered align-middle table-info">
-                <thead class="table-primary bg-gradient text-center">
-                  <tr>
-                    <th>Mã phiếu thu</th> 
-                    <th>Thời gian</th>
-                    <th>Kho</th>
-                    <th>Tổng số phiếu</th>
-                    <th>Tổng chi phí</th>
-                  </tr>
-                </thead>
-                <tbody id="receipts-data">
-                  <!-- JS render dữ liệu -->
-                </tbody>
-              </table>
+          <!-- Tiền từ phiếu thu -->
+          <div class="col-lg-6 col-md-12">
+            <div class="card shadow-sm mb-4 tax-report">
+              <div class="card-header bg-success bg-gradient text-white">
+                <h5 class="mb-0 fw-bold">Tiền từ phiếu thu</h5>
+              </div>
+
+              <div class="card-body">
+                <div class="table-scroll">
+                  <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle table-info">
+                      <thead class="table-primary bg-gradient text-center">
+                        <tr>
+                          <th>Mã phiếu thu</th>
+                          <th>Thời gian</th>
+                          <th>Kho</th>
+                          <th>Tổng số phiếu</th>
+                          <th>Tổng chi phí</th>
+                        </tr>
+                      </thead>
+                      <tbody id="receipts-data">
+                        <!-- JS render dữ liệu -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Tiền từ phiếu chi -->
-        <div class="card shadow-sm mb-4 tax-report">
-          <div class="card-header bg-danger bg-gradient text-white">
-            <h5 class="mb-0 fw-bold">Tiền từ phiếu chi</h5>
-          </div>
+          <!-- Tiền từ phiếu chi -->
+          <div class="col-lg-6 col-md-12">
+            <div class="card shadow-sm mb-4 tax-report">
+              <div class="card-header bg-danger bg-gradient text-white">
+                <h5 class="mb-0 fw-bold">Tiền từ phiếu chi</h5>
+              </div>
 
-          <div class="card-body">
-            <div class="table-responsive">
-              <table id="tax-dataTable" class="table table-hover table-bordered align-middle table-info">
-                <thead class="table-primary bg-gradient text-center">
-                  <tr>
-                    <th>Mã phiếu chi</th> 
-                    <th>Thời gian</th>
-                    <th>Kho</th>
-                    <th>Tổng số phiếu</th>
-                    <th>Tổng chi phí</th>
-                  </tr>
-                </thead>
-                <tbody id="expense-data">
-                  <!-- JS render dữ liệu -->
-                </tbody>
-              </table>
+              <div class="card-body">
+                <div class="table-scroll">
+                  <div class="table-responsive ">
+                    <table class="table table-hover table-bordered align-middle table-info">
+                      <thead class="table-primary bg-gradient text-center">
+                        <tr>
+                          <th>Mã phiếu chi</th>
+                          <th>Thời gian</th>
+                          <th>Kho</th>
+                          <th>Tổng số phiếu</th>
+                          <th>Tổng chi phí</th>
+                        </tr>
+                      </thead>
+                      <tbody id="expense-data">
+                        <!-- JS render dữ liệu -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
+        </div>
       </div>
 
 
