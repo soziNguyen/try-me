@@ -2177,8 +2177,10 @@ export const submitOrderFromCustomer = async (req, res) => {
 
     const io = req.app.get('io')
 
+    const roomName = `staff_${order.organization}_${order.warehouse}`
+
     // Emit đến staff room
-    io.to('staff_room').emit('staff_notification', {
+    io.to(roomName).emit('staff_notification', {
       type: 'new_order_items',
       orderId,
       table: order.tableId?.name || null,

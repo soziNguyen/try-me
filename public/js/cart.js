@@ -527,15 +527,28 @@ function submitOrder() {
   })
 }
 
-function initCallStaffSocket() {
+async function initCallStaffSocket() {
   const socket = io()
   const tableId = getQueryParam('tableId') || ''
 
   const btn = document.getElementById('btnContactToStaff')
   if (!btn) return
 
+  let tableInfo = null
+  try {
+    const result = await ajax(`/api/tables/${tableId}/public`, {}, 'GET')
+    if (result) {
+      tableInfo = result
+    }
+  } catch (error) {
+    console.error(error)
+  }
+
+  const organizationId = tableInfo?.organizationId || tableInfo?.organization?._id
+  const warehouseId = tableInfo?.warehouseId || tableInfo?.warehouse?._id
+
   const COOLDOWN = 5 * 1000 // 2 phút
-  const KEY = `callStaff_${tableId}`
+  const KEY = `callStaff_${organizationId}_${warehouseId}_${tableId}`
 
   btn.addEventListener('click', () => {
     const lastTime = localStorage.getItem(KEY)
@@ -552,6 +565,9 @@ function initCallStaffSocket() {
     const notification = {
       type: 'customer_call_staff',
       tableId,
+      organizationId,
+      warehouseId,
+      tableName: tableInfo?.tableName ? `Bàn ${tableInfo.tableName}` : null,
       time: new Date().toISOString()
     }
 

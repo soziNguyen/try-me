@@ -47,7 +47,8 @@ function playNotificationSound() {
 }
 
 // Nhân viên join room
-socket.emit('staff_join')
+const userId = document.getElementById('currentUserId').value ?? null
+getUserById(userId)
 
 // Nhận notification từ socket
 socket.on('staff_notification', async (data) => {
@@ -68,6 +69,25 @@ socket.on('staff_notification', async (data) => {
   // PHÁT ÂM THANH BẰNG WEB AUDIO API
   playNotificationSound()
 })
+
+async function getUserById(id) {
+  try {
+    const user = await ajax(`/api/users/${id}`, {}, 'GET')
+
+    if (user) {
+      const organizationId = user?.organization?._id
+      const warehouseId = user?.warehouse?._id
+
+      socket.emit('staff_join', {
+        userId: user._id,
+        organizationId,
+        warehouseId
+      })
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
 
 // Lưu notification
 function saveNotification(data) {
