@@ -420,15 +420,33 @@ body {
           }
         }
 
+        .statistical {
+          &.col-md-4 {
+            display: flex;
+            flex-direction: column;
+            width: calc(33.33333333% - 8px);
+
+            .card {
+              flex: 1;
+
+              .card-body {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-evenly;
+              }
+            }
+          }
+        }
+
         .revenueLast7days {
           &.col-md-7 {
-            width: calc(58.33333333% - 4px);
+            width: calc(58.33333333% - 8px);
           }
         }
 
         .top5Items {
           &.col-md-5 {
-            width: calc(41.66666667% - 4px);
+            width: calc(41.66666667% - 8px);
 
             .progress {
               height: 1.5rem;
@@ -615,6 +633,12 @@ body {
           }
         }
 
+        .statistical {
+          &.col-md-4 {
+            width: calc(50% - 16px);
+          }
+        }
+
         .revenueLast7days {
           &.col-md-7 {
             width: 100%;
@@ -668,6 +692,12 @@ body {
       .row {
         .card-item {
           &.col-md-3 {
+            width: 100%;
+          }
+        }
+
+        .statistical {
+          &.col-md-4 {
             width: 100%;
           }
         }

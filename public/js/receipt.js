@@ -94,7 +94,7 @@ $(function () {
           title: 'Tổng tiền',
           render: (data, type, row) => {
             if (type === 'display') {
-              return `<span class="number form-control border-0">${data ?? ''}</span>`
+              return `<span class="number form-control border-0">${formatCurrencyToVnd(data) ?? ''}</span>`
             }
             return data
           }

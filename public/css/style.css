@@ -492,11 +492,38 @@ body {
   padding-left: 10px;
   padding-right: 10px;
 }
+.admin__layout .admin__main .admin__content .row .statistical.col-md-4 {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  width: calc(33.33333333% - 8px);
+}
+.admin__layout .admin__main .admin__content .row .statistical.col-md-4 .card {
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+}
+.admin__layout .admin__main .admin__content .row .statistical.col-md-4 .card .card-body {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: space-evenly;
+      -ms-flex-pack: space-evenly;
+          justify-content: space-evenly;
+}
 .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {
-  width: calc(58.33333333% - 4px);
+  width: calc(58.33333333% - 8px);
 }
 .admin__layout .admin__main .admin__content .row .top5Items.col-md-5 {
-  width: calc(41.66666667% - 4px);
+  width: calc(41.66666667% - 8px);
 }
 .admin__layout .admin__main .admin__content .row .top5Items.col-md-5 .progress {
   height: 1.5rem;
@@ -892,11 +919,38 @@ body {
   padding-left: 10px;
   padding-right: 10px;
 }
+.staff__layout .staff__main .staff__content .row .statistical.col-md-4 {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  width: calc(33.33333333% - 8px);
+}
+.staff__layout .staff__main .staff__content .row .statistical.col-md-4 .card {
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+}
+.staff__layout .staff__main .staff__content .row .statistical.col-md-4 .card .card-body {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: space-evenly;
+      -ms-flex-pack: space-evenly;
+          justify-content: space-evenly;
+}
 .staff__layout .staff__main .staff__content .row .revenueLast7days.col-md-7 {
-  width: calc(58.33333333% - 4px);
+  width: calc(58.33333333% - 8px);
 }
 .staff__layout .staff__main .staff__content .row .top5Items.col-md-5 {
-  width: calc(41.66666667% - 4px);
+  width: calc(41.66666667% - 8px);
 }
 .staff__layout .staff__main .staff__content .row .top5Items.col-md-5 .progress {
   height: 1.5rem;
@@ -1040,6 +1094,9 @@ body {
   .admin__layout .admin__main .admin__content .row .card-item.col-md-3 {
     width: calc(50% - 16px);
   }
+  .admin__layout .admin__main .admin__content .row .statistical.col-md-4 {
+    width: calc(50% - 16px);
+  }
   .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {
     width: 100%;
   }
@@ -1087,6 +1144,9 @@ body {
     width: 50%;
   }
   .admin__layout .admin__main .admin__content .row .card-item.col-md-3 {
+    width: 100%;
+  }
+  .admin__layout .admin__main .admin__content .row .statistical.col-md-4 {
     width: 100%;
   }
   .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {
