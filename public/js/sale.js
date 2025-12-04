@@ -9,8 +9,9 @@ $(function () {
   const $endDate = $('#endDate')
   const $filterBtn = $('#filterDateBtn')
 
-  let salesTable
   let warehouses = []
+  let menuChart = null
+  let quantityChart = null
 
   function loadWarehouses() {
     return fetchData('inventory/warehouse/all')
@@ -21,56 +22,10 @@ $(function () {
       })
       .catch((err) => console.error('Không load được danh sách kho', err))
   }
+
   // --- Hàm định dạng tiền tệ ---
   function formatCurrency(value) {
     return Number(value || 0).toLocaleString('vi-VN') + '₫'
-  }
-
-  // --- Helper map dữ liệu ---
-  function mapItems(items, type) {
-    return (items || []).map((item) => ({ ...item, type }))
-  }
-
-  // --- Hàm khởi tạo DataTable ---
-  function initSalesDataTable() {
-    salesTable = $('#sales-dataTable').DataTable({
-      serverSide: false,
-      processing: true,
-      autoWidth: true,
-      scrollX: true,
-      ordering: false,
-      columns: [
-        { data: 'type', title: 'Loại', className: 'px-3 py-2' },
-        { data: 'name', title: 'Tên', className: 'px-3 py-2', render: (data) => data || '-' },
-        {
-          data: 'quantity',
-          title: 'Số lượng',
-          className: 'text-center px-3 py-2',
-          render: (data) => data || 0
-        },
-        {
-          data: 'total',
-          title: 'Tổng tiền của món',
-          className: 'text-center px-3 py-2',
-          render: (data) => formatCurrency(data)
-        }
-      ],
-      rowCallback: (row, data) => {
-        if (data.type.includes('bán chậm')) $(row).addClass('table-warning')
-        else if (data.type.includes('bán chạy')) $(row).addClass('table-info')
-      },
-      language: {
-        search: '',
-        searchPlaceholder: 'Tìm kiếm món, combo...',
-        lengthMenu: '_MENU_ bản ghi',
-        info: 'Hiển thị _START_ đến _END_ trong tổng _TOTAL_ bản ghi',
-        infoEmpty: 'Không có bản ghi nào',
-        infoFiltered: '(lọc từ _MAX_ bản ghi)',
-        zeroRecords: 'Không tìm thấy kết quả phù hợp',
-        emptyTable: 'Chưa có dữ liệu. Vui lòng chọn thời gian và nhấn "Xem báo cáo"',
-        loadingRecords: 'Đang tải...'
-      }
-    })
   }
 
   // --- Hàm format ngày YYYY-MM-DD ---
@@ -132,35 +87,158 @@ $(function () {
 
     Promise.all([
       $.get('/api/orders/get', { startDate: sDate, endDate: eDate, warehouse: wh }),
-      $.get('/api/orders/getTopItems', { startDate: sDate, endDate: eDate, warehouse: wh })
+      $.get('/api/orders/getTopItems', {
+        startDate: sDate,
+        endDate: eDate,
+        warehouse: wh,
+        returnAll: 'true'
+      })
     ])
-      .then(([summaryRes, topItemsRes]) => {
+      .then(([summaryRes, allItemsRes]) => {
         const summary = summaryRes.summary || {}
         $('#summary-total-revenue').text(formatCurrency(summary.totalAmount))
         $('#summary-total-orders').text(summary.totalOrders || 0)
         $('#summary-total-items').text(summary.totalItems || 0)
         $('#summary-total-combos').text(summary.totalCombos || 0)
 
-        const data = topItemsRes || {}
-        const allRows = [
-          ...mapItems(data.topSellingFoods, 'Món bán chạy'),
-          ...mapItems(data.slowSellingFoods, 'Món bán chậm'),
-          ...mapItems(data.topSellingCombos, 'Combo bán chạy'),
-          ...mapItems(data.slowSellingCombos, 'Combo bán chậm')
-        ]
-
-        if (!salesTable) initSalesDataTable()
-        salesTable.clear().rows.add(allRows).draw()
+        // Vẽ biểu đồ với tất cả dữ liệu
+        const allItems = allItemsRes.data || []
+        renderMenuChart(allItems)
+        renderQuantityChart(allItems)
       })
       .catch((err) => {
         console.error('Lấy dữ liệu thất bại', err)
-        if (salesTable) {
-          salesTable.clear().draw()
-          salesTable.row
-            .add({ type: '-', name: 'Không tải được dữ liệu', quantity: '-', total: 0 })
-            .draw()
-        }
       })
+  }
+
+  // --- Hàm tạo màu dựa trên tên sản phẩm (để đồng bộ màu) ---
+  function getColorForProduct(productName, allProducts) {
+    const index = allProducts.indexOf(productName)
+    const hue = (index * 360) / allProducts.length
+    return `hsla(${hue}, 70%, 60%, 0.8)`
+  }
+
+  // --- Hàm vẽ biểu đồ tròn doanh thu ---
+  function renderMenuChart(items) {
+    if (menuChart) {
+      menuChart.destroy()
+    }
+
+    if (!items || items.length === 0) return
+
+    const labels = items.map((item) => item.product.name)
+    const revenues = items.map((item) => item.totalRevenue)
+
+    const ctx = document.getElementById('chartMenu').getContext('2d')
+
+    const colors = labels.map((name) => getColorForProduct(name, labels))
+
+    menuChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Doanh thu (đ)',
+            data: revenues,
+            backgroundColor: colors,
+            borderWidth: 2
+          }
+        ]
+      },
+      responsive: true,
+      options: {
+        animation: {
+          animateRotate: true,
+          animateScale: true,
+          duration: 1000,
+          easing: 'easeInOutQuart',
+          delay: (context) => {
+            return context.dataIndex * 100
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            align: 'center'
+          }
+        }
+      }
+    })
+  }
+
+  // --- Hàm vẽ biểu đồ cột số lượng ---
+  function renderQuantityChart(items) {
+    if (quantityChart) {
+      quantityChart.destroy()
+    }
+
+    if (!items || items.length === 0) return
+
+    // Sắp xếp theo số lượng giảm dần
+    const sortedItems = [...items].sort((a, b) => b.quantitySold - a.quantitySold)
+
+    const labels = sortedItems.map((item) => item.product.name)
+    const quantities = sortedItems.map((item) => item.quantitySold)
+
+    const ctx = document.getElementById('chartQuantity').getContext('2d')
+
+    const allProductNames = items.map((item) => item.product.name)
+
+    const colors = labels.map((name) => getColorForProduct(name, allProductNames))
+
+    quantityChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Số lượng đã bán',
+            data: quantities,
+            backgroundColor: colors,
+            borderColor: colors.map((color) => color.replace('0.8', '1')),
+            borderWidth: 2
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        animation: {
+          duration: 1000,
+          easing: 'easeInOutBack',
+          delay: (context) => {
+            return context.dataIndex * 100
+          },
+          x: {
+            type: 'number',
+            easing: 'easeOutElastic',
+            duration: 2800,
+            from: 0
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                return `Số lượng: ${context.parsed.x} món`
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    })
   }
 
   // --- Sự kiện ---
@@ -189,6 +267,7 @@ $(function () {
     loadSummary($startDate.val(), $endDate.val(), $(this).val())
   })
 
+  // --- Khởi chạy ---
   loadWarehouses().then(() => {
     // Có thể load báo cáo mặc định ngay sau khi danh sách kho có sẵn
     // loadSummary($startDate.val(), $endDate.val(), $('#warehouseFilter').val())

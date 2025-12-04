@@ -211,6 +211,10 @@ $(function () {
       } else {
         $expenseTbody.html('<tr><td colspan="5" class="text-center">Không có dữ liệu</td></tr>')
       }
+      const expenseScroll = $expenseTbody.closest('.table-scroll')[0]
+      if (expenseScroll) {
+        expenseScroll.scrollTop = expenseScroll.scrollHeight
+      }
     } catch (err) {
       console.error('Lỗi load báo cáo phiếu chi:', err)
       $expenseTbody.html(
@@ -265,6 +269,10 @@ $(function () {
         }
       } else {
         $receiptsTbody.html('<tr><td colspan="5" class="text-center">Không có dữ liệu</td></tr>')
+      }
+      const receiptsScroll = $receiptsTbody.closest('.table-scroll')[0]
+      if (receiptsScroll) {
+        receiptsScroll.scrollTop = receiptsScroll.scrollHeight
       }
     } catch (err) {
       console.error('Lỗi load báo cáo phiếu thu:', err)
