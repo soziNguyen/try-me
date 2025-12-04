@@ -177,7 +177,9 @@ export const updateKitchenItemStatus = async (req, res) => {
       payload.tableName = order.tableId?.name || 'Không rõ bàn'
     }
 
-    io.to('staff_room').emit('staff_notification', payload)
+    const roomName = `staff_${order.organization}_${order.warehouse}`
+
+    io.to(roomName).emit('staff_notification', payload)
 
     responseHelper.success(res, item, 'Cập nhật trạng thái món thành công')
   } catch (error) {

@@ -361,6 +361,7 @@ export const updateOrg = async (req, res) => {
       email,
       phone,
       plan,
+      businessType,
       province,
       commune,
       defaultWarehouse,
@@ -394,6 +395,10 @@ export const updateOrg = async (req, res) => {
       return responseHelper.error(res, 'Mã số thuế không hợp lệ (10-13 chữ số)', 400)
     }
 
+    // Validate BussinessType
+    if (!['shop', 'food', 'drink'].includes(businessType)) {
+      return responseHelper.error(res, 'Loại hình tổ chức không hợp lệ', 400)
+    }
     // Check trùng email/phone/taxCode...
     const conditions = []
     if (email !== undefined && email.trim()) {
@@ -443,7 +448,7 @@ export const updateOrg = async (req, res) => {
         data.plan = plan
       }
     }
-
+    if (plan !== undefined) data.businessType = businessType
     if (province !== undefined) data.province = province
     if (commune !== undefined) data.commune = commune
     if (street !== undefined) data.street = street

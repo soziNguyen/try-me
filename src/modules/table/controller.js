@@ -264,6 +264,32 @@ export const getTableById = async (req, res) => {
   }
 }
 
+export const getTableByIdPublic = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const table = await Table.findById(id)
+      .populate('warehouse', 'name location')
+      .populate('organization', 'name businessType')
+      .lean()
+
+    if (!table) {
+      return responseHelper.error(res, 'Table Not Found', 404)
+    }
+
+    const response = {
+      tableId: table._id,
+      tableName: table.name,
+      organizationId: table.organization?._id || table.organization,
+      warehouseId: table.warehouse?._id || table.warehouse
+    }
+
+    responseHelper.success(res, response)
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
 // UPDATE
 export const updateTable = async (req, res) => {
   try {

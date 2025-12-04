@@ -32,6 +32,7 @@ router.get(
   checkAccountTypeAccess,
   tableController.getTableById
 )
+router.get('/api/tables/:id/public', tableController.getTableByIdPublic)
 router.post(
   '/api/tables/create',
   isAuthenticated,

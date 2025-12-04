@@ -77,7 +77,7 @@ function renderRevenueChart(data) {
   const revenues = data.map((item) => item.totalRevenue)
 
   const ctx = document.getElementById('chartRevenue7Days').getContext('2d')
-  const isBar = labels.length < 2
+  const isBar = labels.length < 3
 
   new Chart(ctx, {
     type: isBar ? 'bar' : 'line',
@@ -93,15 +93,23 @@ function renderRevenueChart(data) {
           backgroundColor: 'rgb(255, 0, 0)',
           ...(isBar && {
             barPercentage: 0.2, // Độ rộng bar so với category (0-1)
-            categoryPercentage: 0.5 // Độ rộng category so với toàn bộ (0-1)
+            categoryPercentage: 0.6 // Độ rộng category so với toàn bộ (0-1)
           })
         }
       ]
     },
     options: {
+      animations: {
+        y: {
+          from: 300,
+          duration: 2000, // 1 giây
+          easing: 'easeOutQuart'
+        }
+      },
       plugins: { legend: { display: false } },
       scales: {
         y: {
+          beginAtZero: true,
           ticks: {
             callback: function (value) {
               return value.toLocaleString('vi-VN')
