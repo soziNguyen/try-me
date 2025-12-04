@@ -492,11 +492,41 @@ body {
   padding-left: 10px;
   padding-right: 10px;
 }
+.admin__layout .admin__main .admin__content .row .statistical.col-md-4 {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  width: calc(33.33333333% - 8px);
+}
+.admin__layout .admin__main .admin__content .row .statistical.col-md-4 .card {
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+}
+.admin__layout .admin__main .admin__content .row .statistical.col-md-4 .card .card-body {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: space-evenly;
+      -ms-flex-pack: space-evenly;
+          justify-content: space-evenly;
+}
+.admin__layout .admin__main .admin__content .row .saleReport.col-md-6 {
+  width: calc(50% - 0.5rem);
+}
 .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {
-  width: calc(58.33333333% - 4px);
+  width: calc(58.33333333% - 8px);
 }
 .admin__layout .admin__main .admin__content .row .top5Items.col-md-5 {
-  width: calc(41.66666667% - 4px);
+  width: calc(41.66666667% - 8px);
 }
 .admin__layout .admin__main .admin__content .row .top5Items.col-md-5 .progress {
   height: 1.5rem;
@@ -892,11 +922,41 @@ body {
   padding-left: 10px;
   padding-right: 10px;
 }
+.staff__layout .staff__main .staff__content .row .statistical.col-md-4 {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  width: calc(33.33333333% - 8px);
+}
+.staff__layout .staff__main .staff__content .row .statistical.col-md-4 .card {
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+}
+.staff__layout .staff__main .staff__content .row .statistical.col-md-4 .card .card-body {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: space-evenly;
+      -ms-flex-pack: space-evenly;
+          justify-content: space-evenly;
+}
+.staff__layout .staff__main .staff__content .row .saleReport.col-md-6 {
+  width: calc(50% - 0.5rem);
+}
 .staff__layout .staff__main .staff__content .row .revenueLast7days.col-md-7 {
-  width: calc(58.33333333% - 4px);
+  width: calc(58.33333333% - 8px);
 }
 .staff__layout .staff__main .staff__content .row .top5Items.col-md-5 {
-  width: calc(41.66666667% - 4px);
+  width: calc(41.66666667% - 8px);
 }
 .staff__layout .staff__main .staff__content .row .top5Items.col-md-5 .progress {
   height: 1.5rem;
@@ -941,9 +1001,28 @@ body {
 
 /* Mobile (<992px) */
 @media (max-width: 991px) {
+  .admin__layout .admin__main,
+  .admin__layout .staff__main,
+  .staff__layout .admin__main,
+  .staff__layout .staff__main {
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+  }
+  .admin__layout .admin__main .admin__content .row .saleReport.col-md-6,
+  .admin__layout .staff__main .admin__content .row .saleReport.col-md-6,
+  .staff__layout .admin__main .admin__content .row .saleReport.col-md-6,
+  .staff__layout .staff__main .admin__content .row .saleReport.col-md-6 {
+    width: calc(100% - 0.5rem);
+  }
   .admin__layout .admin__main #admin__sidebar,
+  .admin__layout .admin__main #staff__sidebar,
+  .admin__layout .staff__main #admin__sidebar,
   .admin__layout .staff__main #staff__sidebar,
   .staff__layout .admin__main #admin__sidebar,
+  .staff__layout .admin__main #staff__sidebar,
+  .staff__layout .staff__main #admin__sidebar,
   .staff__layout .staff__main #staff__sidebar {
     position: fixed;
     top: 40px;
@@ -960,18 +1039,30 @@ body {
     transition: transform 0.3s ease, -webkit-transform 0.3s ease;
   }
   .admin__layout .admin__main #admin__sidebar.show,
+  .admin__layout .admin__main #staff__sidebar.show,
+  .admin__layout .staff__main #admin__sidebar.show,
   .admin__layout .staff__main #staff__sidebar.show,
   .staff__layout .admin__main #admin__sidebar.show,
+  .staff__layout .admin__main #staff__sidebar.show,
+  .staff__layout .staff__main #admin__sidebar.show,
   .staff__layout .staff__main #staff__sidebar.show {
     -webkit-transform: translateX(0);
             transform: translateX(0);
   }
   .admin__layout .admin__main #admin__sidebar ul > li,
   .admin__layout .admin__main #admin__sidebar ul li > .accordion,
+  .admin__layout .admin__main #staff__sidebar ul > li,
+  .admin__layout .admin__main #staff__sidebar ul li > .accordion,
+  .admin__layout .staff__main #admin__sidebar ul > li,
+  .admin__layout .staff__main #admin__sidebar ul li > .accordion,
   .admin__layout .staff__main #staff__sidebar ul > li,
   .admin__layout .staff__main #staff__sidebar ul li > .accordion,
   .staff__layout .admin__main #admin__sidebar ul > li,
   .staff__layout .admin__main #admin__sidebar ul li > .accordion,
+  .staff__layout .admin__main #staff__sidebar ul > li,
+  .staff__layout .admin__main #staff__sidebar ul li > .accordion,
+  .staff__layout .staff__main #admin__sidebar ul > li,
+  .staff__layout .staff__main #admin__sidebar ul li > .accordion,
   .staff__layout .staff__main #staff__sidebar ul > li,
   .staff__layout .staff__main #staff__sidebar ul li > .accordion {
     -webkit-box-pack: start;
@@ -982,6 +1073,14 @@ body {
   .admin__layout .admin__main #admin__sidebar ul > li .accordion-button,
   .admin__layout .admin__main #admin__sidebar ul li > .accordion a,
   .admin__layout .admin__main #admin__sidebar ul li > .accordion .accordion-button,
+  .admin__layout .admin__main #staff__sidebar ul > li a,
+  .admin__layout .admin__main #staff__sidebar ul > li .accordion-button,
+  .admin__layout .admin__main #staff__sidebar ul li > .accordion a,
+  .admin__layout .admin__main #staff__sidebar ul li > .accordion .accordion-button,
+  .admin__layout .staff__main #admin__sidebar ul > li a,
+  .admin__layout .staff__main #admin__sidebar ul > li .accordion-button,
+  .admin__layout .staff__main #admin__sidebar ul li > .accordion a,
+  .admin__layout .staff__main #admin__sidebar ul li > .accordion .accordion-button,
   .admin__layout .staff__main #staff__sidebar ul > li a,
   .admin__layout .staff__main #staff__sidebar ul > li .accordion-button,
   .admin__layout .staff__main #staff__sidebar ul li > .accordion a,
@@ -990,6 +1089,14 @@ body {
   .staff__layout .admin__main #admin__sidebar ul > li .accordion-button,
   .staff__layout .admin__main #admin__sidebar ul li > .accordion a,
   .staff__layout .admin__main #admin__sidebar ul li > .accordion .accordion-button,
+  .staff__layout .admin__main #staff__sidebar ul > li a,
+  .staff__layout .admin__main #staff__sidebar ul > li .accordion-button,
+  .staff__layout .admin__main #staff__sidebar ul li > .accordion a,
+  .staff__layout .admin__main #staff__sidebar ul li > .accordion .accordion-button,
+  .staff__layout .staff__main #admin__sidebar ul > li a,
+  .staff__layout .staff__main #admin__sidebar ul > li .accordion-button,
+  .staff__layout .staff__main #admin__sidebar ul li > .accordion a,
+  .staff__layout .staff__main #admin__sidebar ul li > .accordion .accordion-button,
   .staff__layout .staff__main #staff__sidebar ul > li a,
   .staff__layout .staff__main #staff__sidebar ul > li .accordion-button,
   .staff__layout .staff__main #staff__sidebar ul li > .accordion a,
@@ -1002,6 +1109,14 @@ body {
   .admin__layout .admin__main #admin__sidebar ul > li .accordion-button span,
   .admin__layout .admin__main #admin__sidebar ul li > .accordion a span,
   .admin__layout .admin__main #admin__sidebar ul li > .accordion .accordion-button span,
+  .admin__layout .admin__main #staff__sidebar ul > li a span,
+  .admin__layout .admin__main #staff__sidebar ul > li .accordion-button span,
+  .admin__layout .admin__main #staff__sidebar ul li > .accordion a span,
+  .admin__layout .admin__main #staff__sidebar ul li > .accordion .accordion-button span,
+  .admin__layout .staff__main #admin__sidebar ul > li a span,
+  .admin__layout .staff__main #admin__sidebar ul > li .accordion-button span,
+  .admin__layout .staff__main #admin__sidebar ul li > .accordion a span,
+  .admin__layout .staff__main #admin__sidebar ul li > .accordion .accordion-button span,
   .admin__layout .staff__main #staff__sidebar ul > li a span,
   .admin__layout .staff__main #staff__sidebar ul > li .accordion-button span,
   .admin__layout .staff__main #staff__sidebar ul li > .accordion a span,
@@ -1010,34 +1125,36 @@ body {
   .staff__layout .admin__main #admin__sidebar ul > li .accordion-button span,
   .staff__layout .admin__main #admin__sidebar ul li > .accordion a span,
   .staff__layout .admin__main #admin__sidebar ul li > .accordion .accordion-button span,
+  .staff__layout .admin__main #staff__sidebar ul > li a span,
+  .staff__layout .admin__main #staff__sidebar ul > li .accordion-button span,
+  .staff__layout .admin__main #staff__sidebar ul li > .accordion a span,
+  .staff__layout .admin__main #staff__sidebar ul li > .accordion .accordion-button span,
+  .staff__layout .staff__main #admin__sidebar ul > li a span,
+  .staff__layout .staff__main #admin__sidebar ul > li .accordion-button span,
+  .staff__layout .staff__main #admin__sidebar ul li > .accordion a span,
+  .staff__layout .staff__main #admin__sidebar ul li > .accordion .accordion-button span,
   .staff__layout .staff__main #staff__sidebar ul > li a span,
   .staff__layout .staff__main #staff__sidebar ul > li .accordion-button span,
   .staff__layout .staff__main #staff__sidebar ul li > .accordion a span,
   .staff__layout .staff__main #staff__sidebar ul li > .accordion .accordion-button span {
     display: inline;
   }
-  .admin__layout .admin__main #admin__sidebar ul > li .accordion-collapse.show .accordion-body a,
   .admin__layout .admin__main #admin__sidebar ul li > .accordion .accordion-collapse.show .accordion-body a,
-  .admin__layout .staff__main #staff__sidebar ul > li .accordion-collapse.show .accordion-body a,
+  .admin__layout .admin__main #staff__sidebar ul li > .accordion .accordion-collapse.show .accordion-body a,
+  .admin__layout .staff__main #admin__sidebar ul li > .accordion .accordion-collapse.show .accordion-body a,
   .admin__layout .staff__main #staff__sidebar ul li > .accordion .accordion-collapse.show .accordion-body a,
-  .staff__layout .admin__main #admin__sidebar ul > li .accordion-collapse.show .accordion-body a,
   .staff__layout .admin__main #admin__sidebar ul li > .accordion .accordion-collapse.show .accordion-body a,
-  .staff__layout .staff__main #staff__sidebar ul > li .accordion-collapse.show .accordion-body a,
+  .staff__layout .admin__main #staff__sidebar ul li > .accordion .accordion-collapse.show .accordion-body a,
+  .staff__layout .staff__main #admin__sidebar ul li > .accordion .accordion-collapse.show .accordion-body a,
   .staff__layout .staff__main #staff__sidebar ul li > .accordion .accordion-collapse.show .accordion-body a {
     background: var(--accent-bg);
-  }
-  .admin__layout .admin__main,
-  .admin__layout .staff__main,
-  .staff__layout .admin__main,
-  .staff__layout .staff__main {
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-        -ms-flex-direction: column;
-            flex-direction: column;
   }
 }
 @media (max-width: 768px) {
   .admin__layout .admin__main .admin__content .row .card-item.col-md-3 {
+    width: calc(50% - 16px);
+  }
+  .admin__layout .admin__main .admin__content .row .statistical.col-md-4 {
     width: calc(50% - 16px);
   }
   .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {
@@ -1087,6 +1204,9 @@ body {
     width: 50%;
   }
   .admin__layout .admin__main .admin__content .row .card-item.col-md-3 {
+    width: 100%;
+  }
+  .admin__layout .admin__main .admin__content .row .statistical.col-md-4 {
     width: 100%;
   }
   .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {

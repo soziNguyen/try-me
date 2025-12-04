@@ -39,9 +39,17 @@ const getSaleInfomation = async () => {
       )
       document.querySelector('.newCustomers').textContent = result.todayStats.newCustomers
 
+      document.querySelector('.totalOrdersThisMonth').textContent =
+        result.thisMonthStats.totalOrders
+      document.querySelector('.newCustomersThisMonth').textContent =
+        result.thisMonthStats.newCustomers
+      document.querySelector('.bestSellerThisMonth').textContent =
+        result.thisMonthStats.topItem.name
+
       renderRevenueChart(result.last7DaysRevenue)
       renderTop5Items(result.top5Items)
       renderRecentOrders(result.recentOrders)
+      rowClick()
     }
   } catch (error) {
     console.error('Error:', error)
@@ -84,8 +92,8 @@ function renderRevenueChart(data) {
           borderColor: 'rgb(255, 0, 0)',
           backgroundColor: 'rgb(255, 0, 0)',
           ...(isBar && {
-            barPercentage: 0.5, // Độ rộng bar so với category (0-1)
-            categoryPercentage: 0.6 // Độ rộng category so với toàn bộ (0-1)
+            barPercentage: 0.2, // Độ rộng bar so với category (0-1)
+            categoryPercentage: 0.5 // Độ rộng category so với toàn bộ (0-1)
           })
         }
       ]
@@ -161,7 +169,7 @@ function renderRecentOrders(orders) {
       const timeAgo = getTimeAgo(new Date(order.createdAt))
 
       return `
-      <tr>
+      <tr class="cursor-pointer" data-id=${order._id}>
         <td class="p-2"><strong>#${order.code}</strong></td>
         <td class="p-2">
           ${
@@ -172,17 +180,24 @@ function renderRecentOrders(orders) {
         </td>
         <td class="p-2"><small class="text-muted">${timeAgo}</small></td>
         <td class="text-center">${order.itemCount}</td>
-        <td class="p-2"><strong>${formatCurrencyToVnd(order.total)}</strong></td>
+        <td class="p-2 text-center  "><strong>${formatCurrencyToVnd(order.total)}</strong></td>
         <td class="p-2">${statusBadge}</td>
-        <td class="p-2 text-center">
-          <a href="/receipt/${order._id}?from=report" class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-eye"></i>
-          </a>
-        </td>
       </tr>
     `
     })
     .join('')
+}
+
+function rowClick() {
+  const rows = document.querySelectorAll('#recentOrdersTable tr')
+  rows.forEach((row) => {
+    row.addEventListener('click', function () {
+      const rowId = this.dataset.id
+      if (rowId) {
+        window.location.href = `/receipt/${rowId}?from=report`
+      }
+    })
+  })
 }
 
 function getTimeAgo(date) {

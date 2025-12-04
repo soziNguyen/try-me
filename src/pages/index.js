@@ -603,7 +603,6 @@ export const receiptDetailPage = async (req, res) => {
     let invoiceOptions = null
     if (orgId) {
       invoiceOptions = await InvoiceOption.findOne({ organizationId: orgId, warehouseId }).lean()
-      console.log(invoiceOptions)
     }
 
     const has = (v) => v !== undefined && v !== null && String(v).trim() !== ''

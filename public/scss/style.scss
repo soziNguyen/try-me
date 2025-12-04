@@ -420,15 +420,39 @@ body {
           }
         }
 
+        .statistical {
+          &.col-md-4 {
+            display: flex;
+            flex-direction: column;
+            width: calc(33.33333333% - 8px);
+
+            .card {
+              flex: 1;
+
+              .card-body {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-evenly;
+              }
+            }
+          }
+        }
+
+        .saleReport {
+          &.col-md-6 {
+            width: calc(50% - 0.5rem);
+          }
+        }
+
         .revenueLast7days {
           &.col-md-7 {
-            width: calc(58.33333333% - 4px);
+            width: calc(58.33333333% - 8px);
           }
         }
 
         .top5Items {
           &.col-md-5 {
-            width: calc(41.66666667% - 4px);
+            width: calc(41.66666667% - 8px);
 
             .progress {
               height: 1.5rem;
@@ -563,44 +587,62 @@ body {
 @media (max-width: 991px) {
   .admin__layout,
   .staff__layout {
-    .admin__main #admin__sidebar,
-    .staff__main #staff__sidebar {
-      position: fixed;
-      top: 40px;
-      left: 0;
-      height: calc(100vh - 40px);
-      z-index: 999;
-      background-color: var(--sidebar-bg);
-      width: 320px;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-
-      &.show {
-        transform: translateX(0);
-      }
-
-      ul > li,
-      ul li > .accordion {
-        justify-content: flex-start;
-
-        a,
-        .accordion-button {
-          display: flex;
-
-          span {
-            display: inline;
-          }
-        }
-
-        .accordion-collapse.show .accordion-body a {
-          background: var(--accent-bg);
-        }
-      }
-    }
-
     .admin__main,
     .staff__main {
       flex-direction: column;
+
+      .admin__content {
+        .row {
+          .saleReport {
+            &.col-md-6 {
+              width: calc(100% - 0.5rem);
+            }
+          }
+        }
+      }
+
+      #admin__sidebar,
+      #staff__sidebar {
+        position: fixed;
+        top: 40px;
+        left: 0;
+        height: calc(100vh - 40px);
+        z-index: 999;
+        background-color: var(--sidebar-bg);
+        width: 320px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+
+        &.show {
+          transform: translateX(0);
+        }
+
+        ul {
+          > li,
+          li > .accordion {
+            justify-content: flex-start;
+
+            a,
+            .accordion-button {
+              display: flex;
+
+              span {
+                display: inline;
+              }
+            }
+          }
+
+          li > .accordion {
+            .accordion-collapse.show {
+              .accordion-body {
+                a {
+                  background: var(--accent-bg);
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -611,6 +653,12 @@ body {
       .row {
         .card-item {
           &.col-md-3 {
+            width: calc(50% - 16px);
+          }
+        }
+
+        .statistical {
+          &.col-md-4 {
             width: calc(50% - 16px);
           }
         }
@@ -668,6 +716,12 @@ body {
       .row {
         .card-item {
           &.col-md-3 {
+            width: 100%;
+          }
+        }
+
+        .statistical {
+          &.col-md-4 {
             width: 100%;
           }
         }
