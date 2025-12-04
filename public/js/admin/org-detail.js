@@ -20,6 +20,7 @@ $(function () {
       email: $('#orgEmail').val(),
       phone: $('#orgPhone').val(),
       plan: $('#orgPlan').val(),
+      businessType: $('#businessType').val(),
       province: $('#orgProvince').val(),
       commune: $('#orgCommune').val(),
       street: $('#orgStreet').val(),
@@ -77,6 +78,7 @@ function getElements(data) {
   $('#orgEmail').val(data.email)
   $('#orgPhone').val(data.phoneDisplay?.international)
   $('#orgPlan').val(data.plan?._id || data.plan)
+  $('#businessType').val(data.businessType)
   $('#orgStreet').val(data.street)
   $('#orgIsActive').prop('checked', data.isActive)
 
