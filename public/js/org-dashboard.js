@@ -101,8 +101,8 @@ function renderRevenueChart(data) {
     options: {
       animations: {
         y: {
-          from: 300,
-          duration: 2000, // 1 giây
+          from: 250,
+          duration: 2000,
           easing: 'easeOutQuart'
         }
       },
@@ -142,15 +142,25 @@ function renderTop5Items(items) {
         </div>
 
         <div class="progress">
-          <div title="${item.totalQuantity}" class="progress-bar bg-primary bg-opacity-75" role="progressbar" 
-               style="width: ${percent}%;" 
-               aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">
+          <div title="${item.totalQuantity}" 
+            class="progress-bar bg-primary bg-opacity-75 progress-bar-animated" role="progressbar" 
+              style="width: 0%;"
+              data-width="${percent}%"
+              aria-valuenow="${percent}" 
+              aria-valuemin="0" 
+              aria-valuemax="100">
           </div>
         </div>
       </li>
       `
     })
     .join('')
+
+  setTimeout(() => {
+    document.querySelectorAll('.progress-bar-animated').forEach((bar) => {
+      bar.style.width = bar.getAttribute('data-width')
+    })
+  }, 10)
 }
 
 function renderRecentOrders(orders) {
