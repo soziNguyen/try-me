@@ -103,8 +103,13 @@ $(function () {
 
         // Vẽ biểu đồ với tất cả dữ liệu
         const allItems = allItemsRes.data || []
-        renderMenuChart(allItems)
-        renderQuantityChart(allItems)
+
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            renderMenuChart(allItems)
+            renderQuantityChart(allItems)
+          }, 150)
+        })
       })
       .catch((err) => {
         console.error('Lấy dữ liệu thất bại', err)
@@ -122,16 +127,30 @@ $(function () {
   function renderMenuChart(items) {
     if (menuChart) {
       menuChart.destroy()
+      menuChart = null
     }
 
     if (!items || items.length === 0) return
 
+    const canvas = document.getElementById('chartMenu')
+    if (!canvas) return
+
+    const parent = canvas.parentElement
+
+    // *** SET SIZE CỐ ĐỊNH ***
+    const width = parent.offsetWidth
+    const height = parent.offsetHeight
+    canvas.width = width
+    canvas.height = height
+    canvas.style.width = width + 'px'
+    canvas.style.height = height + 'px'
+
     const labels = items.map((item) => item.product.name)
     const revenues = items.map((item) => item.totalRevenue)
 
-    const ctx = document.getElementById('chartMenu').getContext('2d')
-
-    const colors = labels.map((name) => getColorForProduct(name, labels))
+    const ctx = canvas.getContext('2d')
+    const allProductNames = items.map((item) => item.product.name)
+    const colors = labels.map((name) => getColorForProduct(name, allProductNames))
 
     menuChart = new Chart(ctx, {
       type: 'doughnut',
@@ -139,29 +158,35 @@ $(function () {
         labels: labels,
         datasets: [
           {
-            label: 'Doanh thu (đ)',
             data: revenues,
             backgroundColor: colors,
             borderWidth: 2
           }
         ]
       },
-      responsive: true,
       options: {
+        responsive: false,
+        maintainAspectRatio: false,
         animation: {
           animateRotate: true,
           animateScale: true,
-          duration: 1000,
-          easing: 'easeInOutQuart',
+          duration: 2000,
+          easing: 'easeOutElastic',
           delay: (context) => {
-            return context.dataIndex * 100
+            return Math.random() * 400 + context.dataIndex * 80
           }
         },
         plugins: {
           legend: {
             display: true,
-            position: 'bottom',
-            align: 'center'
+            position: 'bottom'
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                return `Doanh thu: ${formatCurrency(context.parsed)}`
+              }
+            }
           }
         }
       }
@@ -172,20 +197,31 @@ $(function () {
   function renderQuantityChart(items) {
     if (quantityChart) {
       quantityChart.destroy()
+      quantityChart = null
     }
 
     if (!items || items.length === 0) return
 
-    // Sắp xếp theo số lượng giảm dần
+    const canvas = document.getElementById('chartQuantity')
+    if (!canvas) return
+
+    const parent = canvas.parentElement
+
+    const width = parent.offsetWidth
+    const height = parent.offsetHeight
+    canvas.width = width
+    canvas.height = height
+    canvas.style.width = width + 'px'
+    canvas.style.height = height + 'px'
+
     const sortedItems = [...items].sort((a, b) => b.quantitySold - a.quantitySold)
 
     const labels = sortedItems.map((item) => item.product.name)
     const quantities = sortedItems.map((item) => item.quantitySold)
 
-    const ctx = document.getElementById('chartQuantity').getContext('2d')
+    const ctx = canvas.getContext('2d')
 
     const allProductNames = items.map((item) => item.product.name)
-
     const colors = labels.map((name) => getColorForProduct(name, allProductNames))
 
     quantityChart = new Chart(ctx, {
@@ -203,17 +239,19 @@ $(function () {
         ]
       },
       options: {
+        responsive: false,
+        maintainAspectRatio: false,
         indexAxis: 'y',
         animation: {
           duration: 1000,
-          easing: 'easeInOutBack',
+          easing: 'easeInOutQuart',
           delay: (context) => {
-            return context.dataIndex * 100
+            return context.dataIndex * 50
           },
           x: {
             type: 'number',
             easing: 'easeOutElastic',
-            duration: 2800,
+            duration: 1500,
             from: 0
           }
         },
