@@ -101,7 +101,7 @@ export const updateAccount = async (req, res) => {
 
     const { name, type, accountNumber, bankName, bankCode, isActive } = req.body
 
-    if (!['bank', 'e-wallet'].includes(type)) {
+    if (type && !['bank', 'e-wallet'].includes(type)) {
       return responseHelper.error(res, 'Loại ngân hàng không hợp lệ', 400)
     }
 

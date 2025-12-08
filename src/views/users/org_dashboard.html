@@ -2,6 +2,12 @@
   <%- include('../partials/org_sidebar.html') %>
     <div class="admin__content bg-light-blue">
       <div class="row gap-3 gap-md-2 mt-3">
+        <div class="filter">
+          <select id="selectWarehouse" class="form-select w-auto">
+          </select>
+        </div>
+      </div>
+      <div class="row gap-3 gap-md-2 mt-3">
         <div class="card-item col-md-3">
           <div class="card border-0">
             <div class="card-body">
@@ -54,8 +60,6 @@
           </div>
         </div>
       </div>
-
-      
 
       <div class="row gap-3 gap-md-2 mt-4">
         <!-- Doanh thu 7 ngày gần nhất -->
@@ -124,7 +128,7 @@
           </div>
         </div>
 
-                <!-- Tổng kết tháng này -->
+        <!-- Tổng kết tháng này -->
         <div class="statistical col-md-4">
           <div class="card border-0">
             <div class="card-body">

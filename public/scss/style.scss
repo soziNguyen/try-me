@@ -456,6 +456,10 @@ body {
 
             .progress {
               height: 1.5rem;
+
+              .progress-bar-animated {
+                transition: width 1.5s ease-in;
+              }
             }
           }
         }
