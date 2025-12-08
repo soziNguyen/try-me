@@ -1,10 +1,21 @@
 document.addEventListener('DOMContentLoaded', async function () {
   await getSaleInfomation()
+  await fillWarehouseToOptions()
+
+  const selectWarehouse = document.getElementById('selectWarehouse')
+  if (selectWarehouse) {
+    selectWarehouse.addEventListener('change', async function () {
+      await getSaleInfomation()
+    })
+  }
 })
 
 const getSaleInfomation = async () => {
   try {
-    const result = await ajax('/api/order/report', {}, 'GET')
+    const selectWarehouse = document.getElementById('selectWarehouse')
+    const warehouseId = selectWarehouse?.value || 'all'
+
+    const result = await ajax('/api/order/report', { warehouse: warehouseId }, 'GET')
     if (result) {
       document.querySelector('.revenueToday').textContent = formatCurrencyToVnd(result.todayRevenue) // Doanh thu hôm nay (so với hôm qua)
       updateChangeIndicator('.revenueToday', result.todayRevenueChange)
@@ -50,6 +61,7 @@ const getSaleInfomation = async () => {
       renderTop5Items(result.top5Items)
       renderRecentOrders(result.recentOrders)
       rowClick()
+      showFilter()
     }
   } catch (error) {
     console.error('Error:', error)
@@ -72,14 +84,21 @@ function updateChangeIndicator(selector, changePercent) {
   changeElement.textContent = `${Math.abs(percent)}% ${arrow}`
 }
 
+let revenueChart = null
+
 function renderRevenueChart(data) {
   const labels = data.map((item) => item.date)
   const revenues = data.map((item) => item.totalRevenue)
 
   const ctx = document.getElementById('chartRevenue7Days').getContext('2d')
+
+  if (revenueChart) {
+    revenueChart.destroy()
+  }
+
   const isBar = labels.length < 3
 
-  new Chart(ctx, {
+  revenueChart = new Chart(ctx, {
     type: isBar ? 'bar' : 'line',
     data: {
       labels: labels,
@@ -226,4 +245,52 @@ function getTimeAgo(date) {
   if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`
   if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`
   return date.toLocaleDateString('vi-VN')
+}
+
+function showFilter() {
+  const filterBtn = document.querySelector('.filter-btn')
+  const filterPanel = document.querySelector('.filter-panel')
+
+  if (filterBtn) {
+    filterBtn.addEventListener('click', function () {
+      if (filterPanel.classList.contains('d-none')) {
+        filterPanel.classList.remove('d-none')
+        filterPanel.classList.add('d-flex', 'gap-3')
+      } else {
+        filterPanel.classList.remove('d-flex')
+        filterPanel.classList.add('d-none')
+      }
+    })
+  }
+}
+
+let warehouses = []
+
+async function fillWarehouseToOptions() {
+  try {
+    const result = await ajax('/api/inventory/warehouse/all', {}, 'GET')
+    if (result) {
+      renderWarehousesToSelect(result)
+    }
+  } catch (error) {}
+}
+
+function renderWarehousesToSelect(whs = []) {
+  const select = document.getElementById('selectWarehouse')
+  if (select) {
+    select.innerHTML = ''
+
+    const defaultOp = document.createElement('option')
+    defaultOp.value = ''
+    defaultOp.textContent = 'Tất cả'
+    select.appendChild(defaultOp)
+
+    whs.map((opt) => {
+      const op = document.createElement('option')
+      op.value = opt._id
+      op.textContent = opt.name
+
+      select.appendChild(op)
+    })
+  }
 }

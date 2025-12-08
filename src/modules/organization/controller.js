@@ -396,8 +396,10 @@ export const updateOrg = async (req, res) => {
     }
 
     // Validate BussinessType
-    if (!['shop', 'food', 'drink'].includes(businessType)) {
-      return responseHelper.error(res, 'Loại hình tổ chức không hợp lệ', 400)
+    if (req.user.role === 'Admin') {
+      if (!['shop', 'food', 'drink'].includes(businessType)) {
+        return responseHelper.error(res, 'Loại hình tổ chức không hợp lệ', 400)
+      }
     }
     // Check trùng email/phone/taxCode...
     const conditions = []
