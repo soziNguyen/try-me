@@ -1564,6 +1564,9 @@ export const updateOrderDraft = async (req, res) => {
 export const printInvoice = async (req, res) => {
   try {
     const { orderId } = req.params
+    const { status } = req.query
+
+    const invoiceHeaderDefault = status === 'temporary' ? 'PHIẾU TẠM TÍNH' : 'HÓA ĐƠN BÁN HÀNG'
 
     const order = await Order.findById(orderId)
       .populate('items.foodId', 'name price')
@@ -1600,7 +1603,7 @@ export const printInvoice = async (req, res) => {
      Chúng tôi luôn trân trọng mọi ý kiến đóng góp về chất lượng món ăn và dịch vụ.</p>`
     const invoiceTitle = has(invoiceOptions?.invoiceTitle)
       ? invoiceOptions.invoiceTitle
-      : 'HÓA ĐƠN BÁN HÀNG'
+      : invoiceHeaderDefault
     const prefix = has(invoiceOptions?.prefix) ? invoiceOptions.prefix : 'HD'
     const orderDate = order.createdAt ? order.createdAt.toISOString() : ''
 
@@ -2237,7 +2240,7 @@ export const getDashboardStats = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const warehouse = req.query.warehouse ?? 'all'
+    const warehouse = req.query.warehouse
     const now = new Date()
 
     // HÔM NAY
@@ -2304,6 +2307,11 @@ export const getDashboardStats = async (req, res) => {
       organization: organizationId,
       status: 'completed',
       updatedAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+    }
+
+    const thisMonthCustomerMatch = {
+      organization: organizationId,
+      createdAt: { $gte: startOfMonth, $lte: endOfMonth }
     }
 
     // Warehouse filter
@@ -2572,12 +2580,7 @@ export const getDashboardStats = async (req, res) => {
 
     // KHÁCH HÀNG MỚI THÁNG NÀY
     const newCustomersThisMonthPipeline = [
-      {
-        $match: {
-          organization: organizationId,
-          createdAt: { $gte: startOfMonth, $lte: endOfMonth }
-        }
-      },
+      { $match: thisMonthCustomerMatch },
       {
         $count: 'total'
       }

@@ -874,7 +874,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return
       }
 
-      window.open(`/orders/print/${orderId}`, '_blank')
+      window.open(`/orders/print/${orderId}?status=temporary`, '_blank')
     })
   }
 
