@@ -170,10 +170,10 @@ $(function () {
         animation: {
           animateRotate: true,
           animateScale: true,
-          duration: 2000,
-          easing: 'easeOutElastic',
+          duration: 1200,
+          easing: 'easeOutQuart',
           delay: (context) => {
-            return Math.random() * 400 + context.dataIndex * 80
+            return context.dataIndex * 50
           }
         },
         plugins: {

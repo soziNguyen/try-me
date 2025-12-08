@@ -8,6 +8,7 @@ function getSafeEndpoints() {
   return [
     '/api/inventory/ingredient-stock',
     '/api/admin/plan/upgrade',
+    '/api/users/logout',
     /^\/api\/admin\/plan\/[0-9a-f]{24}\/cancel$/
   ]
 }
@@ -37,7 +38,7 @@ const checkPlanAccess = async (req, res, next) => {
     if (!org) return responseHelper.error(res, 'Không tìm thấy tổ chức', 404)
 
     const now = new Date()
-    const isExpired = !org.planExpiredAt || org.planExpiredAt <= now
+    const isExpired = org.planExpiredAt && org.planExpiredAt <= now
 
     if (!isExpired) return next() // gói chưa hết hạn, cho tiếp tục
 

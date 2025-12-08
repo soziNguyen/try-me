@@ -482,7 +482,7 @@ export const createAdminAccount = async (req, res) => {
 
     const admin = new User({
       username: 'admin',
-      email: 'nguyensonthanh1103@gmail.com',
+      email: 'abc@gmail.com',
       role: 'Admin',
       password: '1'
     })
