@@ -1,24 +1,88 @@
 $(function () {
   // --- Biến DOM ---
-  const $reportType = $('#reportType')
-  const $quarterGroup = $('#quarterGroup')
-  const $quarterSelect = $('#quarterSelect')
-  const $monthGroup = $('#monthGroup')
-  const $monthSelect = $('#monthSelect')
-  const $startDate = $('#startDate')
-  const $endDate = $('#endDate')
   const $filterBtn = $('#filterDateBtn')
+  const $warehouseFilter = $('#warehouseFilter')
 
   let warehouses = []
   let menuChart = null
   let quantityChart = null
+
+  // --- DATE RANGE PICKER ---
+  let currentStartDate = moment().subtract(29, 'days')
+  let currentEndDate = moment()
+
+  function initDateRangePicker() {
+    function cb(start, end) {
+      $('#reportrange span').html(start.format('DD/MM/YYYY') + ' - ' + end.format('DD/MM/YYYY'))
+      currentStartDate = start
+      currentEndDate = end
+    }
+
+    $('#reportrange').daterangepicker(
+      {
+        startDate: currentStartDate,
+        endDate: currentEndDate,
+        locale: {
+          format: 'DD/MM/YYYY',
+          separator: ' - ',
+          applyLabel: 'Áp dụng',
+          cancelLabel: 'Hủy',
+          fromLabel: 'Từ',
+          toLabel: 'Đến',
+          customRangeLabel: 'Tùy chỉnh',
+          daysOfWeek: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+          monthNames: [
+            'Tháng 1',
+            'Tháng 2',
+            'Tháng 3',
+            'Tháng 4',
+            'Tháng 5',
+            'Tháng 6',
+            'Tháng 7',
+            'Tháng 8',
+            'Tháng 9',
+            'Tháng 10',
+            'Tháng 11',
+            'Tháng 12'
+          ],
+          firstDay: 1
+        },
+        ranges: {
+          'Hôm nay': [moment(), moment()],
+          'Hôm qua': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+          '7 ngày qua': [moment().subtract(6, 'days'), moment()],
+          '30 ngày qua': [moment().subtract(29, 'days'), moment()],
+          'Tháng này': [moment().startOf('month'), moment().endOf('month')],
+          'Tháng trước': [
+            moment().subtract(1, 'month').startOf('month'),
+            moment().subtract(1, 'month').endOf('month')
+          ],
+          'Quý này': [moment().startOf('quarter'), moment().endOf('quarter')],
+          'Quý trước': [
+            moment().subtract(1, 'quarter').startOf('quarter'),
+            moment().subtract(1, 'quarter').endOf('quarter')
+          ]
+        }
+      },
+      cb
+    )
+
+    cb(currentStartDate, currentEndDate)
+
+    // Lắng nghe sự kiện apply
+    $('#reportrange').on('apply.daterangepicker', function (ev, picker) {
+      currentStartDate = picker.startDate
+      currentEndDate = picker.endDate
+      cb(picker.startDate, picker.endDate)
+    })
+  }
 
   function loadWarehouses() {
     return fetchData('inventory/warehouse/all')
       .then((res) => {
         warehouses = res || []
         const html = warehouses.map((w) => `<option value="${w._id}">${w.name}</option>`).join('')
-        $('#warehouseFilter').append(html)
+        $warehouseFilter.append(html)
       })
       .catch((err) => console.error('Không load được danh sách kho', err))
   }
@@ -28,62 +92,11 @@ $(function () {
     return Number(value || 0).toLocaleString('vi-VN') + '₫'
   }
 
-  // --- Hàm format ngày YYYY-MM-DD ---
-  function formatDate(d) {
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  }
-
-  // --- Hàm set ngày theo bộ lọc ---
-  function setDateInputs(type, value) {
-    const today = new Date()
-    const year = today.getFullYear()
-    let startDate, endDate
-    const currentWarehouse = $('#warehouseFilter').val() || 'all'
-
-    if (type === 'all') {
-      $monthGroup.hide()
-      $quarterGroup.hide()
-      $startDate.val('')
-      $endDate.val('')
-      loadSummary(null, null, currentWarehouse)
-      return
-    }
-
-    if (type === 'month') {
-      $monthGroup.show()
-      $quarterGroup.hide()
-      const month = value ? value - 1 : today.getMonth()
-      startDate = new Date(year, month, 1)
-      endDate = new Date(year, month + 1, 0)
-      $monthSelect.val(month + 1)
-    } else if (type === 'quarter') {
-      $monthGroup.hide()
-      $quarterGroup.show()
-      const q = value || Math.floor(today.getMonth() / 3) + 1
-      const startMonth = (q - 1) * 3
-      const endMonth = startMonth + 2
-      startDate = new Date(year, startMonth, 1)
-      endDate = new Date(year, endMonth + 1, 0)
-      $quarterSelect.val(q)
-    } else if (type === 'custom') {
-      $monthGroup.hide()
-      $quarterGroup.hide()
-      if ($startDate.val() && $endDate.val()) {
-        loadSummary($startDate.val(), $endDate.val(), currentWarehouse)
-      }
-      return
-    }
-
-    $startDate.val(formatDate(startDate))
-    $endDate.val(formatDate(endDate))
-    loadSummary(formatDate(startDate), formatDate(endDate), currentWarehouse)
-  }
-
   // --- Hàm load dữ liệu ---
-  function loadSummary(startDate, endDate, warehouse) {
-    const sDate = startDate !== undefined ? startDate : $startDate.val() || null
-    const eDate = endDate !== undefined ? endDate : $endDate.val() || null
-    const wh = warehouse !== undefined ? warehouse : $('#warehouseFilter').val() || 'all'
+  function loadSummary() {
+    const sDate = currentStartDate.format('YYYY-MM-DD')
+    const eDate = currentEndDate.format('YYYY-MM-DD')
+    const wh = $warehouseFilter.val() || 'all'
 
     Promise.all([
       $.get('/api/orders/get', { startDate: sDate, endDate: eDate, warehouse: wh }),
@@ -280,39 +293,18 @@ $(function () {
   }
 
   // --- Sự kiện ---
-  $reportType.on('change', function () {
-    setDateInputs($(this).val(), null)
-  })
-
-  $monthSelect.on('change', function () {
-    setDateInputs('month', parseInt($(this).val()))
-  })
-
-  $quarterSelect.on('change', function () {
-    setDateInputs('quarter', parseInt($(this).val()))
-  })
-
   $filterBtn.on('click', function () {
-    const start = $startDate.val()
-    const end = $endDate.val()
-    if (start && end && new Date(end) < new Date(start)) {
-      alert('Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu')
-      return
-    }
-    loadSummary(start, end)
+    loadSummary()
   })
-  $('#warehouseFilter').on('change', function () {
-    loadSummary($startDate.val(), $endDate.val(), $(this).val())
+
+  $warehouseFilter.on('change', function () {
+    loadSummary()
   })
 
   // --- Khởi chạy ---
+  initDateRangePicker()
+
   loadWarehouses().then(() => {
-    // Có thể load báo cáo mặc định ngay sau khi danh sách kho có sẵn
-    // loadSummary($startDate.val(), $endDate.val(), $('#warehouseFilter').val())
+    loadSummary()
   })
-  // --- Khởi chạy mặc định ---
-  $monthGroup.hide()
-  $quarterGroup.hide()
-  $reportType.val('all')
-  setDateInputs('all')
 })
