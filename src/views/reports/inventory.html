@@ -12,42 +12,29 @@
         </div>
       </div>
 
-      <!-- Filter Card -->
+      <!-- THAY THẾ phần card filter này -->
       <div class="card shadow-sm border-0 mb-4">
         <div class="card-body p-4">
-          <div class="row g-3 align-items-end">
-            <!-- From Date -->
-            <div class="col-lg-3 col-md-6">
-              <label for="fromDate" class="form-label fw-semibold mb-2">
-                <i class="bi bi-calendar-event text-primary me-2"></i>
-                Từ ngày
-              </label>
-              <input type="date" id="fromDate" class="form-control form-control-lg" />
-            </div>
-
-            <!-- To Date -->
-            <div class="col-lg-3 col-md-6">
-              <label for="toDate" class="form-label fw-semibold mb-2">
-                <i class="bi bi-calendar-check text-primary me-2"></i>
-                Đến ngày
-              </label>
-              <input type="date" id="toDate" class="form-control form-control-lg" />
+          <div class="row g-3 align-items-end justify-content-center">
+            <!-- Date Range Picker - Thay thế 2 input date -->
+            <div class="col-auto">
+              <div id="reportrange">
+                <i class="bi bi-calendar3"></i>&nbsp;
+                <span></span> 
+                <i class="bi bi-caret-down-fill ms-2 float-end"></i>
+              </div>
             </div>
 
             <!-- Warehouse Filter -->
-            <div class="col-lg-3 col-md-6">
-              <label for="warehouseFilterMain" class="form-label fw-semibold mb-2">
-                <i class="bi bi-building text-primary me-2"></i>
-                Kho
-              </label>
-              <select id="warehouseFilterMain" class="form-select form-select-lg">
+            <div class="col-auto">
+              <select id="warehouseFilterMain" class="form-select border-primary">
                 <option value="all">Tất cả kho</option>
               </select>
             </div>
 
             <!-- Action Button -->
-            <div class="col-lg-3 col-md-6">
-              <button id="btnLoad" class="btn btn-primary btn-lg w-100 fw-semibold">
+            <div class="col-auto">
+              <button id="btnLoad" class="btn btn-primary w-100 fw-semibold">
                 <i class="bi bi-search me-2"></i>
                 Xem báo cáo
               </button>

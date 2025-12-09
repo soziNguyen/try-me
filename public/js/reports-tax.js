@@ -1,15 +1,7 @@
 $(function () {
   // KHAI BÁO BIẾN
-
-  // Điều khiển bộ lọc
-  const $reportType = $('#reportType')
-  const $quarterGroup = $('#quarterGroup')
-  const $quarterSelect = $('#quarterSelect')
-  const $monthGroup = $('#monthGroup')
-  const $monthSelect = $('#monthSelect')
-  const $startDate = $('#startDate')
-  const $endDate = $('#endDate')
   const $warehouseFilter = $('#warehouseFilter')
+  const $filterBtn = $('#filterDateBtn')
 
   // Các bảng dữ liệu
   const $taxTbody = $('#tax-data')
@@ -18,11 +10,77 @@ $(function () {
 
   let warehouses = []
 
+  // --- DATE RANGE PICKER ---
+  let currentStartDate = moment().subtract(29, 'days')
+  let currentEndDate = moment()
+
+  function initDateRangePicker() {
+    function cb(start, end) {
+      $('#reportrange span').html(start.format('DD/MM/YYYY') + ' - ' + end.format('DD/MM/YYYY'))
+      currentStartDate = start
+      currentEndDate = end
+    }
+
+    $('#reportrange').daterangepicker(
+      {
+        startDate: currentStartDate,
+        endDate: currentEndDate,
+        locale: {
+          format: 'DD/MM/YYYY',
+          separator: ' - ',
+          applyLabel: 'Áp dụng',
+          cancelLabel: 'Hủy',
+          fromLabel: 'Từ',
+          toLabel: 'Đến',
+          customRangeLabel: 'Tùy chỉnh',
+          daysOfWeek: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+          monthNames: [
+            'Tháng 1',
+            'Tháng 2',
+            'Tháng 3',
+            'Tháng 4',
+            'Tháng 5',
+            'Tháng 6',
+            'Tháng 7',
+            'Tháng 8',
+            'Tháng 9',
+            'Tháng 10',
+            'Tháng 11',
+            'Tháng 12'
+          ],
+          firstDay: 1
+        },
+        ranges: {
+          'Hôm nay': [moment(), moment()],
+          'Hôm qua': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+          '7 ngày qua': [moment().subtract(6, 'days'), moment()],
+          '30 ngày qua': [moment().subtract(29, 'days'), moment()],
+          'Tháng này': [moment().startOf('month'), moment().endOf('month')],
+          'Tháng trước': [
+            moment().subtract(1, 'month').startOf('month'),
+            moment().subtract(1, 'month').endOf('month')
+          ],
+          'Quý này': [moment().startOf('quarter'), moment().endOf('quarter')],
+          'Quý trước': [
+            moment().subtract(1, 'quarter').startOf('quarter'),
+            moment().subtract(1, 'quarter').endOf('quarter')
+          ]
+        }
+      },
+      cb
+    )
+
+    cb(currentStartDate, currentEndDate)
+
+    // Lắng nghe sự kiện apply
+    $('#reportrange').on('apply.daterangepicker', function (ev, picker) {
+      currentStartDate = picker.startDate
+      currentEndDate = picker.endDate
+      cb(picker.startDate, picker.endDate)
+    })
+  }
+
   // HÀM TIỆN ÍCH
-
-  const formatDate = (d) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-
   const formatNumber = (num) => num.toLocaleString('vi-VN')
 
   const formatCurrency = (amount) => {
@@ -43,7 +101,6 @@ $(function () {
   }
 
   // LẤY DỮ LIỆU
-
   function fetchWarehouses() {
     return fetchData('inventory/warehouse/all')
       .then((res) => {
@@ -54,60 +111,10 @@ $(function () {
       .catch((err) => console.error('Không load được danh sách kho', err))
   }
 
-  // XỬ LÝ BỘ LỌC NGÀY
+  function loadAllTables() {
+    const startDate = currentStartDate.format('YYYY-MM-DD')
+    const endDate = currentEndDate.format('YYYY-MM-DD')
 
-  function setDateInputs(type, value) {
-    const today = new Date()
-    const year = today.getFullYear()
-    let startDate, endDate
-
-    switch (type) {
-      case 'all':
-        $reportType.val('all')
-        $startDate.val('')
-        $endDate.val('')
-        $quarterGroup.hide()
-        $monthGroup.hide()
-        break
-
-      case 'month':
-        $quarterGroup.hide()
-        $monthGroup.show()
-        const month = value ? value - 1 : today.getMonth()
-        startDate = new Date(year, month, 1)
-        endDate = new Date(year, month + 1, 0)
-        $monthSelect.val(month + 1)
-        break
-
-      case 'quarter':
-        $monthGroup.hide()
-        $quarterGroup.show()
-        const currentQuarter = Math.floor(today.getMonth() / 3) + 1
-        const q = value || currentQuarter
-        const startMonth = (q - 1) * 3
-        const endMonth = startMonth + 2
-        startDate = new Date(year, startMonth, 1)
-        endDate = new Date(year, endMonth + 1, 0)
-        $quarterSelect.val(q)
-        break
-
-      case 'custom':
-        $quarterGroup.hide()
-        $monthGroup.hide()
-        startDate = $startDate.val() ? new Date($startDate.val()) : null
-        endDate = $endDate.val() ? new Date($endDate.val()) : null
-        break
-    }
-
-    if (startDate && endDate) {
-      $startDate.val(formatDate(startDate))
-      $endDate.val(formatDate(endDate))
-    }
-
-    loadAllTables($startDate.val() || null, $endDate.val() || null)
-  }
-
-  function loadAllTables(startDate, endDate) {
     loadTaxSummary(startDate, endDate)
     loadExpenseSummary(startDate, endDate)
     loadReceiptsSummary(startDate, endDate)
@@ -334,27 +341,12 @@ $(function () {
   }
 
   // XỬ LÝ SỰ KIỆN
-
-  $reportType.on('change', () => setDateInputs($reportType.val(), null))
-  $quarterSelect.on('change', () => setDateInputs('quarter', parseInt($quarterSelect.val())))
-  $monthSelect.on('change', () => setDateInputs('month', parseInt($monthSelect.val())))
-
-  $('#filterDateBtn').on('click', () => {
-    const start = $startDate.val()
-    const end = $endDate.val()
-
-    if (end && start && new Date(end) < new Date(start)) {
-      alert('Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu')
-      return
-    }
-
-    loadAllTables(start, end)
+  $filterBtn.on('click', function () {
+    loadAllTables()
   })
 
-  $warehouseFilter.on('change', () => {
-    const start = $startDate.val() || null
-    const end = $endDate.val() || null
-    loadAllTables(start, end)
+  $warehouseFilter.on('change', function () {
+    loadAllTables()
   })
 
   $(document).on('click', '.clickable-row', function () {
@@ -372,8 +364,9 @@ $(function () {
   })
 
   // KHỞI TẠO
+  initDateRangePicker()
 
-  $quarterGroup.hide()
-  $monthGroup.hide()
-  fetchWarehouses().then(() => setDateInputs('all', null))
+  fetchWarehouses().then(() => {
+    loadAllTables()
+  })
 })

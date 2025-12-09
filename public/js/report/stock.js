@@ -1,6 +1,79 @@
 $(function () {
   let warehouses = []
   let table
+  let currentStartDate = moment()
+  let currentEndDate = moment()
+
+  // ==================== DATE RANGE PICKER ====================
+  function initDateRangePicker() {
+    function cb(start, end) {
+      $('#reportrange span').html(start.format('DD/MM/YYYY') + ' - ' + end.format('DD/MM/YYYY'))
+      currentStartDate = start
+      currentEndDate = end
+    }
+
+    $('#reportrange').daterangepicker(
+      {
+        startDate: currentStartDate,
+        endDate: currentEndDate,
+        locale: {
+          format: 'DD/MM/YYYY',
+          separator: ' - ',
+          applyLabel: 'Áp dụng',
+          cancelLabel: 'Hủy',
+          fromLabel: 'Từ',
+          toLabel: 'Đến',
+          customRangeLabel: 'Tùy chỉnh',
+          daysOfWeek: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+          monthNames: [
+            'Tháng 1',
+            'Tháng 2',
+            'Tháng 3',
+            'Tháng 4',
+            'Tháng 5',
+            'Tháng 6',
+            'Tháng 7',
+            'Tháng 8',
+            'Tháng 9',
+            'Tháng 10',
+            'Tháng 11',
+            'Tháng 12'
+          ],
+          firstDay: 1
+        },
+        ranges: {
+          'Hôm nay': [moment(), moment()],
+          'Hôm qua': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+          '7 ngày qua': [moment().subtract(6, 'days'), moment()],
+          '30 ngày qua': [moment().subtract(29, 'days'), moment()],
+          'Tháng này': [moment().startOf('month'), moment().endOf('month')],
+          'Tháng trước': [
+            moment().subtract(1, 'month').startOf('month'),
+            moment().subtract(1, 'month').endOf('month')
+          ],
+          'Quý này': [moment().startOf('quarter'), moment().endOf('quarter')],
+          'Quý trước': [
+            moment().subtract(1, 'quarter').startOf('quarter'),
+            moment().subtract(1, 'quarter').endOf('quarter')
+          ]
+        },
+        opens: 'left',
+        drops: 'down'
+      },
+      cb
+    )
+
+    cb(currentStartDate, currentEndDate)
+
+    $('#reportrange').on('apply.daterangepicker', function (ev, picker) {
+      currentStartDate = picker.startDate
+      currentEndDate = picker.endDate
+      cb(picker.startDate, picker.endDate)
+    })
+  }
+
+  // Khởi tạo date range picker
+  initDateRangePicker()
 
   // Load danh sách kho trước khi khởi tạo DataTable
   Promise.all([fetchData('inventory/warehouse/all')])
@@ -13,10 +86,6 @@ $(function () {
     .catch((err) => {
       toastr.error('Không load đủ dữ liệu trước khi khởi tạo DataTable', err)
     })
-
-  const today = new Date().toISOString().slice(0, 10)
-  $('#fromDate').val(today)
-  $('#toDate').val(today)
 
   // Populate warehouse dropdown
   function populateWarehouseDropdown() {
@@ -162,14 +231,9 @@ $(function () {
 
   // Load stock report
   async function loadStockReport() {
-    const from = $('#fromDate').val()
-    const to = $('#toDate').val()
+    const from = currentStartDate.format('YYYY-MM-DD')
+    const to = currentEndDate.format('YYYY-MM-DD')
     const warehouse = $('#warehouseFilterMain').val()
-
-    if (!from || !to) {
-      toastr.warning('Vui lòng chọn khoảng thời gian')
-      return
-    }
 
     const params = { from, to }
 
@@ -206,11 +270,4 @@ $(function () {
   // Event handlers
   $('#btnLoad').on('click', loadStockReport)
   $('#warehouseFilterMain').on('change', loadStockReport)
-
-  // Load report on enter key
-  $('#fromDate, #toDate').on('keypress', function (e) {
-    if (e.which === 13) {
-      loadStockReport()
-    }
-  })
 })

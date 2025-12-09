@@ -1,11 +1,4 @@
 $(function () {
-  const $reportType = $('#reportType')
-  const $quarterGroup = $('#quarterGroup')
-  const $quarterSelect = $('#quarterSelect')
-  const $monthGroup = $('#monthGroup')
-  const $monthSelect = $('#monthSelect')
-  const $startDate = $('#startDate')
-  const $endDate = $('#endDate')
   const $filterBtn = $('#filterDateBtn')
   const $warehouseFilter = $('#warehouseFilter')
 
@@ -42,8 +35,8 @@ $(function () {
 
   function fetchStocksData() {
     const params = { start: 0, length: 9999, warehouse: $warehouseFilter.val() || 'all' }
-    if ($startDate.val()) params.startDate = $startDate.val()
-    if ($endDate.val()) params.endDate = $endDate.val()
+    params.startDate = currentStartDate.format('YYYY-MM-DD')
+    params.endDate = currentEndDate.format('YYYY-MM-DD')
 
     return $.ajax({ url: '/api/product/stocks', method: 'GET', data: params }).then((response) => {
       if (response.totalQuantity !== undefined)
@@ -59,8 +52,8 @@ $(function () {
 
   function fetchSalesData() {
     const params = { warehouse: $warehouseFilter.val() || 'all', returnAll: 'true' }
-    if ($startDate.val()) params.startDate = $startDate.val()
-    if ($endDate.val()) params.endDate = $endDate.val()
+    params.startDate = currentStartDate.format('YYYY-MM-DD')
+    params.endDate = currentEndDate.format('YYYY-MM-DD')
 
     return $.ajax({ url: '/api/orders/getTopItems', method: 'GET', data: params })
       .then((response) => {
@@ -110,8 +103,8 @@ $(function () {
         method: 'GET',
         data: (d) => {
           d.warehouse = $warehouseFilter.val() || 'all'
-          if ($startDate.val()) d.startDate = $startDate.val()
-          if ($endDate.val()) d.endDate = $endDate.val()
+          d.startDate = currentStartDate.format('YYYY-MM-DD')
+          d.endDate = currentEndDate.format('YYYY-MM-DD')
           return d
         },
         dataSrc: (json) => {
@@ -167,58 +160,74 @@ $(function () {
     })
   }
 
-  // ==================== BỘ LỌC NGÀY THÁNG ====================
-  function setDateInputs(type, value) {
-    const today = new Date()
-    const year = today.getFullYear()
-    let startDate, endDate
+  // ==================== DATE RANGE PICKER ====================
+  let currentStartDate = moment().subtract(29, 'days')
+  let currentEndDate = moment()
 
-    // Xử lý theo loại bộ lọc
-    switch (type) {
-      case 'all':
-        $monthGroup.hide()
-        $quarterGroup.hide()
-        $startDate.val('')
-        $endDate.val('')
-        reloadData()
-        return
-
-      case 'month':
-        $monthGroup.show()
-        $quarterGroup.hide()
-        const month = value ? value - 1 : today.getMonth()
-        startDate = new Date(year, month, 1)
-        endDate = new Date(year, month + 1, 0)
-        $monthSelect.val(month + 1)
-        break
-
-      case 'quarter':
-        $monthGroup.hide()
-        $quarterGroup.show()
-        const quarter = value || Math.floor(today.getMonth() / 3) + 1
-        const startMonth = (quarter - 1) * 3
-        const endMonth = startMonth + 2
-        startDate = new Date(year, startMonth, 1)
-        endDate = new Date(year, endMonth + 1, 0)
-        $quarterSelect.val(quarter)
-        break
-
-      case 'custom':
-        $monthGroup.hide()
-        $quarterGroup.hide()
-        if ($startDate.val() && $endDate.val()) {
-          reloadData()
-        }
-        return
-
-      default:
-        return
+  function initDateRangePicker() {
+    function cb(start, end) {
+      $('#reportrange span').html(start.format('DD/MM/YYYY') + ' - ' + end.format('DD/MM/YYYY'))
+      currentStartDate = start
+      currentEndDate = end
     }
 
-    // Cập nhật input và reload data
-    $startDate.val(formatDate(startDate))
-    $endDate.val(formatDate(endDate))
-    reloadData()
+    $('#reportrange').daterangepicker(
+      {
+        startDate: currentStartDate,
+        endDate: currentEndDate,
+        locale: {
+          format: 'DD/MM/YYYY',
+          separator: ' - ',
+          applyLabel: 'Áp dụng',
+          cancelLabel: 'Hủy',
+          fromLabel: 'Từ',
+          toLabel: 'Đến',
+          customRangeLabel: 'Tùy chỉnh',
+          daysOfWeek: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+          monthNames: [
+            'Tháng 1',
+            'Tháng 2',
+            'Tháng 3',
+            'Tháng 4',
+            'Tháng 5',
+            'Tháng 6',
+            'Tháng 7',
+            'Tháng 8',
+            'Tháng 9',
+            'Tháng 10',
+            'Tháng 11',
+            'Tháng 12'
+          ],
+          firstDay: 1
+        },
+        ranges: {
+          'Hôm nay': [moment(), moment()],
+          'Hôm qua': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+          '7 ngày qua': [moment().subtract(6, 'days'), moment()],
+          '30 ngày qua': [moment().subtract(29, 'days'), moment()],
+          'Tháng này': [moment().startOf('month'), moment().endOf('month')],
+          'Tháng trước': [
+            moment().subtract(1, 'month').startOf('month'),
+            moment().subtract(1, 'month').endOf('month')
+          ],
+          'Quý này': [moment().startOf('quarter'), moment().endOf('quarter')],
+          'Quý trước': [
+            moment().subtract(1, 'quarter').startOf('quarter'),
+            moment().subtract(1, 'quarter').endOf('quarter')
+          ]
+        }
+      },
+      cb
+    )
+
+    cb(currentStartDate, currentEndDate)
+
+    // Lắng nghe sự kiện apply
+    $('#reportrange').on('apply.daterangepicker', function (ev, picker) {
+      currentStartDate = picker.startDate
+      currentEndDate = picker.endDate
+      cb(picker.startDate, picker.endDate)
+    })
   }
 
   function reloadData() {
@@ -235,25 +244,7 @@ $(function () {
   }
 
   // ==================== SỰ KIỆN ====================
-  $reportType.on('change', function () {
-    setDateInputs($(this).val(), null)
-  })
-
-  $monthSelect.on('change', function () {
-    setDateInputs('month', parseInt($(this).val()))
-  })
-
-  $quarterSelect.on('change', function () {
-    setDateInputs('quarter', parseInt($(this).val()))
-  })
-
   $filterBtn.on('click', function () {
-    const start = $startDate.val()
-    const end = $endDate.val()
-    if (start && end && new Date(end) < new Date(start)) {
-      toastr.error('Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu')
-      return
-    }
     reloadData()
   })
 
@@ -262,9 +253,8 @@ $(function () {
   })
 
   // ==================== KHỞI TẠO ====================
-  $monthGroup.hide()
-  $quarterGroup.hide()
-  $reportType.val('all')
+  // Khởi tạo Date Range Picker trước
+  initDateRangePicker()
 
   // Load dữ liệu ban đầu
   loadWarehouses()
