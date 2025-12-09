@@ -182,7 +182,8 @@ export const updateUser = async (req, res) => {
     const userExist = await User.findOne({
       _id: id,
       organization: organizationId
-    })
+    }).populate('warehouse', 'name')
+
     if (!userExist) {
       return responseHelper.error(res, 'Không tìm thấy người dùng', 404)
     }
@@ -240,7 +241,7 @@ export const updateUser = async (req, res) => {
       { _id: id, organization: organizationId },
       updatedFields,
       { new: true }
-    )
+    ).populate('warehouse', 'name')
 
     if (!updateUser) {
       return responseHelper.error(res, 'Cập nhật thất bại', 400)
@@ -252,7 +253,14 @@ export const updateUser = async (req, res) => {
       [
         { field: 'username', label: 'Tên đăng nhập' },
         { field: 'email', label: 'Email' },
-        { field: 'warehouse', label: 'Kho' },
+        {
+          field: 'warehouse',
+          label: 'Kho',
+          formatValue: (val) => {
+            if (!val) return
+            return val.name || val
+          }
+        },
         { field: 'role', label: 'Vai trò' }
       ],
       userExist.username,

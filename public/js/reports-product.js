@@ -84,7 +84,7 @@ $(function () {
       processing: true,
       autoWidth: true,
       scrollX: true,
-      order: [],
+      order: [[0, 'asc']],
       lengthMenu: [lengthMenu, lengthMenu],
       pageLength: defaultPageLength,
       language: {
@@ -95,8 +95,7 @@ $(function () {
         infoEmpty: 'Không có bản ghi nào',
         infoFiltered: '(lọc từ _MAX_ sản phẩm)',
         zeroRecords: 'Không tìm thấy sản phẩm phù hợp',
-        emptyTable: 'Không có dữ liệu trong bảng',
-        loadingRecords: 'Đang tải...'
+        emptyTable: 'Không có dữ liệu trong bảng'
       },
       ajax: {
         url: '/api/product/entries?flatten=true',
@@ -230,7 +229,12 @@ $(function () {
     })
   }
 
+  const btnOriginalHtml = $filterBtn.html()
   function reloadData() {
+    $filterBtn
+      .prop('disabled', true)
+      .html('<span class="spinner-border spinner-border-sm me-2"></span>Đang tải...')
+
     Promise.all([fetchStocksData(), fetchSalesData()])
       .then(() => {
         if (table) {
@@ -240,6 +244,9 @@ $(function () {
       .catch((err) => {
         console.error('Lỗi khi reload dữ liệu:', err)
         toastr.error('Không thể tải dữ liệu')
+      })
+      .finally(() => {
+        $filterBtn.prop('disabled', false).html(btnOriginalHtml)
       })
   }
 
@@ -252,8 +259,11 @@ $(function () {
     reloadData()
   })
 
+  $filterBtn
+    .prop('disabled', true)
+    .html('<span class="spinner-border spinner-border-sm me-2"></span>Đang tải...')
+
   // ==================== KHỞI TẠO ====================
-  // Khởi tạo Date Range Picker trước
   initDateRangePicker()
 
   // Load dữ liệu ban đầu
@@ -263,5 +273,9 @@ $(function () {
     .catch(() => {
       toastr.error('Không load được dữ liệu')
       initDataTable()
+    })
+    .finally(() => {
+      // Reset button state after initial load completes
+      $filterBtn.prop('disabled', false).html(btnOriginalHtml)
     })
 })

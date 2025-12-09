@@ -256,8 +256,6 @@ $(function () {
         if (result.length === 0) {
           toastr.info('Không có dữ liệu trong khoảng thời gian đã chọn')
           $('#summaryCards').addClass('d-none')
-        } else {
-          toastr.success(`Đã tải ${result.length} nguyên liệu`)
         }
       }
     } catch (err) {

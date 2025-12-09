@@ -463,6 +463,10 @@ body {
             }
           }
         }
+
+        #btnLoad {
+          width: 153.16px !important;
+        }
       }
 
       #reportrange {
@@ -515,6 +519,10 @@ body {
 
 .status {
   transform: translate(-10px, 10px);
+}
+
+.form-width {
+  max-width: 400px;
 }
 
 /* Tooltip */
@@ -687,14 +695,22 @@ body {
             width: 100%;
           }
         }
+
+        .saleReport {
+          .card-title {
+            text-align: center;
+          }
+        }
       }
     }
   }
 }
 
 @media (max-width: 575px) {
-  .admin__layout .admin__main {
-    .admin__content {
+  .admin__layout .admin__main,
+  .staff__layout .staff__main {
+    .admin__content,
+    .staff__content {
       .row {
         .card-item {
           &.col-md-3 {
@@ -733,6 +749,16 @@ body {
     }
   }
 
+  .daterangepicker {
+    width: 231px;
+  }
+
+  .form-width {
+    max-width: 350px;
+  }
+
+  // Riêng cho hóa đơn nâng cấp gói
+  // START
   .admin__content {
     &.border,
     .border-2 {
@@ -766,7 +792,5 @@ body {
     }
   }
 
-  .daterangepicker {
-    width: 238px;
-  }
+  // END
 }
