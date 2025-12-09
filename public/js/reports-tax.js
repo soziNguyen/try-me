@@ -125,7 +125,7 @@ $(function () {
 
   // Bảng hóa đơn
   async function loadTaxSummary(startDate, endDate) {
-    $taxTbody.html('<tr><td colspan="4" class="text-center">Đang tải...</td></tr>')
+    $taxTbody.css('opacity', '0.5')
 
     try {
       let url = '/api/orders/get'
@@ -168,12 +168,14 @@ $(function () {
       $taxTbody.html(
         '<tr><td colspan="4" class="text-center text-danger">Không thể tải dữ liệu</td></tr>'
       )
+    } finally {
+      $taxTbody.css('opacity', '1')
     }
   }
 
   // Bảng phiếu chi
   async function loadExpenseSummary(startDate, endDate) {
-    $expenseTbody.html('<tr><td colspan="5" class="text-center">Đang tải...</td></tr>')
+    $expenseTbody.css('opacity', '0.5')
 
     try {
       let url = '/api/payment-expenses'
@@ -227,12 +229,15 @@ $(function () {
       $expenseTbody.html(
         '<tr><td colspan="5" class="text-center text-danger">Không thể tải dữ liệu</td></tr>'
       )
+    } finally {
+      // THÊM:
+      $expenseTbody.css('opacity', '1')
     }
   }
 
   // Bảng phiếu thu
   async function loadReceiptsSummary(startDate, endDate) {
-    $receiptsTbody.html('<tr><td colspan="5" class="text-center">Đang tải...</td></tr>')
+    $receiptsTbody.css('opacity', '0.5')
 
     try {
       let url = '/api/payment-receipts'
@@ -286,6 +291,9 @@ $(function () {
       $receiptsTbody.html(
         '<tr><td colspan="5" class="text-center text-danger">Không thể tải dữ liệu</td></tr>'
       )
+    } finally {
+      // THÊM:
+      $receiptsTbody.css('opacity', '1')
     }
   }
 
