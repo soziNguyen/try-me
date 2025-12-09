@@ -535,7 +535,7 @@ body {
   -webkit-transition: width 1.5s ease-in;
   transition: width 1.5s ease-in;
 }
-.admin__layout .admin__main .admin__content .filter-bar #reportrange {
+.admin__layout .admin__main .admin__content #reportrange {
   background: #fff;
   cursor: pointer;
   padding: 6px 15px;
@@ -977,7 +977,7 @@ body {
   -webkit-transition: width 1.5s ease-in;
   transition: width 1.5s ease-in;
 }
-.staff__layout .staff__main .staff__content .filter-bar #reportrange {
+.staff__layout .staff__main .staff__content #reportrange {
   background: #fff;
   cursor: pointer;
   padding: 6px 15px;
