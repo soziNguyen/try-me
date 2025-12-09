@@ -52,8 +52,10 @@ const getSaleInfomation = async () => {
 
       document.querySelector('.totalOrdersThisMonth').textContent =
         result.thisMonthStats.totalOrders
-      document.querySelector('.newCustomersThisMonth').textContent =
-        result.thisMonthStats.newCustomers
+      const newCusThisMonth = document.querySelector('.newCustomersThisMonth')
+      if (newCusThisMonth) {
+        newCusThisMonth.textContent = result.thisMonthStats.newCustomers
+      }
       document.querySelector('.bestSellerThisMonth').textContent =
         result.thisMonthStats.topItem.name
 

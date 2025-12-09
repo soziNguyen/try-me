@@ -106,9 +106,6 @@ export const getProductEntries = async (req, res) => {
     const startDate = req.query.startDate
     const endDate = req.query.endDate
 
-    console.log('startDate: ', startDate)
-    console.log('endDate: ', endDate)
-
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 

@@ -115,7 +115,7 @@ $(function () {
     return (
       '<"top-bar d-flex align-items-center justify-content-between flex-wrap"l' +
       'f' +
-      '<"right-group d-flex align-items-center btn-group flex-wrap">' +
+      '<"right-group d-flex gap-2 align-items-center btn-group flex-wrap">' +
       '>' +
       'rt' +
       '<"bottom-bar d-flex justify-content-between mt-3"ip>'
@@ -235,7 +235,7 @@ $(function () {
     <button class="btn btn-outline-danger me-2" id="deletePaymentReceiptBtn">
       <i class="bi bi-trash"></i> Xóa
     </button>
-    <button class="btn btn-outline-success" id="addPaymentReceiptBtn">
+    <button class="btn btn-outline-success mb-2" id="addPaymentReceiptBtn">
       <i class="bi bi-plus-circle"></i> Thêm
     </button>
   `

@@ -1,5 +1,5 @@
 $(function () {
-  // --- Biến DOM ---
+  // Biến DOM
   const $filterBtn = $('#filterDateBtn')
   const $warehouseFilter = $('#warehouseFilter')
 
@@ -7,7 +7,7 @@ $(function () {
   let menuChart = null
   let quantityChart = null
 
-  // --- DATE RANGE PICKER ---
+  // DATE RANGE PICKER
   let currentStartDate = moment().subtract(29, 'days')
   let currentEndDate = moment()
 
@@ -87,13 +87,18 @@ $(function () {
       .catch((err) => console.error('Không load được danh sách kho', err))
   }
 
-  // --- Hàm định dạng tiền tệ ---
+  // Hàm định dạng tiền tệ
   function formatCurrency(value) {
     return Number(value || 0).toLocaleString('vi-VN') + '₫'
   }
 
-  // --- Hàm load dữ liệu ---
+  const btnOriginalHtml = $filterBtn.html()
+
+  // Hàm load dữ liệu
   function loadSummary() {
+    $filterBtn
+      .prop('disabled', true)
+      .html('<span class="spinner-border spinner-border-sm me-2"></span>Đang tải...')
     const sDate = currentStartDate.format('YYYY-MM-DD')
     const eDate = currentEndDate.format('YYYY-MM-DD')
     const wh = $warehouseFilter.val() || 'all'
@@ -121,6 +126,7 @@ $(function () {
           setTimeout(() => {
             renderMenuChart(allItems)
             renderQuantityChart(allItems)
+            $filterBtn.prop('disabled', false).html(btnOriginalHtml)
           }, 150)
         })
       })
@@ -129,14 +135,14 @@ $(function () {
       })
   }
 
-  // --- Hàm tạo màu dựa trên tên sản phẩm (để đồng bộ màu) ---
+  // Hàm tạo màu dựa trên tên sản phẩm
   function getColorForProduct(productName, allProducts) {
     const index = allProducts.indexOf(productName)
     const hue = (index * 360) / allProducts.length
     return `hsla(${hue}, 70%, 60%, 0.8)`
   }
 
-  // --- Hàm vẽ biểu đồ tròn doanh thu ---
+  // Hàm vẽ biểu đồ tròn doanh thu
   function renderMenuChart(items) {
     if (menuChart) {
       menuChart.destroy()
@@ -150,7 +156,7 @@ $(function () {
 
     const parent = canvas.parentElement
 
-    // *** SET SIZE CỐ ĐỊNH ***
+    // SET SIZE CỐ ĐỊNH
     const width = parent.offsetWidth
     const height = parent.offsetHeight
     canvas.width = width
@@ -206,7 +212,7 @@ $(function () {
     })
   }
 
-  // --- Hàm vẽ biểu đồ cột số lượng ---
+  // Hàm vẽ biểu đồ cột số lượng
   function renderQuantityChart(items) {
     if (quantityChart) {
       quantityChart.destroy()
@@ -292,7 +298,7 @@ $(function () {
     })
   }
 
-  // --- Sự kiện ---
+  // Sự kiện
   $filterBtn.on('click', function () {
     loadSummary()
   })
@@ -301,7 +307,7 @@ $(function () {
     loadSummary()
   })
 
-  // --- Khởi chạy ---
+  // Khởi chạy
   initDateRangePicker()
 
   loadWarehouses().then(() => {

@@ -75,6 +75,10 @@ body {
           transform: translate(-10px, 10px);
 }
 
+.form-width {
+  max-width: 400px;
+}
+
 /* Tooltip */
 .sidebar-tooltip {
   position: fixed;
@@ -535,6 +539,9 @@ body {
   -webkit-transition: width 1.5s ease-in;
   transition: width 1.5s ease-in;
 }
+.admin__layout .admin__main .admin__content .row #btnLoad {
+  width: 153.16px !important;
+}
 .admin__layout .admin__main .admin__content #reportrange {
   background: #fff;
   cursor: pointer;
@@ -977,6 +984,9 @@ body {
   -webkit-transition: width 1.5s ease-in;
   transition: width 1.5s ease-in;
 }
+.staff__layout .staff__main .staff__content .row #btnLoad {
+  width: 153.16px !important;
+}
 .staff__layout .staff__main .staff__content #reportrange {
   background: #fff;
   cursor: pointer;
@@ -1187,24 +1197,48 @@ body {
   .admin__layout .admin__main .admin__content .row .top5Items.col-md-5 {
     width: 100%;
   }
+  .admin__layout .admin__main .admin__content .row .saleReport .card-title {
+    text-align: center;
+  }
 }
 @media (max-width: 575px) {
-  .admin__layout .admin__main .admin__content .row .card-item.col-md-3 {
+  .admin__layout .admin__main .admin__content .row .card-item.col-md-3,
+  .admin__layout .admin__main .staff__content .row .card-item.col-md-3,
+  .staff__layout .staff__main .admin__content .row .card-item.col-md-3,
+  .staff__layout .staff__main .staff__content .row .card-item.col-md-3 {
     width: 100%;
   }
-  .admin__layout .admin__main .admin__content .row .statistical.col-md-4 {
+  .admin__layout .admin__main .admin__content .row .statistical.col-md-4,
+  .admin__layout .admin__main .staff__content .row .statistical.col-md-4,
+  .staff__layout .staff__main .admin__content .row .statistical.col-md-4,
+  .staff__layout .staff__main .staff__content .row .statistical.col-md-4 {
     width: 100%;
   }
-  .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {
+  .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7,
+  .admin__layout .admin__main .staff__content .row .revenueLast7days.col-md-7,
+  .staff__layout .staff__main .admin__content .row .revenueLast7days.col-md-7,
+  .staff__layout .staff__main .staff__content .row .revenueLast7days.col-md-7 {
     display: block;
     width: 100%;
   }
-  .admin__layout .admin__main .admin__content .row .top5Items.col-md-5 {
+  .admin__layout .admin__main .admin__content .row .top5Items.col-md-5,
+  .admin__layout .admin__main .staff__content .row .top5Items.col-md-5,
+  .staff__layout .staff__main .admin__content .row .top5Items.col-md-5,
+  .staff__layout .staff__main .staff__content .row .top5Items.col-md-5 {
     display: block;
     width: 100%;
   }
-  .admin__layout .admin__main .admin__content #reportrange i:last-child {
+  .admin__layout .admin__main .admin__content #reportrange i:last-child,
+  .admin__layout .admin__main .staff__content #reportrange i:last-child,
+  .staff__layout .staff__main .admin__content #reportrange i:last-child,
+  .staff__layout .staff__main .staff__content #reportrange i:last-child {
     display: none;
+  }
+  .daterangepicker {
+    width: 231px;
+  }
+  .form-width {
+    max-width: 350px;
   }
   .admin__content.border,
   .admin__content .border-2 {
@@ -1243,8 +1277,5 @@ body {
   }
   .admin__content .invoice-actions .action-buttons .btn {
     width: 50%;
-  }
-  .daterangepicker {
-    width: 238px;
   }
 }

@@ -791,6 +791,16 @@ input[type=text]::-ms-clear {
           transform-origin: top center;
 }
 
+#checkoutCard .action-group-btn {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: end;
+      -ms-flex-pack: end;
+          justify-content: end;
+  gap: 0.5rem;
+}
+
 @media (max-width: 991px) {
   .pagination-bar {
     left: 0 !important;
@@ -902,6 +912,11 @@ input[type=text]::-ms-clear {
   }
   .order-card #foodMenuCol #foodMenu .col:last-child {
     margin-bottom: 5rem;
+  }
+  #checkoutCard .action-group-btn {
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
   }
 }
 @media print {

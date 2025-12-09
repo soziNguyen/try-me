@@ -111,14 +111,27 @@ $(function () {
       .catch((err) => console.error('Không load được danh sách kho', err))
   }
 
-  function loadAllTables() {
+  const btnOriginalHtml = $filterBtn.html()
+  async function loadAllTables() {
+    $filterBtn
+      .prop('disabled', true)
+      .html('<span class="spinner-border spinner-border-sm me-2"></span>Đang tải...')
+
     const startDate = currentStartDate.format('YYYY-MM-DD')
     const endDate = currentEndDate.format('YYYY-MM-DD')
 
-    loadTaxSummary(startDate, endDate)
-    loadExpenseSummary(startDate, endDate)
-    loadReceiptsSummary(startDate, endDate)
-    updateBalanceSummary(startDate, endDate)
+    try {
+      await Promise.all([
+        loadTaxSummary(startDate, endDate),
+        loadExpenseSummary(startDate, endDate),
+        loadReceiptsSummary(startDate, endDate),
+        updateBalanceSummary(startDate, endDate)
+      ])
+    } catch (err) {
+      console.error('Lỗi khi tải dữ liệu:', err)
+    } finally {
+      $filterBtn.prop('disabled', false).html(btnOriginalHtml)
+    }
   }
 
   // RENDER BẢNG DỮ LIỆU

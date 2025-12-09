@@ -719,6 +719,14 @@ input[type='text']::-ms-clear {
   }
 }
 
+#checkoutCard {
+  .action-group-btn {
+    display: flex;
+    justify-content: end;
+    gap: 0.5rem;
+  }
+}
+
 // .modal-backdrop {
 //   display: none !important;
 // }
@@ -844,6 +852,12 @@ input[type='text']::-ms-clear {
           }
         }
       }
+    }
+  }
+
+  #checkoutCard {
+    .action-group-btn {
+      justify-content: space-between;
     }
   }
 }
