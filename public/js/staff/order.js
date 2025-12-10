@@ -1,18 +1,42 @@
-// ======== Biến toàn cục ========
 const urlParams = window.location.pathname.split('/')
 const orderId = urlParams.pop()
 let allItems = []
 const csrfToken = document.getElementById('_csrf').value
+let categorySwiper = null
 
 function getOrderIdFromURL() {
   const match = window.location.pathname.match(/^\/orders\/([a-f0-9]{24})$/i)
   return match ? match[1] : null
 }
 
-// ======== Event Listeners ========
-
-// DOMContentLoaded:
 document.addEventListener('DOMContentLoaded', async () => {
+  const goTopBtn = document.getElementById('go-top')
+  const orderFull = document.getElementById('orderFull')
+
+  if (orderFull && goTopBtn) {
+    const observer = new MutationObserver(() => {
+      if (!orderFull.classList.contains('d-none')) {
+        setTimeout(() => {
+          const staffContent = document.querySelector('.staff__content')
+
+          if (staffContent && staffContent.scrollHeight > staffContent.clientHeight) {
+            const handleScroll = () => goTopContainer(staffContent, goTopBtn)
+
+            // Add listener
+            staffContent.addEventListener('scroll', handleScroll)
+
+            goTopBtn.addEventListener('click', () => {
+              staffContent.scrollTo({ top: 0, behavior: 'smooth' })
+            })
+
+            goTopContainer(staffContent, goTopBtn)
+          }
+        }, 100)
+      }
+    })
+
+    observer.observe(orderFull, { attributes: true, attributeFilter: ['class'] })
+  }
   const orderId = getOrderIdFromURL()
   if (orderId) window.currentOrderId = orderId
 
@@ -363,19 +387,51 @@ function extractCategories(items) {
   return categories
 }
 
+function initSwiper() {
+  // Destroy swiper cũ nếu có
+  if (categorySwiper) {
+    categorySwiper.destroy(true, true)
+  }
+
+  // Khởi tạo Swiper mới
+  categorySwiper = new Swiper('.categorySwiper', {
+    slidesPerView: 'auto',
+    spaceBetween: 0,
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev'
+    },
+    freeMode: true,
+    grabCursor: true,
+    mousewheel: {
+      forceToAxis: true
+    }
+  })
+}
+
 function renderCategories(categories) {
   const categoryList = document.getElementById('categoryList')
   if (!categoryList) return
 
   categoryList.innerHTML = `
-    <button class="btn btn-outline-danger" data-action="all">Tất cả</button>
+  <div class="swiper-slide">
+    <button class="btn btn-outline-danger active" data-action="all">Tất cả</button>
+  </div>
+  <div class="swiper-slide">
     <button class="btn btn-outline-success" data-action="combo">Combo</button>
+  </div>
     ${categories
       .map(
-        (cate) => `<button class="btn btn-outline-primary" data-category="${cate}">${cate}</button>`
+        (cate) => `
+        <div class="swiper-slide">
+          <button class="btn btn-outline-primary" data-category="${cate}">${cate}</button>
+        </div>`
       )
       .join('')}
   `
+  setTimeout(() => {
+    initSwiper()
+  }, 0)
 
   const buttons = categoryList.querySelectorAll('button')
 
@@ -435,26 +491,30 @@ function renderMenu(items) {
 
       const comboItemsList =
         item.isCombo && Array.isArray(item.items)
-          ? item.items.map((i) => i.menuItem?.name || 'Không rõ món').join(', ')
+          ? item.items.map((i) => i.menuItem?.name || 'Không rõ món').join(' + ')
           : ''
 
       return `
       <div class="col">
-        <div class="card shadow-sm h-100 rounded-3">
-          <img src="${imgSrc}" alt="${name}" class="card-img-top">
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title fw-semibold">${name}</h5>
-            ${item.isCombo ? `<p class="card-text text-secondary">Gồm: ${comboItemsList}</p>` : ''}
-            <div class="d-flex flex-column mt-auto">
-              <p class="card-text text-danger fw-bold fs-5 flex-grow-1">Giá: ${priceFormatted} đ</p>
-              <button 
-                class="btn ${item.isCombo ? 'btn-success' : 'btn-primary'} btn-sm rounded-pill px-3 mt-auto btn-add-to-order"
-                data-id="${item._id}"
-                data-name="${name}"
-                data-price="${price}"
-                data-is-combo="${item.isCombo}">
-                <i class="bi bi-bag-plus"></i> Thêm${item.isCombo ? ' combo' : ''}
-              </button>
+        <div class="card shadow border-0 h-100 rounded-3">
+          <div class="card-body p-3 d-flex flex-column">
+            <img src="${imgSrc}" alt="${name}" class="card-img-top">
+            <div class="row card-title fw-semibold font18 mt-4">
+              <div class="col-6">${name}</div>
+              <div class="col-6 text-end text-danger">${priceFormatted} đ</div>
+            </div>
+            <div class="mt-auto pb-2">
+              ${item.isCombo ? `<p class="card-text text-secondary font14">${comboItemsList}</p>` : `<p class="card-text text-secondary font14">${item.description || item.name}</p>`}
+              <div class="d-flex flex-column">
+                <button 
+                  class="btn ${item.isCombo ? 'btn-success' : 'btn-primary'} btn-sm rounded-pill px-3 py-2 mt-auto btn-add-to-order"
+                  data-id="${item._id}"
+                  data-name="${name}"
+                  data-price="${price}"
+                  data-is-combo="${item.isCombo}">
+                  <i class="bi bi-bag-plus"></i> Thêm${item.isCombo ? ' combo' : ''}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1008,4 +1068,14 @@ function renderKitchenStatus(order) {
   })
 
   container.innerHTML = html
+}
+
+function goTopContainer(container, btn) {
+  if (!container || !btn) return
+
+  if (container.scrollTop > 500) {
+    btn.classList.remove('d-none')
+  } else {
+    btn.classList.add('d-none')
+  }
 }

@@ -801,6 +801,46 @@ input[type=text]::-ms-clear {
   gap: 0.5rem;
 }
 
+.category-slider-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+.category-slider-wrapper .categorySwiper {
+  overflow: hidden;
+}
+.category-slider-wrapper .categorySwiper .swiper-slide {
+  width: auto !important;
+}
+.category-slider-wrapper .categorySwiper .swiper-slide .btn {
+  margin-right: 6px !important;
+  white-space: nowrap;
+}
+.category-slider-wrapper .categorySwiper .swiper-slide:last-child .btn {
+  margin-right: 0 !important;
+}
+.category-slider-wrapper .swiper-button-next,
+.category-slider-wrapper .swiper-button-prev {
+  width: 30px;
+  height: 25px;
+  color: var(--dark);
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+  top: 75%;
+}
+.category-slider-wrapper .swiper-button-next.swiper-button-disabled,
+.category-slider-wrapper .swiper-button-prev.swiper-button-disabled {
+  opacity: 0;
+  visibility: hidden;
+  -webkit-transition: opacity 0.3s, visibility 0.3s;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+.category-slider-wrapper .swiper-button-prev {
+  left: -1px;
+}
+.category-slider-wrapper .swiper-button-next {
+  right: -1px;
+}
+
 @media (max-width: 991px) {
   .pagination-bar {
     left: 0 !important;
@@ -913,10 +953,102 @@ input[type=text]::-ms-clear {
   .order-card #foodMenuCol #foodMenu .col:last-child {
     margin-bottom: 5rem;
   }
+  .order-card #foodMenuCol .category-slider-wrapper {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+  .order-card #foodMenuCol .category-slider-wrapper .categorySwiper {
+    overflow: hidden;
+  }
+  .order-card #foodMenuCol .category-slider-wrapper .categorySwiper .swiper-slide {
+    width: auto !important;
+  }
+  .order-card #foodMenuCol .category-slider-wrapper .categorySwiper .swiper-slide .btn {
+    margin-right: 6px !important;
+    white-space: nowrap;
+  }
+  .order-card #foodMenuCol .category-slider-wrapper .categorySwiper .swiper-slide:last-child .btn {
+    margin-right: 0 !important;
+  }
+  .order-card #foodMenuCol .category-slider-wrapper .swiper-button-next,
+  .order-card #foodMenuCol .category-slider-wrapper .swiper-button-prev {
+    width: 30px;
+    height: 25px;
+    background: transparent;
+    color: var(--dark);
+    -webkit-transition: all 0.3s;
+    transition: all 0.3s;
+    top: 62%;
+  }
+  .order-card #foodMenuCol .category-slider-wrapper .swiper-button-next.swiper-button-disabled,
+  .order-card #foodMenuCol .category-slider-wrapper .swiper-button-prev.swiper-button-disabled {
+    opacity: 0;
+    visibility: hidden;
+    -webkit-transition: opacity 0.3s, visibility 0.3s;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+  .order-card #foodMenuCol .category-slider-wrapper .swiper-button-prev {
+    left: -5px;
+  }
+  .order-card #foodMenuCol .category-slider-wrapper .swiper-button-next {
+    right: -5px;
+  }
+  .order-card #foodMenuCol .category-slider-wrapper #go-top {
+    width: 36px;
+    height: 36px;
+    background: #fff;
+    border-radius: 50%;
+    -webkit-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
+    cursor: pointer;
+    -webkit-animation: floatUpDown 1.8s infinite ease-in-out;
+            animation: floatUpDown 1.8s infinite ease-in-out;
+  }
+  .order-card #foodMenuCol .category-slider-wrapper #go-top i {
+    font-size: 20px;
+    color: var(--primary, #007bff);
+  }
   #checkoutCard .action-group-btn {
     -webkit-box-pack: justify;
         -ms-flex-pack: justify;
             justify-content: space-between;
+  }
+}
+@-webkit-keyframes floatUpDown {
+  0% {
+    -webkit-transform: translateY(0);
+            transform: translateY(0);
+  }
+  50% {
+    -webkit-transform: translateY(-14px);
+            transform: translateY(-14px);
+  }
+  100% {
+    -webkit-transform: translateY(0);
+            transform: translateY(0);
+  }
+}
+@keyframes floatUpDown {
+  0% {
+    -webkit-transform: translateY(0);
+            transform: translateY(0);
+  }
+  50% {
+    -webkit-transform: translateY(-14px);
+            transform: translateY(-14px);
+  }
+  100% {
+    -webkit-transform: translateY(0);
+            transform: translateY(0);
   }
 }
 @media print {

@@ -122,7 +122,7 @@ $(function () {
         },
         {
           data: 'receiver',
-          title: 'Họ và tên người nhận',
+          title: 'Người nhận',
           className: 'text-center',
           render: (data) => data || ''
         },

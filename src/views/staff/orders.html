@@ -19,15 +19,21 @@
         </div>
 
         <div class="row ">
-          <div class="col-lg-8 mt-3" id="foodMenuCol">
+          <div class="col-lg-8" id="foodMenuCol"> 
             <div id="orderWarning"></div>
             <div class="search-form position-relative d-flex align-items-center mb-4 mt-3" id="search-menu">
               <i class="bi bi-search position-absolute end-0 translate-middle-x text-primary me-2 fs-5"></i>
               <input type="text" id="searchMenuInput" class="form-control me-2" placeholder="Tìm kiếm" />
             </div>
-            <h3><i class="bi bi-egg-fried me-2 text-warning"></i>Danh sách thực đơn</h3>
-            <div class="d-flex justify-content-between">
-              <div id="categoryList" class="mb-4 d-flex gap-2 flex-wrap"></div>
+            <h1 class="fw-bold fs-2">THỰC ĐƠN</h1>
+            <div class="category-slider-wrapper">
+              <div class="swiper categorySwiper">
+                <div class="swiper-wrapper" id="categoryList">
+                  <!-- Categories sẽ được render vào đây -->
+                </div>
+              </div>
+              <div class="swiper-button-next"></div>
+              <div class="swiper-button-prev"></div>
             </div>
             <div id="foodMenu" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xxl-4 g-3">
               <!-- Món ăn sẽ được render ở đây -->
@@ -369,6 +375,9 @@
             </div>
           </div>
         </div>
+      </div>
+      <div id="go-top" class="position-fixed end-0 bottom-0 btn btn-primary m-4 d-none">
+        <i class="bi bi-arrow-up"></i>
       </div>
     </div>
     </div>

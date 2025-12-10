@@ -550,6 +550,53 @@ body {
   max-width: 300px;
   border-radius: 0.375rem;
 }
+.admin__layout .admin__main .admin__content .category-slider-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+.admin__layout .admin__main .admin__content .category-slider-wrapper .categorySwiper {
+  overflow: hidden;
+}
+.admin__layout .admin__main .admin__content .category-slider-wrapper .categorySwiper .swiper-slide {
+  width: auto !important;
+}
+.admin__layout .admin__main .admin__content .category-slider-wrapper .categorySwiper .swiper-slide .btn {
+  margin-right: 6px !important;
+  white-space: nowrap;
+}
+.admin__layout .admin__main .admin__content .category-slider-wrapper .categorySwiper .swiper-slide:last-child .btn {
+  margin-right: 0 !important;
+}
+.admin__layout .admin__main .admin__content .category-slider-wrapper .swiper-button-next,
+.admin__layout .admin__main .admin__content .category-slider-wrapper .swiper-button-prev {
+  width: 20px;
+  height: 20px;
+  background: var(--white);
+  border-radius: 50%;
+  color: var(--dark);
+  border: 1px solid var(--green-light);
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+  top: 80%;
+}
+.admin__layout .admin__main .admin__content .category-slider-wrapper .swiper-button-next:hover,
+.admin__layout .admin__main .admin__content .category-slider-wrapper .swiper-button-prev:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+.admin__layout .admin__main .admin__content .category-slider-wrapper .swiper-button-next.swiper-button-disabled,
+.admin__layout .admin__main .admin__content .category-slider-wrapper .swiper-button-prev.swiper-button-disabled {
+  opacity: 0;
+  visibility: hidden;
+  -webkit-transition: opacity 0.3s, visibility 0.3s;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+.admin__layout .admin__main .admin__content .category-slider-wrapper .swiper-button-prev {
+  left: -1px;
+}
+.admin__layout .admin__main .admin__content .category-slider-wrapper .swiper-button-next {
+  right: -1px;
+}
 .admin__layout .admin__main #admin__sidebar.collapsed ~ .admin__content .pagination-bar {
   left: 60px;
   width: calc(100% - 60px);
@@ -994,6 +1041,53 @@ body {
   border: 1px solid #0d6efd;
   max-width: 300px;
   border-radius: 0.375rem;
+}
+.staff__layout .staff__main .staff__content .category-slider-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+.staff__layout .staff__main .staff__content .category-slider-wrapper .categorySwiper {
+  overflow: hidden;
+}
+.staff__layout .staff__main .staff__content .category-slider-wrapper .categorySwiper .swiper-slide {
+  width: auto !important;
+}
+.staff__layout .staff__main .staff__content .category-slider-wrapper .categorySwiper .swiper-slide .btn {
+  margin-right: 6px !important;
+  white-space: nowrap;
+}
+.staff__layout .staff__main .staff__content .category-slider-wrapper .categorySwiper .swiper-slide:last-child .btn {
+  margin-right: 0 !important;
+}
+.staff__layout .staff__main .staff__content .category-slider-wrapper .swiper-button-next,
+.staff__layout .staff__main .staff__content .category-slider-wrapper .swiper-button-prev {
+  width: 20px;
+  height: 20px;
+  background: var(--white);
+  border-radius: 50%;
+  color: var(--dark);
+  border: 1px solid var(--green-light);
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+  top: 80%;
+}
+.staff__layout .staff__main .staff__content .category-slider-wrapper .swiper-button-next:hover,
+.staff__layout .staff__main .staff__content .category-slider-wrapper .swiper-button-prev:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+.staff__layout .staff__main .staff__content .category-slider-wrapper .swiper-button-next.swiper-button-disabled,
+.staff__layout .staff__main .staff__content .category-slider-wrapper .swiper-button-prev.swiper-button-disabled {
+  opacity: 0;
+  visibility: hidden;
+  -webkit-transition: opacity 0.3s, visibility 0.3s;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+.staff__layout .staff__main .staff__content .category-slider-wrapper .swiper-button-prev {
+  left: -1px;
+}
+.staff__layout .staff__main .staff__content .category-slider-wrapper .swiper-button-next {
+  right: -1px;
 }
 .staff__layout .staff__main #staff__sidebar.collapsed ~ .staff__content .pagination-bar {
   left: 60px;
