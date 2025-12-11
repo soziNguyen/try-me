@@ -6,6 +6,7 @@ const tableId = getQueryParam('tableId') || ''
 const currentOrderId = getQueryParam('orderId')
 const btn = document.querySelector('.viewCartBottomBtn')
 let categorySwiper = null
+let isViewingOrder = false
 
 // INITIALIZATION
 document.addEventListener('DOMContentLoaded', async () => {
@@ -16,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   initCartModal()
   submitOrder()
   document.getElementById('btnViewOrder').addEventListener('click', handleViewOrder)
-  document.getElementById('btnBackToMenu').addEventListener('click', handleBackToMenu)
   initCallStaffSocket()
   customScrollbarInit()
 
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const foodMenu = document.getElementById('foodMenu')
 
   foodMenu.addEventListener('scroll', () => {
-    if (foodMenu.scrollTop > 300) {
+    if (foodMenu.scrollTop > 400) {
       goTopWrapper.classList.remove('d-none')
     } else {
       goTopWrapper.classList.add('d-none')
@@ -39,28 +39,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 })
 
 async function handleViewOrder() {
-  if (!btn.classList.contains('d-none')) btn.classList.add('d-none')
+  const btnViewOrder = document.getElementById('btnViewOrder')
 
-  try {
-    const result = await ajax(`/api/order/${currentOrderId}/public`, {}, 'GET')
-    const order = result
-    if (!order) return toastr.warning('Không có dữ liệu đơn hàng')
+  if (!isViewingOrder) {
+    try {
+      const result = await ajax(`/api/order/${currentOrderId}/public`, {}, 'GET')
+      const order = result
+      if (!order) return toastr.warning('Không có dữ liệu đơn hàng')
 
-    // Ẩn menu, hiện chi tiết đơn
-    document.getElementById('foodMenuCol').classList.add('d-none')
-    document.getElementById('orderDetail').classList.remove('d-none')
+      // Ẩn menu, hiện chi tiết đơn
+      document.getElementById('foodMenuCol').classList.add('d-none')
+      document.getElementById('orderDetail').classList.remove('d-none')
 
-    renderOrderDetail(order)
-  } catch (err) {
-    console.error(err)
-    toastr.error('Không thể tải đơn hàng')
+      // Đổi button thành "Quay lại"
+      btnViewOrder.innerHTML = 'Quay lại'
+      btnViewOrder.classList.remove('btn-success')
+      btnViewOrder.classList.add('btn-danger')
+      isViewingOrder = true
+
+      renderOrderDetail(order)
+    } catch (err) {
+      console.error(err)
+      toastr.error('Không thể tải đơn hàng')
+    }
+  } else {
+    handleBackToMenu()
   }
 }
 
 function handleBackToMenu() {
+  const btnViewOrder = document.getElementById('btnViewOrder')
+
   document.getElementById('orderDetail').classList.add('d-none')
   document.getElementById('foodMenuCol').classList.remove('d-none')
-  if (btn.classList.contains('d-none')) btn.classList.remove('d-none')
+
+  // Đổi button về "Xem đơn"
+  btnViewOrder.innerHTML = 'Xem đơn'
+  btnViewOrder.classList.remove('btn-danger')
+  btnViewOrder.classList.add('btn-success')
+  isViewingOrder = false
 }
 
 // RENDER
