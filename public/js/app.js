@@ -145,8 +145,19 @@ const formatCurrencyToVnd = (currency) => {
 
 // format order code
 function formatOrderCode(code) {
-  const num = parseInt(code.replace('HD', ''))
-  return `HD${String(num).padStart(2, '0')}`
+  const match = code.match(/^(.+?)(\d+)$/)
+
+  if (!match) {
+    return code
+  }
+
+  const prefix = match[1]
+  const num = parseInt(match[2])
+
+  // Giữ ít nhất 2 chữ số
+  const formattedNum = String(num).padStart(2, '0')
+
+  return `${prefix}${formattedNum}`
 }
 
 // debounce

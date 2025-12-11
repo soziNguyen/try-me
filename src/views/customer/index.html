@@ -18,9 +18,19 @@
             <i class="bi bi-search position-absolute end-0 translate-middle-x me-2 fs-5 opacity-50"></i>
             <input type="text" id="searchMenuInput" class="form-control" placeholder="Tìm kiếm" />
           </div>
-          <h3>Danh sách thực đơn</h3>
-          <div class="d-flex justify-content-between">
-            <div id="categoryList" class="mb-4 d-flex gap-2 flex-wrap"></div>
+          <h1 class="fw-bold fs-2">THỰC ĐƠN</h1>
+          <div class="category-slider-wrapper">
+            <div class="go-top-wrapper position-absolute start-50 top-100 z-1 translate-middle-x d-none">
+              <div id="go-top">
+                <i class="bi bi-arrow-up"></i>
+              </div>
+            </div>
+            <div class="swiper categorySwiper">
+              <div class="swiper-wrapper" id="categoryList">
+              </div>
+            </div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
           </div>
           <div id="foodMenu" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xxl-4 g-3">
           </div>
@@ -63,8 +73,6 @@
       <div class="text-center text-success mt-2">Lưu ý: Giá trên chưa bao gồm thuế VAT</div>
     </div>
   </div>
-
-
 
   <div id="cartModal" class="modal fade" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">

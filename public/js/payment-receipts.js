@@ -170,7 +170,7 @@ $(function () {
       },
       {
         data: 'submitter',
-        title: 'Họ và tên người nộp',
+        title: 'Người nộp',
         className: 'text-center',
         render: (data) => data || ''
       },

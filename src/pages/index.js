@@ -1,6 +1,6 @@
 import { getPageData } from '../helpers/pageDataHelper.js'
 import { getCurrentOrg } from '../helpers/orgHelper.js'
-import { getWarehouse } from '../helpers/warehouseHelper.js'
+import { getWarehouseForAdmin } from '../helpers/warehouseHelper.js'
 import Order from '../modules/order/model.js'
 import InvoiceOption from '../modules/invoice/model.js'
 import PlanTransaction from '../modules/plan-transaction/model.js'
@@ -598,7 +598,7 @@ export const receiptDetailPage = async (req, res) => {
     if (!order) return res.status(404).send('Không tìm thấy đơn hàng')
 
     const orgId = order.organization ? order.organization._id : null
-    const warehouseId = await getWarehouse(req, orgId)
+    const warehouseId = await getWarehouseForAdmin(req, orgId, true)
 
     let invoiceOptions = null
     if (orgId) {

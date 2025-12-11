@@ -5,6 +5,7 @@ let currentSearchResults = []
 const tableId = getQueryParam('tableId') || ''
 const currentOrderId = getQueryParam('orderId')
 const btn = document.querySelector('.viewCartBottomBtn')
+let categorySwiper = null
 
 // INITIALIZATION
 document.addEventListener('DOMContentLoaded', async () => {
@@ -18,6 +19,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btnBackToMenu').addEventListener('click', handleBackToMenu)
   initCallStaffSocket()
   customScrollbarInit()
+
+  // Scroll to top button
+  const goTopBtn = document.getElementById('go-top')
+  const goTopWrapper = document.querySelector('.go-top-wrapper')
+  const foodMenu = document.getElementById('foodMenu')
+
+  foodMenu.addEventListener('scroll', () => {
+    if (foodMenu.scrollTop > 300) {
+      goTopWrapper.classList.remove('d-none')
+    } else {
+      goTopWrapper.classList.add('d-none')
+    }
+  })
+
+  goTopBtn.addEventListener('click', () => {
+    foodMenu.scrollTo({ top: 0, behavior: 'smooth' })
+  })
 })
 
 async function handleViewOrder() {
@@ -161,21 +179,51 @@ function extractCategories(items) {
   return categories
 }
 
+function initSwiper() {
+  // Destroy swiper cũ nếu có
+  if (categorySwiper) {
+    categorySwiper.destroy(true, true)
+  }
+
+  // Khởi tạo Swiper mới
+  categorySwiper = new Swiper('.categorySwiper', {
+    slidesPerView: 'auto',
+    spaceBetween: 0,
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev'
+    },
+    freeMode: true,
+    grabCursor: true,
+    mousewheel: {
+      forceToAxis: true
+    }
+  })
+}
+
 function renderCategories(categories) {
   const categoryList = document.getElementById('categoryList')
   if (!categoryList) return
 
   categoryList.innerHTML = `
-    <button class="btn btn-outline-danger active category-btn" data-action="all">Tất cả</button>
-    <button class="btn btn-outline-success category-btn" data-action="combo">Combo</button>
+    <div class="swiper-slide">
+      <button class="btn btn-outline-danger active" data-action="all">Tất cả</button>
+    </div>
+    <div class="swiper-slide">
+      <button class="btn btn-outline-success" data-action="combo">Combo</button>
+    </div>
     ${categories
       .map(
         (cate) =>
-          `<button class="btn btn-outline-primary category-btn" data-category="${cate}">${cate}</button>`
+          ` <div class="swiper-slide">
+              <button class="btn btn-outline-primary" data-category="${cate}">${cate}</button>
+            </div>`
       )
       .join('')}
   `
-
+  setTimeout(() => {
+    initSwiper()
+  }, 0)
   attachCategoryEventListeners(categoryList)
 }
 
@@ -221,6 +269,10 @@ function createMenuItemHTML(item) {
   const name = item.name || (item.isCombo ? 'Combo không rõ tên' : 'Không rõ tên')
   const price = typeof item.price === 'number' ? item.price : 0
   const priceFormatted = price.toLocaleString()
+  const comboItemsList =
+    item.isCombo && Array.isArray(item.items)
+      ? item.items.map((i) => i.menuItem?.name || 'Không rõ món').join(' + ')
+      : ''
 
   return `
     <div class="col">
@@ -228,7 +280,7 @@ function createMenuItemHTML(item) {
         <img src="${imgSrc}" alt="${name}" class="card-img-top">
         <div class="card-body d-flex flex-column px-0 pb-0">
           <h5 class="card-title fw-semibold">${name}</h5>
-          <p class="card-text text-secondary combo-text">${item.isCombo ? item.note || '' : item.description}</p>
+          <p class="card-text text-secondary combo-text">${item.isCombo ? comboItemsList || item.note : item.description || item.name}</p>
           
           <div class="d-flex align-items-center justify-content-between flex-grow-1 mt-auto">
             <p class="card-text text-danger fw-bold font18 mb-0">Giá: ${priceFormatted} đ</p>

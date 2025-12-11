@@ -4,6 +4,7 @@ import isAuthenticated from '../helpers/isAuthenticated.js'
 import { isPermit } from '../helpers/isPermit.js'
 import isAdmin from '../helpers/isAdmin.js'
 import { checkAccountTypeAccess } from '../helpers/permission.js'
+import { checkWarehouseAccess } from '../helpers/warehouseHelper.js'
 
 const router = express.Router()
 
@@ -27,7 +28,7 @@ router.get('/customers', isAuthenticated, isPermit('Admin', 'Org'), page.custome
 router.get('/change-password', isAuthenticated, page.changePasswordPage)
 router.get('/profile', isAuthenticated, page.profilePage)
 router.get('/receipts', isAuthenticated, page.receiptPage)
-router.get('/receipt/:id', isAuthenticated, page.receiptDetailPage)
+router.get('/receipt/:id', isAuthenticated, checkWarehouseAccess, page.receiptDetailPage)
 router.get('/setting/invoice', isAuthenticated, page.invoicePage)
 router.get('/setting/point', isAuthenticated, isPermit('Admin', 'Org'), page.pointPage)
 

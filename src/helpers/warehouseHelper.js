@@ -36,3 +36,28 @@ export const getWarehouse = async (req, organizationId) => {
     return org.defaultWarehouse
   }
 }
+
+export const getWarehouseForAdmin = async (req, organizationId, allowAll = false) => {
+  if (req.warehouseFilter) {
+    return req.warehouseFilter
+  }
+
+  const org = await Organization.findById(organizationId).select('defaultWarehouse')
+
+  const warehouse = org?.defaultWarehouse || ''
+
+  // Nếu allowAll = true và warehouse rỗng => trả về null
+  if (allowAll && warehouse === '') {
+    return null
+  }
+
+  // Nếu allowAll = false và warehouse rỗng => throw error
+  if (!warehouse) {
+    throw new BusinessError(
+      'Tổ chức chưa thiết lập kho mặc định. Vui lòng cập nhật kho trong phần hồ sơ.',
+      400
+    )
+  }
+
+  return warehouse
+}
