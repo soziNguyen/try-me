@@ -117,7 +117,10 @@ $(function () {
           title: 'Kho nhập',
           render: (data, type, row) => {
             if (type === 'display') {
-              return data ? `${row.warehouse.name} - ${row.warehouse.location}` : ''
+              const warehouse = data ? `${row.warehouse.name} - ${row.warehouse.location}` : ''
+              const sub = warehouse.length > 30 ? warehouse.substring(0, 30) + '...' : warehouse
+
+              return `<span title="${warehouse}">${sub}</span>`
             }
             return row.warehouse?.name || ''
           }

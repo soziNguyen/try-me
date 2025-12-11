@@ -37,6 +37,12 @@ $(function () {
       emptyTable: 'Không có dữ liệu trong bảng'
     },
     pageLength: numRows,
+    columnDefs: [
+      { width: '130px', targets: 3 },
+      { width: '130px', targets: 5 },
+      { width: '130px', targets: 7 },
+      { width: '50px', targets: 8 }
+    ],
     columns: [
       {
         data: null,

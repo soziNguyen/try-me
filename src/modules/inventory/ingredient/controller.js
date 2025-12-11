@@ -365,7 +365,7 @@ export const updateIngredient = async (req, res) => {
         {
           field: 'updatedBy',
           label: 'Người cập nhật',
-          formatValue: (val) => val?.username || 'Chưa cập nhật'
+          formatValue: (val) => val?.username || ''
         }
       ],
       ingredient.name,
