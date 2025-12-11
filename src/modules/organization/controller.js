@@ -8,6 +8,7 @@ import responseHelper from '../../helpers/responseHelper.js'
 import BusinessError from '../../modules/error/BusinessError.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import validator from 'validator'
+import { insertDummyDataForOrganization } from '../../data/service.js'
 import {
   isValidUsername,
   isValidPassword,
@@ -164,6 +165,7 @@ export const createOrganization = async (req, res) => {
         organization: organization._id
       })
       await adminUser.save({ session })
+      await insertDummyDataForOrganization(session, organization._id, accountType)
 
       return { organization, admin: adminUser }
     })
@@ -188,8 +190,6 @@ export const createOrganization = async (req, res) => {
 
     responseHelper.success(res, responseData, 'Tổ chức và quản trị viên đã được tạo thành công')
   } catch (error) {
-    console.error('Create organization error:', error)
-
     if (error.code === 11000) {
       if (error.keyPattern?.email) {
         return responseHelper.error(res, 'Email đã tồn tại', 400)

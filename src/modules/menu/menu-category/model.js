@@ -8,7 +8,7 @@ const menuCategorySchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      default: null
     },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
