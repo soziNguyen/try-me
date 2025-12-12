@@ -532,6 +532,16 @@ body {
           right: -1px;
         }
       }
+
+      #receiptTable_wrapper {
+        .dt-layout-row {
+          &:first-child {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+          }
+        }
+      }
     }
 
     ##{$role}__sidebar.collapsed ~ .#{$role}__content {
