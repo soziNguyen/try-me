@@ -25,7 +25,7 @@ const productEntrySchema = new mongoose.Schema(
           default: null
         },
         quantity: { type: Number, default: 0 },
-        unit: { type: String, enum: units, default: 'cái' },
+        unit: { type: String, enum: units, default: 'món' },
         unitPrice: { type: Number, default: 0 },
         total: { type: Number, default: 0 } // Tổng theo items
       }
@@ -37,7 +37,7 @@ const productEntrySchema = new mongoose.Schema(
     organization: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
     isLocked: { type: Boolean, default: false },
     lockedAt: { type: Date, default: null },
-    lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
   },
   {
     collection: 'ProductEntries',

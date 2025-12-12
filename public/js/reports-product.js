@@ -7,16 +7,12 @@ $(function () {
   const stocksData = {},
     salesData = {}
 
-  function formatNumber(val = 0, color = '', isPositive = false, isNegative = false) {
+  function formatNumber(val = 0, color = '', isPositive = false) {
     const formatted = val.toLocaleString('vi-VN')
     if (isPositive && val > 0)
       return `<span class="number text-${color} fw-semibold">+${formatted}</span>`
-    if (isNegative) return `<span class="number text-${color} fw-semibold">-${formatted}</span>`
-    return `<span class="number">${formatted}</span>`
-  }
-
-  function formatDate(d) {
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    else if (val === 0) return `<span class="number text-dark fw-semibold">${formatted}</span>`
+    else return `<span class="number text-${color} fw-semibold">-${formatted}</span>`
   }
 
   function loadWarehouses() {
@@ -138,7 +134,7 @@ $(function () {
           orderable: false,
           render: (_, __, row) => {
             const sold = salesData[row.product?._id || row.productId] || 0
-            return formatNumber(sold, 'danger', false, true)
+            return formatNumber(sold, 'danger', false)
           }
         },
         {

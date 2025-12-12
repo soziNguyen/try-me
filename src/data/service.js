@@ -7,7 +7,14 @@ import { StockEntry } from '../modules/stock-transaction/stock-entry/model.js'
 import { MenuCategory } from '../modules/menu/menu-category/model.js'
 import { MenuItem } from '../modules/menu/menu-item/model.js'
 import { generateDocumentCode } from '../helpers/common.js'
+import Tax from '../modules/tax/model.js'
 import Table from '../modules/table/model.js'
+import Coupon from '../modules/coupon/model.js'
+import PaymentMethod from '../modules/payment/model.js'
+import ReceivingAccount from '../modules/receiving-account/model.js'
+import { Combo } from '../modules/menu/combo/model.js'
+import { ProductEntry } from '../modules/product/entry/model.js'
+import ProductStock from '../modules/product/stock/model.js'
 import QRCode from 'qrcode'
 import {
   dummyIngredientCategories,
@@ -16,7 +23,13 @@ import {
   warehouseDummy,
   dummyTables,
   dummyMenuCategories,
-  dummyMenuItems
+  dummyMenuItems,
+  dummyTaxes,
+  dummyPaymentMethods,
+  dummyReceivingAccounts,
+  dummyCoupons,
+  dummyCombos,
+  dummyPEItems
 } from '../data/dummy.js'
 
 export async function insertDummyDataForOrganization(session, organizationId, businessType) {
@@ -158,7 +171,128 @@ export async function insertDummyDataForOrganization(session, organizationId, bu
       organization: organizationId
     }))
 
-    await MenuItem.insertMany(menuItemData, { session })
+    const menuItems = await MenuItem.insertMany(menuItemData, { session })
+
+    const comboData = dummyCombos.map((c) => ({
+      sku: c.sku,
+      name: c.name,
+      image: c.image,
+      items: c.items.map((it) => ({
+        menuItem: menuItems[it.itemIndex]._id,
+        quantity: it.quantity
+      })),
+      price: c.price,
+      isActive: c.isActive,
+      note: c.note,
+      warehouse: warehouses[0]._id,
+      organization: organizationId
+    }))
+
+    const combos = await Combo.insertMany(comboData, { session })
+
+    const peItems = dummyPEItems.map((it) => {
+      const ref = it.type === 'MenuItem' ? menuItems[it.itemIndex] : combos[it.comboIndex]
+
+      const total = it.quantity * it.unitPrice
+
+      return {
+        productType: it.type,
+        product: ref._id,
+        quantity: it.quantity,
+        unit: 'món',
+        unitPrice: it.unitPrice,
+        total
+      }
+    })
+
+    // tổng toàn bộ phiếu
+    const peTotal = peItems.reduce((s, i) => s + i.total, 0)
+
+    // code
+    const peCode = await generateDocumentCode(ProductEntry, 'PE')
+
+    // tạo ProductEntry
+    await ProductEntry.create(
+      [
+        {
+          code: peCode,
+          warehouse: warehouses[0]._id,
+          items: peItems,
+          total: peTotal,
+          note: 'Phiếu nhập sản phẩm mẫu',
+          organization: organizationId
+        }
+      ],
+      { session }
+    )
+
+    // cập nhật tồn kho ProductStock
+    for (const it of peItems) {
+      if (it.productType === 'MenuItem') {
+        await ProductStock.findOneAndUpdate(
+          {
+            product: it.product,
+            warehouse: warehouses[0]._id,
+            organization: organizationId
+          },
+          { $inc: { quantity: it.quantity } },
+          { upsert: true, session }
+        )
+      } else {
+        await ProductStock.findOneAndUpdate(
+          {
+            combo: it.product,
+            warehouse: warehouses[0]._id,
+            organization: organizationId
+          },
+          { $inc: { quantity: it.quantity } },
+          { upsert: true, session }
+        )
+      }
+    }
+
+    await Tax.insertMany(
+      dummyTaxes.map((t) => ({
+        ...t,
+        organization: organizationId
+      })),
+      { session }
+    )
+
+    const receivingAccounts = await ReceivingAccount.insertMany(
+      dummyReceivingAccounts.map((ra) => ({
+        ...ra,
+        organization: organizationId
+      })),
+      { session }
+    )
+
+    await Promise.all(
+      dummyPaymentMethods.map(async (pm, index) => {
+        const data = {
+          ...pm,
+          organization: organizationId
+        }
+
+        if (pm.type === 'bank') {
+          data.receivingAccountId = receivingAccounts.find((a) => a.type === 'bank')._id
+        }
+
+        if (pm.type === 'e-wallet') {
+          data.receivingAccountId = receivingAccounts.find((a) => a.type === 'e-wallet')._id
+        }
+
+        await PaymentMethod.create([data], { session })
+      })
+    )
+
+    await Coupon.insertMany(
+      dummyCoupons.map((c) => ({
+        ...c,
+        organization: organizationId
+      })),
+      { session }
+    )
 
     return true
   } catch (err) {

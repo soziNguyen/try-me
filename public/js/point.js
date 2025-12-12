@@ -1,26 +1,12 @@
-document.addEventListener('DOMContentLoaded', async () => {
-  const pointInput = document.getElementById('pointValue')
-  const earnRateInput = document.getElementById('pointsEarnRate')
-  const exampleText = document.getElementById('pointsExample')
-  const submitBtn = document.querySelector('#pointsSettingsForm button[type="submit"]')
+const pointInput = document.getElementById('pointValue')
+const earnRateInput = document.getElementById('pointsEarnRate')
+const exampleText = document.getElementById('pointsExample')
+const submitBtn = document.querySelector('#pointsSettingsForm button[type="submit"]')
 
+document.addEventListener('DOMContentLoaded', async () => {
   let initialValues = {}
 
-  try {
-    const result = await ajax('/api/setting/point', {}, 'GET')
-
-    if (result) {
-      pointInput.value = result.pointValue || 500
-      earnRateInput.value = result.pointsEarnRate || 10000
-      initialValues = {
-        pointValue: pointInput.value,
-        pointsEarnRate: earnRateInput.value
-      }
-      updateExample()
-    }
-  } catch (error) {
-    console.error(error.message)
-  }
+  await getPointSettings()
 
   // Kiểm tra thay đổi và enable/disable nút
   function checkChanges() {
@@ -96,6 +82,7 @@ function editPointSetting() {
           pointValue: pointInput.value,
           pointsEarnRate: earnRateInput.value
         }
+        getPointSettings()
       }
     } catch (error) {
       console.error(error.message)
@@ -105,4 +92,21 @@ function editPointSetting() {
       submitBtn.textContent = originalText
     }
   })
+}
+
+async function getPointSettings() {
+  try {
+    const result = await ajax('/api/setting/point', {}, 'GET')
+
+    if (result) {
+      pointInput.value = result.pointValue || 500
+      earnRateInput.value = result.pointsEarnRate || 10000
+      initialValues = {
+        pointValue: pointInput.value,
+        pointsEarnRate: earnRateInput.value
+      }
+    }
+  } catch (error) {
+    console.error(error.message)
+  }
 }

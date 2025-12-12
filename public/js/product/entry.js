@@ -20,8 +20,6 @@ $(function () {
         '<"bottom-bar d-flex justify-content-between mt-3"ip>',
       serverSide: true,
       processing: true,
-      autoWidth: true,
-      scrollX: true,
       order: [],
       ajax: {
         url: '/api/product/entries',
@@ -122,7 +120,13 @@ $(function () {
           data: 'note',
           title: 'Ghi chú',
           className: 'text-center',
-          render: (data) => data || ''
+          render: (data) => {
+            const maxLength = 30
+            if (data && data.length > maxLength) {
+              return data.substring(0, maxLength) + '...'
+            }
+            return data || ''
+          }
         },
         {
           data: null,
