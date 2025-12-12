@@ -1296,35 +1296,40 @@ body {
   }
 }
 @media (max-width: 575px) {
+  .admin__layout #notificationModal .modal-dialog,
+  .staff__layout #notificationModal .modal-dialog {
+    right: 15px;
+    width: 360px;
+  }
   .admin__layout .admin__main .admin__content .row .card-item.col-md-3,
-  .admin__layout .admin__main .staff__content .row .card-item.col-md-3,
-  .staff__layout .staff__main .admin__content .row .card-item.col-md-3,
+  .admin__layout .staff__main .staff__content .row .card-item.col-md-3,
+  .staff__layout .admin__main .admin__content .row .card-item.col-md-3,
   .staff__layout .staff__main .staff__content .row .card-item.col-md-3 {
     width: 100%;
   }
   .admin__layout .admin__main .admin__content .row .statistical.col-md-4,
-  .admin__layout .admin__main .staff__content .row .statistical.col-md-4,
-  .staff__layout .staff__main .admin__content .row .statistical.col-md-4,
+  .admin__layout .staff__main .staff__content .row .statistical.col-md-4,
+  .staff__layout .admin__main .admin__content .row .statistical.col-md-4,
   .staff__layout .staff__main .staff__content .row .statistical.col-md-4 {
     width: 100%;
   }
   .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7,
-  .admin__layout .admin__main .staff__content .row .revenueLast7days.col-md-7,
-  .staff__layout .staff__main .admin__content .row .revenueLast7days.col-md-7,
+  .admin__layout .staff__main .staff__content .row .revenueLast7days.col-md-7,
+  .staff__layout .admin__main .admin__content .row .revenueLast7days.col-md-7,
   .staff__layout .staff__main .staff__content .row .revenueLast7days.col-md-7 {
     display: block;
     width: 100%;
   }
   .admin__layout .admin__main .admin__content .row .top5Items.col-md-5,
-  .admin__layout .admin__main .staff__content .row .top5Items.col-md-5,
-  .staff__layout .staff__main .admin__content .row .top5Items.col-md-5,
+  .admin__layout .staff__main .staff__content .row .top5Items.col-md-5,
+  .staff__layout .admin__main .admin__content .row .top5Items.col-md-5,
   .staff__layout .staff__main .staff__content .row .top5Items.col-md-5 {
     display: block;
     width: 100%;
   }
   .admin__layout .admin__main .admin__content #reportrange i:last-child,
-  .admin__layout .admin__main .staff__content #reportrange i:last-child,
-  .staff__layout .staff__main .admin__content #reportrange i:last-child,
+  .admin__layout .staff__main .staff__content #reportrange i:last-child,
+  .staff__layout .admin__main .admin__content #reportrange i:last-child,
   .staff__layout .staff__main .staff__content #reportrange i:last-child {
     display: none;
   }

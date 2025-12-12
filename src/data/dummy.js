@@ -180,9 +180,12 @@ export const dummyCombos = [
 ]
 
 export const dummyPEItems = [
-  { type: 'MenuItem', itemIndex: 0, quantity: 10, unitPrice: 20000 },
-  { type: 'MenuItem', itemIndex: 1, quantity: 5, unitPrice: 25000 },
-  { type: 'Combo', comboIndex: 0, quantity: 2, unitPrice: 60000 }
+  { type: 'MenuItem', itemIndex: 0, quantity: 50, unitPrice: 20000 },
+  { type: 'MenuItem', itemIndex: 1, quantity: 35, unitPrice: 25000 },
+  { type: 'MenuItem', itemIndex: 2, quantity: 40, unitPrice: 30000 },
+
+  { type: 'Combo', comboIndex: 0, quantity: 20, unitPrice: 60000 },
+  { type: 'Combo', comboIndex: 1, quantity: 15, unitPrice: 55000 }
 ]
 
 export const dummyTaxes = [
