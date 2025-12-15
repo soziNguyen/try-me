@@ -8,7 +8,7 @@ const shiftSchema = new mongoose.Schema(
       required: true
     },
     name: { type: String, default: '' }, // Tên ca
-    type: { type: String, enum: ['day', 'night'], default: null }, // Loại ca
+    type: { type: String, enum: ['morning', 'afternoon', 'night'], default: null }, // Loại ca
     startTime: { type: String, default: '' }, // HH:mm
     endTime: { type: String, default: '' }, // HH:mm
     note: { type: String, default: '' }

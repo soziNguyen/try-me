@@ -60,10 +60,10 @@ $(function () {
         title: 'Loại ca',
         render: (data, type, row) => {
           if (type === 'display') {
-            const shifts = ['day', 'night']
+            const shifts = ['morning', 'afternoon', 'night']
             const opts = shifts.map(
               (o) => `
-                <option value="${o}" ${data === o ? 'selected' : ''}>${o === 'day' ? 'Ca ngày' : 'Ca đêm'}</option>    
+                <option value="${o}" ${data === o ? 'selected' : ''}>${o === 'morning' ? 'Ca sáng' : o === 'afternoon' ? 'Ca chiều' : 'Ca tối'}</option>    
               `
             )
             return `

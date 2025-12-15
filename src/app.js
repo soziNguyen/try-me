@@ -40,7 +40,9 @@ app.set('trust proxy', 1)
 
 // Middleware
 app.use(compression()) // Compress responses
-app.use(helmet()) // Security middleware
+if (process.env.NODE_ENV === 'production') {
+  app.use(helmet()) // Security middleware
+}
 app.use(cors()) // Allow API requests from different origins (CORS)
 app.use(express.json()) // Parse incoming JSON requests (req.body)
 // app.use((req, res, next) => {
@@ -85,6 +87,10 @@ const sessionStore = MongoStore.create({
 sessionStore.on('connected', () => console.log('MongoStore is connected'))
 sessionStore.on('error', (error) => console.error('MongoStore connection error:', error))
 
+let cookieSecure = false
+if (process.env.NODE_ENV === 'production') {
+  cookieSecure = true
+}
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -92,7 +98,7 @@ app.use(
     resave: true,
     saveUninitialized: true,
     store: sessionStore,
-    cookie: { secure: false } // local: false
+    cookie: { secure: cookieSecure } // local: false
   })
 )
 
