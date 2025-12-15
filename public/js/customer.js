@@ -235,11 +235,6 @@ function handleUpdateCustomer(e, csrfToken) {
   })
 }
 
-function resetForm(selector) {
-  const form = $(selector)[0]
-  if (form) form.reset()
-}
-
 function showPointHistoryModal(data) {
   const { customer, history } = data
 

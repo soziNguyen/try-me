@@ -56,9 +56,9 @@ const getSaleInfomation = async () => {
       if (newCusThisMonth) {
         newCusThisMonth.textContent = result.thisMonthStats.newCustomers
       }
+      
       document.querySelector('.bestSellerThisMonth').textContent =
-        result.thisMonthStats.topItem.name
-
+        result.thisMonthStats?.topItem?.name
       renderRevenueChart(result.last7DaysRevenue)
       renderTop5Items(result.top5Items)
       renderRecentOrders(result.recentOrders)

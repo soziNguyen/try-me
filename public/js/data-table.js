@@ -5,6 +5,11 @@ function reloadTable(selector) {
   if (table) table.ajax.reload(null, false)
 }
 
+function resetForm(selector) {
+  const form = $(selector)[0]
+  if (form) form.reset()
+}
+
 function handlerAddEvent(tableSelector, btnSelector, module) {
   const $wrapper = $(`${tableSelector}_wrapper`)
   const table = $(tableSelector).DataTable()

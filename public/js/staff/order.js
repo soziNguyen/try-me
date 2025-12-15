@@ -298,37 +298,40 @@ async function getTables(order = null) {
     const res = await ajax('/api/tables', {}, 'GET')
     const tables = Array.isArray(res?.tables) ? res.tables : []
 
-    const $select = $('#table-select')
-    if (!$select.length) {
-      console.error('Không tìm thấy element #table-select')
-      return
+    const businessType = $('#businessType').val()
+    if (!['shop'].includes(businessType)) {
+      const $select = $('#table-select')
+      if (!$select.length) {
+        console.error('Không tìm thấy element #table-select')
+        return
+      }
+  
+      if ($select.hasClass('select2-hidden-accessible')) {
+        $select.select2('destroy')
+      }
+  
+      let html = '<option value="">Chọn bàn</option>'
+      const currentTableId = order?.tableId?._id || null
+  
+      if (currentTableId) {
+        html += '<option value="empty">Trống</option>'
+      }
+  
+      tables.forEach((t) => {
+        const selected = t._id === currentTableId ? 'selected' : ''
+        const prefix = t._id === currentTableId ? 'Bàn: ' : ''
+        html += `<option value="${t._id}" ${selected}>${prefix}${t.name}</option>`
+      })
+  
+      $select.html(html)
+  
+      $select.select2({
+        width: '100%',
+        placeholder: 'Chọn bàn'
+      })
+  
+      $select.prop('disabled', false)
     }
-
-    if ($select.hasClass('select2-hidden-accessible')) {
-      $select.select2('destroy')
-    }
-
-    let html = '<option value="">Chọn bàn</option>'
-    const currentTableId = order?.tableId?._id || null
-
-    if (currentTableId) {
-      html += '<option value="empty">Trống</option>'
-    }
-
-    tables.forEach((t) => {
-      const selected = t._id === currentTableId ? 'selected' : ''
-      const prefix = t._id === currentTableId ? 'Bàn: ' : ''
-      html += `<option value="${t._id}" ${selected}>${prefix}${t.name}</option>`
-    })
-
-    $select.html(html)
-
-    $select.select2({
-      width: '100%',
-      placeholder: 'Chọn bàn'
-    })
-
-    $select.prop('disabled', false)
   } catch (error) {
     toastr.error('Không thể tải danh sách bàn')
   }
@@ -744,7 +747,7 @@ async function addComboToOrder(comboId, comboName, price) {
     const result = await ajax(`/api/orders/${orderId}/items`, { comboId, quantity: 1 })
     if (result) {
       toastr.remove()
-      toastr.success(`Đã thêm combo ${comboName} vào hóa đơn`)
+      toastr.success(`Đã thêm ${comboName} vào hóa đơn`)
       updateOrderUI(result)
       renderKitchenStatus(result)
     }
