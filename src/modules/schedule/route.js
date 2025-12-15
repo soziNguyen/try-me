@@ -6,12 +6,14 @@ import {
   createSchedule,
   updateSchedule,
   deleteSchedule,
-  getMySchedules
+  getMySchedules,
+  getSchedulesByRange
 } from './controller.js'
 
 const router = express.Router()
 
 router.get('/api/schedules', isAuthenticated, getSchedules)
+router.get('/api/schedules/range', isAuthenticated, getSchedulesByRange)
 router.get('/api/schedules/my', isAuthenticated, getMySchedules)
 router.post('/api/schedule/create', isAuthenticated, createSchedule)
 router.post('/api/schedule/update/:id', isAuthenticated, updateSchedule)

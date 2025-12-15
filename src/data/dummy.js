@@ -106,11 +106,11 @@ export const warehouseDummy = [
 ]
 
 export const dummyTables = [
-  { name: 'Bàn 01', capacity: 4, area: 'KV1' },
-  { name: 'Bàn 02', capacity: 4, area: 'KV1' },
-  { name: 'Bàn 03', capacity: 4, area: 'KV2' },
-  { name: 'Bàn 04', capacity: 4, area: 'KV2' },
-  { name: 'Bàn 05', capacity: 4, area: 'KV3' }
+  { name: '01', capacity: 4, area: 'KV1' },
+  { name: '02', capacity: 4, area: 'KV1' },
+  { name: '03', capacity: 4, area: 'KV2' },
+  { name: '04', capacity: 4, area: 'KV2' },
+  { name: '05', capacity: 4, area: 'KV3' }
 ]
 
 export const dummyMenuCategories = [
@@ -149,5 +149,126 @@ export const dummyMenuItems = [
     image: '',
     price: 35000,
     categoryIndex: 1
+  }
+]
+
+export const dummyCombos = [
+  {
+    sku: 'CB001',
+    name: 'Combo Cà phê đen + Trà đào',
+    image: '',
+    items: [
+      { itemIndex: 0, quantity: 1 }, // Cà phê đen
+      { itemIndex: 2, quantity: 1 } // Trà đào
+    ],
+    price: 55000,
+    isActive: true,
+    note: 'Combo tiết kiệm'
+  },
+  {
+    sku: 'CB002',
+    name: 'Combo Cà phê sữa + Cà phê đen',
+    image: '',
+    items: [
+      { itemIndex: 1, quantity: 1 }, // Cà phê sữa
+      { itemIndex: 0, quantity: 1 } // Cà phê đen
+    ],
+    price: 52000,
+    isActive: true,
+    note: 'Combo buổi sáng'
+  }
+]
+
+export const dummyPEItems = [
+  { type: 'MenuItem', itemIndex: 0, quantity: 50, unitPrice: 20000 },
+  { type: 'MenuItem', itemIndex: 1, quantity: 35, unitPrice: 25000 },
+  { type: 'MenuItem', itemIndex: 2, quantity: 40, unitPrice: 30000 },
+
+  { type: 'Combo', comboIndex: 0, quantity: 20, unitPrice: 60000 },
+  { type: 'Combo', comboIndex: 1, quantity: 15, unitPrice: 55000 }
+]
+
+export const dummyTaxes = [
+  {
+    name: 'Thuế 0%',
+    rate: 0,
+    description: 'Áp dụng cho các nhóm hàng không chịu thuế'
+  },
+  {
+    name: 'Thuế 8%',
+    rate: 8,
+    description: 'Thuế VAT 8% theo quy định'
+  }
+]
+
+export const dummyReceivingAccounts = [
+  {
+    type: 'bank',
+    bankCode: 'VCB',
+    bankName: 'Vietcombank',
+    accountNumber: '0011001234567',
+    name: 'Công ty TNHH ABC'
+  },
+  {
+    type: 'e-wallet',
+    bankCode: 'MOMO',
+    bankName: 'Momo E-Wallet',
+    accountNumber: '0988123456',
+    name: 'Công ty TNHH ABC'
+  }
+]
+
+export const dummyPaymentMethods = [
+  {
+    name: 'Tiền mặt',
+    type: 'cash',
+    description: 'Thanh toán bằng tiền mặt',
+    isDefault: true
+  },
+  {
+    name: 'Chuyển khoản',
+    type: 'bank',
+    description: 'Thanh toán qua tài khoản ngân hàng'
+  },
+  {
+    name: 'Momo',
+    type: 'e-wallet',
+    description: 'Thanh toán qua ví MoMo'
+  }
+]
+
+export const dummyCoupons = [
+  {
+    code: 'SALE10',
+    discountType: 'percent',
+    discountValue: 10,
+    description: 'Giảm 10% cho toàn bộ đơn hàng',
+    startDate: new Date(),
+    endDate: new Date(new Date().setDate(new Date().getDate() + 30)), // 30 ngày
+    usageLimit: null,
+    usedCount: 0,
+    isActive: true
+  },
+  {
+    code: 'GIAM50K',
+    discountType: 'amount',
+    discountValue: 50000,
+    description: 'Giảm trực tiếp 50.000đ',
+    startDate: new Date(),
+    endDate: new Date(new Date().setDate(new Date().getDate() + 60)), // 60 ngày
+    usageLimit: 100,
+    usedCount: 0,
+    isActive: true
+  },
+  {
+    code: 'FLASH20',
+    discountType: 'percent',
+    discountValue: 20,
+    description: 'Flash sale giảm 20% trong 24h',
+    startDate: new Date(),
+    endDate: new Date(new Date().setDate(new Date().getDate() + 1)), // 1 ngày
+    usageLimit: 50,
+    usedCount: 0,
+    isActive: true
   }
 ]

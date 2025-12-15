@@ -26,7 +26,7 @@ export const getInvoiceOptions = async (req, res) => {
     }
 
     if (!warehouseId) {
-      return responseHelper.error(res, 'Không tìm thấy warehouse', 400)
+      return responseHelper.error(res, 'Vui lòng thiết lập kho trong profile', 400)
     }
 
     // Query

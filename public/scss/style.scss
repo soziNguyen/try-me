@@ -532,6 +532,16 @@ body {
           right: -1px;
         }
       }
+
+      #receiptTable_wrapper {
+        .dt-layout-row {
+          &:first-child {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+          }
+        }
+      }
     }
 
     ##{$role}__sidebar.collapsed ~ .#{$role}__content {
@@ -762,10 +772,17 @@ body {
 }
 
 @media (max-width: 575px) {
-  .admin__layout .admin__main,
-  .staff__layout .staff__main {
-    .admin__content,
-    .staff__content {
+  .admin__layout,
+  .staff__layout {
+    #notificationModal {
+      .modal-dialog {
+        right: 15px;
+        width: 360px;
+      }
+    }
+
+    .admin__main .admin__content,
+    .staff__main .staff__content {
       .row {
         .card-item {
           &.col-md-3 {
