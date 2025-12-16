@@ -15,6 +15,7 @@ import ReceivingAccount from '../modules/receiving-account/model.js'
 import { Combo } from '../modules/menu/combo/model.js'
 import { ProductEntry } from '../modules/product/entry/model.js'
 import ProductStock from '../modules/product/stock/model.js'
+import { Shift } from '../modules/shift/model.js'
 import QRCode from 'qrcode'
 import {
   dummyIngredientCategories,
@@ -29,7 +30,8 @@ import {
   dummyReceivingAccounts,
   dummyCoupons,
   dummyCombos,
-  dummyPEItems
+  dummyPEItems,
+  dummyShifts
 } from '../data/dummy.js'
 
 export async function insertDummyDataForOrganization(session, organizationId, businessType) {
@@ -131,7 +133,7 @@ export async function insertDummyDataForOrganization(session, organizationId, bu
 
     // Insert Tables for food & drink business
     if (['drink', 'food'].includes(businessType)) {
-      const domain = process.env.DOMAIN || 'http://localhost:6001'
+      const domain = process.env.DOMAIN || 'http://localhost:3000'
 
       const tables = []
       for (const t of dummyTables) {
@@ -289,6 +291,14 @@ export async function insertDummyDataForOrganization(session, organizationId, bu
     await Coupon.insertMany(
       dummyCoupons.map((c) => ({
         ...c,
+        organization: organizationId
+      })),
+      { session }
+    )
+
+    await Shift.insertMany(
+      dummyShifts.map((s) => ({
+        ...s,
         organization: organizationId
       })),
       { session }

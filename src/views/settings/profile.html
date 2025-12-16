@@ -202,14 +202,14 @@
               <% } %>
 
                 <%- include('../partials/commonjs.html') %>
-                  <%- include('../partials/cropper_modal.html') %>
-                    <input type="hidden" id="currentOrgId"
-                      value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
-                    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
-                    <script src="/js/sidebar-toggle.js"></script>
-                    <script src="/js/data-table.js"></script>
-                    <% if (userRole==="Admin" ) { %>
-                      <script src="/js/admin/admin-org.js"></script>
-                      <% } %>
-                        <script src="/js/admin/org-profile.js"></script>
-                        <%- include('../partials/footer.html') %>
+                <%- include('../partials/cropper_modal.html') %>
+                  <input type="hidden" id="currentOrgId"
+                    value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
+                <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+                <%- include('../partials/sidebar_togglejs.html') %>
+                <%- include('../partials/data_tablejs.html') %>
+                <% if (userRole==="Admin" ) { %>
+                  <%- include('../partials/admin-orgjs.html') %>
+                <% } %>
+                <script src="/js/admin/org-profile.js?ver=1.0.0"></script>
+                <%- include('../partials/footer.html') %>

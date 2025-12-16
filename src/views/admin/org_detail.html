@@ -174,13 +174,13 @@
       </div>
 
     </div>
-    </div>
-    </div>
+  </div>
+</div>
 
-    <%- include('../partials/commonjs.html') %>
-      <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
-      <script src="/js/sidebar-toggle.js"></script>
-      <script src="/js/data-table.js"></script>
-      <script src="/js/admin/admin-org.js"></script>
-      <script src="/js/admin/org-detail.js"></script>
-      <%- include('../partials/footer.html') %>
+<%- include('../partials/commonjs.html') %>
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<%- include('../partials/sidebar_togglejs.html') %>
+<%- include('../partials/data_tablejs.html') %>
+<%- include('../partials/admin-orgjs.html') %>
+<script src="/js/admin/org-detail.js?ver=1.0.0"></script>
+<%- include('../partials/footer.html') %>

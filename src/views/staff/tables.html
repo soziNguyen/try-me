@@ -1,99 +1,98 @@
-<%- include('../partials/header.html') %> <%- include('../partials/staff_sidebar.html') %>
+<%- include('../partials/header.html') %> 
+  <%- include('../partials/staff_sidebar.html') %>
 
-<div class="staff__content">
-  <h2 class="fw-bold mb-4"><%= pageTitle %></h2>
+    <div class="staff__content">
+      <h2 class="fw-bold mb-4"><%= pageTitle %></h2>
 
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-    <div class="d-flex mb-3" id="areaButtonsContainer"></div>
-    <div class="search-form d-flex align-items-center" id="search-container">
-      <input type="text" id="searchUserInput" class="form-control me-2" placeholder="Search" />
-    </div>
-  </div>
-
-  <!-- GRID -->
-  <div
-    id="tableGrid"
-    class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4 mt-4"
-  ></div>
-</div>
-
-<!-- Modal xác nhận giao bàn -->
-<div class="modal fade" id="assignTableModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Xác nhận giao bàn</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p id="assign-table-question" class="fw-bold text-danger"></p>
-        <ul class="list-unstyled mb-0">
-          <li><strong>Tên bàn:</strong> <span id="assign-table-name"></span></li>
-          <li><strong>Sức chứa:</strong> <span id="assign-table-capacity"></span></li>
-          <li><strong>Khu vực:</strong> <span id="assign-table-area"></span></li>
-        </ul>
-        <div class="mb-3">
-          <input
-            type="text"
-            id="customerNameInput"
-            class="form-control mt-md-2"
-            placeholder="Tên khách hàng"
-          />
-        </div>
-        <div class="mb-3">
-          <input
-            type="text"
-            id="customerPhoneInput"
-            class="form-control"
-            placeholder="Số điện thoại"
-          />
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <div class="d-flex mb-3" id="areaButtonsContainer"></div>
+        <div class="search-form d-flex align-items-center" id="search-container">
+          <input type="text" id="searchUserInput" class="form-control me-2" placeholder="Search" />
         </div>
       </div>
-      <div class="modal-footer">
-        <button id="btnConfirmAssignTable" class="btn btn-success">Xác nhận</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+
+      <!-- GRID -->
+      <div id="tableGrid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4 mt-4"></div>
+    </div>
+
+    <!-- Modal xác nhận giao bàn -->
+    <div class="modal fade" id="assignTableModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Xác nhận giao bàn</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p id="assign-table-question" class="fw-bold text-danger"></p>
+            <ul class="list-unstyled mb-0">
+              <li><strong>Tên bàn:</strong> <span id="assign-table-name"></span></li>
+              <li><strong>Sức chứa:</strong> <span id="assign-table-capacity"></span></li>
+              <li><strong>Khu vực:</strong> <span id="assign-table-area"></span></li>
+            </ul>
+            <div class="mb-3">
+              <input
+                type="text"
+                id="customerNameInput"
+                class="form-control mt-md-2"
+                placeholder="Tên khách hàng"
+              />
+            </div>
+            <div class="mb-3">
+              <input
+                type="text"
+                id="customerPhoneInput"
+                class="form-control"
+                placeholder="Số điện thoại"
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button id="btnConfirmAssignTable" class="btn btn-success">Xác nhận</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- Modal cập nhật bàn -->
-<div class="modal fade" id="updateTableModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Cập nhật bàn</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <label for="update-name" class="form-label">Số bàn</label>
-        <input id="update-name" class="form-control mb-2" placeholder="Tên bàn" readonly />
-        <label for="update-customer" class="form-label">Tên khách</label>
-        <input id="update-customer" class="form-control mb-2" placeholder="Tên khách" />
-        <label for="update-status" class="form-label">Trạng thái</label>
-        <select id="update-status" class="form-control mb-2">
-          <option value="available">Trống</option>
-          <option value="occupied">Có khách</option>
-        </select>
-        <label for="update-capacity" class="form-label">Số Người</label>
-        <input
-          id="update-capacity"
-          class="form-control mb-2"
-          type="number"
-          placeholder="Số Lượng Người"
-        />
-      </div>
-      <div class="modal-footer">
-        <button id="btnUpdateTable" class="btn btn-primary">Cập nhật</button>
+    <!-- Modal cập nhật bàn -->
+    <div class="modal fade" id="updateTableModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Cập nhật bàn</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <label for="update-name" class="form-label">Số bàn</label>
+            <input id="update-name" class="form-control mb-2" placeholder="Tên bàn" readonly />
+            <label for="update-customer" class="form-label">Tên khách</label>
+            <input id="update-customer" class="form-control mb-2" placeholder="Tên khách" />
+            <label for="update-status" class="form-label">Trạng thái</label>
+            <select id="update-status" class="form-control mb-2">
+              <option value="available">Trống</option>
+              <option value="occupied">Có khách</option>
+            </select>
+            <label for="update-capacity" class="form-label">Số Người</label>
+            <input
+              id="update-capacity"
+              class="form-control mb-2"
+              type="number"
+              placeholder="Số Lượng Người"
+            />
+          </div>
+          <div class="modal-footer">
+            <button id="btnUpdateTable" class="btn btn-primary">Cập nhật</button>
+          </div>
+        </div>
       </div>
     </div>
+    <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
   </div>
 </div>
-<input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
-
 <%- include('../partials/commonjs.html') %>
 <script src="/js/library/socket.io.min.js"></script>
-<script src="/js/notifications.js"></script>
-<script src="/js/sidebar-toggle.js"></script>
-<script src="/js/staff/tables.js"></script>
+<script src="/js/notifications.js?ver=1.0.0"></script>
+<%- include('../partials/sidebar_togglejs.html') %>
+<script src="/js/staff/tables.js?ver=1.0.0"></script>
 <%- include('../partials/staff_footer.html') %>

@@ -17,7 +17,6 @@ router.get(
 )
 router.get('/tax', isAuthenticated, isPermit('Admin', 'Org'), page.taxPage)
 router.get('/payment-methods', isAuthenticated, isPermit('Admin', 'Org'), page.paymentMethodPage)
-router.get('/revenue', isAuthenticated, isPermit('Admin', 'Org'), page.revenuePage)
 router.get(
   '/receiving-accounts',
   isAuthenticated,

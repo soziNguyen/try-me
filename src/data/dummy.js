@@ -272,3 +272,27 @@ export const dummyCoupons = [
     isActive: true
   }
 ]
+
+export const dummyShifts = [
+  {
+    name: 'Ca Sáng',
+    type: 'morning',
+    startTime: '08:00',
+    endTime: '14:00',
+    note: 'Ca làm việc buổi sáng'
+  },
+  {
+    name: 'Ca Chiều',
+    type: 'afternoon',
+    startTime: '14:00',
+    endTime: '20:00',
+    note: 'Ca làm việc buổi chiều'
+  },
+  {
+    name: 'Ca Tối',
+    type: 'night',
+    startTime: '20:00',
+    endTime: '02:00',
+    note: 'Ca làm việc buổi tối'
+  }
+]
