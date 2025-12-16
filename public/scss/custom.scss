@@ -1016,6 +1016,17 @@ input[type='text']::-ms-clear {
       padding: 0;
       margin: 0;
 
+      &.invoice {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 auto !important;
+        padding: 3mm !important;
+
+        .invoice-container {
+          width: 100%;
+        }
+      }
+
       .card {
         border: none;
         box-shadow: none;
@@ -1128,12 +1139,22 @@ input[type='text']::-ms-clear {
     display: none;
   }
 
-  .btn-back {
-    display: none;
+  .btn-back,
+  .invoice-actions {
+    display: none !important;
   }
 
   @page {
     size: A4 portrait;
     margin: 10mm;
+  }
+
+  @page invoice-page {
+    size: 58mm auto;
+    margin: 0;
+  }
+
+  .container.invoice {
+    page: invoice-page;
   }
 }

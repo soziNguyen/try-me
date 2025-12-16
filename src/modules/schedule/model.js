@@ -13,14 +13,23 @@ const scheduleSchema = new mongoose.Schema(
       ref: 'Shift',
       default: null
     },
-    date: { type: Date, default: Date.now() }, // yyyy-mm-dd
+    isRecurring: { type: Boolean, default: false },
+    recurringPattern: {
+      type: String,
+      enum: ['daily', 'weekly', 'monthly', null],
+      default: null
+    },
+    date: { type: Date, default: Date.now }, // yyyy-mm-dd
     status: {
       type: String,
       enum: ['scheduled', 'confirmed', 'cancelled'],
       default: 'scheduled'
     },
+    recurringEndDate: { type: Date, default: null },
     note: { type: String, default: '' },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } // Admin tạo lịch
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Admin tạo lịch
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }, // User duyệt lịch
+    approvedAt: { type: Date }
   },
   {
     collection: 'Schedules',

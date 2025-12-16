@@ -1076,6 +1076,17 @@ input[type=text]::-ms-clear {
     padding: 0;
     margin: 0;
   }
+  body .container.invoice,
+  body .container-xxl.invoice {
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 3mm !important;
+  }
+  body .container.invoice .invoice-container,
+  body .container-xxl.invoice .invoice-container {
+    width: 100%;
+  }
   body .container .card,
   body .container-xxl .card {
     border: none;
@@ -1196,11 +1207,19 @@ input[type=text]::-ms-clear {
   #toast-container {
     display: none;
   }
-  .btn-back {
-    display: none;
+  .btn-back,
+  .invoice-actions {
+    display: none !important;
   }
   @page {
     size: A4 portrait;
     margin: 10mm;
+  }
+  @page invoice-page {
+    size: 58mm auto;
+    margin: 0;
+  }
+  .container.invoice {
+    page: invoice-page;
   }
 }

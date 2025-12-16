@@ -9,7 +9,10 @@ export const getShiftOptions = async (req, res) => {
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
 
-    const shifts = await Shift.find({ organization: organizationId }, { _id: 1, name: 1 })
+    const shifts = await Shift.find(
+      { organization: organizationId },
+      { _id: 1, name: 1, startTime: 1, endTime: 1 }
+    )
 
     responseHelper.success(res, shifts)
   } catch (error) {
@@ -145,7 +148,7 @@ export const updateShift = async (req, res) => {
       return responseHelper.error(res, 'Ca không tồn tại', 404)
     }
 
-    if (type !== undefined && type !== '' && !['day', 'night'].includes(type)) {
+    if (type !== undefined && type !== '' && !['morning', 'afternoon', 'night'].includes(type)) {
       return responseHelper.error(res, 'Loại ca là ngày hoặc đêm', 400)
     }
 
@@ -185,8 +188,9 @@ export const updateShift = async (req, res) => {
           label: 'Loại ca',
           formatValue: (val) => {
             const types = {
-              day: 'Ngày',
-              night: 'Đêm'
+              morning: 'Sáng',
+              afternoon: 'Chiều',
+              night: 'Tối'
             }
 
             return types[val] || ''

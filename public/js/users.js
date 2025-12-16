@@ -1,7 +1,7 @@
 const logInForm = document.getElementById('login-form')
 const signUpForm = document.getElementById('signup-form')
 const forgotForm = document.getElementById('forgot-password')
-const resetForm = document.getElementById('reset-form')
+const resetPasswordForm = document.getElementById('reset-form')
 
 if (logInForm) {
   // Điền sẵn giá trị từ localStorage khi trang login load
@@ -171,12 +171,12 @@ if (logInForm) {
       toastr.error(error.message)
     }
   })
-} else if (resetForm) {
+} else if (resetPasswordForm) {
   document.addEventListener('DOMContentLoaded', () => {
     // Lấy token từ URL (http://localhost:3003/reset-password/:token)
     const token = window.location.pathname.split('/').pop()
 
-    resetForm.addEventListener('submit', async (event) => {
+    resetPasswordForm.addEventListener('submit', async (event) => {
       event.preventDefault()
 
       const newPasswordElement = document.getElementById('newPassword')

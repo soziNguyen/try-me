@@ -136,12 +136,14 @@
                             <%= user.username %>
                           </span>
                         </p>
-                        <div class="d-flex align-items-center">
-                          <i class="bi bi-table me-2 text-info"></i>
-                          <select id="table-select">
-                            <option value="">Chọn bàn</option>
-                          </select>
-                        </div>
+                        <% if (!['shop'].includes(user.businessType)) { %>
+                          <div class="d-flex align-items-center">
+                            <i class="bi bi-table me-2 text-info"></i>
+                            <select id="table-select">
+                              <option value="">Chọn bàn</option>
+                            </select>
+                          </div>
+                        <% } %>
                       </div>
                       <table class="table table-bordered table-sm mb-0">
                         <thead class="table-light">
@@ -384,6 +386,7 @@
     </div>
 
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
+    <input type="hidden" id="businessType" value="<%= user.businessType %>" />
     <%- include('../partials/commonjs.html') %>
     <script src="/js/library/socket.io.min.js"></script>
     <script src="/js/sidebar-toggle.js"></script>

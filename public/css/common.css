@@ -12329,6 +12329,10 @@
   font-size: 100px !important;
 }
 
+.font-small {
+  font-size: 0.7rem !important;
+}
+
 .fl {
   float: left;
 }
@@ -12423,6 +12427,9 @@
 }
 .w-300 {
   width: 300px !important;
+}
+.w-350 {
+  width: 350px !important;
 }
 .w-390 {
   width: 390px !important;
@@ -12521,7 +12528,9 @@
 .min-160 {
   min-width: 160px !important;
 }
-
+.mh-120 {
+  min-height: 120px !important;
+}
 .min-width-280 {
   min-width: 280px !important;
 }

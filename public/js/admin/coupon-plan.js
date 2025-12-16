@@ -43,9 +43,7 @@ $(function () {
         infoEmpty: 'Không có bản ghi nào',
         infoFiltered: '(được lọc từ tổng _MAX_ mã giảm giá)',
         zeroRecords: 'Không tìm thấy kết quả phù hợp',
-        emptyTable: 'Không có dữ liệu trong bảng',
-        processing:
-          '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Đang tải...</span></div>'
+        emptyTable: 'Không có dữ liệu trong bảng'
       },
       lengthMenu: showList,
       pageLength: numRows,

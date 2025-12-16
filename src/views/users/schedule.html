@@ -1,17 +1,158 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/org_sidebar.html') %>
     <div class="admin__content">
-      <h2 class="mb-3 bold semi-bold">
-        <%= pageTitle %>
-      </h2>
 
-      <table id="scheduleTable" class="table table-bordered">
-        <tbody id="scheduleTableBody">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h4 class="mb-0"><i class="bi bi-calendar3"></i> Quản Lý Lịch Làm Việc</h4>
+              <small class="text-muted">Hệ thống quản lý lịch làm việc nhân viên</small>
+            </div>
+            
+            <!-- View Toggle -->
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-outline-primary active" id="tableViewBtn">
+                <i class="bi bi-table"></i> Bảng
+              </button>
+              <button type="button" class="btn btn-outline-primary" id="calendarViewBtn">
+                <i class="bi bi-calendar-week"></i> Lịch
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        </tbody>
-      </table>
+      <div id="tableView" class="card shadow-sm border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center border-0">
+          <h5 class="mb-0">Danh sách lịch làm việc</h5>
+          <button class="btn btn-outline-success" id="addScheduleBtn">
+            <i class="bi bi-plus-circle"></i> Thêm lịch
+          </button>
+        </div>
+        <div class="card-body">
+          <table id="scheduleTable" class="table table-bordered">
+            <tbody id="scheduleTableBody">
+  
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="calendarView" class="card shadow-sm d-none">
+        <div class="card-header bg-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0" id="currentMonth"></h5>
+            <div>
+              <button class="btn btn-outline-secondary btn-sm btn-last-month">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              <button class="btn btn-outline-primary btn-sm mx-2 btn-today">Hôm nay</button>
+              <button class="btn btn-outline-secondary btn-sm btn-next-month">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Calendar Header -->
+          <div class="row g-2 mb-2">
+            <div class="col text-center fw-bold text-danger">CN</div>
+            <div class="col text-center fw-bold">T2</div>
+            <div class="col text-center fw-bold">T3</div>
+            <div class="col text-center fw-bold">T4</div>
+            <div class="col text-center fw-bold">T5</div>
+            <div class="col text-center fw-bold">T6</div>
+            <div class="col text-center fw-bold">T7</div>
+          </div>
+          
+          <!-- Calendar Grid -->
+          <div id="calendarGrid"></div>
+        </div>
+      </div>
     </div>
 
+    <div class="modal fade" id="scheduleModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Thêm lịch làm việc</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="scheduleForm">
+              <input type="hidden" id="scheduleId">
+              
+              <div class="mb-3">
+                <label class="form-label">Nhân viên <span class="text-danger">*</span></label>
+                <select class="form-select" id="userId" required>
+                  <option value="">— Chọn nhân viên —</option>
+                </select>
+              </div>
+  
+              <div class="mb-3">
+                <label class="form-label">Ca làm <span class="text-danger">*</span></label>
+                <select class="form-select" id="shiftId" required>
+                  <option value="">— Chọn ca làm —</option>
+                </select>
+              </div>
+  
+              <div class="mb-3">
+                <label class="form-label">Ngày <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="scheduleDate" required>
+              </div>
+  
+              <div class="mb-3">
+                <label class="form-label">Trạng thái</label>
+                <select class="form-select" id="scheduleStatus">
+                  <option value="scheduled">Chờ xác nhận</option>
+                  <option value="confirmed">Đã xác nhận</option>
+                  <option value="cancelled">Đã hủy</option>
+                </select>
+              </div>
+  
+              <div class="mb-3">
+                <label class="form-label">Ghi chú</label>
+                <textarea class="form-control" id="scheduleNote" rows="3"></textarea>
+              </div>
+  
+              <div class="mb-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="isRecurring">
+                  <label class="form-check-label" for="isRecurring">
+                    Lặp lại
+                  </label>
+                </div>
+              </div>
+  
+              <div id="recurringOptions" class="d-none">
+                <div class="mb-3">
+                  <label class="form-label">Kiểu lặp</label>
+                  <select class="form-select" id="recurringPattern">
+                    <option value="daily">Hàng ngày</option>
+                    <option value="weekly">Hàng tuần</option>
+                    <option value="monthly">Hàng tháng</option>
+                  </select>
+                </div>
+  
+                <div class="mb-3">
+                  <label class="form-label">Ngày kết thúc</label>
+                  <input type="date" class="form-control" id="recurringEndDate">
+                </div>
+              </div>
+
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-primary" form="scheduleForm" id="saveScheduleBtn">
+              <i class="bi bi-save"></i> Lưu
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
     </div>
     </div>
     <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
