@@ -298,16 +298,16 @@
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button
-                    class="accordion-button <%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'active' : '' %> <%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? '' : 'collapsed' %>"
+                    class="accordion-button <%= ['PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'active' : '' %> <%= ['PaymentReceipts', 'PaymentExpenses'].includes(page) ? '' : 'collapsed' %>"
                     type="button" data-bs-toggle="collapse" data-bs-target="#collapseRevenue"
-                    aria-expanded="<%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'true' : 'false' %>"
+                    aria-expanded="<%= ['PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'true' : 'false' %>"
                     aria-controls="collapseRevenue">
                     <i class="bi bi-cash-stack text-success me-2"></i>
                     <span>Quản lý thu chi</span>
                   </button>
                 </h2>
                 <div id="collapseRevenue"
-                  class="accordion-collapse collapse <%= ['Revenue', 'PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'show' : '' %>"
+                  class="accordion-collapse collapse <%= ['PaymentReceipts', 'PaymentExpenses'].includes(page) ? 'show' : '' %>"
                   data-bs-parent="#accordionRevenue">
                   <div class="accordion-body">
                     <a class="<%= page === 'PaymentReceipts' ? 'accordion-active' : '' %>"

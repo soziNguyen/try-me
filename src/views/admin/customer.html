@@ -10,110 +10,110 @@
         </tbody>
       </table>
     </div>
-    </div>
-    </div>
+  </div>
+</div>
 
-    <!-- FORM ADD -->
+<!-- FORM ADD -->
 
-    <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel"
-      aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="addCustomerModalLabel">Thêm khách hàng mới</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addCustomerModalLabel">Thêm khách hàng mới</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addCustomerForm">
+          <div class="mb-3">
+            <label for="newCustomerName" class="form-label">Tên khách hàng</label>
+            <input type="text" class="form-control" id="customerName">
           </div>
-          <div class="modal-body">
-            <form id="addCustomerForm">
-              <div class="mb-3">
-                <label for="newCustomerName" class="form-label">Tên khách hàng</label>
-                <input type="text" class="form-control" id="customerName">
-              </div>
-              <div class="mb-3">
-                <label for="newCustomerPhone" class="form-label">Số điện thoại</label>
-                <input type="text" class="form-control" id="customerPhone">
-              </div>
-            </form>
+          <div class="mb-3">
+            <label for="newCustomerPhone" class="form-label">Số điện thoại</label>
+            <input type="text" class="form-control" id="customerPhone">
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i
-                class="bi bi-x-circle me-2"></i>Hủy</button>
-            <button type="submit" id="addCustomerBtn" form="addCustomerForm" class="btn btn-primary"
-              id="addCustomerBtn">
-              <i class="bi bi-plus-circle me-2"></i>Thêm</button>
-          </div>
-        </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i
+            class="bi bi-x-circle me-2"></i>Hủy</button>
+        <button type="submit" id="addCustomerBtn" form="addCustomerForm" class="btn btn-primary"
+          id="addCustomerBtn">
+          <i class="bi bi-plus-circle me-2"></i>Thêm</button>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- FORM UPDATE -->
-    <div class="modal fade" id="updateCustomerModal" tabindex="-1" aria-labelledby="updateCustomerModalLabel"
-      aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="updateCustomerModalLabel">Cập nhật thông tin khách hàng</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+<!-- FORM UPDATE -->
+<div class="modal fade" id="updateCustomerModal" tabindex="-1" aria-labelledby="updateCustomerModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="updateCustomerModalLabel">Cập nhật thông tin khách hàng</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <div class="modal-body">
+        <form id="updateCustomerForm">
+          <input type="hidden" id="updateCustomerId">
+          <div class="mb-3">
+            <label for="newCustomerName" class="form-label">Tên khách hàng</label>
+            <input type="text" class="form-control" id="updateCustomerName">
           </div>
-          <div class="modal-body">
-            <form id="updateCustomerForm">
-              <input type="hidden" id="updateCustomerId">
-              <div class="mb-3">
-                <label for="newCustomerName" class="form-label">Tên khách hàng</label>
-                <input type="text" class="form-control" id="updateCustomerName">
-              </div>
-              <div class="mb-3">
-                <label for="newCustomerPhone" class="form-label">Số điện thoại</label>
-                <input type="text" class="form-control" id="updateCustomerPhone">
-              </div>
-            </form>
+          <div class="mb-3">
+            <label for="newCustomerPhone" class="form-label">Số điện thoại</label>
+            <input type="text" class="form-control" id="updateCustomerPhone">
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              <i class="bi bi-x-circle me-2"></i>Hủy</button>
-            <button type="submit" id="updateCustomerBtn" form="updateCustomerForm" class="btn btn-primary"
-              id="addCustomerBtn">
-              <i class="bi bi-check-circle me-1"></i>
-              Lưu</button>
-          </div>
-        </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-2"></i>Hủy</button>
+        <button type="submit" id="updateCustomerBtn" form="updateCustomerForm" class="btn btn-primary"
+          id="addCustomerBtn">
+          <i class="bi bi-check-circle me-1"></i>
+          Lưu</button>
       </div>
     </div>
+  </div>
+</div>
 
-    <div class="modal fade " id="pointHistoryModal">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title font28">Lịch sử điểm</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          
-          <div class="current-points ps-3 pt-3 fw-bold"></div>
+<div class="modal fade " id="pointHistoryModal">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title font28">Lịch sử điểm</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      
+      <div class="current-points ps-3 pt-3 fw-bold"></div>
 
-          <div class="modal-body h-600">
-            <table class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Ngày</th>
-                  <th>Loại</th>
-                  <th>Điểm</th>
-                  <th>Ghi chú</th>
-                </tr>
-              </thead>
-              <tbody id="pointHistoryBody"></tbody>
-            </table>
-          </div>
+      <div class="modal-body h-600">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Ngày</th>
+              <th>Loại</th>
+              <th>Điểm</th>
+              <th>Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody id="pointHistoryBody"></tbody>
+        </table>
+      </div>
 
-          <div class="modal-footer py-3">
-          </div>
-        </div>
+      <div class="modal-footer py-3">
       </div>
     </div>
+  </div>
+</div>
     
 
-    <%- include('../partials/commonjs.html') %>
-      <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
-      <script src="/js/sidebar-toggle.js"></script>
-      <script src="/js/data-table.js"></script>
-      <script src="/js/customer.js"></script>
-      <%- include('../partials/footer.html') %>
+<%- include('../partials/commonjs.html') %>
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<%- include('../partials/sidebar_togglejs.html') %>
+<%- include('../partials/data_tablejs.html') %>
+<script src="/js/customer.js?ver=1.0.0"></script>
+<%- include('../partials/footer.html') %>

@@ -382,15 +382,15 @@
         <i class="bi bi-arrow-up"></i>
       </div>
     </div>
-    </div>
-    </div>
+  </div>
+</div>
 
-    <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
-    <input type="hidden" id="businessType" value="<%= user.businessType %>" />
-    <%- include('../partials/commonjs.html') %>
-    <script src="/js/library/socket.io.min.js"></script>
-    <script src="/js/sidebar-toggle.js"></script>
-    <script src="/js/notifications.js"></script>
-    <script src="/js/staff/checkout.js"></script>
-    <script src="/js/staff/order.js"></script>
-    <%- include('../partials/staff_footer.html') %>
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
+<input type="hidden" id="businessType" value="<%= user.businessType %>" />
+<%- include('../partials/commonjs.html') %>
+<script src="/js/library/socket.io.min.js"></script>
+<%- include('../partials/sidebar_togglejs.html') %>
+<script src="/js/notifications.js?ver=1.0.0"></script>
+<script src="/js/staff/checkout.js?ver=1.0.0"></script>
+<script src="/js/staff/order.js?ver=1.0.0"></script>
+<%- include('../partials/staff_footer.html') %>

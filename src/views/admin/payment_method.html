@@ -11,105 +11,107 @@
         <tbody id="paymentMethodTableBody"></tbody>
       </table>
     </div>
+  </div>
+</div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="paymentMethodModal" tabindex="-1" aria-labelledby="paymentMethodModalLabel"
-      aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <form id="paymentMethodForm">
-            <div class="modal-header">
-              <h5 class="modal-title" id="paymentMethodModalLabel">Thêm phương thức thanh toán</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+<!-- Modal -->
+<div class="modal fade" id="paymentMethodModal" tabindex="-1" aria-labelledby="paymentMethodModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <form id="paymentMethodForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="paymentMethodModalLabel">Thêm phương thức thanh toán</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+        </div>
+
+        <div class="modal-body">
+          <input type="hidden" id="paymentMethodId">
+
+          <div class="row g-3">
+            <!-- Thông tin cơ bản -->
+            <div class="col-md-6">
+              <label class="form-label">Tên hiển thị</label>
+              <input type="text" id="pmName" class="form-control" required>
             </div>
 
-            <div class="modal-body">
-              <input type="hidden" id="paymentMethodId">
+            <div class="col-md-6">
+              <label class="form-label">Mã (Code)</label>
+              <select id="pmCode" class="form-select" required>
+              </select>
+            </div>
 
-              <div class="row g-3">
-                <!-- Thông tin cơ bản -->
+            <div class="col-md-6">
+              <label class="form-label">Icon (Bootstrap)</label>
+              <input type="text" id="pmIcon" class="form-control" placeholder="VD: bi-credit-card">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Thứ tự hiển thị</label>
+              <input type="number" id="pmSortOrder" class="form-control" value="0">
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">Mô tả</label>
+              <textarea id="pmDescription" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="col-12 border p-3 rounded bg-light">
+              <h6 class="fw-bold mb-2">Thông tin ngân hàng (Bank Info)</h6>
+              <div class="row g-2">
                 <div class="col-md-6">
-                  <label class="form-label">Tên hiển thị</label>
-                  <input type="text" id="pmName" class="form-control" required>
+                  <label class="form-label">Mã ngân hàng (Bank Code)</label>
+                  <input type="text" id="pmBankCode" class="form-control" placeholder="VD: VCB, ACB, TCB...">
                 </div>
-
                 <div class="col-md-6">
-                  <label class="form-label">Mã (Code)</label>
-                  <select id="pmCode" class="form-select" required>
-                  </select>
+                  <label class="form-label">Tên ngân hàng</label>
+                  <input type="text" id="pmBankName" class="form-control">
                 </div>
-
                 <div class="col-md-6">
-                  <label class="form-label">Icon (Bootstrap)</label>
-                  <input type="text" id="pmIcon" class="form-control" placeholder="VD: bi-credit-card">
+                  <label class="form-label">Số tài khoản</label>
+                  <input type="text" id="pmAccountNumber" class="form-control">
                 </div>
-
                 <div class="col-md-6">
-                  <label class="form-label">Thứ tự hiển thị</label>
-                  <input type="number" id="pmSortOrder" class="form-control" value="0">
+                  <label class="form-label">Tên chủ tài khoản</label>
+                  <input type="text" id="pmAccountName" class="form-control">
                 </div>
-
-                <div class="col-md-12">
-                  <label class="form-label">Mô tả</label>
-                  <textarea id="pmDescription" class="form-control" rows="2"></textarea>
-                </div>
-
-                <div class="col-12 border p-3 rounded bg-light">
-                  <h6 class="fw-bold mb-2">Thông tin ngân hàng (Bank Info)</h6>
-                  <div class="row g-2">
-                    <div class="col-md-6">
-                      <label class="form-label">Mã ngân hàng (Bank Code)</label>
-                      <input type="text" id="pmBankCode" class="form-control" placeholder="VD: VCB, ACB, TCB...">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Tên ngân hàng</label>
-                      <input type="text" id="pmBankName" class="form-control">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Số tài khoản</label>
-                      <input type="text" id="pmAccountNumber" class="form-control">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Tên chủ tài khoản</label>
-                      <input type="text" id="pmAccountName" class="form-control">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Chi nhánh</label>
-                      <input type="text" id="pmBranchName" class="form-control">
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Cấu hình JSON -->
-                <div class="col-md-12">
-                  <label class="form-label">Cấu hình (JSON)</label>
-                  <textarea id="pmConfig" class="form-control" rows="3" placeholder='{"apiKey": "..."}'></textarea>
-                </div>
-
-                <!-- Trạng thái kích hoạt -->
-                <div class="col-md-12 mt-2">
-                  <div class="form-check">
-                    <input type="checkbox" id="pmIsActive" class="form-check-input" checked>
-                    <label class="form-check-label" for="pmIsActive">Kích hoạt</label>
-                  </div>
+                <div class="col-md-6">
+                  <label class="form-label">Chi nhánh</label>
+                  <input type="text" id="pmBranchName" class="form-control">
                 </div>
               </div>
             </div>
 
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-              <button type="submit" class="btn btn-primary" id="savePaymentMethodBtn">Lưu</button>
+            <!-- Cấu hình JSON -->
+            <div class="col-md-12">
+              <label class="form-label">Cấu hình (JSON)</label>
+              <textarea id="pmConfig" class="form-control" rows="3" placeholder='{"apiKey": "..."}'></textarea>
             </div>
-          </form>
+
+            <!-- Trạng thái kích hoạt -->
+            <div class="col-md-12 mt-2">
+              <div class="form-check">
+                <input type="checkbox" id="pmIsActive" class="form-check-input" checked>
+                <label class="form-check-label" for="pmIsActive">Kích hoạt</label>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          <button type="submit" class="btn btn-primary" id="savePaymentMethodBtn">Lưu</button>
+        </div>
+      </form>
     </div>
+  </div>
+</div>
 
-    <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
 
-    <%- include('../partials/commonjs.html') %>
-      <script src="/js/sidebar-toggle.js"></script>
-      <script src="/js/data-table.js"></script>
-      <script src="/js/admin/admin-org.js"></script>
-      <script src="/js/admin/payment-method.js"></script>
-      <%- include('../partials/footer.html') %>
+<%- include('../partials/commonjs.html') %>
+<%- include('../partials/sidebar_togglejs.html') %>
+<%- include('../partials/data_tablejs.html') %>
+<%- include('../partials/admin-orgjs.html') %>
+<script src="/js/admin/payment-method.js?ver=1.0.0"></script>
+<%- include('../partials/footer.html') %>

@@ -539,16 +539,6 @@ export const tableManagementPage = async (req, res) => {
   )
 }
 
-export const revenuePage = async (req, res) => {
-  res.render(
-    'admin/revenue',
-    getPageData(req, 'Quản lý doanh thu', 'Revenue', {
-      headerClass: 'admin__header',
-      pageTitle: 'QUẢN LÝ DOANH THU'
-    })
-  )
-}
-
 export const receivingAccountPage = async (req, res) => {
   res.render(
     'payment/receiving_account',
