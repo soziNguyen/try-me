@@ -452,7 +452,8 @@ body {
 
         .top5Items {
           &.col-md-5 {
-            width: calc(41.66666667% - 8px);
+            flex: 0 0 calc(41.66666667% - 8px);
+            max-width: calc(41.66666667% - 8px);
 
             .progress {
               height: 1.5rem;
