@@ -572,7 +572,7 @@ export const forgotPassword = async (req, res) => {
     await user.save()
 
     const domain =
-      process.env.NODE_ENV === 'production' ? process.env.DOMAIN : 'http://localhost:6001'
+      process.env.NODE_ENV === 'production' ? process.env.DOMAIN : 'http://localhost:3000'
     const resetLink = `${domain}/reset-password/${resetToken}`
     await mailer.sendMail({
       from: SMTP.username,
