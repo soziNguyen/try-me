@@ -678,21 +678,21 @@ export const getStaffSummary = async (req, res) => {
 
     const data = await Order.aggregate([
       { $match: match },
-      { $match: { createdBy: { $ne: null } } },
+      { $match: { updatedBy: { $ne: null } } },
       {
         $addFields: {
-          createdBy: {
+          updatedBy: {
             $cond: [
-              { $eq: [{ $type: '$createdBy' }, 'objectId'] },
-              '$createdBy',
-              { $convert: { input: '$createdBy', to: 'objectId', onError: null, onNull: null } }
+              { $eq: [{ $type: '$updatedBy' }, 'objectId'] },
+              '$updatedBy',
+              { $convert: { input: '$updatedBy', to: 'objectId', onError: null, onNull: null } }
             ]
           }
         }
       },
       {
         $group: {
-          _id: '$createdBy',
+          _id: '$updatedBy',
           totalOrders: { $sum: 1 },
           totalAmount: { $sum: '$totalAmount' },
           totalDiscount: { $sum: '$discount' },
