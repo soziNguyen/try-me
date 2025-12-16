@@ -216,11 +216,6 @@ $(function () {
     handlerUpdateEvent('#scheduleTable', 'schedule')
   }
 
-  $('#addScheduleBtn').on('click', function () {
-    const modal = showModal('scheduleModal')
-    modal.show()
-  })
-
   function attachEventHandlers() {
     // View toggle
     $('#tableViewBtn').on('click', function () {
