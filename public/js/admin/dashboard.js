@@ -1,14 +1,35 @@
 $(function () {
+  initDateRangePicker()
   fetchAdminDashboardStats()
+
+  $filterBtn.on('click', function () {
+    fetchAdminDashboardStats({
+      startDate: currentStartDate.format('YYYY-MM-DD'),
+      endDate: currentEndDate.format('YYYY-MM-DD')
+    })
+  })
 })
 
-function fetchAdminDashboardStats() {
+const $filterBtn = $('#filterDateBtn')
+const btnOriginalHtml = $filterBtn.html()
+
+function fetchAdminDashboardStats(params = {}) {
+  $filterBtn
+    .prop('disabled', true)
+    .html('<span class="spinner-border spinner-border-sm me-2"></span>Đang tải...')
+
   $.ajax({
     url: '/api/admin/summary',
     method: 'GET',
+    data: params,
     success: function (data) {
       renderData(data)
       renderRecentOrders(data.data.recentOrder)
+      renderRevenueChart(data.data.revenueChart)
+      renderOrderStatusChart(data.data.orderStatusChart)
+    },
+    complete: function () {
+      $filterBtn.prop('disabled', false).html(btnOriginalHtml)
     }
   })
 }
@@ -66,4 +87,147 @@ function renderRecentOrders(orders) {
     `
     })
     .join('')
+}
+
+let revenueChart = null
+
+function renderRevenueChart(raw) {
+  const chartData = {
+    labels: raw.map((i) => i._id),
+    datasets: [
+      {
+        data: raw.map((i) => i.total)
+      }
+    ]
+  }
+
+  const ctx = document.getElementById('chartRevenue')
+
+  if (revenueChart) revenueChart.destroy()
+
+  revenueChart = new Chart(ctx, {
+    type: 'pie',
+    data: chartData,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.label}: ${formatCurrencyToVnd(ctx.raw)}`
+          }
+        }
+      }
+    }
+  })
+}
+
+let orderStatusChart = null
+const ORDER_STATUS_VI = {
+  paid: 'Đã thanh toán',
+  pending: 'Chờ thanh toán',
+  cancelled: 'Đã hủy'
+}
+
+function renderOrderStatusChart(raw) {
+  const chartData = {
+    labels: raw.map((i) => ORDER_STATUS_VI[i._id] || i._id),
+    datasets: [
+      {
+        data: raw.map((i) => i.total)
+      }
+    ]
+  }
+
+  const ctx = document.getElementById('chartQuantity')
+
+  if (orderStatusChart) orderStatusChart.destroy()
+
+  orderStatusChart = new Chart(ctx, {
+    type: 'pie',
+    data: chartData,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label(ctx) {
+              return `${ctx.label}: ${ctx.raw} đơn`
+            }
+          }
+        }
+      }
+    }
+  })
+}
+
+// DATE RANGE PICKER
+let currentStartDate = moment().startOf('month')
+let currentEndDate = moment()
+
+function initDateRangePicker() {
+  function cb(start, end) {
+    $('#reportrange span').html(start.format('DD/MM/YYYY') + ' - ' + end.format('DD/MM/YYYY'))
+    currentStartDate = start
+    currentEndDate = end
+  }
+
+  $('#reportrange').daterangepicker(
+    {
+      startDate: currentStartDate,
+      endDate: currentEndDate,
+      locale: {
+        format: 'DD/MM/YYYY',
+        separator: ' - ',
+        applyLabel: 'Áp dụng',
+        cancelLabel: 'Hủy',
+        fromLabel: 'Từ',
+        toLabel: 'Đến',
+        customRangeLabel: 'Tùy chỉnh',
+        daysOfWeek: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+        monthNames: [
+          'Tháng 1',
+          'Tháng 2',
+          'Tháng 3',
+          'Tháng 4',
+          'Tháng 5',
+          'Tháng 6',
+          'Tháng 7',
+          'Tháng 8',
+          'Tháng 9',
+          'Tháng 10',
+          'Tháng 11',
+          'Tháng 12'
+        ],
+        firstDay: 1
+      },
+      ranges: {
+        'Hôm nay': [moment(), moment()],
+        'Hôm qua': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        '7 ngày qua': [moment().subtract(6, 'days'), moment()],
+        '30 ngày qua': [moment().subtract(29, 'days'), moment()],
+        'Tháng này': [moment().startOf('month'), moment().endOf('month')],
+        'Tháng trước': [
+          moment().subtract(1, 'month').startOf('month'),
+          moment().subtract(1, 'month').endOf('month')
+        ],
+        'Quý này': [moment().startOf('quarter'), moment().endOf('quarter')],
+        'Quý trước': [
+          moment().subtract(1, 'quarter').startOf('quarter'),
+          moment().subtract(1, 'quarter').endOf('quarter')
+        ]
+      }
+    },
+    cb
+  )
+
+  cb(currentStartDate, currentEndDate)
+
+  // Lắng nghe sự kiện apply
+  $('#reportrange').on('apply.daterangepicker', function (ev, picker) {
+    currentStartDate = picker.startDate
+    currentEndDate = picker.endDate
+    cb(picker.startDate, picker.endDate)
+  })
 }

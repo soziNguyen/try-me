@@ -542,6 +542,21 @@ body {
   -webkit-transition: width 1.5s ease-in;
   transition: width 1.5s ease-in;
 }
+.admin__layout .admin__main .admin__content .row .revenue.col-md-6 {
+  width: calc(50% - 8px);
+}
+.admin__layout .admin__main .admin__content .row .revenue.col-md-6 canvas {
+  max-height: 400px;
+}
+.admin__layout .admin__main .admin__content .row .chartOrderStatus.col-md-6 {
+  -webkit-box-flex: 0;
+      -ms-flex: 0 0 calc(50% - 8px);
+          flex: 0 0 calc(50% - 8px);
+  max-width: calc(50% - 8px);
+}
+.admin__layout .admin__main .admin__content .row .chartOrderStatus.col-md-6 canvas {
+  max-height: 400px;
+}
 .admin__layout .admin__main .admin__content .row #btnLoad {
   width: 153.16px !important;
 }
@@ -1049,6 +1064,21 @@ body {
   -webkit-transition: width 1.5s ease-in;
   transition: width 1.5s ease-in;
 }
+.staff__layout .staff__main .staff__content .row .revenue.col-md-6 {
+  width: calc(50% - 8px);
+}
+.staff__layout .staff__main .staff__content .row .revenue.col-md-6 canvas {
+  max-height: 400px;
+}
+.staff__layout .staff__main .staff__content .row .chartOrderStatus.col-md-6 {
+  -webkit-box-flex: 0;
+      -ms-flex: 0 0 calc(50% - 8px);
+          flex: 0 0 calc(50% - 8px);
+  max-width: calc(50% - 8px);
+}
+.staff__layout .staff__main .staff__content .row .chartOrderStatus.col-md-6 canvas {
+  max-height: 400px;
+}
 .staff__layout .staff__main .staff__content .row #btnLoad {
   width: 153.16px !important;
 }
@@ -1173,6 +1203,21 @@ body {
   .staff__layout .admin__main .admin__content .row .saleReport.col-md-6,
   .staff__layout .staff__main .admin__content .row .saleReport.col-md-6 {
     width: calc(100% - 0.5rem);
+  }
+  .admin__layout .admin__main .admin__content .row .revenue.col-md-6,
+  .admin__layout .staff__main .admin__content .row .revenue.col-md-6,
+  .staff__layout .admin__main .admin__content .row .revenue.col-md-6,
+  .staff__layout .staff__main .admin__content .row .revenue.col-md-6 {
+    width: 100%;
+  }
+  .admin__layout .admin__main .admin__content .row .chartOrderStatus.col-md-6,
+  .admin__layout .staff__main .admin__content .row .chartOrderStatus.col-md-6,
+  .staff__layout .admin__main .admin__content .row .chartOrderStatus.col-md-6,
+  .staff__layout .staff__main .admin__content .row .chartOrderStatus.col-md-6 {
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 100%;
+            flex: 0 0 100%;
+    max-width: 100%;
   }
   .admin__layout .admin__main #admin__sidebar,
   .admin__layout .admin__main #staff__sidebar,
@@ -1324,6 +1369,10 @@ body {
   .admin__layout .admin__main .admin__content .row .saleReport .card-title {
     text-align: center;
   }
+  .admin__layout .admin__main .filter-bar.mobile {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
 }
 @media (max-width: 575px) {
   .admin__layout #notificationModal .modal-dialog,
@@ -1356,6 +1405,29 @@ body {
   .staff__layout .staff__main .staff__content .row .top5Items.col-md-5 {
     display: block;
     width: 100%;
+  }
+  .admin__layout .admin__main .admin__content .row .revenue.col-md-6,
+  .admin__layout .staff__main .staff__content .row .revenue.col-md-6,
+  .staff__layout .admin__main .admin__content .row .revenue.col-md-6,
+  .staff__layout .staff__main .staff__content .row .revenue.col-md-6 {
+    display: block;
+    width: 100%;
+  }
+  .admin__layout .admin__main .admin__content .row .chartOrderStatus.col-md-6,
+  .admin__layout .staff__main .staff__content .row .chartOrderStatus.col-md-6,
+  .staff__layout .admin__main .admin__content .row .chartOrderStatus.col-md-6,
+  .staff__layout .staff__main .staff__content .row .chartOrderStatus.col-md-6 {
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 100%;
+            flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .admin__layout .admin__main .admin__content .filter-bar.mobile,
+  .admin__layout .staff__main .staff__content .filter-bar.mobile,
+  .staff__layout .admin__main .admin__content .filter-bar.mobile,
+  .staff__layout .staff__main .staff__content .filter-bar.mobile {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
   }
   .admin__layout .admin__main .admin__content #reportrange i:last-child,
   .admin__layout .staff__main .staff__content #reportrange i:last-child,
