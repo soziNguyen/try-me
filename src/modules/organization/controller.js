@@ -397,7 +397,7 @@ export const updateOrg = async (req, res) => {
 
     // Validate BussinessType
     if (req.user.role === 'Admin') {
-      if (!['shop', 'food', 'drink'].includes(businessType)) {
+      if (businessType && !['shop', 'food', 'drink'].includes(businessType)) {
         return responseHelper.error(res, 'Loại hình tổ chức không hợp lệ', 400)
       }
     }

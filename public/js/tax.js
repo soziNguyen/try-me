@@ -39,6 +39,10 @@ $(function () {
         zeroRecords: 'Không tìm thấy kết quả phù hợp',
         emptyTable: 'Không có dữ liệu trong bảng'
       },
+      columnDefs: [
+        { targets: 0, width: '50px' },
+        { targets: 2, width: '150px' },
+      ],
       columns: [
         {
           data: null,

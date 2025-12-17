@@ -704,8 +704,6 @@ export const getSchedulesByRange = async (req, res) => {
       .populate('shift', 'name startTime endTime')
       .sort({ date: 1 })
 
-    console.log(schedules)
-
     responseHelper.success(res, schedules)
   } catch (error) {
     responseHelper.error(res, error.message)

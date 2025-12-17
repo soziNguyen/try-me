@@ -530,7 +530,10 @@ body {
   width: calc(58.33333333% - 8px);
 }
 .admin__layout .admin__main .admin__content .row .top5Items.col-md-5 {
-  width: calc(41.66666667% - 8px);
+  -webkit-box-flex: 0;
+      -ms-flex: 0 0 calc(41.66666667% - 8px);
+          flex: 0 0 calc(41.66666667% - 8px);
+  max-width: calc(41.66666667% - 8px);
 }
 .admin__layout .admin__main .admin__content .row .top5Items.col-md-5 .progress {
   height: 1.5rem;
@@ -1034,7 +1037,10 @@ body {
   width: calc(58.33333333% - 8px);
 }
 .staff__layout .staff__main .staff__content .row .top5Items.col-md-5 {
-  width: calc(41.66666667% - 8px);
+  -webkit-box-flex: 0;
+      -ms-flex: 0 0 calc(41.66666667% - 8px);
+          flex: 0 0 calc(41.66666667% - 8px);
+  max-width: calc(41.66666667% - 8px);
 }
 .staff__layout .staff__main .staff__content .row .top5Items.col-md-5 .progress {
   height: 1.5rem;

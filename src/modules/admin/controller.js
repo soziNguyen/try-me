@@ -286,6 +286,11 @@ export const deleteUsers = async (req, res) => {
 
     // Lấy thông tin user trước khi xóa để log
     const usersToDelete = await User.find({ _id: { $in: ids } }).select('username organization')
+
+    if (req.user.role === 'Admin') {
+      return responseHelper.error(res, 'Không thể xóa người dùng có vai trò Admin', 403)
+    }
+
     if (usersToDelete.length === 0) {
       return responseHelper.error(res, 'Không tìm thấy người dùng để xóa')
     }

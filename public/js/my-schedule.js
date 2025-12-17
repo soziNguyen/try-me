@@ -43,15 +43,22 @@ $(function () {
         },
         {
           data: 'shift',
+          className: 'px-2 py-1',          
           title: 'Ca làm',
           render: (data) => {
             if (!data) return ''
             let ca = data.name || ''
-            let type = data.type && data.type === 'day' ? ' (Ngày)' : 'Đêm'
             let time =
               data.startTime && data.endTime ? ` - ${data.startTime} ~ ${data.endTime}` : ''
-            return ca + type + time
+            return ca + time
           }
+        },
+        {
+          data: 'note',
+          title: 'Ghi chú',
+          render: (data) => `
+            <span class="form-control w-100 border-0">${data || ''}</span>
+          `
         },
         {
           data: 'status',
@@ -69,13 +76,6 @@ $(function () {
             return map[data] || ''
           }
         },
-        {
-          data: 'note',
-          title: 'Ghi chú',
-          render: (data) => `
-            <span class="form-control w-100 border-0">${data || ''}</span>
-          `
-        }
       ]
     })
   }

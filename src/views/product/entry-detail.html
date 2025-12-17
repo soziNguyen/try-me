@@ -116,11 +116,11 @@
   </div>
 
   </div>
-  </div>
+</div>
 
-  <%- include('../partials/commonjs.html') %>
-    <script src="/js/data-table.js"></script>
-    <input type="hidden" id="currentOrgId"
-      value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
-    <script src="/js/product/entry-detail.js"></script>
-    <%- include('../partials/footer.html') %>
+<%- include('../partials/commonjs.html') %>
+<%- include('../partials/data_tablejs.html') %>
+<input type="hidden" id="currentOrgId"
+  value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
+<script src="/js/product/entry-detail.js?ver=1.0.0"></script>
+<%- include('../partials/footer.html') %>

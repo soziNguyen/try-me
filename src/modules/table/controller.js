@@ -25,7 +25,7 @@ export const createTable = async (req, res) => {
     }
 
     const newTable = new Table(data)
-    const domainName = process.env.DOMAIN || 'http://localhost:6001'
+    const domainName = process.env.DOMAIN || 'http://localhost:3000'
 
     const url = `${domainName}/api/scan/${newTable._id.toString()}`
     // Generate QR

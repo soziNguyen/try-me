@@ -1,11 +1,11 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/org_sidebar.html') %>
     <div class="admin__content">
-      <div class="container-fluid py-4">
+      <div class="container-fluid pb-4">
         <!-- Page Header -->
         <div class="row mb-4">
           <div class="col">
-            <h2 class="fw-bold text-primary mb-1">
+            <h2 class="fw-bold mb-1">
               <%= pageTitle %>
             </h2>
             <p class="text-muted mb-0">Tùy chỉnh thông tin xuất hiện trên hóa đơn của bạn</p>
@@ -135,11 +135,11 @@
       </div>
     </div>
 
-    <input type="hidden" id="currentOrgId"
-      value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
-    <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
+<input type="hidden" id="currentOrgId"
+  value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
 
-    <%- include('../partials/commonjs.html') %>
-      <script src="/js/sidebar-toggle.js"></script>
-      <script src="/js/invoice.js"></script>
-      <%- include('../partials/footer.html') %>
+<%- include('../partials/commonjs.html') %>
+<%- include('../partials/sidebar_togglejs.html') %>
+<script src="/js/invoice.js?ver=1.0.0"></script>
+<%- include('../partials/footer.html') %>

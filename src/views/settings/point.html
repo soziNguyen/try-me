@@ -37,13 +37,14 @@
         </form>
       </div>
     </div>
-    </div>
+  </div>
+</div>
 
-    <input type="hidden" id="currentOrgId"
-      value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
-    <input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
+<input type="hidden" id="currentOrgId"
+  value="<%= userRole === 'Admin' ? (session.currentOrg || '') : (currentOrgId || '') %>">
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>" />
 
-    <%- include('../partials/commonjs.html') %>
-      <script src="/js/sidebar-toggle.js"></script>
-      <script src="/js/point.js"></script>
-      <%- include('../partials/footer.html') %>
+<%- include('../partials/commonjs.html') %>
+<%- include('../partials/sidebar_togglejs.html') %>
+<script src="/js/point.js?ver=1.0.0"></script>
+<%- include('../partials/footer.html') %>
