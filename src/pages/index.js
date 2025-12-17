@@ -895,3 +895,13 @@ export const kitchenPage = async (req, res) => {
     })
   )
 }
+
+export const employeePage = async (req, res) => {
+  res.render(
+    'admin/employee',
+    getPageData(req, 'Quản lý nhân viên', 'Employee', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ NHÂN VIÊN'
+    })
+  )
+}
