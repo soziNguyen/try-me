@@ -65,7 +65,7 @@ export const getActivityLogs = async (req, res) => {
     const recordsFiltered = countResult[0]?.count || 0
 
     // Sort hợp lệ
-    const allowedSort = ['userName', 'description', 'createdAt']
+    const allowedSort = ['userName', 'description', 'createdAt', 'status']
     const sortObj = {}
     sortObj[allowedSort.includes(sortField) ? sortField : 'createdAt'] = sortDir
 

@@ -1,0 +1,117 @@
+<%- include('../partials/header.html') %>
+  <%- include('../partials/admin_sidebar.html') %>
+    <div class="admin__content">
+      <h3 class="fw-bold mb-4">
+        <%= pageTitle %>
+      </h3>
+
+      <table id="userTable" class="table">
+        <thead>
+          <tr>
+            <th class="t_center"><input type="checkbox" id="selectAll"></th>
+            <th>Tên đăng nhập</th>
+            <th>Email</th>
+            <th>Vai trò</th>
+            <th>Tổ chức</th>
+            <th>Thời gian tạo</th>
+            <th>Thời gian cập nhật</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          <!-- data inserted here -->
+        </tbody>
+      </table>
+      <!--new user modal-->
+
+      <div class="modal fade" id="newUserModal">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Thêm mới thành viên</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form id="newUserForm">
+                <div class="mb-3">
+                  <label>Tên đăng nhập:</label>
+                  <input type="text" id="username" class="form-control">
+                </div>
+                <div class="mb-3">
+                  <label>Email:</label>
+                  <input type="email" id="email" class="form-control" autocomplete="username">
+                </div>
+                <div class="mb-3">
+                  <label>Mật khẩu:</label>
+                  <input type="password" id="password" class="form-control" autocomplete="new-password">
+                </div>
+                <div class="mb-3">
+                  <label>Xác nhận mật khẩu:</label>
+                  <input type="password" id="confirm-password" class="form-control" autocomplete="new-password">
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
+                <i class="bi bi-x-lg"></i> Đóng
+              </button>
+              <button type="submit" id="createUserBtn" form="newUserForm" class="btn btn-outline-primary">
+                <i class="bi bi-person-plus me-1"></i> Tạo mới
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- update user modal -->
+
+      <div class="modal fade" id="updateUserModal">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Cập nhật nhân viên %>
+              </h4>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form id="updateUserForm">
+                <div class="mb-3">
+                  <label>Tên đăng nhập:</label>
+                  <input type="text" id="new-username" class="form-control">
+                </div>
+                <div class="mb-3">
+                  <label>Email:</label>
+                  <input type="email" id="new-email" class="form-control" autocomplete="username">
+                </div>
+                <div class="mb-3">
+                  <label>Mật khẩu mới:</label>
+                  <input type="password" id="new-password" class="form-control" autocomplete="new-password">
+                </div>
+                <div class="mb-3">
+                  <label>Xác nhận mật khẩu:</label>
+                  <input type="password" id="new-confirm-password" class="form-control" autocomplete="new-password">
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
+                <i class="bi bi-x-lg"></i> Đóng
+              </button>
+              <button type="submit" id="updateUserBtnForm" form="updateUserForm" class="btn btn-outline-primary">
+                <i class="bi bi-pencil-square me-1"></i> Thay đổi
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<%- include('../partials/commonjs.html')%>
+<%- include('../partials/sidebar_togglejs.html') %>
+<%- include('../partials/data_tablejs.html') %>
+<%- include('../partials/admin-orgjs.html') %>
+<script src="/js/admin/employee.js?ver=1.0.1"></script>
+<%- include('../partials/footer.html') %>
