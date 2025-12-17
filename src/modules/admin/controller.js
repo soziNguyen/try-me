@@ -766,6 +766,13 @@ export const deleteEmployees = async (req, res) => {
 
 export const adminDashboardStats = async (req, res) => {
   try {
+    const { startDate, endDate } = req.query
+    const start = startDate
+      ? new Date(`${startDate}T00:00:00.000Z`)
+      : new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+
+    const end = endDate ? new Date(`${endDate}T23:59:59.999Z`) : new Date()
+
     const totalOrgPipeLine = [
       {
         $count: 'total'
@@ -823,18 +830,78 @@ export const adminDashboardStats = async (req, res) => {
       { $limit: 10 }
     ]
 
+    const paidRevenuePipeline = [
+      {
+        $match: {
+          status: 'paid'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$total' },
+          totalPaidOrders: { $sum: 1 }
+        }
+      }
+    ]
+
+    const revenueByPlanPipeline = [
+      {
+        $match: {
+          status: 'paid',
+          paidAt: { $gte: start, $lte: end }
+        }
+      },
+      {
+        $lookup: {
+          from: 'Plans',
+          localField: 'plan',
+          foreignField: '_id',
+          as: 'plan'
+        }
+      },
+      { $unwind: '$plan' },
+      {
+        $group: {
+          _id: '$plan.name',
+          total: { $sum: '$total' }
+        }
+      },
+      { $sort: { total: -1 } }
+    ]
+
+    const orderStatusPipeline = [
+      {
+        $match: {
+          createdAt: { $gte: start, $lte: end }
+        }
+      },
+      {
+        $group: {
+          _id: '$status',
+          total: { $sum: 1 }
+        }
+      }
+    ]
+
     const [
       totalUsers,
       totalEmployees,
       totalOrganizations,
       activeOrganizations,
-      recentPlanTransactions
+      recentPlanTransactions,
+      paidRevenue,
+      revenueChart,
+      orderStatusChart
     ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ role: 'SubAdmin' }),
       Organization.aggregate(totalOrgPipeLine),
       Organization.aggregate(isActivePipeline),
-      PlanTransaction.aggregate(recentPlanTransactionsPipeline)
+      PlanTransaction.aggregate(recentPlanTransactionsPipeline),
+      PlanTransaction.aggregate(paidRevenuePipeline),
+      PlanTransaction.aggregate(revenueByPlanPipeline),
+      PlanTransaction.aggregate(orderStatusPipeline)
     ])
 
     responseHelper.success(res, {
@@ -842,7 +909,11 @@ export const adminDashboardStats = async (req, res) => {
       totalEmployees,
       totalOrganizations: totalOrganizations[0]?.total || 0,
       activeOrganizations: activeOrganizations[0]?.total || 0,
-      recentOrder: recentPlanTransactions
+      recentOrder: recentPlanTransactions,
+      totalPaidRevenue: paidRevenue[0]?.totalRevenue || 0,
+      totalPaidOrders: paidRevenue[0]?.totalPaidOrders || 0,
+      revenueChart,
+      orderStatusChart
     })
   } catch (error) {
     responseHelper.error(res, error.message)

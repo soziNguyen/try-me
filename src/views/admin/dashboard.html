@@ -63,6 +63,47 @@
         </div>
       </div>
 
+      <div class="filter-bar mobile p-md-4">
+        <div class="row g-4 align-items-end justify-content-center">
+
+          <!-- Date Range Picker thay thế toàn bộ phần lọc cũ -->
+          <div class="col-auto">
+            <div id="reportrange">
+              <i class="bi bi-calendar3"></i>&nbsp;
+              <span></span> 
+              <i class="bi bi-caret-down-fill ms-2 float-end"></i>
+            </div>
+          </div>
+
+          <div class="col-auto">
+            <button id="filterDateBtn" class="btn btn-primary shadow px-4">
+              <i class="bi bi-funnel me-2"></i>Lọc
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="row gap-3 gap-md-2">
+        <div class="revenue col-md-6">
+          <div class="card border-0">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Doanh thu</h5>
+              <canvas id="chartRevenue" height="120"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chartOrderStatus col-md-6">
+          <div class="card border-0 h-100">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Đơn hàng</h5>
+              <canvas id="chartQuantity" height="120"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="row gap-3 gap-md-2 mt-4">
         <div class="col-md-12">
           <div class="card border-0">
