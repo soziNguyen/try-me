@@ -77,9 +77,9 @@
                 <label for="orgPlan" class="col-sm-3 col-form-label fw-semibold">
                   Gói dịch vụ
                 </label>
-                <div class="col-sm-9">
-                  <select class="org-update form-select" id="orgPlan" name="plan" data-field="plan">
-                  </select>
+                <div class="col-sm-9 d-flex align-items-center">
+                  <span id="orgPlanBadge" class="badge fs-6 px-3 py-2"></span>
+                  <small id="orgPlanExpired" class="text-muted ms-2"></small>
                 </div>
               </div>
 
@@ -182,5 +182,5 @@
 <%- include('../partials/sidebar_togglejs.html') %>
 <%- include('../partials/data_tablejs.html') %>
 <%- include('../partials/admin-orgjs.html') %>
-<script src="/js/admin/org-detail.js?ver=1.0.0"></script>
+<script src="/js/admin/org-detail.js?ver=1.0.1"></script>
 <%- include('../partials/footer.html') %>

@@ -1,9 +1,7 @@
 $(function () {
   const orgId = window.location.pathname.split('/').pop()
 
-  getPlans().then(() => {
-    fillDataToForm(orgId)
-  })
+  fillDataToForm(orgId)
 
   // Submit form
   $('#updateOrgForm').on('submit', function (e) {
@@ -77,7 +75,7 @@ function getElements(data) {
   $('#taxCode').val(data.taxCode)
   $('#orgEmail').val(data.email)
   $('#orgPhone').val(data.phoneDisplay?.international)
-  $('#orgPlan').val(data.plan?._id || data.plan)
+  renderPlanBadge(data.plan, data.planExpiredAt)
   $('#businessType').val(data.businessType)
   $('#orgStreet').val(data.street)
   $('#orgIsActive').prop('checked', data.isActive)
@@ -96,20 +94,44 @@ async function listAddress(data) {
   $('#orgCommune').val(communeId).trigger('change')
 }
 
-function getPlans() {
-  return new Promise((resolve) => {
-    $.getJSON('/api/admin/plan/active', function (data) {
-      const $planSelect = $('#orgPlan')
-      $planSelect.empty()
-      const result = data.data
+function renderPlanBadge(plan, planExpiredAt) {
+  const $badge = $('#orgPlanBadge')
+  const $expired = $('#orgPlanExpired')
 
-      if (result && result.length > 0) {
-        result.forEach((plan) => {
-          $planSelect.append(`<option value="${plan._id}">${plan.name}</option>`)
-        })
-      }
+  if (!plan) {
+    $badge.text('Không xác định').removeClass().addClass('badge fs-6 px-3 py-2 bg-secondary')
 
-      resolve()
-    })
-  })
+    $expired.text('')
+    return
+  }
+
+  const planName = typeof plan === 'object' ? plan.name : plan
+
+  const planClassMap = {
+    FREE: 'bg-secondary',
+    STARTER: 'bg-info',
+    PRO: 'bg-dark',
+    ENTERPRISE: 'bg-success'
+  }
+
+  const badgeClass = planClassMap[planName] || 'bg-dark'
+
+  $badge.text(planName).removeClass().addClass(`badge fs-6 px-3 py-2 ${badgeClass}`)
+
+  // ===== Expired time =====
+  if (!planExpiredAt) {
+    $expired.text('Không giới hạn')
+    return
+  }
+
+  const expiredDate = new Date(planExpiredAt)
+  const now = new Date()
+
+  if (expiredDate < now) {
+    $expired.html('<span class="text-danger">Đã hết hạn</span>')
+  } else {
+    const daysLeft = Math.ceil((expiredDate - now) / (1000 * 60 * 60 * 24))
+
+    $expired.html(`HSD: <strong>${formatDate(expiredDate)}</strong> · còn ${daysLeft} ngày`)
+  }
 }

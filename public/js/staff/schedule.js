@@ -407,8 +407,12 @@ $(function () {
     $('#modalTitle').text(isEdit ? 'Sửa lịch làm việc' : 'Thêm lịch làm việc')
     $('#scheduleForm')[0].reset()
     $('#scheduleId').val(schedule?._id || '')
+    $('#isRecurring').prop('checked', false).prop('disabled', false)
     $('#recurringOptions').addClass('d-none')
-    $('#isRecurring').prop('checked', false)
+
+    if (isEdit) {
+      $('#isRecurring').prop('disabled', true)
+    }
 
     if (schedule) {
       $('#userId').val(schedule.user?._id || '')
@@ -416,15 +420,6 @@ $(function () {
       $('#scheduleDate').val(schedule.date ? moment(schedule.date).format('YYYY-MM-DD') : '')
       $('#scheduleStatus').val(schedule.status || 'scheduled')
       $('#scheduleNote').val(schedule.note || '')
-
-      if (schedule.isRecurring) {
-        $('#isRecurring').prop('checked', true)
-        $('#recurringOptions').removeClass('d-none')
-        $('#recurringPattern').val(schedule.recurringPattern || 'daily')
-        $('#recurringEndDate').val(
-          schedule.recurringEndDate ? moment(schedule.recurringEndDate).format('YYYY-MM-DD') : ''
-        )
-      }
     } else if (defaultDate) {
       $('#scheduleDate').val(defaultDate)
     }
