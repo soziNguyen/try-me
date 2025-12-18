@@ -14,9 +14,7 @@ const $filterBtn = $('#filterDateBtn')
 const btnOriginalHtml = $filterBtn.html()
 
 function fetchAdminDashboardStats(params = {}) {
-  $filterBtn
-    .prop('disabled', true)
-    .html('<span class="spinner-border spinner-border-sm me-2"></span>Đang tải...')
+  $filterBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>')
 
   $.ajax({
     url: '/api/admin/summary',
@@ -35,10 +33,14 @@ function fetchAdminDashboardStats(params = {}) {
 }
 
 function renderData(data) {
-  $('.totalOrganizations').text(data.data.totalOrganizations)
-  $('.totalUsers').text(data.data.totalUsers)
-  $('.totalSubAdmins').text(data.data.totalEmployees)
-  $('.activeOrganizations').text(data.data.activeOrganizations)
+  const totalOrgs = $('.totalOrganizations')
+  const totalUsers = $('.totalUsers')
+  const totalSubAdmins = $('.totalSubAdmins')
+  const activeOrganizations = $('.activeOrganizations')
+  if (totalOrgs) totalOrgs.text(data.data.totalOrganizations)
+  if (totalUsers) totalUsers.text(data.data.totalUsers)
+  if (totalSubAdmins) totalSubAdmins.text(data.data.totalEmployees)
+  if (activeOrganizations) activeOrganizations.text(data.data.activeOrganizations)
 }
 
 function renderRecentOrders(orders) {

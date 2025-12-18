@@ -5,9 +5,24 @@ import { getCoupons, createCoupon, updateCoupon, deleteCoupons, applyCoupon } fr
 
 const router = express.Router()
 
-router.get('/api/coupons', isAuthenticated, isPermit('Admin', 'Org'), getCoupons)
-router.post('/api/coupon/create', isAuthenticated, isPermit('Admin', 'Org'), createCoupon)
-router.post('/api/coupon/update/:id', isAuthenticated, isPermit('Admin', 'Org'), updateCoupon)
-router.post('/api/coupon/deletes', isAuthenticated, isPermit('Admin', 'Org'), deleteCoupons)
+router.get('/api/coupons', isAuthenticated, isPermit('Admin', 'SubAdmin', 'Org'), getCoupons)
+router.post(
+  '/api/coupon/create',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  createCoupon
+)
+router.post(
+  '/api/coupon/update/:id',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  updateCoupon
+)
+router.post(
+  '/api/coupon/deletes',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  deleteCoupons
+)
 router.post('/api/coupon/apply', isAuthenticated, applyCoupon)
 export default router

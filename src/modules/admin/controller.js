@@ -23,7 +23,14 @@ export const getAllUsers = async (req, res) => {
     const sortDir = req.query['order[0][dir]'] === 'asc' ? 1 : -1
 
     // pipeline aggregation
-    const pipeline = [...lookupRef('organization', 'Organizations')]
+    const pipeline = [
+      ...lookupRef('organization', 'Organizations'),
+      {
+        $match: {
+          role: { $ne: 'Admin' }
+        }
+      }
+    ]
 
     // filter search
     if (searchValue) {
@@ -45,7 +52,7 @@ export const getAllUsers = async (req, res) => {
     const recordsFiltered = countResult[0]?.count || 0
 
     // count total
-    const recordsTotal = await User.countDocuments()
+    const recordsTotal = await User.countDocuments({ role: { $ne: 'Admin' } })
 
     // sort, skip, limit
     pipeline.push(
@@ -192,28 +199,44 @@ export const updateUser = async (req, res) => {
 
     if (existingUser) return responseHelper.error(res, 'Tên hoặc email người dùng đã tồn tại', 400)
 
-    if (!mongoose.isValidObjectId(organization)) {
-      return responseHelper.error(res, 'Tổ chức không hợp lệ', 400)
+    if (String(userToUpdate._id) === String(req.user._id) && role !== userToUpdate.role) {
+      return responseHelper.error(res, 'Không thể chỉnh sửa vai trò của chính mình', 400)
     }
 
-    if (role && role === 'Admin') {
-      return responseHelper.error(res, 'Không thể thay đổi vai trò người dùng thành Admin', 403)
+    if (userToUpdate.role === 'SubAdmin' && role !== 'SubAdmin') {
+      return responseHelper.error(res, 'Không thể thay đổi vai trò của SubAdmin', 400)
     }
 
-    if (!['Org', 'Staff', 'Kitchen'].includes(role)) {
-      return responseHelper.error(res, 'Vai trò không hợp lệ', 400)
+    if (
+      !['Admin', 'SubAdmin'].includes(userToUpdate.role) &&
+      ['Admin', 'SubAdmin'].includes(role)
+    ) {
+      return responseHelper.error(
+        res,
+        'Không thể thay đổi vai trò người dùng thành Admin/SubAdmin',
+        403
+      )
     }
 
-    const orgExists = await Organization.findById(organization)
-    if (!orgExists) {
-      return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
+    if (!['Admin', 'SubAdmin'].includes(role)) {
+      if (!organization || !mongoose.isValidObjectId(organization)) {
+        return responseHelper.error(res, 'Tổ chức không hợp lệ', 400)
+      }
+
+      const orgExists = await Organization.findById(organization)
+      if (!orgExists) {
+        return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
+      }
     }
 
     const dataUpdates = {
       username,
       email,
-      organization,
       role
+    }
+
+    if (!['Admin', 'SubAdmin'].includes(role)) {
+      dataUpdates.organization = organization
     }
 
     if (password || confirmPassword) {

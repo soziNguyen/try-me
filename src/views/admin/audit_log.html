@@ -8,7 +8,9 @@
       <table id="auditLogsTable" class="table table-bordered">
         <thead>
           <tr>
+            <% if (user.role === 'Admin') { %>
             <th><input type="checkbox" id="selectAll"></th>
+            <% } %>
             <th>Thời gian</th>
             <th>Người dùng</th>
             <th>Tổ chức</th>
@@ -26,6 +28,7 @@
 </div>
 
 <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<input type="hidden" id="userRole" value="<%= user.role %>">
 <%- include('../partials/commonjs.html') %>
 <%- include('../partials/sidebar_togglejs.html') %>
 <%- include('../partials/data_tablejs.html') %>

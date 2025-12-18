@@ -596,6 +596,7 @@ export const getOrgDashboard = async (req, res) => {
 
     if (
       req.user.role === 'Admin' ||
+      req.user.role === 'SubAdmin' ||
       (req.user.role === 'Org' && String(req.user.organization) === String(orgId))
     ) {
       return res.render(

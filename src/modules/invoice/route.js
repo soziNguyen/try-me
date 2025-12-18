@@ -13,7 +13,7 @@ router.get('/api/invoice/options', isAuthenticated, checkWarehouseAccess, getInv
 router.patch(
   '/api/invoice/options',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   updateInvoiceOptions
 )
 

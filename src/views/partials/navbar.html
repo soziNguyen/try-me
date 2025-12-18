@@ -82,7 +82,7 @@
             </button>
           </li> -->
 
-          <% if (user.role==='Admin' || user.role==='Org' ) { %>
+          <% if (['Admin', 'SubAdmin', 'Org'].includes(user.role)) { %>
             <li>
               <a href="/profile" class="dropdown-item py-2">
                 <i class="bi bi-person me-2"></i> Hồ sơ
@@ -96,7 +96,7 @@
             </a>
           </li>
 
-          <% if(user.role==='Admin' && session.currentOrg) { %>
+          <% if((user.role==='Admin' || user.role==='SubAdmin') && session?.currentOrg) { %>
             <li>
               <button type="button" class="dropdown-item py-2" id="exitOrgBtn">
                 <i class="bi bi-arrow-left-circle me-2"></i> Quay lại Admin

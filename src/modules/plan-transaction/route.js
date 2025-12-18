@@ -6,10 +6,16 @@ import {
   getPlanTransactionById,
   deletePlanTransactions
 } from './controller.js'
+import { isPermit } from '../../helpers/isPermit.js'
 
 const router = express.Router()
 
-router.get('/api/admin/plan-transactions', isAuthenticated, isAdmin, getPlanTransactions)
+router.get(
+  '/api/admin/plan-transactions',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin'),
+  getPlanTransactions
+)
 router.get('/api/admin/plan-transaction/:id', isAuthenticated, getPlanTransactionById)
 router.post(
   '/api/admin/plan-transactions/deletes',

@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 export function getCurrentOrg(req) {
   if (!req.user) return null
 
-  if (req.user.role === 'Admin') {
+  if (req.user.role === 'Admin' || req.user.role === 'SubAdmin') {
     return req.session?.currentOrg
       ? new mongoose.Types.ObjectId(String(req.session.currentOrg))
       : null

@@ -8,7 +8,7 @@ const router = express.Router()
 router.get(
   '/api/reports/stock/ingredients',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   getStockReport
 )
 
