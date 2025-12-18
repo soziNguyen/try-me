@@ -465,6 +465,27 @@ body {
           }
         }
 
+        .revenue {
+          &.col-md-6 {
+            width: calc(50% - 8px);
+
+            canvas {
+              max-height: 400px;
+            }
+          }
+        }
+
+        .chartOrderStatus {
+          &.col-md-6 {
+            flex: 0 0 calc(50% - 8px);
+            max-width: calc(50% - 8px);
+
+            canvas {
+              max-height: 400px;
+            }
+          }
+        }
+
         #btnLoad {
           width: 153.16px !important;
         }
@@ -685,6 +706,19 @@ body {
               width: calc(100% - 0.5rem);
             }
           }
+
+          .revenue {
+            &.col-md-6 {
+              width: 100%;
+            }
+          }
+
+          .chartOrderStatus {
+            &.col-md-6 {
+              flex: 0 0 100%;
+              max-width: 100%;
+            }
+          }
         }
       }
 
@@ -769,6 +803,12 @@ body {
         }
       }
     }
+    .filter-bar {
+      &.mobile {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+      }
+    }
   }
 }
 
@@ -809,6 +849,27 @@ body {
             display: block;
             width: 100%;
           }
+        }
+
+        .revenue {
+          &.col-md-6 {
+            display: block;
+            width: 100%;
+          }
+        }
+
+        .chartOrderStatus {
+          &.col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+          }
+        }
+      }
+
+      .filter-bar {
+        &.mobile {
+          margin-top: 0.75rem;
+          margin-bottom: 0.75rem;
         }
       }
 

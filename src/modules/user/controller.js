@@ -80,6 +80,7 @@ export const createUser = async (req, res) => {
       'USER',
       `Thêm mới nhân viên`,
       newUser.username,
+      'SUCCESS',
       warehouse
     )
 

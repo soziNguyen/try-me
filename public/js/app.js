@@ -32,6 +32,16 @@ async function ajax(url, data = {}, method = 'POST') {
   return result.data
 }
 
+function getTimeAgo(date) {
+  const now = new Date()
+  const diff = Math.floor((now - date) / 1000) // seconds
+
+  if (diff < 60) return 'Vừa xong'
+  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`
+  return date.toLocaleDateString('vi-VN')
+}
+
 /**
  * Format a given date string to "dd/MM/yyyy - HH:mm".
  *

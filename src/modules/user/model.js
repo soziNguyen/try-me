@@ -9,7 +9,11 @@ const UserSchema = new Schema(
     username: { type: String, default: '', unique: true },
     email: { type: String, default: '', unique: true },
     password: { type: String, select: false, default: '' },
-    role: { type: String, enum: ['Admin', 'Org', 'Staff', 'Kitchen'], default: 'Staff' },
+    role: {
+      type: String,
+      enum: ['Admin', 'SubAdmin', 'Org', 'Staff', 'Kitchen'],
+      default: 'Staff'
+    },
     warehouse: {
       type: Schema.Types.ObjectId,
       ref: 'Warehouse',
@@ -19,7 +23,7 @@ const UserSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Organization',
       required: function () {
-        return this.role !== 'Admin' // Admin không bắt buộc organization
+        return !['Admin', 'SubAdmin'].includes(this.role) // Admin không bắt buộc organization
       }
     },
     resetToken: { type: String, default: null },

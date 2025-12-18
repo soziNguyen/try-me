@@ -1,15 +1,146 @@
 <%- include('../partials/header.html') %>
   <%- include('../partials/admin_sidebar.html') %>
     <div class="admin__content bg-light-blue">
-      <h1>Welcome, <%= user.username %>
-      </h1>
+      <div class="row gap-3 gap-md-2 mt-3">
+        <div class="card-item col-md-3">
+          <div class="card border-0">
+            <div class="card-body">
+              <div class="card-icon fs-4">
+                <i class="bi bi-buildings rounded-circle bg-primary bg-opacity-25 text-primary"></i>
+              </div>
+              <div class="card-title mt-2 fs-5">Tổng số tổ chức</div>
+              <div class="card-value fs-4 fw-bold totalOrganizations">0</div>
+              <div class="card-change mt-2 text-muted fs-6">
+                Đang quản lý
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-item col-md-3">
+          <div class="card border-0">
+            <div class="card-body">
+              <div class="card-icon fs-4">
+                <i class="bi bi-people rounded-circle bg-success bg-opacity-25 text-success"></i>
+              </div>
+              <div class="card-title mt-2 fs-5">Tổng người dùng</div>
+              <div class="card-value fs-4 fw-bold totalUsers">0</div>
+              <div class="card-change mt-2 text-muted fs-6">
+                Admin / SubAdmin / Nhân viên
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-item col-md-3">
+          <div class="card border-0">
+            <div class="card-body">
+              <div class="card-icon fs-4">
+                <i class="bi bi-person-badge rounded-circle bg-warning bg-opacity-25 text-dark"></i>
+              </div>
+              <div class="card-title mt-2 fs-5">Nhân viên</div>
+              <div class="card-value fs-4 fw-bold totalSubAdmins">0</div>
+              <div class="card-change mt-2 text-muted fs-6">
+                Quản lý tổ chức
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-item col-md-3">
+          <div class="card border-0">
+            <div class="card-body">
+              <div class="card-icon fs-4">
+                <i class="bi bi-check-circle rounded-circle bg-info bg-opacity-25 text-info"></i>
+              </div>
+              <div class="card-title mt-2 fs-5">Tổ chức hoạt động</div>
+              <div class="card-value fs-4 fw-bold activeOrganizations">0</div>
+              <div class="card-change mt-2 text-muted fs-6">
+                Đang sử dụng hệ thống
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-bar mobile p-md-4">
+        <div class="row g-4 align-items-end justify-content-center">
+
+          <!-- Date Range Picker thay thế toàn bộ phần lọc cũ -->
+          <div class="col-auto">
+            <div id="reportrange">
+              <i class="bi bi-calendar3"></i>&nbsp;
+              <span></span> 
+              <i class="bi bi-caret-down-fill ms-2 float-end"></i>
+            </div>
+          </div>
+
+          <div class="col-auto">
+            <button id="filterDateBtn" class="btn btn-primary shadow px-4">
+              <i class="bi bi-funnel me-2"></i>Lọc
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="row gap-3 gap-md-2">
+        <div class="revenue col-md-6">
+          <div class="card border-0">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Doanh thu</h5>
+              <canvas id="chartRevenue" height="120"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chartOrderStatus col-md-6">
+          <div class="card border-0 h-100">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Đơn hàng</h5>
+              <canvas id="chartQuantity" height="120"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row gap-3 gap-md-2 mt-4">
+        <div class="col-md-12">
+          <div class="card border-0">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Đơn hàng gần đây</h5>
+                <a href="/plan-transactions" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th>#Mã đơn</th>
+                      <th>Thời gian</th>
+                      <th>Tổ chức</th>
+                      <th>Gói</th>
+                      <th>Thời hạn</th>
+                      <th>Tổng tiền</th>
+                      <th>Ngày thanh toán</th>
+                      <th>Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentOrdersTable">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    </div>
+  </div>
 </div>
 <%- include('../partials/commonjs.html') %>
 <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
 <%- include('../partials/sidebar_togglejs.html') %>
 <%- include('../partials/data_tablejs.html') %>
 <%- include('../partials/admin-orgjs.html') %>
-<!-- <script src="/js/admin.js"></script> -->
+<script src="/js/admin/dashboard.js?ver=1.0.0"></script>
 <%- include('../partials/footer.html') %>
