@@ -10,23 +10,28 @@ import { isPermit } from '../../../helpers/isPermit.js'
 
 const router = express.Router()
 
-router.get('/api/inventory/categories', isAuthenticated, getIngredientCategories)
+router.get(
+  '/api/inventory/categories',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  getIngredientCategories
+)
 router.post(
   '/api/inventory/category/create',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   createInredientCategory
 )
 router.post(
   '/api/inventory/category/update/:id',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   updateIngredientCategory
 )
 router.post(
   '/api/inventory/category/deletes',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   deleteIngredientCategories
 )
 

@@ -1,6 +1,8 @@
 $(function () {
   let table
   let organizations = []
+  const userRole = $('#userRole').val()
+  const isAdmin = userRole === 'Admin'
 
   Promise.all([fetchData('organizations')])
     .then(([orgs]) => {
@@ -21,6 +23,38 @@ $(function () {
   showList.sort((a, b) => a - b)
 
   function initDataTable() {
+    const columns = []
+
+    if (isAdmin) {
+      columns.push({
+        data: null,
+        orderable: false,
+        className: 'text-center',
+        render: (data, type, row) =>
+          `<input type="checkbox" class="logCheckbox" data-id="${row._id}">`
+      })
+    }
+
+    // Thêm các cột còn lại
+    columns.push(
+      { data: 'time', className: 'p-2' },
+      { data: 'userName', className: 'p-2' },
+      { data: 'organizationName', className: 'p-2' },
+      { data: 'description', className: 'p-2' },
+      {
+        data: 'status',
+        className: 'p-2',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return data === 'SUCCESS'
+              ? `<span class="bg-success text-white badge p-2">Thành công</span>`
+              : `<span class="bg-danger text-white badge p-2">Thất bại</span>`
+          }
+          return data ?? ''
+        }
+      }
+    )
+
     table = $('#auditLogsTable').DataTable({
       dom:
         '<"top-bar d-flex align-items-center justify-content-between flex-wrap gap-3"' +
@@ -42,35 +76,11 @@ $(function () {
           }
         }
       },
-      order: [[1, 'desc']],
+      order: [[isAdmin ? 1 : 0, 'desc']],
       lengthMenu: [showList, showList],
       pageLength: numRows,
-      columnDefs: [{ width: '180px', target: 1 }],
-      columns: [
-        {
-          data: null,
-          orderable: false,
-          className: 'text-center',
-          render: (data, type, row) =>
-            `<input type="checkbox" class="logCheckbox" data-id="${row._id}">`
-        },
-        { data: 'time', className: 'p-2' },
-        { data: 'userName', className: 'p-2' },
-        { data: 'organizationName', className: 'p-2' },
-        { data: 'description', className: 'p-2' },
-        {
-          data: 'status',
-          className: 'p-2',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return data === 'SUCCESS'
-                ? `<span class="bg-success text-white badge p-2">Thành công</span>`
-                : `<span class="bg-danger text-white badge p-2">Thất bại</span>`
-            }
-            return data ?? ''
-          }
-        }
-      ],
+      columnDefs: isAdmin ? [{ width: '180px', target: 1 }] : [{ width: '180px', target: 0 }],
+      columns: columns,
       language: {
         search: '',
         searchPlaceholder: 'Tìm kiếm hoạt động',
@@ -91,23 +101,27 @@ $(function () {
             ${organizations.map((o) => `<option value="${o._id}">${o.name}</option>`).join('')}
           </select>
         `
-        const deleteBtn = `
-          <button id="deleteLogBtn" class="btn btn-danger">
-            <i class="bi bi-trash"></i> Xóa
-          </button>
-        `
+
+        if (isAdmin) {
+          const deleteBtn = `
+            <button id="deleteLogBtn" class="btn btn-danger">
+              <i class="bi bi-trash"></i> Xóa
+            </button>
+          `
+          $('.delete-group').html(deleteBtn)
+        }
+
         $('.center-group').html(selectHtml)
 
-        $('.delete-group').html(deleteBtn)
-
-        // Event listener cho filter
         $('#organizationFilter').on('change', function () {
           table.ajax.reload()
         })
       }
     })
 
-    initTableCheckboxEvents('#auditLogsTable', 'logCheckbox')
-    handlerDeleteEvent('#auditLogsTable', '#deleteLogBtn', 'logCheckbox', 'admin/audit-logs')
+    if (isAdmin) {
+      initTableCheckboxEvents('#auditLogsTable', 'logCheckbox')
+      handlerDeleteEvent('#auditLogsTable', '#deleteLogBtn', 'logCheckbox', 'admin/audit-logs')
+    }
   }
 })

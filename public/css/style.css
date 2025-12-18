@@ -1354,24 +1354,38 @@ body {
   }
 }
 @media (max-width: 768px) {
+  .admin__layout .admin__main .admin__content .row.sales, .admin__layout .admin__main .admin__content .row.statisticals, .admin__layout .admin__main .admin__content .row.management {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
   .admin__layout .admin__main .admin__content .row .card-item.col-md-3 {
-    width: calc(50% - 16px);
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 calc(50% - 4px);
+            flex: 0 0 calc(50% - 4px);
+    max-width: calc(50% - 4px);
+    padding: 0;
   }
   .admin__layout .admin__main .admin__content .row .statistical.col-md-4 {
-    width: calc(50% - 16px);
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 calc(50% - 4px);
+            flex: 0 0 calc(50% - 4px);
+    max-width: calc(50% - 4px);
+    padding: 0;
   }
   .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7 {
-    width: 100%;
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 100%;
+            flex: 0 0 100%;
+    max-width: 100%;
   }
   .admin__layout .admin__main .admin__content .row .top5Items.col-md-5 {
-    width: 100%;
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 100%;
+            flex: 0 0 100%;
+    max-width: 100%;
   }
   .admin__layout .admin__main .admin__content .row .saleReport .card-title {
     text-align: center;
-  }
-  .admin__layout .admin__main .filter-bar.mobile {
-    margin-top: 1rem;
-    margin-bottom: 1rem;
   }
 }
 @media (max-width: 575px) {
@@ -1384,27 +1398,37 @@ body {
   .admin__layout .staff__main .staff__content .row .card-item.col-md-3,
   .staff__layout .admin__main .admin__content .row .card-item.col-md-3,
   .staff__layout .staff__main .staff__content .row .card-item.col-md-3 {
-    width: 100%;
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 100%;
+            flex: 0 0 100%;
+    max-width: 100%;
   }
   .admin__layout .admin__main .admin__content .row .statistical.col-md-4,
   .admin__layout .staff__main .staff__content .row .statistical.col-md-4,
   .staff__layout .admin__main .admin__content .row .statistical.col-md-4,
   .staff__layout .staff__main .staff__content .row .statistical.col-md-4 {
-    width: 100%;
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 100%;
+            flex: 0 0 100%;
+    max-width: 100%;
   }
   .admin__layout .admin__main .admin__content .row .revenueLast7days.col-md-7,
   .admin__layout .staff__main .staff__content .row .revenueLast7days.col-md-7,
   .staff__layout .admin__main .admin__content .row .revenueLast7days.col-md-7,
   .staff__layout .staff__main .staff__content .row .revenueLast7days.col-md-7 {
-    display: block;
-    width: 100%;
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 100%;
+            flex: 0 0 100%;
+    max-width: 100%;
   }
   .admin__layout .admin__main .admin__content .row .top5Items.col-md-5,
   .admin__layout .staff__main .staff__content .row .top5Items.col-md-5,
   .staff__layout .admin__main .admin__content .row .top5Items.col-md-5,
   .staff__layout .staff__main .staff__content .row .top5Items.col-md-5 {
-    display: block;
-    width: 100%;
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 100%;
+            flex: 0 0 100%;
+    max-width: 100%;
   }
   .admin__layout .admin__main .admin__content .row .revenue.col-md-6,
   .admin__layout .staff__main .staff__content .row .revenue.col-md-6,

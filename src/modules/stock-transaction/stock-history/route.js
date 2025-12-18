@@ -8,7 +8,7 @@ const router = express.Router()
 router.get(
   '/api/inventory/stock-histories',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   getStockHistories
 )
 

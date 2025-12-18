@@ -20,7 +20,7 @@ router.get(
   '/api/menu/get/',
   isAuthenticated,
   checkWarehouseAccess,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   getMenus
 )
 router.get('/api/menu/search', checkWarehouseAccess, searchMenus)
@@ -28,21 +28,21 @@ router.post(
   '/api/menu/create',
   isAuthenticated,
   checkWarehouseAccess,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   createMenu
 )
 router.post(
   '/api/menu/update/:id',
   isAuthenticated,
   checkWarehouseAccess,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   updateMenu
 )
 router.post(
   '/api/menu/deletes',
   isAuthenticated,
   checkWarehouseAccess,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   deleteMenus
 )
 

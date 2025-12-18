@@ -1,6 +1,6 @@
 import express from 'express'
 import isAuthenticated from '../../helpers/isAuthenticated.js'
-// import { isPermit } from '../helpers/isPermit.js'
+import { isPermit } from '../../helpers/isPermit.js'
 import {
   getActiveAccounts,
   getAccounts,
@@ -12,8 +12,28 @@ import {
 const router = express.Router()
 
 router.get('/api/receiving-account/active', isAuthenticated, getActiveAccounts)
-router.get('/api/receiving-accounts', isAuthenticated, getAccounts)
-router.post('/api/receiving-account/create', isAuthenticated, createAccount)
-router.post('/api/receiving-account/update/:id', isAuthenticated, updateAccount)
-router.post('/api/receiving-account/deletes', isAuthenticated, deleteAccount)
+router.get(
+  '/api/receiving-accounts',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  getAccounts
+)
+router.post(
+  '/api/receiving-account/create',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  createAccount
+)
+router.post(
+  '/api/receiving-account/update/:id',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  updateAccount
+)
+router.post(
+  '/api/receiving-account/deletes',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  deleteAccount
+)
 export default router

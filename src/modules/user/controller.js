@@ -195,7 +195,7 @@ export const updateUser = async (req, res) => {
     }
 
     // Chặn nâng quyền lên Admin nếu không phải Admin thật (thay value của option ngoài FE)
-    if (role === 'Admin' && userExist.role !== 'Admin') {
+    if ((role === 'Admin' || role === 'SubAdmin') && userExist.role !== 'Admin') {
       return responseHelper.error(res, 'Bạn không có thẩm quyền để thực hiện thao tác này', 403)
     }
 
