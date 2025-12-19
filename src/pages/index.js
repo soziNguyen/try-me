@@ -4,6 +4,7 @@ import { getWarehouseForAdmin } from '../helpers/warehouseHelper.js'
 import Order from '../modules/order/model.js'
 import InvoiceOption from '../modules/invoice/model.js'
 import PlanTransaction from '../modules/plan-transaction/model.js'
+import Organization from '../modules/organization/model.js'
 
 //=============================================
 //================= USER ======================
@@ -904,6 +905,21 @@ export const employeePage = async (req, res) => {
     getPageData(req, 'Quản lý nhân viên', 'Employee', {
       headerClass: 'admin__header',
       pageTitle: 'QUẢN LÝ NHÂN VIÊN'
+    })
+  )
+}
+
+export const changePlan = async (req, res) => {
+  const { id } = req.params
+  const org = await Organization.findById(id).populate('plan', 'code level name')
+
+  res.render(
+    'admin/change-plan',
+    getPageData(req, 'Thay đổi gói dịch vụ', 'Change Plan', {
+      headerClass: 'admin__header',
+      pageTitle: 'THAY ĐỔI GÓI DỊCH VỤ',
+      orgName: org.name,
+      orgPlan: org.plan.name
     })
   )
 }

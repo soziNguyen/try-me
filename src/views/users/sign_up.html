@@ -1,5 +1,5 @@
 <%- include('../partials/header.html') %>
-
+<div class="bg-light-blue h-100vh">
   <div class="container py-5">
     <div class="row justify-content-center">
       <div class="col-xl-10 col-lg-11">
@@ -12,9 +12,95 @@
           </div>
         </div>
 
+        <div class="d-flex justify-content-center account-type-step">
+          <div class="card w-540 p-4">
+            <h4 class="mb-4 fw-semibold text-center">Chọn loại tài khoản</h4>
+            <div class="list-group mb-4">
+          
+              <label class="list-group-item d-flex align-items-center gap-3 py-3 account-option">
+                <input class="form-check-input fs-4" type="radio" name="accountType" value="personal" required>
+                <div class="fs-5 fw-medium">
+                  Tài khoản cá nhân
+                </div>
+              </label>
+          
+              <label class="list-group-item d-flex align-items-center gap-3 py-3 account-option">
+                <input class="form-check-input fs-4" type="radio" name="accountType" value="enterprise">
+                <div class="fs-5 fw-medium">
+                  Tài khoản doanh nghiệp
+                </div>
+              </label>
+          
+            </div>
+          
+            <div class="d-flex justify-content-center">
+              <button class="btn btn-primary btn-lg px-5 btn-next">
+                Tiếp tục
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <form id="signup-form-personal" class="d-flex justify-content-center d-none">
+          <div class="d-flex">
+            <div class="card shadow-sm rounded-4 p-4 flex-fill">
+              <h5 class="fw-bold border-bottom pb-2 mb-4">
+                <i class="bi bi-building me-2"></i>Thông tin cá nhân
+              </h5>
+
+              <div class="mb-3">
+                <label for="name" class="form-label text-secondary fw-semibold">Họ và tên *</label>
+                <input type="text" id="name" name="name" class="form-control rounded-3"
+                  placeholder="Nhập tên tổ chức">
+              </div>
+
+              <div class="mb-3">
+                <label for="cccd" class="form-label text-secondary fw-semibold">Căn cước công dân (ID) *</label>
+                <input type="text" id="cccd" name="cccd" class="form-control rounded-3"
+                  placeholder="CCCD/ ID">
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label for="email" class="form-label text-secondary fw-semibold">Email *</label>
+                  <input type="email" id="email" name="email" class="form-control rounded-3"
+                    placeholder="email@domain.com">
+                </div>
+                <div class="col-md-6">
+                  <label for="phone" class="form-label text-secondary fw-semibold">Số điện thoại *</label>
+                  <input type="text" id="phone" name="phone" class="form-control rounded-3"
+                    placeholder="0123456789">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="mb-3 col-md-6">
+                  <label for="province" class="form-label text-secondary fw-semibold">Tỉnh/Thành phố *</label>
+                  <select id="province" name="province" class="form-select rounded-3"></select>
+                </div>
+
+                <div class="mb-3 col-md-6">
+                  <label for="commune" class="form-label text-secondary fw-semibold">Xã/Phường *</label>
+                  <select id="commune" name="commune" class="form-select rounded-3"></select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="street" class="form-label text-secondary fw-semibold">Địa chỉ chi tiết</label>
+                <input type="text" id="street" name="street" class="form-control rounded-3"
+                  placeholder="Số nhà, tên đường">
+              </div>
+
+              <div class="mt-3 d-flex justify-content-end">
+                <button type="button" class="btn btn-primary btn-step-2">Tiếp theo</button>
+              </div>
+            </div>
+          </div>
+        </form>
+
         <!-- Form -->
-        <form id="signup-form">
-          <div class="row g-4">
+        <form id="signup-form" class="d-none">
+          <div class="row justify-content-center g-4">
 
             <!-- Thông tin tổ chức -->
             <div class="col-lg-6 d-flex">
@@ -32,19 +118,19 @@
                 <div class="mb-3">
                   <label for="orgName" class="form-label text-secondary fw-semibold">Tên tổ chức *</label>
                   <input type="text" id="orgName" name="orgName" class="form-control rounded-3"
-                    placeholder="Nhập tên tổ chức" required>
+                    placeholder="Nhập tên tổ chức">
                 </div>
 
                 <div class="row g-3 mb-3">
                   <div class="col-md-6">
                     <label for="orgEmail" class="form-label text-secondary fw-semibold">Email *</label>
                     <input type="email" id="orgEmail" name="orgEmail" class="form-control rounded-3"
-                      placeholder="email@domain.com" required>
+                      placeholder="email@domain.com">
                   </div>
                   <div class="col-md-6">
                     <label for="orgPhone" class="form-label text-secondary fw-semibold">Số điện thoại *</label>
                     <input type="text" id="orgPhone" name="orgPhone" class="form-control rounded-3"
-                      placeholder="0123456789" required>
+                      placeholder="0123456789">
                   </div>
                 </div>
 
@@ -67,54 +153,55 @@
                 </div>
               </div>
             </div>
-
-            <!-- Thông tin quản trị viên -->
-            <div class="col-lg-6 d-flex flex-column">
-              <div class="card shadow-sm rounded-4 p-4 flex-fill d-flex flex-column">
-                <div class="flex-grow-1">
-                  <h5 class="fw-bold border-bottom pb-2 mb-4">
-                    <i class="bi bi-person-circle me-2"></i>Thông tin đăng nhập
-                  </h5>
-
-                  <div class="mb-3">
-                    <label for="adminUsername" class="form-label text-secondary fw-semibold">Tài khoản *</label>
-                    <input type="text" id="adminUsername" name="adminUsername" class="form-control rounded-3"
-                      placeholder="Nhập tên tài khoản" required>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="adminEmail" class="form-label text-secondary fw-semibold">Email đăng nhập *</label>
-                    <input type="email" id="adminEmail" name="adminEmail" class="form-control rounded-3"
-                      placeholder="admin@email.com" required>
-                  </div>
-
-                  <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                      <label for="adminPassword" class="form-label text-secondary fw-semibold">Mật khẩu *</label>
-                      <input type="password" id="adminPassword" name="adminPassword" class="form-control rounded-3"
-                        placeholder="••••••••" required>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="confirmPassword" class="form-label text-secondary fw-semibold">Xác nhận *</label>
-                      <input type="password" id="confirmPassword" name="confirmPassword" class="form-control rounded-3"
-                        placeholder="••••••••" required>
-                    </div>
-                    <div class="col-md-12">
-                      <label for="accountType" class="form-label text-secondary fw-semibold">Loại hình kinh doanh
-                        *</label>
-                      <select id="accountType" name="accountType" class="form-select rounded-3"></select>
-                    </div>
-                  </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100 rounded-pill mt-3">
-                  Tạo tổ chức và quản trị viên
-                </button>
-              </div>
-            </div>
-
           </div>
         </form>
+
+        <!-- Thông tin quản trị viên -->
+        <div id="userForm" class="d-flex justify-content-center d-none">
+          <div class="d-flex w-540">
+            <div class="card shadow-sm rounded-4 p-4 flex-fill d-flex flex-column">
+              <div class="flex-grow-1">
+                <h5 class="fw-bold border-bottom pb-2 mb-4">
+                  <i class="bi bi-person-circle me-2"></i>Thông tin đăng nhập
+                </h5>
+  
+                <div class="mb-3">
+                  <label for="adminUsername" class="form-label text-secondary fw-semibold">Tài khoản *</label>
+                  <input type="text" id="adminUsername" name="adminUsername" class="form-control rounded-3"
+                    placeholder="Nhập tên tài khoản" required>
+                </div>
+  
+                <div class="mb-3">
+                  <label for="adminEmail" class="form-label text-secondary fw-semibold">Email đăng nhập *</label>
+                  <input type="email" id="adminEmail" name="adminEmail" class="form-control rounded-3"
+                    placeholder="admin@email.com" required>
+                </div>
+  
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label for="adminPassword" class="form-label text-secondary fw-semibold">Mật khẩu *</label>
+                    <input type="password" id="adminPassword" name="adminPassword" class="form-control rounded-3"
+                      placeholder="••••••••" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="confirmPassword" class="form-label text-secondary fw-semibold">Xác nhận *</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control rounded-3"
+                      placeholder="••••••••" required>
+                  </div>
+                  <div class="col-md-12">
+                    <label for="accountType" class="form-label text-secondary fw-semibold">Loại hình kinh doanh
+                      *</label>
+                    <select id="accountType" name="accountType" class="form-select rounded-3"></select>
+                  </div>
+                </div>
+              </div>
+  
+              <button type="submit" class="btn btn-primary w-100 rounded-pill mt-3">
+                Đăng ký
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Footer -->
         <div class="text-center mt-5">
@@ -125,6 +212,7 @@
       </div>
     </div>
   </div>
+</div>
 
 <%- include('../partials/commonjs.html') %>
 <script src="/js/users.js?ver=1.0.0"></script>

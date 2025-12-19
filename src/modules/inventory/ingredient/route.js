@@ -16,31 +16,31 @@ router.get('/api/inventory/ingredient/active', isAuthenticated, getActiveIngredi
 router.get(
   '/api/inventory/ingredient/all',
   isAuthenticated,
-  isPermit('Admin', 'SubAdmin'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   getActiveIngredients
 )
 router.get(
   '/api/inventory/ingredient',
   isAuthenticated,
-  isPermit('Admin', 'SubAdmin'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   ingredientDataAPI
 )
 router.post(
   '/api/inventory/ingredient/create',
   isAuthenticated,
-  isPermit('Admin', 'SubAdmin'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   createIngredient
 )
 router.post(
   '/api/inventory/ingredient/update/:id',
   isAuthenticated,
-  isPermit('Admin', 'SubAdmin'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   updateIngredient
 )
 router.post(
   '/api/inventory/ingredient/deletes',
   isAuthenticated,
-  isPermit('Admin', 'SubAdmin'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   deleteIngredients
 )
 

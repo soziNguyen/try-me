@@ -484,9 +484,9 @@ function getBestFormat(hasTransparency = false) {
  * @returns {Promise} Promise trả về khi load xong dữ liệu.
  */
 
-function listProvinces() {
+function listProvinces(selector = '#orgProvince') {
   return $.getJSON('/data/full_address.json').then((res) => {
-    const $provinceSelect = $('#orgProvince')
+    const $provinceSelect = $(selector)
     $provinceSelect.empty().append('<option value="">— Tỉnh/ Thành phố —</option>')
 
     if (res.error == 0 && res.data) {
@@ -505,9 +505,9 @@ function listProvinces() {
  * @returns {Promise} Promise trả về khi load xong dữ liệu.
  */
 
-function listCommunes(provinceId) {
+function listCommunes(provinceId, selector = '#orgCommune') {
   return $.getJSON('/data/full_address.json').then((res) => {
-    const $communeSelect = $('#orgCommune')
+    const $communeSelect = $(selector)
     $communeSelect.empty().append('<option value="">— Chọn Xã/ Phường —</option>')
 
     if (res.error == 0 && res.data) {

@@ -37,7 +37,7 @@ export const createOrganization = async (req, res) => {
       adminEmail,
       adminPassword
     } = req.body
-    const accountType = (req.body.accountType || '').toLowerCase()
+    const businessType = (req.body.businessType || '').toLowerCase()
 
     if (
       !orgName ||
@@ -46,7 +46,7 @@ export const createOrganization = async (req, res) => {
       !adminUsername ||
       !adminEmail ||
       !adminPassword ||
-      !accountType
+      !businessType
     ) {
       return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin bắt buộc', 400)
     }
@@ -82,7 +82,7 @@ export const createOrganization = async (req, res) => {
       return responseHelper.error(res, 'Mã số thuế không hợp lệ (10-13 chữ số)', 400)
     }
 
-    if (!['shop', 'food', 'drink'].includes(accountType)) {
+    if (!['shop', 'food', 'drink'].includes(businessType)) {
       return responseHelper.error(res, 'Loại hình kinh doanh không hợp lệ', 400)
     }
 
@@ -146,7 +146,7 @@ export const createOrganization = async (req, res) => {
         province: orgProvince,
         commune: orgCommune,
         street: orgStreet,
-        businessType: accountType,
+        businessType: businessType,
         plan: freePlan ? freePlan._id : null
       }
       if (cleanTaxCode) {
@@ -165,7 +165,7 @@ export const createOrganization = async (req, res) => {
         organization: organization._id
       })
       await adminUser.save({ session })
-      await insertDummyDataForOrganization(session, organization._id, accountType)
+      await insertDummyDataForOrganization(session, organization._id, businessType)
 
       return { organization, admin: adminUser }
     })

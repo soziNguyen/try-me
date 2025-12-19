@@ -19,6 +19,11 @@ const UserSchema = new Schema(
       ref: 'Warehouse',
       default: null
     },
+    accountType: {
+      type: String,
+      enum: ['personal', 'enterprise'],
+      default: null // Nhân viên không có accountType
+    },
     organization: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',

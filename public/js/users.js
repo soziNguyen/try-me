@@ -1,5 +1,7 @@
 const logInForm = document.getElementById('login-form')
 const signUpForm = document.getElementById('signup-form')
+const signUpFormPersonal = document.getElementById('signup-form-personal')
+const userForm = document.getElementById('userForm')
 const forgotForm = document.getElementById('forgot-password')
 const resetPasswordForm = document.getElementById('reset-form')
 
@@ -69,6 +71,39 @@ if (logInForm) {
     }
   })
 } else if (signUpForm) {
+  const nextBtn = document.querySelector('.btn-next')
+  const next2Btn = document.querySelector('.btn-step-2')
+  const accountTypeStep = document.querySelector('.account-type-step')
+
+  const personalForm = document.getElementById('signup-form-personal')
+  const enterpriseForm = document.getElementById('signup-form') // nếu có
+
+  nextBtn?.addEventListener('click', () => {
+    const selected = document.querySelector('input[name="accountType"]:checked')
+
+    if (!selected) {
+      toastr.warning('Vui lòng chọn loại tài khoản')
+      return
+    }
+
+    accountTypeStep.classList.add('d-none') // Ẩn step chọn loại tài khoản
+
+    // Hiển thị form tương ứng
+    if (selected.value === 'personal') {
+      personalForm?.classList.remove('d-none')
+    }
+
+    if (selected.value === 'enterprise') {
+      enterpriseForm?.classList.remove('d-none')
+    }
+  })
+
+  next2Btn.addEventListener('click', () => {
+    signUpFormPersonal.classList.add('d-none')
+    userForm.classList.remove('d-none')
+  })
+
+  //
   const accountTypeSelect = document.getElementById('accountType')
 
   const accType = {
@@ -100,7 +135,7 @@ if (logInForm) {
       adminUsername: formData.get('adminUsername'),
       adminEmail: formData.get('adminEmail'),
       adminPassword: formData.get('adminPassword'),
-      accountType: formData.get('accountType')
+      businessType: formData.get('accountType')
     }
 
     const confirmPassword = formData.get('confirmPassword')
@@ -121,7 +156,7 @@ if (logInForm) {
       adminUsername: data.adminUsername,
       adminEmail: data.adminEmail,
       adminPassword: data.adminPassword,
-      accountType: data.accountType
+      businessType: data.businessType
     }
 
     if (Object.values(requiredFields).some((value) => !value)) {
@@ -515,6 +550,7 @@ if (logInForm) {
     })
   }
 }
+
 function getRoleLabel(role) {
   const roleMap = {
     Admin: 'Quản trị',
@@ -561,7 +597,7 @@ function renderTable(users = []) {
 
 $(document).ready(function () {
   if (signUpForm) {
-    listProvinces()
+    listProvinces('#orgProvince')
     $('#orgProvince').on('change', function () {
       const provinceId = $(this).val()
       if (provinceId) {
@@ -572,6 +608,21 @@ $(document).ready(function () {
           .append('<option value="">— Chọn Xã/ Phường —</option>')
           .prop('disabled', true)
         initSelect2($('#orgCommune'), '— Chọn Xã/ Phường —')
+      }
+    })
+  }
+  if (signUpFormPersonal) {
+    listProvinces('#province')
+    $('#province').on('change', function () {
+      const provinceId = $(this).val()
+      if (provinceId) {
+        listCommunes(provinceId, '#commune')
+      } else {
+        $('#commune')
+          .empty()
+          .append('<option value="">— Chọn Xã/ Phường —</option>')
+          .prop('disabled', true)
+        initSelect2($('#commune'), '— Chọn Xã/ Phường —')
       }
     })
   }

@@ -4,7 +4,7 @@ import Organization from '../organization/model.js'
 import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import CouponPlan from '../coupon-plan/model.js'
 import PlanTransaction from '../plan-transaction/model.js'
-import { generateInvoiceCode } from '../../helpers/generateInvoiceCode.js'
+import { generateInvoiceCodeForPlan } from '../../helpers/generateInvoiceCode.js'
 import { logActivity } from '../activity-logs/service.js'
 import { buildChangeLog } from '../../helpers/changeLog.js'
 
@@ -415,7 +415,7 @@ export const upgradePlan = async (req, res) => {
     const total = subtotal + vat
 
     // TẠO MÃ HÓA ĐƠN
-    const invoiceCode = await generateInvoiceCode(PlanTransaction, 'HD')
+    const invoiceCode = await generateInvoiceCodeForPlan(PlanTransaction, 'HD')
 
     // TẠO TRANSACTION
     const transaction = await PlanTransaction.create({
