@@ -5,6 +5,16 @@ export function isDate(str) {
   return !isNaN(d)
 }
 
+export function isValidCCCDFormat(cccd) {
+  if (!cccd) return false
+  cccd = String(cccd).trim()
+  if (!/^\d{12}$/.test(cccd)) return false
+  const provinceCode = Number(cccd.slice(0, 3))
+  if (provinceCode < 1 || provinceCode > 96) return false
+
+  return true
+}
+
 export const formatPhone = (phone) => {
   if (!phone) return ''
   return phone.startsWith('84') ? `+${phone}` : phone

@@ -22,83 +22,225 @@ import { getPageData } from '../../helpers/pageDataHelper.js'
 import { logActivity } from '../activity-logs/service.js'
 import { buildChangeLog } from '../../helpers/changeLog.js'
 import { getProvinceName, getCommuneName } from '../../helpers/address.js'
+import { isValidCCCDFormat } from '../../helpers/common.js'
+import Profile from '../profile/model.js'
 
 export const createOrganization = async (req, res) => {
   try {
-    const {
-      taxCode,
-      orgName,
-      orgEmail,
-      orgPhone,
-      orgProvince,
-      orgCommune,
-      orgStreet,
-      adminUsername,
-      adminEmail,
-      adminPassword
-    } = req.body
-    const businessType = (req.body.businessType || '').toLowerCase()
+    const { accountType } = req.body
 
-    if (
-      !orgName ||
-      !orgEmail ||
-      !orgPhone ||
-      !adminUsername ||
-      !adminEmail ||
-      !adminPassword ||
-      !businessType
-    ) {
-      return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin bắt buộc', 400)
+    if (!accountType || !['personal', 'enterprise'].includes(accountType)) {
+      return responseHelper.error(res, 'Loại tài khoản không hợp lệ', 400)
+    }
+
+    let organizationData = {}
+    let profileData = {}
+    let adminData = {}
+
+    // Lấy thông tin chung
+    const { adminUsername, adminEmail, adminPassword, businessType } = req.body
+
+    // Validate thông tin đăng nhập
+    if (!adminUsername || !adminEmail || !adminPassword || !businessType) {
+      return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin đăng nhập', 400)
     }
 
     // Validate admin username
     const usernameError = isValidUsername(adminUsername)
     if (usernameError) {
-      return responseHelper.error(res, `${usernameError}`, 400)
+      return responseHelper.error(res, usernameError, 400)
     }
 
     // Validate admin password
     const passwordError = isValidPassword(adminPassword)
     if (passwordError) {
-      return responseHelper.error(res, `${passwordError}`, 400)
+      return responseHelper.error(res, passwordError, 400)
     }
 
-    // Validate emails
-    if (!validator.isEmail(orgEmail)) {
-      return responseHelper.error(res, 'Email tổ chức không hợp lệ', 400)
-    }
+    // Validate admin email
     if (!validator.isEmail(adminEmail)) {
-      return responseHelper.error(res, 'Email quản trị viên không hợp lệ', 400)
+      return responseHelper.error(res, 'Email đăng nhập không hợp lệ', 400)
     }
 
-    // Validate phone number
-    const phoneError = validatePhoneNumber(orgPhone)
-    if (phoneError) {
-      return responseHelper.error(res, phoneError, 400)
-    }
-
-    // Validate tax code if provided
-    if (taxCode && !validateTaxCode(taxCode)) {
-      return responseHelper.error(res, 'Mã số thuế không hợp lệ (10-13 chữ số)', 400)
-    }
-
-    if (!['shop', 'food', 'drink'].includes(businessType)) {
+    // Validate business type
+    if (!['shop', 'food', 'drink'].includes(businessType.toLowerCase())) {
       return responseHelper.error(res, 'Loại hình kinh doanh không hợp lệ', 400)
     }
 
-    // Process data
-    const cleanOrgEmail = orgEmail.trim().toLowerCase()
-    const cleanAdminEmail = adminEmail.trim().toLowerCase()
-    const cleanAdminUsername = adminUsername.trim()
-    const cleanOrgName = orgName.trim()
-    const cleanTaxCode = taxCode?.trim()
-    const processedPhone = formatPhoneNumber(orgPhone)
+    if (accountType === 'personal') {
+      // Personal Account
+      const { name, cccd, email, phone, province, commune, street } = req.body
 
+      // Validate required fields
+      if (!name || !cccd || !email || !phone || !province || !commune) {
+        return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin cá nhân', 400)
+      }
+
+      // Validate CCCD
+      if (!isValidCCCDFormat(cccd)) {
+        return responseHelper.error(
+          res,
+          'CCCD không hợp lệ (phải có 12 chữ số và mã tỉnh từ 001-096)',
+          400
+        )
+      }
+
+      // Validate email
+      if (!validator.isEmail(email)) {
+        return responseHelper.error(res, 'Email không hợp lệ', 400)
+      }
+
+      // Validate phone
+      const phoneError = validatePhoneNumber(phone)
+      if (phoneError) {
+        return responseHelper.error(res, phoneError, 400)
+      }
+
+      // Chuẩn bị dữ liệu
+      const cleanName = name.trim()
+      const cleanCccd = cccd.trim()
+      const cleanEmail = email.trim().toLowerCase()
+      const processedPhone = formatPhoneNumber(phone)
+
+      profileData = {
+        fullName: cleanName,
+        cccd: cleanCccd,
+        email: cleanEmail,
+        phone: processedPhone,
+        province,
+        commune,
+        street: street?.trim() || ''
+      }
+
+      organizationData = {
+        name: cleanName, // Tên tổ chức = Tên người đăng ký
+        email: cleanEmail,
+        phone: processedPhone,
+        province,
+        commune,
+        street: street?.trim() || '',
+        taxCode: cleanCccd, // Mã số thuế = CCCD
+        businessType: businessType.toLowerCase()
+      }
+
+      adminData = {
+        username: adminUsername.trim(),
+        email: adminEmail.trim().toLowerCase(),
+        password: adminPassword
+      }
+    } else if (accountType === 'enterprise') {
+      // Enterprise Account
+      const {
+        taxCode,
+        orgName,
+        orgEmail,
+        orgPhone,
+        orgProvince,
+        orgCommune,
+        orgStreet,
+        repName,
+        repCccd,
+        repEmail,
+        repPhone,
+        repProvince,
+        repCommune,
+        repStreet
+      } = req.body
+
+      // Validate required fields - Tổ chức
+      if (!taxCode || !orgName || !orgEmail || !orgPhone || !orgProvince || !orgCommune) {
+        return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin tổ chức', 400)
+      }
+
+      // Validate required fields - Người đại diện
+      if (!repName || !repCccd || !repEmail || !repPhone || !repProvince || !repCommune) {
+        return responseHelper.error(res, 'Vui lòng điền đầy đủ thông tin người đại diện', 400)
+      }
+
+      // Validate CCCD người đại diện
+      if (!isValidCCCDFormat(repCccd)) {
+        return responseHelper.error(
+          res,
+          'CCCD người đại diện không hợp lệ (phải có 12 chữ số và mã tỉnh từ 001-096)',
+          400
+        )
+      }
+
+      // Validate tax code if provided
+      if (taxCode && !validateTaxCode(taxCode)) {
+        return responseHelper.error(res, 'Mã số thuế không hợp lệ (10-13 chữ số)', 400)
+      }
+
+      // Validate emails
+      if (!validator.isEmail(orgEmail)) {
+        return responseHelper.error(res, 'Email tổ chức không hợp lệ', 400)
+      }
+      if (!validator.isEmail(repEmail)) {
+        return responseHelper.error(res, 'Email người đại diện không hợp lệ', 400)
+      }
+
+      // Validate phone numbers
+      const orgPhoneError = validatePhoneNumber(orgPhone)
+      if (orgPhoneError) {
+        return responseHelper.error(res, `Số điện thoại tổ chức: ${orgPhoneError}`, 400)
+      }
+
+      const repPhoneError = validatePhoneNumber(repPhone)
+      if (repPhoneError) {
+        return responseHelper.error(res, `Số điện thoại người đại diện: ${repPhoneError}`, 400)
+      }
+
+      // Chuẩn bị dữ liệu
+      const cleanOrgName = orgName.trim()
+      const cleanOrgEmail = orgEmail.trim().toLowerCase()
+      const processedOrgPhone = formatPhoneNumber(orgPhone)
+      const cleanTaxCode = taxCode?.trim()
+
+      const cleanRepName = repName.trim()
+      const cleanRepCccd = repCccd.trim()
+      const cleanRepEmail = repEmail.trim().toLowerCase()
+      const processedRepPhone = formatPhoneNumber(repPhone)
+
+      profileData = {
+        fullName: cleanRepName,
+        cccd: cleanRepCccd,
+        email: cleanRepEmail,
+        phone: processedRepPhone,
+        province: repProvince,
+        commune: repCommune,
+        street: repStreet?.trim() || ''
+      }
+
+      organizationData = {
+        name: cleanOrgName,
+        email: cleanOrgEmail,
+        phone: processedOrgPhone,
+        province: orgProvince,
+        commune: orgCommune,
+        street: orgStreet?.trim() || '',
+        businessType: businessType.toLowerCase()
+      }
+
+      if (cleanTaxCode) {
+        organizationData.taxCode = cleanTaxCode
+      }
+
+      adminData = {
+        username: adminUsername.trim(),
+        email: adminEmail.trim().toLowerCase(),
+        password: adminPassword
+      }
+    }
+
+    // Thực hiện transaction
     const result = await withTransaction(async (session) => {
       // Build duplicate check conditions
-      const duplicateConditions = [{ email: cleanOrgEmail }, { phone: processedPhone }]
-      if (cleanTaxCode) {
-        duplicateConditions.push({ taxCode: cleanTaxCode })
+      const duplicateConditions = [
+        { email: organizationData.email },
+        { phone: organizationData.phone }
+      ]
+      if (organizationData.taxCode) {
+        duplicateConditions.push({ taxCode: organizationData.taxCode })
       }
 
       // Check for existing organization
@@ -107,70 +249,67 @@ export const createOrganization = async (req, res) => {
       }).session(session)
 
       if (existingOrg) {
-        if (existingOrg.email === cleanOrgEmail) {
+        if (existingOrg.email === organizationData.email) {
           throw new BusinessError('Email tổ chức đã tồn tại', 400)
         }
-        if (existingOrg.phone === processedPhone) {
-          throw new BusinessError('Số điện thoại đã tồn tại', 400)
+        if (existingOrg.phone === organizationData.phone) {
+          throw new BusinessError('Số điện thoại tổ chức đã tồn tại', 400)
         }
-        if (existingOrg.taxCode === cleanTaxCode) {
+        if (organizationData.taxCode && existingOrg.taxCode === organizationData.taxCode) {
           throw new BusinessError('Mã số thuế đã tồn tại', 400)
         }
       }
 
       // Check admin email
       const existingUserEmail = await User.findOne({
-        email: cleanAdminEmail
+        email: adminData.email
       }).session(session)
 
       if (existingUserEmail) {
-        throw new BusinessError('Email quản trị viên đã tồn tại trong hệ thống', 400)
+        throw new BusinessError('Email đăng nhập đã tồn tại trong hệ thống', 400)
       }
 
       // Check admin username (globally unique)
       const existingUsername = await User.findOne({
-        username: cleanAdminUsername
+        username: adminData.username
       }).session(session)
 
       if (existingUsername) {
-        throw new BusinessError('Tên đăng nhập quản trị viên đã tồn tại', 400)
+        throw new BusinessError('Tên đăng nhập đã tồn tại', 400)
       }
 
+      // Get free plan
       const freePlan = await Plan.findOne({ code: 'FREE' }).session(session)
 
-      // Create organization
-      const orgData = {
-        name: cleanOrgName,
-        email: cleanOrgEmail,
-        phone: processedPhone, // Always 84xxxxxxxx format
-        province: orgProvince,
-        commune: orgCommune,
-        street: orgStreet,
-        businessType: businessType,
-        plan: freePlan ? freePlan._id : null
-      }
-      if (cleanTaxCode) {
-        orgData.taxCode = cleanTaxCode
-      }
+      // Create profile
+      const profile = new Profile(profileData)
+      await profile.save({ session })
 
-      const organization = new Organization(orgData)
+      // Create organization with profile reference
+      organizationData.profile = profile._id
+      organizationData.plan = freePlan ? freePlan._id : null
+
+      const organization = new Organization(organizationData)
       await organization.save({ session })
 
       // Create admin user
       const adminUser = new User({
-        username: cleanAdminUsername,
-        email: cleanAdminEmail,
-        password: adminPassword, // Will be hashed by pre-save hook
+        username: adminData.username,
+        email: adminData.email,
+        password: adminData.password, // Will be hashed by pre-save hook
         role: 'Org',
         organization: organization._id
       })
       await adminUser.save({ session })
-      await insertDummyDataForOrganization(session, organization._id, businessType)
 
-      return { organization, admin: adminUser }
+      // Insert dummy data
+      await insertDummyDataForOrganization(session, organization._id, organizationData.businessType)
+
+      return { organization, profile, admin: adminUser }
     })
 
     const responseData = {
+      accountType,
       organization: {
         ...result.organization.toObject(),
         phoneDisplay: {
@@ -180,6 +319,7 @@ export const createOrganization = async (req, res) => {
           type: getPhoneType(result.organization.phone)
         }
       },
+      profile: result.profile.toObject(),
       admin: {
         id: result.admin._id,
         username: result.admin.username,
@@ -188,7 +328,13 @@ export const createOrganization = async (req, res) => {
       }
     }
 
-    responseHelper.success(res, responseData, 'Tổ chức và quản trị viên đã được tạo thành công')
+    responseHelper.success(
+      res,
+      responseData,
+      accountType === 'personal'
+        ? 'Tài khoản cá nhân đã được tạo thành công'
+        : 'Tài khoản doanh nghiệp đã được tạo thành công'
+    )
   } catch (error) {
     if (error.code === 11000) {
       if (error.keyPattern?.email) {

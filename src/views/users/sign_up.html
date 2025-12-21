@@ -1,6 +1,6 @@
 <%- include('../partials/header.html') %>
 <div class="bg-light-blue h-100vh">
-  <div class="container py-5">
+  <div class="container bg-light-blue py-5">
     <div class="row justify-content-center">
       <div class="col-xl-10 col-lg-11">
 
@@ -106,11 +106,11 @@
             <div class="col-lg-6 d-flex">
               <div class="card shadow-sm rounded-4 p-4 flex-fill">
                 <h5 class="fw-bold border-bottom pb-2 mb-4">
-                  <i class="bi bi-building me-2"></i>Thông tin hồ sơ
+                  <i class="bi bi-building me-2"></i>Thông tin tổ chức
                 </h5>
 
                 <div class="mb-3">
-                  <label for="taxCode" class="form-label text-secondary fw-semibold">Mã số thuế</label>
+                  <label for="taxCode" class="form-label text-secondary fw-semibold">Mã số thuế *</label>
                   <input type="text" id="taxCode" name="taxCode" class="form-control rounded-3"
                     placeholder="Nhập mã số thuế">
                 </div>
@@ -153,11 +153,71 @@
                 </div>
               </div>
             </div>
+
+            <!-- Thông tin người đại diện -->
+            <div class="col-lg-6 d-flex">
+              <div class="card shadow-sm rounded-4 p-4 flex-fill">
+                <h5 class="fw-bold border-bottom pb-2 mb-4">
+                  <i class="bi bi-person me-2"></i>Thông tin người đại diện
+                </h5>
+
+                <div class="mb-3">
+                  <label for="repName" class="form-label text-secondary fw-semibold">Họ và tên *</label>
+                  <input type="text" id="repName" name="repName" class="form-control rounded-3"
+                    placeholder="Nhập họ và tên">
+                </div>
+
+                <div class="mb-3">
+                  <label for="repCccd" class="form-label text-secondary fw-semibold">Căn cước công dân (ID) *</label>
+                  <input type="text" id="repCccd" name="repCccd" class="form-control rounded-3"
+                    placeholder="CCCD/ ID">
+                </div>
+
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label for="repEmail" class="form-label text-secondary fw-semibold">Email *</label>
+                    <input type="email" id="repEmail" name="repEmail" class="form-control rounded-3"
+                      placeholder="email@domain.com">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="repPhone" class="form-label text-secondary fw-semibold">Số điện thoại *</label>
+                    <input type="text" id="repPhone" name="repPhone" class="form-control rounded-3"
+                      placeholder="0123456789">
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="mb-3 col-md-6">
+                    <label for="repProvince" class="form-label text-secondary fw-semibold">Tỉnh/Thành phố *</label>
+                    <select id="repProvince" name="repProvince" class="form-select rounded-3"></select>
+                  </div>
+
+                  <div class="mb-3 col-md-6">
+                    <label for="repCommune" class="form-label text-secondary fw-semibold">Xã/Phường *</label>
+                    <select id="repCommune" name="repCommune" class="form-select rounded-3"></select>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="repStreet" class="form-label text-secondary fw-semibold">Địa chỉ chi tiết</label>
+                  <input type="text" id="repStreet" name="repStreet" class="form-control rounded-3"
+                    placeholder="Số nhà, tên đường">
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Button Tiếp theo -->
+          <div class="d-flex justify-content-center mt-4">
+            <button type="button" class="btn btn-primary btn-lg px-5 btn-enterprise-next">
+              Tiếp theo
+            </button>
           </div>
         </form>
 
         <!-- Thông tin quản trị viên -->
-        <div id="userForm" class="d-flex justify-content-center d-none">
+        <form id="userForm" class="d-flex justify-content-center d-none">
           <div class="d-flex w-540">
             <div class="card shadow-sm rounded-4 p-4 flex-fill d-flex flex-column">
               <div class="flex-grow-1">
@@ -167,25 +227,25 @@
   
                 <div class="mb-3">
                   <label for="adminUsername" class="form-label text-secondary fw-semibold">Tài khoản *</label>
-                  <input type="text" id="adminUsername" name="adminUsername" class="form-control rounded-3"
+                  <input type="text" id="adminUsername" name="adminUsername" class="form-control rounded-3" autocomplete="adminUsername"
                     placeholder="Nhập tên tài khoản" required>
                 </div>
   
                 <div class="mb-3">
                   <label for="adminEmail" class="form-label text-secondary fw-semibold">Email đăng nhập *</label>
-                  <input type="email" id="adminEmail" name="adminEmail" class="form-control rounded-3"
+                  <input type="email" id="adminEmail" name="adminEmail" class="form-control rounded-3" autocomplete="adminEmail"
                     placeholder="admin@email.com" required>
                 </div>
   
                 <div class="row g-3 mb-3">
                   <div class="col-md-6">
                     <label for="adminPassword" class="form-label text-secondary fw-semibold">Mật khẩu *</label>
-                    <input type="password" id="adminPassword" name="adminPassword" class="form-control rounded-3"
+                    <input type="password" id="adminPassword" name="adminPassword" class="form-control rounded-3" autocomplete="new-password"
                       placeholder="••••••••" required>
                   </div>
                   <div class="col-md-6">
                     <label for="confirmPassword" class="form-label text-secondary fw-semibold">Xác nhận *</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control rounded-3"
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control rounded-3" autocomplete="new-password"
                       placeholder="••••••••" required>
                   </div>
                   <div class="col-md-12">
@@ -201,7 +261,7 @@
               </button>
             </div>
           </div>
-        </div>
+        </form>
 
         <!-- Footer -->
         <div class="text-center mt-5">

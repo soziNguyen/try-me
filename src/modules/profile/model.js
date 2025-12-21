@@ -7,6 +7,7 @@ const ProfileSchema = new Schema(
     fullName: { type: String, trim: true, default: '' },
     cccd: { type: String, trim: true, default: '' }, // Căn cước công dân
     phone: { type: String, trim: true, default: '' },
+    email: { type: String, trim: true, default: '' },
     province: { type: String, trim: true, default: '' },
     commune: { type: String, trim: true, default: '' },
     street: { type: String, trim: true, default: '' },
