@@ -6,6 +6,6 @@ import { isPermit } from '../../helpers/isPermit.js'
 const router = express.Router()
 
 router.get('/api/setting/point', isAuthenticated, getPointSetting)
-router.post('/api/setting/point', isAuthenticated, isPermit('Admin', 'Org'), editPoint)
+router.post('/api/setting/point', isAuthenticated, isPermit('Admin', 'SubAdmin', 'Org'), editPoint)
 
 export default router

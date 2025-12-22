@@ -20,20 +20,30 @@ router.get('/', isAuthenticated, dashboard)
 router.get('/api/users/summary', isAuthenticated, userController.getStaffSummary)
 
 // =====================user routes==================================
-router.get('/users', isAuthenticated, isPermit('Admin', 'Org'), userPage) // render view
-router.get('/api/users', isAuthenticated, isPermit('Admin', 'Org'), userController.getUsers) // get data json
+router.get('/users', isAuthenticated, isPermit('Admin', 'SubAdmin', 'Org'), userPage) // render view
+router.get(
+  '/api/users',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  userController.getUsers
+) // get data json
 router.get('/api/users/:id', isAuthenticated, userController.getUserById) // get data json
 router.post(
   '/api/users/create',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   userController.createUser
 ) // post
-router.put('/api/users/update/:id', isAuthenticated, userController.updateUser) // post
+router.put(
+  '/api/users/update/:id',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  userController.updateUser
+) // post
 router.post(
   '/api/users/delete',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   userController.deleteUsers
 ) // post
 

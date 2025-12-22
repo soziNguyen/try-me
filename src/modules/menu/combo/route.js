@@ -18,28 +18,28 @@ router.get(
   '/api/menu/combos',
   isAuthenticated,
   checkWarehouseAccess,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   getCombos
 )
 router.post(
   '/api/menu/combo/create',
   isAuthenticated,
   checkWarehouseAccess,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   createCombo
 )
 router.post(
   '/api/menu/combo/update/:id',
   isAuthenticated,
   checkWarehouseAccess,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   updateCombo
 )
 router.post(
   '/api/menu/combo/deletes',
   isAuthenticated,
   checkWarehouseAccess,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   deleteCombos
 )
 router.get('/api/menu/combo/search', checkWarehouseAccess, searchCombos)

@@ -10,12 +10,14 @@
             </a>
           </li>
 
+          <% if (user.role === 'Admin') { %>
           <li class="<%= page === 'Employee Management' ? 'active' : '' %>">
             <a class="w-100" href="/employees">
               <i class="bi bi-person-bounding-box me-2"></i>
               <span>Quản lý Nhân viên</span>
             </a>
           </li>
+          <% } %>
 
           <li class="<%= page === 'User Management' ? 'active' : '' %>">
             <a class="w-100" href="/admin">
@@ -31,19 +33,21 @@
             </a>
           </li>
 
+          <% if (user.role === 'Admin') { %>
           <li class="<%= page === 'Plan' ? 'active' : '' %>">
             <a class="w-100" href="/plans">
               <i class="bi bi-box-seam text-success me-2"></i>
               <span>Quản lý Gói dịch vụ</span>
             </a>
           </li>
-
+          
           <li class="<%= page === 'Payment Method' ? 'active' : '' %>">
             <a class="w-100" href="/admin/payment-methods">
               <i class="bi bi-wallet2 text-info me-2"></i>
               <span>Phương thức thanh toán</span>
             </a>
           </li>
+          <% } %>
 
           <li class="<%= page === 'Coupon Plan' ? 'active' : '' %>">
             <a class="w-100" href="/coupons">

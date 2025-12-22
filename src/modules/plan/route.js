@@ -19,12 +19,27 @@ const router = express.Router()
 router.get('/api/admin/plan/active', isAuthenticated, getActivePlans)
 router.get('/api/admin/plans', isAuthenticated, isPermit('Admin'), getAllPlansAdmin)
 router.post('/api/admin/plan/create', isAuthenticated, isPermit('Admin'), createPlan)
-router.post('/api/admin/plan/upgrade', isAuthenticated, isPermit('Admin', 'Org'), upgradePlan)
+router.post(
+  '/api/admin/plan/upgrade',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  upgradePlan
+)
 router.put('/api/admin/plan/update/:id', isAuthenticated, isPermit('Admin'), updatePlan)
-router.get('/api/admin/plan/:id', isAuthenticated, isPermit('Admin', 'Org'), getPlanById)
-router.get('/api/admin/plan/code/:code', isAuthenticated, isPermit('Admin', 'Org'), getPlanByCode)
+router.get(
+  '/api/admin/plan/:id',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  getPlanById
+)
+router.get(
+  '/api/admin/plan/code/:code',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  getPlanByCode
+)
 router.post('/api/admin/plan/deletes', isAuthenticated, isPermit('Admin'), hardDeletePlan)
-router.post('/api/admin/plan/:id/approve', isPermit('Admin'), approvePlanTransaction)
+router.post('/api/admin/plan/:id/approve', isPermit('Admin', 'SubAdmin'), approvePlanTransaction)
 router.post('/api/admin/plan/:id/cancel', cancelPlanTransaction)
 
 export default router

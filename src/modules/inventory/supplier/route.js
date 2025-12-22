@@ -12,23 +12,28 @@ import { isPermit } from '../../../helpers/isPermit.js'
 const router = express.Router()
 
 router.get('/api/inventory/supplier/all', isAuthenticated, getAllSuppliers)
-router.get('/api/inventory/suppliers', isAuthenticated, isPermit('Admin', 'Org'), getSuppliers)
+router.get(
+  '/api/inventory/suppliers',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  getSuppliers
+)
 router.post(
   '/api/inventory/supplier/create',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   createSupplier
 )
 router.post(
   '/api/inventory/supplier/update/:id',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   updateSupplier
 )
 router.post(
   '/api/inventory/supplier/deletes',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   forceDeleteSuppliers
 )
 

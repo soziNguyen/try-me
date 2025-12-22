@@ -27,7 +27,7 @@ const checkPlanAccess = async (req, res, next) => {
 
     // Không cần login || Admin => Next()
     if (!req.isAuthenticated()) return next()
-    if (req.user.role === 'Admin') return next()
+    if (req.user.role === 'Admin' || req.user.role === 'SubAdmin') return next()
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) {

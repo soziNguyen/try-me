@@ -169,7 +169,7 @@ $(function () {
       // Handle update user
       $('#userTable_wrapper').on('click', '.updateUserBtn', function () {
         const userId = $(this).data('id')
-        const roles = ['Org', 'Staff', 'Kitchen']
+        const roles = ['SubAdmin', 'Org', 'Staff', 'Kitchen']
         const $roleSelected = $('#new-role')
         $roleSelected.empty().append(
           roles

@@ -12,7 +12,7 @@ import {
 
 const router = express.Router()
 
-router.get('/api/admin/coupons', isAuthenticated, isPermit('Admin'), getCouponPlans)
+router.get('/api/admin/coupons', isAuthenticated, isPermit('Admin', 'SubAdmin'), getCouponPlans)
 router.get('/api/admin/coupon/:id', isAuthenticated, isPermit('Admin'), getCouponPlanById)
 router.post('/api/admin/coupon/create', isAuthenticated, isPermit('Admin'), createCouponPlan)
 router.post('/api/admin/coupon/update/:id', isAuthenticated, isPermit('Admin'), updateCouponPlan)

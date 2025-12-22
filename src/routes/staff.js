@@ -5,17 +5,37 @@ import { isPermit } from '../helpers/isPermit.js'
 
 const router = express.Router()
 
-router.get('/staff/shifts', isAuthenticated, isPermit('Admin', 'Org'), page.shiftPage)
-router.get('/staff/schedule', isAuthenticated, isPermit('Admin', 'Org'), page.schedulePage)
+router.get('/staff/shifts', isAuthenticated, isPermit('Admin', 'SubAdmin', 'Org'), page.shiftPage)
+router.get(
+  '/staff/schedule',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  page.schedulePage
+)
 router.get('/my-schedule', isAuthenticated, page.mySchedulePage)
-router.get('/staff/attendance', isAuthenticated, isPermit('Admin', 'Org'), page.attendancePage)
+router.get(
+  '/staff/attendance',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  page.attendancePage
+)
 router.get(
   '/staff/attendance/:id',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   page.attendanceDetail
 )
-router.get('/staff/payroll/:id', isAuthenticated, isPermit('Admin', 'Org'), page.payrollDetailPage)
-router.get('/activity-logs', isAuthenticated, isPermit('Admin', 'Org'), page.activityLog)
+router.get(
+  '/staff/payroll/:id',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  page.payrollDetailPage
+)
+router.get(
+  '/activity-logs',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  page.activityLog
+)
 
 export default router

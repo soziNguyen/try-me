@@ -8,7 +8,7 @@ const router = express.Router()
 router.post(
   '/api/inventory/ingredient-stock',
   isAuthenticated,
-  isPermit('Admin', 'Org'),
+  isPermit('Admin', 'SubAdmin', 'Org'),
   getIngredientStockList
 )
 
