@@ -89,6 +89,7 @@ function getElements(data) {
   $('#businessType').val(data.businessType)
   $('#orgStreet').val(data.street)
   $('#orgIsActive').prop('checked', data.isActive)
+  $('#verificationStatus').val(data.profile.verificationStatus)
 
   if (data.profile.cccdImages.front) {
     $('#cccdFrontPreview').attr('src', data.profile.cccdImages.front).removeClass('d-none')
@@ -104,6 +105,10 @@ function getElements(data) {
   } else {
     $('#cccdBackPreview').addClass('d-none')
     $('#cccdBackPlaceholder').removeClass('d-none')
+  }
+
+  if (data.profile.verificationStatus === 'rejected') {
+    $('#verificationNote').val(data.profile.verificationNote || '')
   }
 
   if (data.accountType === 'enterprise') {

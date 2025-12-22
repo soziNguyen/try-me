@@ -99,7 +99,7 @@ async function fetchOrgDetail() {
           icon: 'bi-check-circle'
         },
         rejected: {
-          text: 'Bị từ chối',
+          text: 'Từ chối',
           class: 'bg-danger',
           icon: 'bi-x-circle'
         }
