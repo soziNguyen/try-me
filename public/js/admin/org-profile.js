@@ -73,8 +73,6 @@ async function fetchOrgDetail() {
         $('#cccd').val(profile.cccd || '')
         $('#email').val(profile.email || '')
         $('#phone').val(profile.phone || '')
-        $('#province').val(profile.province || '')
-        $('#commune').val(profile.commune || '')
         $('#street').val(profile.street || '')
 
         const profileProvinceId = profile.province || ''
@@ -146,7 +144,7 @@ async function fetchOrgDetail() {
   }
 }
 
-// ================== Auto update field ==================
+// Auto update field
 async function updateOrgField(field, value) {
   const csrfToken = document.getElementById('_csrf')?.value
   const payload = { [field]: value }
@@ -180,7 +178,44 @@ async function updateOrgField(field, value) {
   }
 }
 
-// ================== Hàm tạo canvas tròn ==================
+// Update profile field
+async function updateProfileField(field, value) {
+  const csrfToken = document.getElementById('_csrf')?.value
+
+  // Build nested profile object
+  const payload = {
+    profile: {
+      [field]: value
+    }
+  }
+
+  if (field === 'phone') {
+    payload.profile.phone = value ? value.replace(/[\s\.\-]/g, '') : ''
+  }
+
+  try {
+    const res = await fetch(`/api/organization/update/${orgId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken
+      },
+      body: JSON.stringify(payload)
+    })
+    const data = await res.json()
+    if (data.success) {
+      toastr.remove()
+      toastr.success(data.message)
+    } else {
+      toastr.error(data.message || `Lỗi cập nhật ${field}`)
+    }
+  } catch (err) {
+    console.error('Lỗi updateProfileField:', err)
+    toastr.error(err.message || `Lỗi khi cập nhật ${field}`)
+  }
+}
+
+// Hàm tạo canvas tròn
 function createCircularCanvas(sourceCanvas, size = 400) {
   const circularCanvas = document.createElement('canvas')
   const ctx = circularCanvas.getContext('2d')
@@ -196,13 +231,13 @@ function createCircularCanvas(sourceCanvas, size = 400) {
   return circularCanvas
 }
 
-// ================== Document ready ==================
+//  Document ready
 $(document).ready(function () {
   if (!orgInfo) return
 
   fetchOrgDetail()
 
-  // ------------------- Field change handlers -------------------
+  // Organization field change handlers
   $(document).on('change', '.org-update', function () {
     if (isLoadingOrgData) return
 
@@ -230,7 +265,51 @@ $(document).ready(function () {
     updateOrgField(field, value)
   })
 
-  // ------------------- Xem ảnh -------------------
+  // Profile field change handlers (for enterprise)
+  if (accountType === 'enterprise') {
+    $('#fullName, #cccd, #email, #phone, #street').on('change', function () {
+      if (isLoadingOrgData) return
+
+      const fieldMap = {
+        fullName: 'fullName',
+        cccd: 'cccd',
+        email: 'email',
+        phone: 'phone',
+        street: 'street'
+      }
+
+      const field = fieldMap[this.id]
+      const value = $(this).val() || ''
+
+      updateProfileField(field, value)
+    })
+
+    // Profile province change
+    $('#province').on('change', function () {
+      if (isLoadingOrgData) return
+
+      const provinceId = $(this).val()
+      updateProfileField('province', provinceId)
+
+      if (provinceId) {
+        listCommunes(provinceId, '#commune')
+      } else {
+        $('#commune')
+          .empty()
+          .append('<option value="">— Chọn Xã/ Phường —</option>')
+          .prop('disabled', true)
+        initSelect2($('#commune'), '— Chọn Xã/ Phường —')
+      }
+    })
+
+    // Profile commune change
+    $('#commune').on('change', function () {
+      if (isLoadingOrgData) return
+      updateProfileField('commune', $(this).val())
+    })
+  }
+
+  // Xem ảnh
   $('.preview-btn').on('click', () => {
     const imgSrc = $('#orgLogoPreview').attr('src')
     if (!imgSrc || imgSrc.includes('default.png')) return toastr.info('Chưa có ảnh để xem')
@@ -255,7 +334,7 @@ $(document).ready(function () {
     $('#imagePreviewModal').on('hidden.bs.modal', (e) => e.target.remove())
   })
 
-  // ------------------- Upload + Crop -------------------
+  // Upload + Crop
   $('.upload-btn').on('click', () => {
     const input = $('<input type="file" accept="image/*" />')
     input.on('change', (e) => {
@@ -341,6 +420,7 @@ $(document).ready(function () {
     }, mime)
   })
 
+  // CCCD Upload
   $('#uploadCccdFront').on('click', () => $('#cccdFrontInput').click())
   $('#uploadCccdBack').on('click', () => $('#cccdBackInput').click())
 

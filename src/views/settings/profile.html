@@ -261,80 +261,75 @@
                 </span>
               </div>
             </div>
-            <div class="card-body p-4">
-              <div class="row">
-                <!-- CCCD Front Image -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label fw-semibold small text-secondary">Ảnh mặt trước CCCD</label>
-                  <div class="cccd-upload-container">
-                    <div class="cccd-preview-wrapper border rounded text-center p-3 min-height-200">
-                      <img id="cccdFrontPreview" src="" alt="Mặt trước CCCD" 
-                        class="img-fluid rounded d-none mh-180">
-                      <div id="cccdFrontPlaceholder" class="d-flex flex-column align-items-center justify-content-center min-height-180">
-                        <i class="bi bi-card-image text-muted fs-0"></i>
-                        <p class="text-muted mt-2 mb-0">Chưa có ảnh mặt trước</p>
-                      </div>
-                    </div>
-                    <div class="mt-2 d-flex gap-2">
-                      <button type="button" class="btn btn-outline-light flex-fill" id="uploadCccdFront">
-                        <i class="bi bi-upload"></i>
-                      </button>
-                      <button type="button" class="btn btn-outline-danger d-none" id="removeCccdFront">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                    <input type="file" id="cccdFrontInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
-                  </div>
-                  <small class="text-muted">Ảnh rõ nét, đầy đủ 4 góc thẻ</small>
-                </div>
 
-                <!-- CCCD Back Image -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label fw-semibold small text-secondary">Ảnh mặt sau CCCD</label>
-                  <div class="cccd-upload-container">
-                    <div class="cccd-preview-wrapper border rounded text-center p-3 min-height-200">
-                      <img id="cccdBackPreview" src="" alt="Mặt sau CCCD" 
-                        class="img-fluid rounded d-none mh-180">
-                      <div id="cccdBackPlaceholder" class="d-flex flex-column align-items-center justify-content-center min-height-180">
-                        <i class="bi bi-card-image text-muted fs-0"></i>
-                        <p class="text-muted mt-2 mb-0">Chưa có ảnh mặt sau</p>
+            <% if (kyc !== 'verified') { %>
+              <div class="card-body p-4">
+                <div class="row">
+                  <!-- CCCD Front Image -->
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold small text-secondary">Ảnh mặt trước CCCD</label>
+                    <div class="cccd-upload-container">
+                      <div class="cccd-preview-wrapper border rounded text-center p-3 min-height-200">
+                        <img id="cccdFrontPreview" src="" alt="Mặt trước CCCD" 
+                          class="img-fluid rounded d-none mh-180">
+                        <div id="cccdFrontPlaceholder" class="d-flex flex-column align-items-center justify-content-center min-height-180">
+                          <i class="bi bi-card-image text-muted fs-0"></i>
+                          <p class="text-muted mt-2 mb-0">Chưa có ảnh mặt trước</p>
+                        </div>
                       </div>
+                      <div class="mt-2 d-flex gap-2">
+                        <button type="button" class="btn btn-outline-light flex-fill" id="uploadCccdFront">
+                          <i class="bi bi-upload"></i>
+                        </button>
+                      </div>
+                      <input type="file" id="cccdFrontInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
                     </div>
-                    <div class="mt-2 d-flex gap-2">
-                      <button type="button" class="btn btn-outline-light flex-fill" id="uploadCccdBack">
-                        <i class="bi bi-upload"></i>
-                      </button>
-                      <button type="button" class="btn btn-outline-danger d-none" id="removeCccdBack">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                    <input type="file" id="cccdBackInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
+                    <small class="text-muted">Ảnh rõ nét, đầy đủ 4 góc thẻ</small>
                   </div>
-                  <small class="text-muted">Ảnh rõ nét, đầy đủ 4 góc thẻ</small>
-                </div>
 
-                <!-- Verification Note (if rejected) -->
-                <div class="col-md-12 mb-3 d-none" id="verificationNoteContainer">
-                  <div class="alert alert-danger mb-0">
-                    <div class="d-flex align-items-start gap-2">
-                      <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
-                      <div>
-                        <strong>Lý do từ chối:</strong>
-                        <p id="verificationNote" class="mb-0 mt-1"></p>
+                  <!-- CCCD Back Image -->
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold small text-secondary">Ảnh mặt sau CCCD</label>
+                    <div class="cccd-upload-container">
+                      <div class="cccd-preview-wrapper border rounded text-center p-3 min-height-200">
+                        <img id="cccdBackPreview" src="" alt="Mặt sau CCCD" 
+                          class="img-fluid rounded d-none mh-180">
+                        <div id="cccdBackPlaceholder" class="d-flex flex-column align-items-center justify-content-center min-height-180">
+                          <i class="bi bi-card-image text-muted fs-0"></i>
+                          <p class="text-muted mt-2 mb-0">Chưa có ảnh mặt sau</p>
+                        </div>
+                      </div>
+                      <div class="mt-2 d-flex gap-2">
+                        <button type="button" class="btn btn-outline-light flex-fill" id="uploadCccdBack">
+                          <i class="bi bi-upload"></i>
+                        </button>
+                      </div>
+                      <input type="file" id="cccdBackInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
+                    </div>
+                    <small class="text-muted">Ảnh rõ nét, đầy đủ 4 góc thẻ</small>
+                  </div>
+
+                  <!-- Verification Note (if rejected) -->
+                  <div class="col-md-12 mb-3 d-none" id="verificationNoteContainer">
+                    <div class="alert alert-danger mb-0">
+                      <div class="d-flex align-items-start gap-2">
+                        <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+                        <div>
+                          <strong>Lý do từ chối:</strong>
+                          <p id="verificationNote" class="mb-0 mt-1"></p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                
-                <div class="col-md-12">
-                  <div class="d-flex align-items-center gap-2 bg-light rounded p-3">
-                    <i class="bi bi-shield-check text-success fs-5"></i>
-                    <span class="text-muted">
-                      Thông tin cá nhân sẽ được hệ thống tự động xóa khỏi máy chủ ngay sau khi quá trình xác minh hoàn tất.
-                    </span>
-                  </div>
-                </div>
-                
+              </div>
+            <% } %>
+            <div class="card-footer no-background border-top-0">
+              <div class="d-flex align-items-center gap-2 p-2">
+                <i class="bi bi-shield-check text-success fs-5"></i>
+                <span class="text-muted small">
+                  Thông tin cá nhân sẽ được hệ thống tự động xóa khỏi máy chủ ngay sau khi quá trình xác minh hoàn tất.
+                </span>
               </div>
             </div>
           </div>

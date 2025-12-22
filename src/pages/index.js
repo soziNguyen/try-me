@@ -48,7 +48,7 @@ export const resetPasswordPage = async (req, res) => {
 
 export const profilePage = async (req, res) => {
   const orgId = req.user.organization
-  const org = await Organization.findById(orgId)
+  const org = await Organization.findById(orgId).populate('profile', 'verificationStatus')
 
   res.render(
     'settings/profile',
@@ -59,7 +59,8 @@ export const profilePage = async (req, res) => {
       pageTitle: 'THÔNG TIN HỒ SƠ',
       userRole: req.user.role,
       currentOrgId: req.user.organization,
-      accountType: org.accountType
+      accountType: org.accountType,
+      kyc: org.profile.verificationStatus
     })
   )
 }

@@ -14,8 +14,8 @@ const ProfileSchema = new Schema(
     avatar: { type: String, trim: true, default: '' },
     dateOfBirth: { type: Date, default: null },
     cccdImages: {
-      front: { type: String, trim: true, default: '' }, // Ảnh mặt trước
-      back: { type: String, trim: true, default: '' } // Ảnh mặt sau
+      front: { type: String, trim: true, default: null }, // Ảnh mặt trước
+      back: { type: String, trim: true, default: null } // Ảnh mặt sau
     },
     verificationStatus: {
       type: String,
@@ -23,6 +23,7 @@ const ProfileSchema = new Schema(
       default: 'pending'
     },
     verifiedAt: { type: Date, default: null },
+    verifiedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     verificationNote: { type: String, trim: true, default: '' } // Ghi chú khi reject
   },
   {

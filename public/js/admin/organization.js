@@ -188,8 +188,6 @@ $(function () {
 
   $('#orgTable').on('click', '.change-plan', function () {
     const id = $(this).data('id')
-    console.log(id)
-
     window.location.href = `/organization/${id}/plan`
   })
 })

@@ -42,5 +42,11 @@ router.post(
   org.updateOrg
 ) // post
 router.post('/api/admin/organization/deletes', isAuthenticated, isAdmin, org.deleteOrgs) // post
+router.post(
+  '/api/organization/:id/verify',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin', 'Org'),
+  org.verifyProfile
+) // post
 
 export default router

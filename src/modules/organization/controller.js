@@ -507,6 +507,7 @@ export const updateOrg = async (req, res) => {
   try {
     const { id } = req.params
     const {
+      // Organization fields
       logo,
       name,
       email,
@@ -518,17 +519,22 @@ export const updateOrg = async (req, res) => {
       defaultWarehouse,
       street,
       isActive,
-      taxCode
+      taxCode,
+      // Profile fields
+      profile
     } = req.body
 
     if (!id) return responseHelper.error(res, 'Id không hợp lệ', 400)
 
-    const organization = await Organization.findById(id).populate('plan', 'name')
+    const organization = await Organization.findById(id)
+      .populate('plan', 'name')
+      .populate('profile')
+
     if (!organization) return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
 
     const oldOrg = organization.toObject()
 
-    // VALIDATE PHONE ...
+    // VALIDATE PHONE (Organization)
     let processedPhone = phone
     if (phone !== undefined && phone.trim()) {
       const phoneError = validatePhoneNumber(phone)
@@ -536,7 +542,7 @@ export const updateOrg = async (req, res) => {
       processedPhone = formatPhoneNumber(phone)
     }
 
-    // Validate email
+    // Validate email (Organization)
     if (email !== undefined && email.trim() && !validator.isEmail(email.trim())) {
       return responseHelper.error(res, 'Email không hợp lệ', 400)
     }
@@ -552,7 +558,8 @@ export const updateOrg = async (req, res) => {
         return responseHelper.error(res, 'Loại hình tổ chức không hợp lệ', 400)
       }
     }
-    // Check trùng email/phone/taxCode...
+
+    // Check trùng email/phone/taxCode (Organization)
     const conditions = []
     if (email !== undefined && email.trim()) {
       conditions.push({ email: email.trim().toLowerCase() })
@@ -583,12 +590,161 @@ export const updateOrg = async (req, res) => {
       }
     }
 
-    // CHUẨN BỊ DATA UPDATE
+    // HANDLE PROFILE UPDATE (for both personal and enterprise)
+    let profileId = organization.profile
+    let processedProfilePhone = null
+    let profileDataToSync = {}
+    let currentProfile = null
+
+    if (profileId) {
+      currentProfile = await Profile.findById(profileId).select('verificationStatus')
+    }
+
+    if (currentProfile?.verificationStatus === 'verified') {
+      // Allowed fields
+      const allowedProfileFields = ['email', 'phone']
+
+      // Check profile update
+      const hasForbiddenProfile =
+        profile && Object.keys(profile).some((key) => !allowedProfileFields.includes(key))
+
+      // Check organization update
+      const hasForbiddenOrg =
+        logo !== undefined ||
+        name !== undefined ||
+        plan !== undefined ||
+        businessType !== undefined ||
+        province !== undefined ||
+        commune !== undefined ||
+        street !== undefined ||
+        defaultWarehouse !== undefined ||
+        isActive !== undefined ||
+        taxCode !== undefined
+
+      if (hasForbiddenProfile || hasForbiddenOrg) {
+        return responseHelper.error(
+          res,
+          'Tài khoản đã được xác minh. Bạn chỉ được cập nhật Email hoặc Số điện thoại',
+          403
+        )
+      }
+    }
+
+    if (profile) {
+      // Validate profile phone
+      if (profile.phone !== undefined && profile.phone.trim()) {
+        const phoneError = validatePhoneNumber(profile.phone)
+        if (phoneError) return responseHelper.error(res, `Profile: ${phoneError}`, 400)
+        processedProfilePhone = formatPhoneNumber(profile.phone)
+      }
+
+      // Validate profile email
+      if (
+        profile.email !== undefined &&
+        profile.email.trim() &&
+        !validator.isEmail(profile.email.trim())
+      ) {
+        return responseHelper.error(res, 'Profile: Email không hợp lệ', 400)
+      }
+
+      if (profile.cccd !== undefined && profile.cccd.trim()) {
+        if (!isValidCCCDFormat(profile.cccd)) {
+          return responseHelper.error(res, 'Profile: CCCD không hợp lệ', 400)
+        }
+      }
+
+      const profileData = {}
+      if (profile.fullName !== undefined && profile.fullName.trim()) {
+        profileData.fullName = profile.fullName.trim()
+      }
+      if (profile.cccd !== undefined) profileData.cccd = profile.cccd.trim()
+      if (profile.phone !== undefined) profileData.phone = processedProfilePhone
+      if (profile.email !== undefined && profile.email.trim()) {
+        profileData.email = profile.email.trim().toLowerCase()
+      }
+      if (profile.province !== undefined) profileData.province = profile.province
+      if (profile.commune !== undefined) profileData.commune = profile.commune
+      if (profile.street !== undefined) profileData.street = profile.street
+
+      // Handle CCCD images
+      if (profile.cccdImages) {
+        if (!profileData.cccdImages) profileData.cccdImages = {}
+        if (profile.cccdImages.front !== undefined) {
+          profileData['cccdImages.front'] = profile.cccdImages.front
+        }
+        if (profile.cccdImages.back !== undefined) {
+          profileData['cccdImages.back'] = profile.cccdImages.back
+        }
+      }
+
+      // Update or create profile
+      if (profileId) {
+        // Update existing profile
+        const oldProfile = organization.profile?.toObject()
+
+        await Profile.findByIdAndUpdate(profileId, profileData, {
+          new: true,
+          runValidators: true
+        })
+
+        // Delete old CCCD images if new ones are uploaded
+        if (oldProfile?.cccdImages) {
+          if (
+            profile.cccdImages?.front &&
+            oldProfile.cccdImages.front &&
+            oldProfile.cccdImages.front !== profile.cccdImages.front
+          ) {
+            try {
+              await deleteFile(oldProfile.cccdImages.front)
+            } catch (err) {
+              console.error('Không xóa được ảnh CCCD mặt trước cũ:', err)
+            }
+          }
+          if (
+            profile.cccdImages?.back &&
+            oldProfile.cccdImages.back &&
+            oldProfile.cccdImages.back !== profile.cccdImages.back
+          ) {
+            try {
+              await deleteFile(oldProfile.cccdImages.back)
+            } catch (err) {
+              console.error('Không xóa được ảnh CCCD mặt sau cũ:', err)
+            }
+          }
+        }
+      } else {
+        // Create new profile
+        const newProfile = await Profile.create(profileData)
+        profileId = newProfile._id
+      }
+
+      // Prepare sync data for personal accounts
+      if (organization.accountType === 'personal') {
+        if (profile.phone !== undefined) profileDataToSync.phone = processedProfilePhone
+        if (profile.email !== undefined && profile.email.trim()) {
+          profileDataToSync.email = profile.email.trim().toLowerCase()
+        }
+        if (profile.province !== undefined) profileDataToSync.province = profile.province
+        if (profile.commune !== undefined) profileDataToSync.commune = profile.commune
+        if (profile.street !== undefined) profileDataToSync.street = profile.street
+      }
+    }
+
+    // CHUẨN BỊ DATA UPDATE (Organization)
     const data = {}
     if (logo !== undefined) data.logo = logo
     if (name !== undefined && name.trim()) data.name = name.trim()
-    if (email !== undefined && email.trim()) data.email = email.trim().toLowerCase()
-    if (phone !== undefined) data.phone = processedPhone
+
+    // Merge profile sync data for personal accounts (takes priority)
+    if (Object.keys(profileDataToSync).length > 0) {
+      Object.assign(data, profileDataToSync)
+    }
+
+    // Organization data (will be overridden by profileDataToSync if exists)
+    if (email !== undefined && email.trim() && !profileDataToSync.email) {
+      data.email = email.trim().toLowerCase()
+    }
+    if (phone !== undefined && !profileDataToSync.phone) data.phone = processedPhone
     if (plan !== undefined) {
       if (!plan) {
         data.plan = null
@@ -601,21 +757,24 @@ export const updateOrg = async (req, res) => {
         data.plan = plan
       }
     }
-    if (plan !== undefined) data.businessType = businessType
-    if (province !== undefined) data.province = province
-    if (commune !== undefined) data.commune = commune
-    if (street !== undefined) data.street = street
+    if (businessType !== undefined) data.businessType = businessType
+    if (province !== undefined && !profileDataToSync.province) data.province = province
+    if (commune !== undefined && !profileDataToSync.commune) data.commune = commune
+    if (street !== undefined && !profileDataToSync.street) data.street = street
     if (defaultWarehouse !== undefined)
       data.defaultWarehouse = defaultWarehouse === '' ? null : defaultWarehouse
     if (isActive !== undefined) data.isActive = isActive
     if (taxCode !== undefined) data.taxCode = taxCode?.trim() || null
+    if (profileId) data.profile = profileId
 
     const oldLogo = organization.logo
 
     const updated = await Organization.findByIdAndUpdate(id, data, {
       new: true,
       runValidators: true
-    }).populate('plan', 'name')
+    })
+      .populate('plan', 'name')
+      .populate('profile')
 
     if (!updated) {
       return responseHelper.error(res, 'Không thể cập nhật tổ chức', 400)
@@ -765,4 +924,42 @@ export const getOrgDashboard = async (req, res) => {
   } catch (error) {
     responseHelper.error(res, error.message)
   }
+}
+
+export const verifyProfile = async (req, res) => {
+  const { id } = req.params
+
+  const profile = await Profile.findById(id)
+  if (!profile) {
+    return responseHelper.error(res, 'Profile không tồn tại', 404)
+  }
+
+  if (profile.verificationStatus === 'verified') {
+    return responseHelper.error(res, 'Profile đã được xác minh', 400)
+  }
+
+  const oldImages = profile.cccdImages
+
+  profile.verificationStatus = 'verified'
+  profile.verifiedAt = new Date()
+  profile.verifiedBy = req.user._id
+  profile.cccdImages = null
+
+  await profile.save()
+
+  // Xóa file CCCD
+  if (oldImages?.front) await deleteFile(oldImages.front)
+  if (oldImages?.back) await deleteFile(oldImages.back)
+
+  logActivity(
+    profile._id,
+    req.user._id,
+    req.user.username,
+    'VERIFY',
+    'PROFILE',
+    'Xác minh hồ sơ người dùng',
+    profile.fullName
+  )
+
+  responseHelper.success(res, profile, 'Xác minh thành công')
 }
