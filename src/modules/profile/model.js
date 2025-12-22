@@ -12,7 +12,18 @@ const ProfileSchema = new Schema(
     commune: { type: String, trim: true, default: '' },
     street: { type: String, trim: true, default: '' },
     avatar: { type: String, trim: true, default: '' },
-    dateOfBirth: { type: Date, default: null }
+    dateOfBirth: { type: Date, default: null },
+    cccdImages: {
+      front: { type: String, trim: true, default: '' }, // Ảnh mặt trước
+      back: { type: String, trim: true, default: '' } // Ảnh mặt sau
+    },
+    verificationStatus: {
+      type: String,
+      enum: ['pending', 'verified', 'rejected'],
+      default: 'pending'
+    },
+    verifiedAt: { type: Date, default: null },
+    verificationNote: { type: String, trim: true, default: '' } // Ghi chú khi reject
   },
   {
     collection: 'Profiles',

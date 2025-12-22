@@ -59,6 +59,16 @@ $(function () {
       listCommunes(provinceId)
     }
   })
+
+  // View mặt trước
+  $('#viewCccdFront').on('click', function () {
+    viewImage('#cccdFrontPreview', 'Ảnh mặt trước CCCD')
+  })
+
+  // View mặt sau
+  $('#viewCccdBack').on('click', function () {
+    viewImage('#cccdBackPreview', 'Ảnh mặt sau CCCD')
+  })
 })
 
 function fillDataToForm(id) {
@@ -80,6 +90,31 @@ function getElements(data) {
   $('#orgStreet').val(data.street)
   $('#orgIsActive').prop('checked', data.isActive)
 
+  if (data.profile.cccdImages.front) {
+    $('#cccdFrontPreview').attr('src', data.profile.cccdImages.front).removeClass('d-none')
+    $('#cccdFrontPlaceholder').addClass('d-none')
+  } else {
+    $('#cccdFrontPreview').addClass('d-none')
+    $('#cccdFrontPlaceholder').removeClass('d-none')
+  }
+
+  if (data.profile.cccdImages.back) {
+    $('#cccdBackPreview').attr('src', data.profile.cccdImages.back).removeClass('d-none')
+    $('#cccdBackPlaceholder').addClass('d-none')
+  } else {
+    $('#cccdBackPreview').addClass('d-none')
+    $('#cccdBackPlaceholder').removeClass('d-none')
+  }
+
+  if (data.accountType === 'enterprise') {
+    const profile = data.profile
+    $('#fullName').val(profile.fullName)
+    $('#cccd').val(profile.cccd)
+    $('#ownerEmail').val(profile.email)
+    $('#ownerPhone').val(profile.phone)
+    $('#ownerStreet').val(profile.street)
+  }
+
   listAddress(data)
 }
 
@@ -92,6 +127,17 @@ async function listAddress(data) {
 
   await listCommunes(provinceId)
   $('#orgCommune').val(communeId).trigger('change')
+
+  if (data.accountType === 'enterprise') {
+    const profileProvinceId = data.profile.province || ''
+    const profileCommuneId = data.profile.commune || ''
+
+    await listProvinces('#ownerProvince')
+    $('#ownerProvince').val(profileProvinceId).trigger('change')
+
+    await listCommunes(profileProvinceId, '#ownerCommune')
+    $('#ownerCommune').val(profileCommuneId).trigger('change')
+  }
 }
 
 function renderPlanBadge(plan, planExpiredAt) {
@@ -134,4 +180,19 @@ function renderPlanBadge(plan, planExpiredAt) {
 
     $expired.html(`HSD: <strong>${formatDate(expiredDate)}</strong> · còn ${daysLeft} ngày`)
   }
+}
+
+function viewImage(previewSelector, title = 'Xem ảnh CCCD') {
+  const src = $(previewSelector).attr('src')
+
+  if (!src) {
+    toastr.remove()
+    toastr.info('Chưa có ảnh để xem')
+    return
+  }
+
+  $('#imageViewModalImg').attr('src', src)
+  $('#imageViewModal .modal-title').text(title)
+
+  new bootstrap.Modal('#imageViewModal').show()
 }

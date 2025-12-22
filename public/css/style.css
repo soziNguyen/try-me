@@ -627,6 +627,52 @@ body {
       -ms-flex-align: start;
           align-items: flex-start;
 }
+.admin__layout .admin__main .admin__content #orgForm .cccd-upload-container {
+  position: relative;
+}
+.admin__layout .admin__main .admin__content #orgForm .cccd-upload-container #uploadCccdFront,
+.admin__layout .admin__main .admin__content #orgForm .cccd-upload-container #uploadCccdBack {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+.admin__layout .admin__main .admin__content #orgForm .cccd-upload-container:hover .cccd-preview-wrapper {
+  background-color: var(--shadow-color);
+}
+.admin__layout .admin__main .admin__content #orgForm .cccd-upload-container:hover #uploadCccdFront,
+.admin__layout .admin__main .admin__content #orgForm .cccd-upload-container:hover #uploadCccdBack {
+  pointer-events: auto;
+  opacity: 1;
+  -webkit-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+.admin__layout .admin__main .admin__content #updateOrgForm .cccd-view-container {
+  position: relative;
+}
+.admin__layout .admin__main .admin__content #updateOrgForm .cccd-view-container #viewCccdFront,
+.admin__layout .admin__main .admin__content #updateOrgForm .cccd-view-container #viewCccdBack {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+.admin__layout .admin__main .admin__content #updateOrgForm .cccd-view-container:hover .cccd-preview-wrapper {
+  background-color: var(--shadow-color);
+}
+.admin__layout .admin__main .admin__content #updateOrgForm .cccd-view-container:hover #viewCccdFront,
+.admin__layout .admin__main .admin__content #updateOrgForm .cccd-view-container:hover #viewCccdBack {
+  pointer-events: auto;
+  opacity: 1;
+  -webkit-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
 .admin__layout .admin__main #admin__sidebar.collapsed ~ .admin__content .pagination-bar {
   left: 60px;
   width: calc(100% - 60px);
@@ -1148,6 +1194,52 @@ body {
   -webkit-box-align: start;
       -ms-flex-align: start;
           align-items: flex-start;
+}
+.staff__layout .staff__main .staff__content #orgForm .cccd-upload-container {
+  position: relative;
+}
+.staff__layout .staff__main .staff__content #orgForm .cccd-upload-container #uploadCccdFront,
+.staff__layout .staff__main .staff__content #orgForm .cccd-upload-container #uploadCccdBack {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+.staff__layout .staff__main .staff__content #orgForm .cccd-upload-container:hover .cccd-preview-wrapper {
+  background-color: var(--shadow-color);
+}
+.staff__layout .staff__main .staff__content #orgForm .cccd-upload-container:hover #uploadCccdFront,
+.staff__layout .staff__main .staff__content #orgForm .cccd-upload-container:hover #uploadCccdBack {
+  pointer-events: auto;
+  opacity: 1;
+  -webkit-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+.staff__layout .staff__main .staff__content #updateOrgForm .cccd-view-container {
+  position: relative;
+}
+.staff__layout .staff__main .staff__content #updateOrgForm .cccd-view-container #viewCccdFront,
+.staff__layout .staff__main .staff__content #updateOrgForm .cccd-view-container #viewCccdBack {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+.staff__layout .staff__main .staff__content #updateOrgForm .cccd-view-container:hover .cccd-preview-wrapper {
+  background-color: var(--shadow-color);
+}
+.staff__layout .staff__main .staff__content #updateOrgForm .cccd-view-container:hover #viewCccdFront,
+.staff__layout .staff__main .staff__content #updateOrgForm .cccd-view-container:hover #viewCccdBack {
+  pointer-events: auto;
+  opacity: 1;
+  -webkit-transition: all 0.3s ease;
+  transition: all 0.3s ease;
 }
 .staff__layout .staff__main #staff__sidebar.collapsed ~ .staff__content .pagination-bar {
   left: 60px;

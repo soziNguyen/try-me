@@ -47,6 +47,9 @@ export const resetPasswordPage = async (req, res) => {
 }
 
 export const profilePage = async (req, res) => {
+  const orgId = req.user.organization
+  const org = await Organization.findById(orgId)
+
   res.render(
     'settings/profile',
     getPageData(req, 'Thông tin hồ sơ', 'Profile', {
@@ -55,7 +58,8 @@ export const profilePage = async (req, res) => {
         : 'staff__header',
       pageTitle: 'THÔNG TIN HỒ SƠ',
       userRole: req.user.role,
-      currentOrgId: req.user.organization
+      currentOrgId: req.user.organization,
+      accountType: org.accountType
     })
   )
 }
@@ -829,13 +833,15 @@ export const couponPlanDetailPage = async (req, res) => {
 
 export const orgDetailPage = async (req, res) => {
   const orgId = req.params.id
+  const org = await Organization.findById(orgId)
 
   res.render(
     'admin/org_detail',
     getPageData(req, 'Chi tiết tổ chức', 'Organization Detail', {
       headerClass: 'admin__header',
       pageTitle: 'CHI TIẾT TỔ CHỨC',
-      orgId
+      orgId,
+      accountType: org.accountType
     })
   )
 }

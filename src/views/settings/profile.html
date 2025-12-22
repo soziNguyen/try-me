@@ -51,7 +51,7 @@
                   <i class="bi bi-building text-primary fs-4"></i>
                 </div>
                 <div>
-                  <h5 class="mb-0 fw-semibold">Thông tin tổ chức</h5>
+                  <h5 class="mb-0 fw-semibold">Thông tin doanh nghiệp</h5>
                   <p class="text-muted small mb-0">Thông tin cơ bản về doanh nghiệp</p>
                 </div>
               </div>
@@ -148,6 +148,189 @@
           </div>
         </div>
 
+        <% if (accountType === 'enterprise') { %>
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+              <div class="d-flex align-items-center">
+                <div class="bg-warning bg-opacity-10 rounded p-2 me-3">
+                  <i class="bi bi-person-workspace text-warning fs-4"></i>
+                </div>
+                <div>
+                  <h5 class="mb-0 fw-semibold">Thông tin chủ sở hữu</h5>
+                  <p class="text-muted small mb-0">
+                    Giám đốc hoặc người chịu trách nhiệm doanh nghiệp
+                  </p>
+                </div>
+              </div>              
+            </div>
+            <div class="card-body p-4">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold small text-secondary">Họ tên</label>
+                  <div class="input-group">
+                    <span class="input-group-text border-end-0">
+                      <i class="bi bi-hash text-secondary"></i>
+                    </span>
+                    <input type="text" id="fullName" class="form-control border-start-0"
+                      data-field="fullName" placeholder="Họ tên">
+                  </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold small text-secondary">CCCD</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="bi bi-building text-secondary"></i>
+                    </span>
+                    <input type="text" id="cccd" class="form-control border-start-0"
+                      data-field="cccd" placeholder="Tên tổ chức">
+                  </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold small text-secondary">Email</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="bi bi-envelope text-secondary"></i>
+                    </span>
+                    <input type="text" id="email" class="form-control border-start-0"
+                      data-field="email" placeholder="Email">
+                  </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold small text-secondary">Số điện thoại</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="bi bi-telephone text-secondary"></i>
+                    </span>
+                    <input type="text" id="phone" class="form-control border-start-0"
+                      data-field="phone" placeholder="Số điện thoại">
+                  </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold small text-secondary">Tỉnh/Thành phố</label>
+                  <div class="d-flex align-items-center border rounded ps-2">
+                    <i class="bi bi-geo-alt text-secondary me-2"></i>
+                    <select id="province" class="form-control flex-grow-1"
+                      data-field="province"></select>
+                  </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold small text-secondary">Xã/Phường</label>
+                  <div class="d-flex align-items-center border rounded ps-2">
+                    <i class="bi bi-signpost text-secondary me-2"></i>
+                    <select id="commune" class="form-control flex-grow-1"
+                      data-field="commune"></select>
+                  </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold small text-secondary">Số nhà/Đường</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                      <i class="bi bi-house text-secondary"></i>
+                    </span>
+                    <input type="text" id="street" class="form-control border-start-0"
+                      data-field="street" placeholder="Số nhà/Đường">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- CCCD Verification Card -->
+        <div class="cccd-verification mt-3">
+          <div class="card shadow-sm">
+            <div class="card-header bg-light">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                  <div class="bg-info bg-opacity-10 rounded p-2 me-3">
+                    <i class="bi bi-card-checklist text-info fs-4"></i>
+                  </div>
+                  <div>
+                    <h5 class="mb-0 fw-semibold">Xác minh (KYC)</h5>
+                    <p class="text-muted small mb-0">Upload ảnh CCCD để xác minh tài khoản</p>
+                  </div>
+                </div>
+                <span id="verificationBadge" class="badge bg-warning">
+                  <i class="bi bi-clock-history me-1"></i>Chờ xác minh
+                </span>
+              </div>
+            </div>
+            <div class="card-body p-4">
+              <div class="row">
+                <!-- CCCD Front Image -->
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold small text-secondary">Ảnh mặt trước CCCD</label>
+                  <div class="cccd-upload-container">
+                    <div class="cccd-preview-wrapper border rounded text-center p-3 min-height-200">
+                      <img id="cccdFrontPreview" src="" alt="Mặt trước CCCD" 
+                        class="img-fluid rounded d-none mh-180">
+                      <div id="cccdFrontPlaceholder" class="d-flex flex-column align-items-center justify-content-center min-height-180">
+                        <i class="bi bi-card-image text-muted fs-0"></i>
+                        <p class="text-muted mt-2 mb-0">Chưa có ảnh mặt trước</p>
+                      </div>
+                    </div>
+                    <div class="mt-2 d-flex gap-2">
+                      <button type="button" class="btn btn-outline-light flex-fill" id="uploadCccdFront">
+                        <i class="bi bi-upload"></i>
+                      </button>
+                      <button type="button" class="btn btn-outline-danger d-none" id="removeCccdFront">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                    <input type="file" id="cccdFrontInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
+                  </div>
+                  <small class="text-muted">Ảnh rõ nét, đầy đủ 4 góc thẻ</small>
+                </div>
+
+                <!-- CCCD Back Image -->
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold small text-secondary">Ảnh mặt sau CCCD</label>
+                  <div class="cccd-upload-container">
+                    <div class="cccd-preview-wrapper border rounded text-center p-3 min-height-200">
+                      <img id="cccdBackPreview" src="" alt="Mặt sau CCCD" 
+                        class="img-fluid rounded d-none mh-180">
+                      <div id="cccdBackPlaceholder" class="d-flex flex-column align-items-center justify-content-center min-height-180">
+                        <i class="bi bi-card-image text-muted fs-0"></i>
+                        <p class="text-muted mt-2 mb-0">Chưa có ảnh mặt sau</p>
+                      </div>
+                    </div>
+                    <div class="mt-2 d-flex gap-2">
+                      <button type="button" class="btn btn-outline-light flex-fill" id="uploadCccdBack">
+                        <i class="bi bi-upload"></i>
+                      </button>
+                      <button type="button" class="btn btn-outline-danger d-none" id="removeCccdBack">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                    <input type="file" id="cccdBackInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
+                  </div>
+                  <small class="text-muted">Ảnh rõ nét, đầy đủ 4 góc thẻ</small>
+                </div>
+
+                <!-- Verification Note (if rejected) -->
+                <div class="col-md-12 mb-3 d-none" id="verificationNoteContainer">
+                  <div class="alert alert-danger mb-0">
+                    <div class="d-flex align-items-start">
+                      <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                      <div>
+                        <strong>Lý do từ chối:</strong>
+                        <p id="verificationNote" class="mb-0 mt-1"></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Account Info Card -->
         <div class="account-info mt-3">
           <div class="card shadow-sm">
@@ -195,21 +378,21 @@
             </div>
           </div>
         </div>
-
       </form>
     </div>
 
-    <% } %>
+  <% } %>
 
-      <%- include('../partials/commonjs.html') %>
-      <%- include('../partials/cropper_modal.html') %>
-        <input type="hidden" id="currentOrgId"
-          value="<%= ['Admin','SubAdmin'].includes(userRole) ? (session.currentOrg || '') : (currentOrgId || '') %>">
-      <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
-      <%- include('../partials/sidebar_togglejs.html') %>
-      <%- include('../partials/data_tablejs.html') %>
-      <% if (['Admin','SubAdmin'].includes(user.role)) { %>
-        <%- include('../partials/admin-orgjs.html') %>
-      <% } %>
-      <script src="/js/admin/org-profile.js?ver=1.0.0"></script>
-      <%- include('../partials/footer.html') %>
+<%- include('../partials/commonjs.html') %>
+<%- include('../partials/cropper_modal.html') %>
+<input type="hidden" name="accountType" id="accountType" value="<%= accountType %>">
+<input type="hidden" id="currentOrgId"
+  value="<%= ['Admin','SubAdmin'].includes(userRole) ? (session.currentOrg || '') : (currentOrgId || '') %>">
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<%- include('../partials/sidebar_togglejs.html') %>
+<%- include('../partials/data_tablejs.html') %>
+<% if (['Admin','SubAdmin'].includes(user.role)) { %>
+  <%- include('../partials/admin-orgjs.html') %>
+<% } %>
+<script src="/js/admin/org-profile.js?ver=1.0.0"></script>
+<%- include('../partials/footer.html') %>

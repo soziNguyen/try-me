@@ -3,7 +3,14 @@ import { getCurrentOrg } from './orgHelper.js'
 import responseHelper from './responseHelper.js'
 
 function getSafeEndpoints() {
-  return ['/api/inventory/ingredient-stock', '/api/admin/plan/upgrade', '/api/users/logout']
+  return [
+    '/api/inventory/ingredient-stock',
+    '/api/admin/plan/upgrade',
+    '/api/users/logout',
+    '/api/upload',
+    '/api/profile/update-cccd',
+    /^\/api\/organization\/update\/[0-9a-f]{24}$/
+  ]
 }
 
 const checkActiveOrg = async (req, res, next) => {
@@ -14,7 +21,14 @@ const checkActiveOrg = async (req, res, next) => {
     // Cho phép 1 số API đặc biệt
     const SAFE_ENDPOINTS = getSafeEndpoints()
 
-    if (SAFE_ENDPOINTS.includes(req.path)) {
+    const isSafeEndpoint = SAFE_ENDPOINTS.some((pattern) => {
+      if (pattern instanceof RegExp) {
+        return pattern.test(req.path)
+      }
+      return pattern === req.path
+    })
+
+    if (isSafeEndpoint) {
       return next()
     }
 

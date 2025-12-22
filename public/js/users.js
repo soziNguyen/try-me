@@ -74,10 +74,13 @@ if (logInForm) {
   const nextBtn = document.querySelector('.btn-next')
   const next2Btn = document.querySelector('.btn-step-2')
   const enterpriseNextBtn = document.querySelector('.btn-enterprise-next')
+  const backBtn = document.querySelector('.btn-back')
   const accountTypeStep = document.querySelector('.account-type-step')
 
   let selectedAccountType = null
+  let lastErrorMessage = '' // Lưu error message
 
+  // Step 1: Chọn loại tài khoản
   nextBtn?.addEventListener('click', () => {
     const selected = document.querySelector('input[name="accountType"]:checked')
 
@@ -96,6 +99,7 @@ if (logInForm) {
     }
   })
 
+  // Step 2: Từ form cá nhân => Form đăng nhập
   next2Btn?.addEventListener('click', () => {
     const formData = new FormData(personalForm)
 
@@ -117,6 +121,7 @@ if (logInForm) {
     userForm.classList.remove('d-none')
   })
 
+  // Step 2: Từ form doanh nghiệp => Form đăng nhập
   enterpriseNextBtn?.addEventListener('click', () => {
     const formData = new FormData(enterpriseForm)
 
@@ -143,6 +148,17 @@ if (logInForm) {
     userForm.classList.remove('d-none')
   })
 
+  // Nút quay lại thủ công
+  backBtn?.addEventListener('click', () => {
+    userForm.classList.add('d-none')
+
+    if (selectedAccountType === 'personal') {
+      personalForm?.classList.remove('d-none')
+    } else if (selectedAccountType === 'enterprise') {
+      enterpriseForm?.classList.remove('d-none')
+    }
+  })
+
   // Populate business type dropdown
   const accountTypeSelect = document.getElementById('accountType')
 
@@ -159,9 +175,94 @@ if (logInForm) {
     accountTypeSelect.appendChild(option)
   }
 
+  // Hàm phân tích lỗi và xác định step cần quay lại
+  function analyzeError(errorMessage) {
+    const msg = errorMessage.toLowerCase()
+
+    // Lỗi liên quan đến thông tin cá nhân/tổ chức (cần quay lại step info)
+    const infoErrorKeywords = [
+      // CCCD related
+      'cccd',
+      'căn cước',
+      'mã tỉnh',
+      'chữ số và mã tỉnh',
+
+      // Tax code
+      'mã số thuế',
+      'tax code',
+
+      // Email organization/personal
+      'email tổ chức',
+      'email cá nhân',
+      'email không hợp lệ',
+      'email người đại diện',
+
+      // Phone
+      'số điện thoại tổ chức',
+      'số điện thoại người đại diện',
+      'số điện thoại',
+      'phone',
+
+      // Location
+      'tỉnh',
+      'thành phố',
+      'xã',
+      'phường',
+      'province',
+      'commune',
+
+      // Organization info
+      'tên tổ chức',
+      'thông tin tổ chức',
+      'thông tin cá nhân',
+      'thông tin người đại diện',
+
+      // Duplicate checks from backend
+      'đã tồn tại'
+    ]
+
+    // Lỗi liên quan đến đăng nhập (giữ nguyên ở step login)
+    const loginErrorKeywords = [
+      'tên đăng nhập',
+      'username',
+      'email đăng nhập',
+      'mật khẩu',
+      'password',
+      'loại hình kinh doanh',
+      'business type'
+    ]
+
+    // Kiểm tra lỗi thuộc loại info
+    for (const keyword of infoErrorKeywords) {
+      if (msg.includes(keyword)) {
+        return 'info'
+      }
+    }
+
+    // Kiểm tra lỗi thuộc loại login
+    for (const keyword of loginErrorKeywords) {
+      if (msg.includes(keyword)) {
+        return 'login'
+      }
+    }
+
+    // Mặc định: quay về info để an toàn
+    return 'info'
+  }
+
+  // Override toastr.error để capture error message
+  const originalToastrError = toastr.error
+  toastr.error = function (message, title, options) {
+    lastErrorMessage = message || ''
+    return originalToastrError.call(toastr, message, title, options)
+  }
+
   // Submit cuối cùng từ userForm
   userForm?.addEventListener('submit', async (event) => {
     event.preventDefault()
+
+    // Reset error message
+    lastErrorMessage = ''
 
     // Lấy thông tin đăng nhập
     const adminUsername = document.getElementById('adminUsername').value
@@ -228,17 +329,33 @@ if (logInForm) {
       }
     }
 
-    try {
-      const result = await ajax('/api/organization/create', data)
+    const result = await ajax('/api/organization/create', data)
 
-      if (result) {
-        toastr.success('Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...')
+    if (result === false) {
+      const errorStep = analyzeError(lastErrorMessage)
+
+      if (errorStep === 'info') {
         setTimeout(() => {
-          window.location.href = '/login'
+          userForm.classList.add('d-none')
+
+          if (selectedAccountType === 'personal') {
+            personalForm?.classList.remove('d-none')
+            toastr.info('Vui lòng kiểm tra lại thông tin cá nhân')
+          } else if (selectedAccountType === 'enterprise') {
+            enterpriseForm?.classList.remove('d-none')
+            toastr.info('Vui lòng kiểm tra lại thông tin tổ chức và người đại diện')
+          }
         }, 1500)
       }
-    } catch (error) {
-      toastr.error(error.message || 'Có lỗi xảy ra khi đăng ký')
+      return
+    }
+
+    // Thành công
+    if (result) {
+      toastr.success('Đăng ký thành công! Đang chuyển hướng...')
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 2000)
     }
   })
 } else if (forgotForm) {

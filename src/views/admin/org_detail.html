@@ -20,144 +20,278 @@
           <form id="updateOrgForm">
             <input type="hidden" id="orgId" name="orgId" value="<%= orgId || '' %>">
 
-            <!-- Thông tin cơ bản -->
-            <div class="mb-4">
-              <h6 class="text-primary border-bottom pb-2 mb-3">
-                <i class="bi bi-building me-2"></i>
-                Thông Tin Cơ Bản
-              </h6>
+            <div class="row">
+              <!-- Cột trái -->
+              <div class="col-lg-6">
+                <!-- Thông tin cơ bản -->
+                <h6 class="text-primary border-bottom pb-2 mb-3">
+                  <i class="bi bi-building me-2"></i>
+                  Thông Tin Cơ Bản
+                </h6>
 
-              <div class="row mb-3">
-                <label for="orgName" class="col-sm-3 col-form-label fw-semibold">
-                  Tên tổ chức
-                </label>
-                <div class="col-sm-9">
+                <div class="mb-3">
+                  <label for="orgName" class="form-label fw-semibold">Tên tổ chức</label>
                   <input type="text" class="org-update form-control" id="orgName" name="name" data-field="name">
                 </div>
-              </div>
 
-              <div class="row mb-3">
-                <label for="taxCode" class="col-sm-3 col-form-label fw-semibold">
-                  Mã số thuế
-                </label>
-                <div class="col-sm-9">
+                <div class="mb-3">
+                  <label for="taxCode" class="form-label fw-semibold">Mã số thuế</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-receipt"></i></span>
-                    <input type="text" class="org-update form-control" id="taxCode" name="taxCode" data-field="taxCode"
-                      placeholder="Nhập mã số thuế">
+                    <input type="text" class="org-update form-control" id="taxCode" name="taxCode" data-field="taxCode" placeholder="Nhập mã số thuế">
                   </div>
                 </div>
-              </div>
 
-              <div class="row mb-3">
-                <label for="orgEmail" class="col-sm-3 col-form-label fw-semibold">
-                  Email
-                </label>
-                <div class="col-sm-9">
+                <div class="mb-3">
+                  <label for="orgEmail" class="form-label fw-semibold">Email</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                     <input type="email" class="org-update form-control" id="orgEmail" name="email" data-field="email">
                   </div>
                 </div>
-              </div>
 
-              <div class="row mb-3">
-                <label for="orgPhone" class="col-sm-3 col-form-label fw-semibold">
-                  Số điện thoại
-                </label>
-                <div class="col-sm-9">
+                <div class="mb-3">
+                  <label for="orgPhone" class="form-label fw-semibold">Số điện thoại</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                     <input type="text" class="org-update form-control" id="orgPhone" name="phone" data-field="phone">
                   </div>
                 </div>
-              </div>
 
-              <div class="row mb-3">
-                <label for="orgPlan" class="col-sm-3 col-form-label fw-semibold">
-                  Gói dịch vụ
-                </label>
-                <div class="col-sm-9 d-flex align-items-center">
-                  <span id="orgPlanBadge" class="badge fs-6 px-3 py-2"></span>
-                  <small id="orgPlanExpired" class="text-muted ms-2"></small>
-                </div>
-              </div>
-
-              <div class="row mb-3">
-                <label for="businessType" class="col-sm-3 col-form-label fw-semibold">
-                  Loại hình
-                </label>
-                <div class="col-sm-9">
+                <div class="mb-3">
+                  <label for="businessType" class="form-label fw-semibold">Loại hình</label>
                   <select class="org-update form-select" id="businessType" name="businessType" data-field="businessType">
                     <option value="shop">Siêu thị, cửa hàng</option>
                     <option value="food">Đồ uống, cafe</option>
                     <option value="drink">Nhà hàng, quán ăn</option>
                   </select>
                 </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Gói dịch vụ</label>
+                  <div class="d-flex align-items-center">
+                    <span id="orgPlanBadge" class="badge fs-6 px-3 py-2"></span>
+                    <small id="orgPlanExpired" class="text-muted ms-2"></small>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <!-- Địa chỉ -->
-            <div class="mb-4">
-              <h6 class="text-primary border-bottom pb-2 mb-3">
-                <i class="bi bi-geo-alt me-2"></i>
-                Địa Chỉ
-              </h6>
+              <!-- Cột phải -->
+              <div class="col-lg-6">
+                <!-- Địa chỉ -->
+                <h6 class="text-primary border-bottom pb-2 mb-3">
+                  <i class="bi bi-geo-alt me-2"></i>
+                  Địa Chỉ
+                </h6>
 
-              <div class="row mb-3">
-                <label for="orgProvince" class="col-sm-3 col-form-label fw-semibold">
-                  Tỉnh/Thành phố
-                </label>
-                <div class="col-sm-9">
+                <div class="mb-3">
+                  <label for="orgProvince" class="form-label fw-semibold">Tỉnh/Thành phố</label>
                   <select class="org-update form-select" id="orgProvince" name="province" data-field="province">
                   </select>
                 </div>
-              </div>
 
-              <div class="row mb-3">
-                <label for="orgCommune" class="col-sm-3 col-form-label fw-semibold">
-                  Quận/Huyện/Xã
-                </label>
-                <div class="col-sm-9">
+                <div class="mb-3">
+                  <label for="orgCommune" class="form-label fw-semibold">Quận/Huyện/Xã</label>
                   <select class="org-update form-select" id="orgCommune" name="commune" data-field="commune">
                   </select>
                 </div>
-              </div>
 
-              <div class="row mb-3">
-                <label for="orgStreet" class="col-sm-3 col-form-label fw-semibold">
-                  Địa chỉ chi tiết
-                </label>
-                <div class="col-sm-9">
-                  <textarea class="org-update form-control" id="orgStreet" name="street" data-field="street" rows="3"
-                    placeholder="Số nhà, tên đường..."></textarea>
+                <div class="mb-3">
+                  <label for="orgStreet" class="form-label fw-semibold">Địa chỉ chi tiết</label>
+                  <textarea class="org-update form-control" id="orgStreet" name="street" data-field="street" rows="3" placeholder="Số nhà, tên đường..."></textarea>
                 </div>
-              </div>
-            </div>
 
-            <!-- Trạng thái -->
-            <div class="mb-4">
-              <h6 class="text-primary border-bottom pb-2 mb-3">
-                <i class="bi bi-toggle-on me-2"></i>
-                Trạng Thái
-              </h6>
-
-              <div class="row">
-                <div class="col-sm-9 offset-sm-3">
+                <!-- Trạng thái -->
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Trạng thái</label>
                   <div class="form-check form-switch">
-                    <input class="form-check-input org-update" type="checkbox" id="orgIsActive" name="isActive"
-                      data-field="isActive">
-                    <label class="form-check-label fw-semibold" for="orgIsActive">
+                    <input class="form-check-input org-update" type="checkbox" id="orgIsActive" name="isActive" data-field="isActive">
+                    <label class="form-check-label" for="orgIsActive">
                       Kích hoạt tổ chức
                     </label>
                   </div>
                 </div>
+                
               </div>
             </div>
 
+            <% if (accountType === 'enterprise') { %>
+              <!-- Thông tin chủ sở hữu -->
+              <div class="row mt-4 pt-4 border-top">
+                <div class="col-12 mb-3">
+                  <h6 class="text-primary border-bottom pb-2">
+                    <i class="bi bi-person-workspace me-2"></i>
+                    Thông Tin Chủ Sở Hữu
+                  </h6>
+                </div>
+
+                <!-- Cột trái -->
+                <div class="col-lg-6">
+                  <div class="mb-3">
+                    <label for="fullName" class="form-label fw-semibold">Họ tên</label>
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <i class="bi bi-person"></i>
+                      </span>
+                      <input type="text" id="fullName" class="form-control"
+                        data-field="fullName" placeholder="Nhập họ tên">
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="cccd" class="form-label fw-semibold">CCCD</label>
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <i class="bi bi-card-text"></i>
+                      </span>
+                      <input type="text" id="cccd" class="form-control"
+                        data-field="cccd" placeholder="Nhập số CCCD">
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="ownerEmail" class="form-label fw-semibold">Email</label>
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <i class="bi bi-envelope"></i>
+                      </span>
+                      <input type="email" id="ownerEmail" class="form-control"
+                        data-field="email" placeholder="Nhập email">
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="ownerPhone" class="form-label fw-semibold">Số điện thoại</label>
+                    <div class="input-group">
+                      <span class="input-group-text">
+                        <i class="bi bi-telephone"></i>
+                      </span>
+                      <input type="text" id="ownerPhone" class="form-control"
+                        data-field="phone" placeholder="Nhập số điện thoại">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cột phải -->
+                <div class="col-lg-6">
+                  <div class="mb-3">
+                    <label for="ownerProvince" class="form-label fw-semibold">Tỉnh/Thành phố</label>
+                    <select id="ownerProvince" class="form-select"
+                      data-field="province">
+                    </select>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="ownerCommune" class="form-label fw-semibold">Xã/Phường</label>
+                    <select id="ownerCommune" class="form-select"
+                      data-field="commune">
+                    </select>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="ownerStreet" class="form-label fw-semibold">Địa chỉ chi tiết</label>
+                    <textarea id="ownerStreet" class="form-control" rows="3"
+                      data-field="street" placeholder="Số nhà, tên đường..."></textarea>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+
+            <!-- Xác minh CCCD -->
+            <div class="row mt-4 pt-4 border-top">
+              <div class="col-12 mb-3">
+                <div class="d-flex align-items-center justify-content-between">
+                  <h6 class="text-primary border-bottom pb-2 mb-0 flex-grow-1">
+                    <i class="bi bi-card-checklist me-2"></i>
+                    Xác Minh (KYC)
+                  </h6>
+                </div>
+              </div>
+
+              <!-- Cột trái - Ảnh mặt trước -->
+              <div class="col-lg-6">
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Ảnh mặt trước CCCD</label>
+                  <div class="cccd-view-container">
+                    <div class="cccd-preview-wrapper border rounded text-center p-3 min-height-200">
+                      <img id="cccdFrontPreview" src="" alt="Mặt trước CCCD" 
+                        class="img-fluid rounded d-none mh-180">
+                      <div id="cccdFrontPlaceholder" class="d-flex flex-column align-items-center justify-content-center min-height-180">
+                        <i class="bi bi-card-image text-muted fs-0"></i>
+                        <p class="text-muted mt-2 mb-0">Chưa có ảnh mặt trước</p>
+                      </div>
+                    </div>
+                    <div class="mt-2 d-flex gap-2">
+                      <button type="button" class="btn btn-outline-light flex-fill" id="viewCccdFront">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                    </div>
+                    <input type="file" id="cccdFrontInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
+                  </div>
+                  <small class="text-muted">Ảnh rõ nét, đầy đủ 4 góc thẻ</small>
+                </div>
+              </div>
+
+              <!-- Cột phải - Ảnh mặt sau -->
+              <div class="col-lg-6">
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Ảnh mặt sau CCCD</label>
+                  <div class="cccd-view-container">
+                    <div class="cccd-preview-wrapper border rounded text-center p-3 min-height-200">
+                      <img id="cccdBackPreview" src="" alt="Mặt sau CCCD" 
+                        class="img-fluid rounded d-none mh-180">
+                      <div id="cccdBackPlaceholder" class="d-flex flex-column align-items-center justify-content-center min-height-180">
+                        <i class="bi bi-card-image text-muted fs-0"></i>
+                        <p class="text-muted mt-2 mb-0">Chưa có ảnh mặt sau</p>
+                      </div>
+                    </div>
+                    <div class="mt-2 d-flex gap-2">
+                      <button type="button" class="btn btn-outline-light flex-fill" id="viewCccdBack">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                    </div>
+                    <input type="file" id="cccdBackInput" class="d-none" accept="image/jpeg,image/jpg,image/png">
+                  </div>
+                  <small class="text-muted">Ảnh rõ nét, đầy đủ 4 góc thẻ</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="row align-items-center mt-4 pt-4">
+              <div class="col-md-3">
+                <label for="verificationStatus" class="form-label fw-semibold mb-0">
+                  Trạng thái
+                </label>
+              </div>
+            
+              <div class="col-md-9">
+                <select
+                  id="verificationStatus"
+                  class="form-select"
+                  data-field="verificationStatus"
+                >
+                  <option value="pending">Chờ xác minh</option>
+                  <option value="verified">Đã xác minh</option>
+                  <option value="rejected">Từ chối</option>
+                </select>
+              </div>
+            </div>
+            <div class="row pt-4">
+              <div class="col-md-3">
+                <label for="verificationNote" class="form-label fw-semibold mb-0">
+                  Nội dung từ chối
+                </label>
+              </div>
+            
+              <div class="col-md-9">
+                <textarea name="verificationNote" id="verificationNote" data-field="verificationNote" class="form-control"></textarea>
+              </div>
+            </div>
+            
+
             <!-- Buttons -->
-            <div class="row">
-              <div class="col-sm-9 offset-sm-3">
+            <div class="row mt-4 pt-3 border-top">
+              <div class="col-12 d-flex justify-content-end">
                 <a href="/organizations" class="btn btn-secondary me-2">
                   <i class="bi bi-x-circle me-1"></i>
                   Hủy
@@ -176,6 +310,29 @@
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="imageViewModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-image me-2"></i>
+          Xem ảnh CCCD
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img
+          id="imageViewModalImg"
+          src=""
+          class="img-fluid rounded"
+          style="max-height: 75vh"
+        >
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <%- include('../partials/commonjs.html') %>
 <input type="hidden" id="currentUserId" value="<%= currentUserId %>">

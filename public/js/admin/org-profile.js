@@ -1,5 +1,6 @@
 const orgId = document.getElementById('currentOrgId').value
 const orgInfo = document.querySelector('.org-info')
+const accountType = document.getElementById('accountType').value
 let cropper
 let isLoadingOrgData = false // cờ để tránh update lúc load
 
@@ -34,6 +35,8 @@ async function fetchOrgDetail() {
 
     if (data.success) {
       const org = data.data
+      const profile = org.profile || {}
+
       await fetchWarehouses(org.defaultWarehouse?._id)
 
       $('#taxCode').val(org.taxCode || '')
@@ -64,6 +67,75 @@ async function fetchOrgDetail() {
 
       await listCommunes(provinceId)
       $('#orgCommune').val(communeId).trigger('change')
+
+      if (accountType === 'enterprise') {
+        $('#fullName').val(profile.fullName || '')
+        $('#cccd').val(profile.cccd || '')
+        $('#email').val(profile.email || '')
+        $('#phone').val(profile.phone || '')
+        $('#province').val(profile.province || '')
+        $('#commune').val(profile.commune || '')
+        $('#street').val(profile.street || '')
+
+        const profileProvinceId = profile.province || ''
+        const profileCommuneId = profile.commune || ''
+
+        await listProvinces('#province')
+        $('#province').val(profileProvinceId).trigger('change')
+
+        await listCommunes(profileProvinceId, '#commune')
+        $('#commune').val(profileCommuneId).trigger('change')
+      }
+
+      const verificationMap = {
+        pending: {
+          text: 'Chờ xác nhận',
+          class: 'bg-warning text-dark',
+          icon: 'bi-hourglass-split'
+        },
+        verified: {
+          text: 'Đã xác minh',
+          class: 'bg-success',
+          icon: 'bi-check-circle'
+        },
+        rejected: {
+          text: 'Bị từ chối',
+          class: 'bg-danger',
+          icon: 'bi-x-circle'
+        }
+      }
+
+      const s = verificationMap[profile.verificationStatus]
+
+      $('#verificationBadge')
+        .html(`<i class="bi ${s.icon} me-1"></i>${s.text}`)
+        .removeClass('bg-warning bg-success bg-danger bg-secondary text-dark')
+        .addClass(s.class)
+
+      if (profile.cccdImages?.front) {
+        $('#cccdFrontPreview').attr('src', profile.cccdImages.front).removeClass('d-none')
+        $('#cccdFrontPlaceholder').addClass('d-none')
+      } else {
+        $('#cccdFrontPreview').addClass('d-none')
+        $('#cccdFrontPlaceholder').removeClass('d-none')
+      }
+
+      // CCCD BACK
+      if (profile.cccdImages?.back) {
+        $('#cccdBackPreview').attr('src', profile.cccdImages.back).removeClass('d-none')
+        $('#cccdBackPlaceholder').addClass('d-none')
+      } else {
+        $('#cccdBackPreview').addClass('d-none')
+        $('#cccdBackPlaceholder').removeClass('d-none')
+      }
+
+      // Verification note (nếu bị reject)
+      if (profile.verificationStatus === 'rejected') {
+        $('#verificationNote').text(profile.verificationNote || '')
+        $('#verificationNoteContainer').removeClass('d-none')
+      } else {
+        $('#verificationNoteContainer').addClass('d-none')
+      }
     } else {
       toastr.error(data.message || 'Không lấy được thông tin tổ chức')
     }
@@ -268,4 +340,74 @@ $(document).ready(function () {
         })
     }, mime)
   })
+
+  $('#uploadCccdFront').on('click', () => $('#cccdFrontInput').click())
+  $('#uploadCccdBack').on('click', () => $('#cccdBackInput').click())
+
+  $('#cccdFrontInput').on('change', function () {
+    handleCccdChange(this, 'front', '#cccdFrontPreview', '#cccdFrontPlaceholder')
+  })
+
+  $('#cccdBackInput').on('change', function () {
+    handleCccdChange(this, 'back', '#cccdBackPreview', '#cccdBackPlaceholder')
+  })
+
+  function handleCccdChange(input, side, previewSelector, placeholderSelector) {
+    const file = input.files[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toastr.error('Vui lòng chọn file ảnh')
+      input.value = ''
+      return
+    }
+
+    // Preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      $(previewSelector).attr('src', e.target.result).removeClass('d-none')
+      $(placeholderSelector).addClass('d-none')
+    }
+    reader.readAsDataURL(file)
+
+    uploadAndUpdateCccd(file, side)
+  }
+
+  async function uploadAndUpdateCccd(file, side) {
+    const csrfToken = document.getElementById('_csrf')?.value
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'x-csrf-token': csrfToken },
+        body: formData
+      })
+
+      const uploadData = await uploadRes.json()
+      if (!uploadData.success) throw new Error(uploadData.error)
+
+      const updateRes = await fetch('/api/profile/update-cccd', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken
+        },
+        body: JSON.stringify({
+          side,
+          url: uploadData.file.url
+        })
+      })
+
+      const updateData = await updateRes.json()
+      if (!updateData.success) throw new Error(updateData.message)
+
+      toastr.success(`Đã tải lên CCCD mặt ${side === 'front' ? 'trước' : 'sau'}`)
+    } catch (err) {
+      console.error(err)
+      toastr.error(err.message || 'Upload CCCD thất bại')
+    }
+  }
 })

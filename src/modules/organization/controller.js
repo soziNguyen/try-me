@@ -120,7 +120,8 @@ export const createOrganization = async (req, res) => {
         commune,
         street: street?.trim() || '',
         taxCode: cleanCccd, // Mã số thuế = CCCD
-        businessType: businessType.toLowerCase()
+        businessType: businessType.toLowerCase(),
+        isActive: false
       }
 
       adminData = {
@@ -218,7 +219,8 @@ export const createOrganization = async (req, res) => {
         province: orgProvince,
         commune: orgCommune,
         street: orgStreet?.trim() || '',
-        businessType: businessType.toLowerCase()
+        businessType: businessType.toLowerCase(),
+        isActive: false
       }
 
       if (cleanTaxCode) {
@@ -231,6 +233,8 @@ export const createOrganization = async (req, res) => {
         password: adminPassword
       }
     }
+
+    organizationData.accountType = accountType
 
     // Thực hiện transaction
     const result = await withTransaction(async (session) => {
@@ -390,6 +394,7 @@ export const getOrgById = async (req, res) => {
     const org = await Organization.findById(id)
       .populate('defaultWarehouse', '_id name location')
       .populate('plan', '_id code name')
+      .populate('profile')
     if (!org) return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
 
     const responseData = {

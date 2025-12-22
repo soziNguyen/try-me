@@ -814,7 +814,7 @@ export const adminDashboardStats = async (req, res) => {
     const recentPlanTransactionsPipeline = [
       {
         $match: {
-          status: { $exists: true }
+          status: 'pending'
         }
       },
       {
