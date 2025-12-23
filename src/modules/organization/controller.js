@@ -600,9 +600,9 @@ export const updateOrg = async (req, res) => {
       currentProfile = await Profile.findById(profileId).select('verificationStatus')
     }
 
-    if (currentProfile?.verificationStatus === 'verified') {
+    if (currentProfile?.verificationStatus === 'verified' && req.user.role !== 'Admin') {
       // Allowed fields
-      const allowedProfileFields = ['email', 'phone']
+      const allowedProfileFields = ['email', 'phone', 'defaultWarehouse']
 
       // Check profile update
       const hasForbiddenProfile =
@@ -617,7 +617,6 @@ export const updateOrg = async (req, res) => {
         province !== undefined ||
         commune !== undefined ||
         street !== undefined ||
-        defaultWarehouse !== undefined ||
         isActive !== undefined ||
         taxCode !== undefined
 
@@ -665,6 +664,9 @@ export const updateOrg = async (req, res) => {
       if (profile.province !== undefined) profileData.province = profile.province
       if (profile.commune !== undefined) profileData.commune = profile.commune
       if (profile.street !== undefined) profileData.street = profile.street
+      if (profile.verificationNote !== undefined) {
+        profileData.verificationNote = profile.verificationNote.trim()
+      }
 
       // Handle CCCD images
       if (profile.cccdImages) {
@@ -720,6 +722,8 @@ export const updateOrg = async (req, res) => {
 
       // Prepare sync data for personal accounts
       if (organization.accountType === 'personal') {
+        if (profile.fullName !== undefined) profileDataToSync.name = profile.fullName.trim()
+        if (profile.cccd !== undefined) profileDataToSync.taxCode = profile.cccd.trim()
         if (profile.phone !== undefined) profileDataToSync.phone = processedProfilePhone
         if (profile.email !== undefined && profile.email.trim()) {
           profileDataToSync.email = profile.email.trim().toLowerCase()
@@ -733,7 +737,6 @@ export const updateOrg = async (req, res) => {
     // CHUẨN BỊ DATA UPDATE (Organization)
     const data = {}
     if (logo !== undefined) data.logo = logo
-    if (name !== undefined && name.trim()) data.name = name.trim()
 
     // Merge profile sync data for personal accounts (takes priority)
     if (Object.keys(profileDataToSync).length > 0) {
@@ -741,6 +744,9 @@ export const updateOrg = async (req, res) => {
     }
 
     // Organization data (will be overridden by profileDataToSync if exists)
+    if (name !== undefined && name.trim() && !profileDataToSync.name) {
+      data.name = name.trim()
+    }
     if (email !== undefined && email.trim() && !profileDataToSync.email) {
       data.email = email.trim().toLowerCase()
     }
@@ -764,7 +770,9 @@ export const updateOrg = async (req, res) => {
     if (defaultWarehouse !== undefined)
       data.defaultWarehouse = defaultWarehouse === '' ? null : defaultWarehouse
     if (isActive !== undefined) data.isActive = isActive
-    if (taxCode !== undefined) data.taxCode = taxCode?.trim() || null
+    if (taxCode !== undefined && !profileDataToSync.taxCode) {
+      data.taxCode = taxCode?.trim() || null
+    }
     if (profileId) data.profile = profileId
 
     const oldLogo = organization.logo
@@ -778,6 +786,46 @@ export const updateOrg = async (req, res) => {
 
     if (!updated) {
       return responseHelper.error(res, 'Không thể cập nhật tổ chức', 400)
+    }
+
+    if (updated.accountType === 'personal' && updated.profile) {
+      const orgToProfileSync = {}
+
+      if (name !== undefined && name.trim() && !profileDataToSync.name) {
+        orgToProfileSync.fullName = updated.name
+      }
+      if (taxCode !== undefined && !profileDataToSync.taxCode) {
+        const cccdValue = updated.taxCode || ''
+        // Validate CCCD format nếu có giá trị
+        if (cccdValue && !isValidCCCDFormat(cccdValue)) {
+          return responseHelper.error(
+            res,
+            'CCCD không hợp lệ (phải có 12 chữ số và mã tỉnh từ 001-096)',
+            400
+          )
+        } else {
+          orgToProfileSync.cccd = cccdValue
+        }
+      }
+      if (email !== undefined && email.trim() && !profileDataToSync.email) {
+        orgToProfileSync.email = updated.email
+      }
+      if (phone !== undefined && !profileDataToSync.phone) {
+        orgToProfileSync.phone = updated.phone
+      }
+      if (province !== undefined && !profileDataToSync.province) {
+        orgToProfileSync.province = updated.province
+      }
+      if (commune !== undefined && !profileDataToSync.commune) {
+        orgToProfileSync.commune = updated.commune
+      }
+      if (street !== undefined && !profileDataToSync.street) {
+        orgToProfileSync.street = updated.street
+      }
+
+      if (Object.keys(orgToProfileSync).length > 0) {
+        await Profile.findByIdAndUpdate(updated.profile._id, orgToProfileSync)
+      }
     }
 
     // XÓA FILE LOGO CŨ
@@ -924,42 +972,4 @@ export const getOrgDashboard = async (req, res) => {
   } catch (error) {
     responseHelper.error(res, error.message)
   }
-}
-
-export const verifyProfile = async (req, res) => {
-  const { id } = req.params
-
-  const profile = await Profile.findById(id)
-  if (!profile) {
-    return responseHelper.error(res, 'Profile không tồn tại', 404)
-  }
-
-  if (profile.verificationStatus === 'verified') {
-    return responseHelper.error(res, 'Profile đã được xác minh', 400)
-  }
-
-  const oldImages = profile.cccdImages
-
-  profile.verificationStatus = 'verified'
-  profile.verifiedAt = new Date()
-  profile.verifiedBy = req.user._id
-  profile.cccdImages = null
-
-  await profile.save()
-
-  // Xóa file CCCD
-  if (oldImages?.front) await deleteFile(oldImages.front)
-  if (oldImages?.back) await deleteFile(oldImages.back)
-
-  logActivity(
-    profile._id,
-    req.user._id,
-    req.user.username,
-    'VERIFY',
-    'PROFILE',
-    'Xác minh hồ sơ người dùng',
-    profile.fullName
-  )
-
-  responseHelper.success(res, profile, 'Xác minh thành công')
 }

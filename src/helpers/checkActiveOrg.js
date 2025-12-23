@@ -9,6 +9,7 @@ function getSafeEndpoints() {
     '/api/users/logout',
     '/api/upload',
     '/api/profile/update-cccd',
+    '/api/profile/kyc-request',
     /^\/api\/organization\/update\/[0-9a-f]{24}$/
   ]
 }

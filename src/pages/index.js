@@ -834,7 +834,7 @@ export const couponPlanDetailPage = async (req, res) => {
 
 export const orgDetailPage = async (req, res) => {
   const orgId = req.params.id
-  const org = await Organization.findById(orgId)
+  const org = await Organization.findById(orgId).populate('profile', 'verificationStatus')
 
   res.render(
     'admin/org_detail',
@@ -842,7 +842,8 @@ export const orgDetailPage = async (req, res) => {
       headerClass: 'admin__header',
       pageTitle: 'CHI TIẾT TỔ CHỨC',
       orgId,
-      accountType: org.accountType
+      accountType: org.accountType,
+      kyc: org.profile.verificationStatus
     })
   )
 }

@@ -25,6 +25,25 @@ $(function () {
       isActive: $('#orgIsActive').is(':checked')
     }
 
+    if ($('#fullName').length) {
+      formData.profile = {
+        fullName: $('#fullName').val(),
+        cccd: $('#cccd').val(),
+        email: $('#ownerEmail').val(),
+        phone: $('#ownerPhone').val(),
+        province: $('#ownerProvince').val(),
+        commune: $('#ownerCommune').val(),
+        street: $('#ownerStreet').val()
+      }
+    }
+
+    if ($('#verificationNote').length) {
+      if (!formData.profile) {
+        formData.profile = {}
+      }
+      formData.profile.verificationNote = $('#verificationNote').val()
+    }
+
     const submitBtn = $(this).find('button[type="submit"]')
     submitBtn
       .prop('disabled', true)
@@ -38,6 +57,7 @@ $(function () {
           submitBtn
             .prop('disabled', false)
             .html('<i class="bi bi-check-circle me-1"></i>Lưu thay đổi')
+          fillDataToForm(orgId)
         } else {
           submitBtn
             .prop('disabled', false)
@@ -69,7 +89,45 @@ $(function () {
   $('#viewCccdBack').on('click', function () {
     viewImage('#cccdBackPreview', 'Ảnh mặt sau CCCD')
   })
+
+  $('#verificationStatus').on('change', async function () {
+    const newStatus = $(this).val()
+    const statusText = $(this).find('option:selected').text()
+
+    toggleRejectedNote(newStatus)
+
+    showConfirmModal({
+      title: 'Xác nhận',
+      okBtnColor: newStatus === 'rejected' ? 'danger' : 'primary',
+      message: `Bạn có chắc muốn đổi trạng thái thành "${statusText}"?`,
+      confirmed: 'Xác nhận',
+      onConfirm: async () => {
+        try {
+          const result = await ajax(`/api/profile/${orgId}/verify`, {
+            verificationStatus: newStatus
+          })
+          if (result) {
+            toastr.success('Cập nhật trạng thái thành công')
+            fillDataToForm(orgId)
+          }
+        } catch (error) {
+          console.error(error)
+          toastr.error('Có lỗi xảy ra khi cập nhật')
+          fillDataToForm(orgId)
+        }
+      }
+    })
+  })
 })
+
+function toggleRejectedNote(status) {
+  if (status === 'rejected') {
+    $('#rejectedNoteWrapper').removeClass('d-none')
+  } else {
+    $('#rejectedNoteWrapper').addClass('d-none')
+    $('#verificationNote').val('')
+  }
+}
 
 function fillDataToForm(id) {
   fetchData(`organization/${id}`)
@@ -90,8 +148,9 @@ function getElements(data) {
   $('#orgStreet').val(data.street)
   $('#orgIsActive').prop('checked', data.isActive)
   $('#verificationStatus').val(data.profile.verificationStatus)
+  updateVerificationBadge(data.profile.verificationStatus)
 
-  if (data.profile.cccdImages.front) {
+  if (data.profile.cccdImages?.front) {
     $('#cccdFrontPreview').attr('src', data.profile.cccdImages.front).removeClass('d-none')
     $('#cccdFrontPlaceholder').addClass('d-none')
   } else {
@@ -99,13 +158,15 @@ function getElements(data) {
     $('#cccdFrontPlaceholder').removeClass('d-none')
   }
 
-  if (data.profile.cccdImages.back) {
+  if (data.profile.cccdImages?.back) {
     $('#cccdBackPreview').attr('src', data.profile.cccdImages.back).removeClass('d-none')
     $('#cccdBackPlaceholder').addClass('d-none')
   } else {
     $('#cccdBackPreview').addClass('d-none')
     $('#cccdBackPlaceholder').removeClass('d-none')
   }
+
+  toggleRejectedNote(data.profile.verificationStatus)
 
   if (data.profile.verificationStatus === 'rejected') {
     $('#verificationNote').val(data.profile.verificationNote || '')
@@ -200,4 +261,22 @@ function viewImage(previewSelector, title = 'Xem ảnh CCCD') {
   $('#imageViewModal .modal-title').text(title)
 
   new bootstrap.Modal('#imageViewModal').show()
+}
+
+function updateVerificationBadge(status) {
+  const badge = $('#verificationStatusBadge')
+
+  switch (status) {
+    case 'pending':
+      badge.removeClass().addClass('badge bg-warning text-dark').text('Chờ xác minh')
+      break
+    case 'verified':
+      badge.removeClass().addClass('badge bg-success').text('Xác minh')
+      break
+    case 'rejected':
+      badge.removeClass().addClass('badge bg-danger').text('Từ chối')
+      break
+    default:
+      badge.removeClass().addClass('badge bg-secondary').text('Chưa xác định')
+  }
 }

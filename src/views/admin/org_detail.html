@@ -10,12 +10,6 @@
       </div>
 
       <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-          <h5 class="mb-0">
-            <i class="bi bi-info-circle me-2"></i>
-            Thông tin tổ chức
-          </h5>
-        </div>
         <div class="card-body p-4">
           <form id="updateOrgForm">
             <input type="hidden" id="orgId" name="orgId" value="<%= orgId || '' %>">
@@ -200,14 +194,15 @@
             <!-- Xác minh CCCD -->
             <div class="row mt-4 pt-4 border-top">
               <div class="col-12 mb-3">
-                <div class="d-flex align-items-center justify-content-between">
-                  <h6 class="text-primary border-bottom pb-2 mb-0 flex-grow-1">
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2">
+                  <h6 class="text-primary mb-0">
                     <i class="bi bi-card-checklist me-2"></i>
                     Xác Minh (KYC)
                   </h6>
+                  <span id="verificationStatusBadge" class="badge bg-secondary">Chờ xác minh</span>
                 </div>
               </div>
-
+              <% if (kyc !== 'verified') { %>
               <!-- Cột trái - Ảnh mặt trước -->
               <div class="col-lg-6">
                 <div class="mb-3">
@@ -255,9 +250,10 @@
                   <small class="text-muted">Ảnh rõ nét, đầy đủ 4 góc thẻ</small>
                 </div>
               </div>
+              <% } %>
             </div>
 
-            <div class="row align-items-center mt-4 pt-4">
+            <div class="row align-items-center">
               <div class="col-md-3">
                 <label for="verificationStatus" class="form-label fw-semibold mb-0">
                   Trạng thái
@@ -271,12 +267,13 @@
                   data-field="verificationStatus"
                 >
                   <option value="pending">Chờ xác minh</option>
-                  <option value="verified">Đã xác minh</option>
+                  <option value="verified">Xác minh</option>
                   <option value="rejected">Từ chối</option>
                 </select>
               </div>
             </div>
-            <div class="row pt-4">
+
+            <div class="row pt-4 d-none" id="rejectedNoteWrapper">
               <div class="col-md-3">
                 <label for="verificationNote" class="form-label fw-semibold mb-0">
                   Nội dung từ chối
@@ -287,7 +284,6 @@
                 <textarea name="verificationNote" id="verificationNote" data-field="verificationNote" class="form-control"></textarea>
               </div>
             </div>
-            
 
             <!-- Buttons -->
             <div class="row mt-4 pt-3 border-top">

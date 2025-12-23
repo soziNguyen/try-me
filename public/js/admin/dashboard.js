@@ -8,6 +8,12 @@ $(function () {
       endDate: currentEndDate.format('YYYY-MM-DD')
     })
   })
+
+  const kycRequestTable = $('#kycRequestTable')
+  kycRequestTable.on('click', 'tr', function () {
+    const id = $(this).data('id')
+    window.location.href = `/organization/${id}`
+  })
 })
 
 const $filterBtn = $('#filterDateBtn')
@@ -24,6 +30,7 @@ function fetchAdminDashboardStats(params = {}) {
       renderData(data)
       renderRecentOrders(data.data.recentOrder)
       renderRevenueChart(data.data.revenueChart)
+      renderKycTable(data.data.kycRequest)
       renderOrderStatusChart(data.data.orderStatusChart)
     },
     complete: function () {
@@ -84,6 +91,40 @@ function renderRecentOrders(orders) {
         <td class="p-2">${order.duration} ${order.mode === 'month' ? 'Tháng' : 'Năm'}</td>
         <td class="p-2">${formatCurrencyToVnd(order.total)}</td>
         <td class="p-2">${!order.paidAt ? '<span class="fst-italic text-muted"><i class="bi bi-hourglass-split text-danger"></i> Chưa thanh toán</span>' : `<span class="text-success fw-semibold"><i class="bi bi-check-circle"></i> ${formatted}</span>`}</td>
+        <td class="p-2">${statusBadge}</td>
+      </tr>
+    `
+    })
+    .join('')
+}
+
+function renderKycTable(data) {
+  const tbody = document.getElementById('kycRequestTable')
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-muted">Chưa có đơn hàng</td>
+      </tr>
+    `
+    return
+  }
+
+  tbody.innerHTML = data
+    .map((kyc) => {
+      const statusBadge =
+        {
+          pending: '<span class="badge bg-warning">Chờ xác minh</span>',
+          verified: '<span class="badge bg-success">Đã xác minh</span>',
+          rejected: '<span class="badge bg-danger">Từ chối</span>'
+        }[kyc.verificationStatus] || '<span class="badge bg-secondary">Không rõ</span>'
+
+      return `
+      <tr data-id="${kyc.organizationId}" class="cursor-pointer">
+        <td class="p-2"><strong>${kyc.organizationName}</strong></td>
+        <td class="p-2">${kyc.fullName}</td>
+        <td class="p-2">${kyc.cccd}</td>
+        <td class="p-2">${formatDateTime(kyc.kycRequestedAt)}</td>
         <td class="p-2">${statusBadge}</td>
       </tr>
     `

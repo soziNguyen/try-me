@@ -31,11 +31,11 @@ $(function () {
       {
         data: 'organization',
         className: 'py-2',
-        render: (data, type, row) => {
-          if (type === 'display') {
-            return `<span class="text">${data.name || ''}</span>`
-          }
-          return data.name || ''
+        render: (data, type) => {
+          console.log(data)
+
+          const name = data?.name ?? ''
+          return type === 'display' ? `<span class="text">${name}</span>` : name
         }
       },
       {

@@ -85,31 +85,6 @@ async function fetchOrgDetail() {
         $('#commune').val(profileCommuneId).trigger('change')
       }
 
-      const verificationMap = {
-        pending: {
-          text: 'Chờ xác nhận',
-          class: 'bg-warning text-dark',
-          icon: 'bi-hourglass-split'
-        },
-        verified: {
-          text: 'Đã xác minh',
-          class: 'bg-success',
-          icon: 'bi-check-circle'
-        },
-        rejected: {
-          text: 'Từ chối',
-          class: 'bg-danger',
-          icon: 'bi-x-circle'
-        }
-      }
-
-      const s = verificationMap[profile.verificationStatus]
-
-      $('#verificationBadge')
-        .html(`<i class="bi ${s.icon} me-1"></i>${s.text}`)
-        .removeClass('bg-warning bg-success bg-danger bg-secondary text-dark')
-        .addClass(s.class)
-
       if (profile.cccdImages?.front) {
         $('#cccdFrontPreview').attr('src', profile.cccdImages.front).removeClass('d-none')
         $('#cccdFrontPlaceholder').addClass('d-none')
@@ -127,13 +102,7 @@ async function fetchOrgDetail() {
         $('#cccdBackPlaceholder').removeClass('d-none')
       }
 
-      // Verification note (nếu bị reject)
-      if (profile.verificationStatus === 'rejected') {
-        $('#verificationNote').text(profile.verificationNote || '')
-        $('#verificationNoteContainer').removeClass('d-none')
-      } else {
-        $('#verificationNoteContainer').addClass('d-none')
-      }
+      renderKycUI(profile)
     } else {
       toastr.error(data.message || 'Không lấy được thông tin tổ chức')
     }
@@ -142,6 +111,28 @@ async function fetchOrgDetail() {
   } finally {
     isLoadingOrgData = false
   }
+}
+
+async function kycRequest() {
+  try {
+    showConfirmModal({
+      title: 'Yêu cầu KYC',
+      okBtnColor: 'success',
+      message: `Bạn có chắc muốn gửi yêu cầu KYC?`,
+      confirmed: 'Xác nhận',
+      onConfirm: async () => {
+        try {
+          const result = await ajax(`/api/profile/kyc-request/retry`)
+          if (result) {
+            toastr.success('Yêu cầu KYC đã được gửi thành công')
+          }
+        } catch (error) {
+          console.error(error)
+          toastr.error('Có lỗi xảy ra gửi yêu cầu')
+        }
+      }
+    })
+  } catch (error) {}
 }
 
 // Auto update field
@@ -484,10 +475,105 @@ $(document).ready(function () {
       const updateData = await updateRes.json()
       if (!updateData.success) throw new Error(updateData.message)
 
+      $('#verificationNoteContainer').addClass('d-none')
+      $('#verificationNote').text('')
+
+      $('#verificationBadge')
+        .removeClass('bg-danger bg-success')
+        .addClass('bg-warning text-dark')
+        .html('<i class="bi bi-clock-history me-1"></i>Chờ xác minh')
+
       toastr.success(`Đã tải lên CCCD mặt ${side === 'front' ? 'trước' : 'sau'}`)
     } catch (err) {
       console.error(err)
       toastr.error(err.message || 'Upload CCCD thất bại')
     }
   }
+
+  const requestKycBtn = $('#requestKycBtn')
+
+  if (requestKycBtn) {
+    requestKycBtn.on('click', kycRequest)
+  }
+
+  const submitKycBtn = $('#submitKycBtn')
+
+  if (submitKycBtn.length) {
+    submitKycBtn.on('click', async () => {
+      try {
+        showConfirmModal({
+          title: 'Yêu cầu KYC',
+          okBtnColor: 'success',
+          message: 'Bạn có chắc muốn gửi yêu cầu KYC?',
+          confirmed: 'Xác nhận',
+          onConfirm: async () => {
+            try {
+              const result = await ajax('/api/profile/kyc-request')
+              if (result) {
+                toastr.success(result.message || 'Yêu cầu KYC đã được gửi thành công')
+                renderKycUI({
+                  verificationStatus: 'pending',
+                  kycRequest: true
+                })
+              }
+            } catch (err) {
+              console.error(err)
+              toastr.error('Có lỗi xảy ra khi gửi yêu cầu KYC')
+            }
+          }
+        })
+      } catch (err) {
+        console.error(err)
+      }
+    })
+  }
 })
+
+function renderKycUI(profile = {}) {
+  const verificationMap = {
+    pending: {
+      text: 'Chờ xác minh',
+      class: 'bg-warning text-dark',
+      icon: 'bi-hourglass-split'
+    },
+    verified: {
+      text: 'Đã xác minh',
+      class: 'bg-success',
+      icon: 'bi-check-circle'
+    },
+    rejected: {
+      text: 'Từ chối',
+      class: 'bg-danger',
+      icon: 'bi-x-circle'
+    }
+  }
+
+  const status = profile.verificationStatus || 'pending'
+  const config = verificationMap[status]
+
+  // BADGE
+  $('#verificationBadge')
+    .html(`<i class="bi ${config.icon} me-1"></i>${config.text}`)
+    .removeClass('bg-warning bg-success bg-danger bg-secondary text-dark')
+    .addClass(config.class)
+
+  if (profile.kycRequest) {
+    // Đã gửi – đang chờ duyệt
+    $('#submitKycBtn')
+      .prop('disabled', true)
+      .html('<i class="bi bi-hourglass-split me-1"></i> Chờ xác minh')
+
+    $('#verificationNoteContainer').addClass('d-none')
+  } else if (status === 'rejected') {
+    // Bị từ chối – cho gửi lại
+    $('#submitKycBtn').prop('disabled', false).html('<i class="bi bi-send me-1"></i> Gửi lại KYC')
+
+    $('#verificationNote').text(profile.verificationNote || 'Hồ sơ chưa hợp lệ')
+    $('#verificationNoteContainer').removeClass('d-none')
+  } else {
+    // Chưa gửi
+    $('#submitKycBtn').prop('disabled', false).html('<i class="bi bi-send me-1"></i> Gửi KYC')
+
+    $('#verificationNoteContainer').addClass('d-none')
+  }
+}

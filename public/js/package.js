@@ -109,7 +109,7 @@ async function fillPlans(currentPlanCode, mode = 'month') {
     }
 
     planCard.innerHTML = `
-      <form class="card h-100 rounded-4 shadow-sm position-relative plan-form" 
+      <form class="card h-100 rounded-4 shadow border-0 position-relative plan-form" 
         data-id=${plan._id} data-code="${plan.code}">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title text-center fw-bold mt-4 fs-2">${plan.name}</h5>

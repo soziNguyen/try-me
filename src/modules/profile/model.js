@@ -17,6 +17,11 @@ const ProfileSchema = new Schema(
       front: { type: String, trim: true, default: null }, // Ảnh mặt trước
       back: { type: String, trim: true, default: null } // Ảnh mặt sau
     },
+    kycRequest: { type: Boolean, default: false },
+    kycRequestedAt: {
+      type: Date,
+      default: null
+    },
     verificationStatus: {
       type: String,
       enum: ['pending', 'verified', 'rejected'],
@@ -24,6 +29,8 @@ const ProfileSchema = new Schema(
     },
     verifiedAt: { type: Date, default: null },
     verifiedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    rejectedAt: { type: Date, default: null },
+    rejectedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     verificationNote: { type: String, trim: true, default: '' } // Ghi chú khi reject
   },
   {
