@@ -24,3 +24,24 @@ export const generateInvoiceCode = async (Model, prefix = 'HD') => {
   const numberPart = String(nextNumber).padStart(12, '0')
   return `${prefix}${numberPart}`
 }
+
+export const generateInvoiceCodeForPlan = async (Model, prefix = 'HD') => {
+  // Tìm hóa đơn có code lớn nhất
+  const lastDoc = await Model.findOne({
+    code: new RegExp(`^${prefix}\\d+$`)
+  })
+    .sort({ code: -1 })
+    .lean()
+
+  let lastNumber = 0
+  if (lastDoc?.code) {
+    const match = lastDoc.code.match(new RegExp(`^${prefix}(\\d+)$`))
+    if (match) {
+      lastNumber = parseInt(match[1], 10)
+    }
+  }
+
+  const nextNumber = lastNumber + 1
+  const numberPart = String(nextNumber).padStart(12, '0')
+  return `${prefix}${numberPart}`
+}

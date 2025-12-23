@@ -43,10 +43,13 @@ import kitchenRoutes from '../modules/kitchen/route.js'
 import uploadRouter from '../modules/upload/route.js'
 import pointHistoryRouter from '../modules/point-history/route.js'
 import checkPlanAccess from '../helpers/checkPlanAccess.js'
+import checkActiveOrg from '../helpers/checkActiveOrg.js'
+import profileRoutes from '../modules/profile/route.js'
 import pageRoute from '../pages/route.js'
 
 const router = express.Router()
 router.use(checkPlanAccess)
+router.use(checkActiveOrg)
 
 const routes = [
   // Core
@@ -123,7 +126,10 @@ const routes = [
 
   // Report
   stockReportRoutes,
-  kitchenRoutes
+  kitchenRoutes,
+
+  // Profile
+  profileRoutes
 ]
 
 routes.forEach((route) => router.use('/', route))

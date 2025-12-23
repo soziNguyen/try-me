@@ -7,6 +7,7 @@ import { isValidUsername, isValidPassword, isPasswordMatch } from '../../helpers
 import { lookupRef } from '../../helpers/lookupHelper.js'
 import ActivityLog from '../activity-logs/model.js'
 import PlanTransaction from '../plan-transaction/model.js'
+import Profile from '../profile/model.js'
 import dayjs from 'dayjs'
 import mongoose from 'mongoose'
 import { logActivity } from '../activity-logs/service.js'
@@ -309,14 +310,24 @@ export const deleteUsers = async (req, res) => {
     }
 
     // Lấy thông tin user trước khi xóa để log
-    const usersToDelete = await User.find({ _id: { $in: ids } }).select('username organization')
-
-    if (req.user.role === 'Admin') {
-      return responseHelper.error(res, 'Không thể xóa người dùng có vai trò Admin', 403)
-    }
+    const usersToDelete = await User.find({ _id: { $in: ids } }).select(
+      'username organization role'
+    )
 
     if (usersToDelete.length === 0) {
       return responseHelper.error(res, 'Không tìm thấy người dùng để xóa')
+    }
+
+    const hasAdmin = usersToDelete.some((user) => user.role === 'Admin')
+    if (hasAdmin) {
+      return responseHelper.error(res, 'Không thể xóa người dùng có vai trò Admin', 403)
+    }
+
+    const deletingSelf = usersToDelete.some(
+      (user) => user._id.toString() === req.user._id.toString()
+    )
+    if (deletingSelf) {
+      return responseHelper.error(res, 'Không thể xóa chính mình', 403)
     }
 
     await User.deleteMany({ _id: { $in: ids } })
@@ -814,7 +825,7 @@ export const adminDashboardStats = async (req, res) => {
     const recentPlanTransactionsPipeline = [
       {
         $match: {
-          status: { $exists: true }
+          status: 'pending'
         }
       },
       {
@@ -907,6 +918,46 @@ export const adminDashboardStats = async (req, res) => {
       }
     ]
 
+    const kycPendingPipeline = [
+      {
+        $match: { kycRequest: true }
+      },
+      {
+        $lookup: {
+          from: 'Organizations',
+          localField: '_id',
+          foreignField: 'profile',
+          as: 'organization'
+        }
+      },
+      {
+        $unwind: {
+          path: '$organization',
+          preserveNullAndEmptyArrays: false
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          fullName: 1,
+          verificationStatus: 1,
+          kycRequest: 1,
+          verificationNote: 1,
+          cccd: 1,
+          cccdImages: 1,
+          kycRequestedAt: 1,
+
+          // org info
+          organizationId: '$organization._id',
+          organizationName: '$organization.name',
+          organizationEmail: '$organization.email',
+          organizationPhone: '$organization.phone',
+          isActive: '$organization.isActive'
+        }
+      },
+      { $sort: { createdAt: -1 } }
+    ]
+
     const [
       totalUsers,
       totalEmployees,
@@ -915,7 +966,8 @@ export const adminDashboardStats = async (req, res) => {
       recentPlanTransactions,
       paidRevenue,
       revenueChart,
-      orderStatusChart
+      orderStatusChart,
+      kycPendingProfiles
     ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ role: 'SubAdmin' }),
@@ -924,7 +976,8 @@ export const adminDashboardStats = async (req, res) => {
       PlanTransaction.aggregate(recentPlanTransactionsPipeline),
       PlanTransaction.aggregate(paidRevenuePipeline),
       PlanTransaction.aggregate(revenueByPlanPipeline),
-      PlanTransaction.aggregate(orderStatusPipeline)
+      PlanTransaction.aggregate(orderStatusPipeline),
+      Profile.aggregate(kycPendingPipeline)
     ])
 
     responseHelper.success(res, {
@@ -936,7 +989,8 @@ export const adminDashboardStats = async (req, res) => {
       totalPaidRevenue: paidRevenue[0]?.totalRevenue || 0,
       totalPaidOrders: paidRevenue[0]?.totalPaidOrders || 0,
       revenueChart,
-      orderStatusChart
+      orderStatusChart,
+      kycRequest: kycPendingProfiles
     })
   } catch (error) {
     responseHelper.error(res, error.message)

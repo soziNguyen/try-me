@@ -203,14 +203,14 @@ table thead th.number {
   text-align: right;
   padding: 0.375rem 0.5rem;
 }
+table tbody td input[type=checkbox] {
+  display: block;
+  margin: auto;
+}
 table tbody td {
   text-align: left;
   vertical-align: middle;
   padding: 0 !important;
-}
-table tbody td input[type=checkbox] {
-  display: block;
-  margin: auto;
 }
 table tbody td:first-child input[type=checkbox]:hover {
   cursor: pointer;

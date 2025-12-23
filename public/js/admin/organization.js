@@ -1,6 +1,5 @@
 $(function () {
   let table
-  const editableFields = ['name', 'email', 'phone']
   let provinceLists = []
   let communeLists = []
 
@@ -80,7 +79,17 @@ $(function () {
         data: 'plan',
         render: (data, type, row) => {
           if (type === 'display') {
-            return `<span class="text">${data || ''}</span>`
+            const editBtn = `
+              <button class="btn btn-sm btn-outline-primary border-0 change-plan" data-id="${row._id}">
+                <i class="bi bi-pencil-square"></i>
+              </button>`
+
+            return `
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text">${data || ''}</span>
+                ${data ? editBtn : ''}
+              </div>
+            `
           }
           return data
         }
@@ -175,5 +184,10 @@ $(function () {
   $('#orgTable').on('click', '.editBtn', function () {
     const id = $(this).data('id')
     window.location.href = `/organization/${id}`
+  })
+
+  $('#orgTable').on('click', '.change-plan', function () {
+    const id = $(this).data('id')
+    window.location.href = `/organization/${id}/plan`
   })
 })

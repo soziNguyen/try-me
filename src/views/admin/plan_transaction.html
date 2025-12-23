@@ -8,9 +8,11 @@
       <table id="planTransactionTable" class="table">
         <thead>
           <tr>
+            <% if (user.role === 'Admin') { %>
             <th>
               <input type="checkbox" id="selectAll">
             </th>
+            <% } %>
             <th>Tổ chức</th>
             <th>Gói</th>
             <th>Thời hạn</th>
@@ -35,6 +37,7 @@
 </div>
 
 <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<input type="hidden" id="userRole" value="<%= user.role %>">
 <%- include('../partials/commonjs.html') %>
 <%- include('../partials/sidebar_togglejs.html') %>
 <%- include('../partials/data_tablejs.html') %>

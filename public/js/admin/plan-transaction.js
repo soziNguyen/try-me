@@ -1,5 +1,7 @@
 $(function () {
   let table
+  const userRole = $('#userRole').val()
+  const isAdmin = userRole === 'Admin'
 
   let showList = [10, 25, 50, 100]
   const numRows = Math.floor(
@@ -13,6 +15,172 @@ $(function () {
   initDataTable()
 
   function initDataTable() {
+    let columns = []
+
+    if (isAdmin) {
+      columns.push({
+        data: null,
+        orderable: false,
+        className: 'text-center',
+        render: (data, type, row) =>
+          `<input type="checkbox" class="planCheckbox" data-id="${row._id}">`
+      })
+    }
+
+    columns.push(
+      {
+        data: 'organization',
+        className: 'py-2',
+        render: (data, type) => {
+          console.log(data)
+
+          const name = data?.name ?? ''
+          return type === 'display' ? `<span class="text">${name}</span>` : name
+        }
+      },
+      {
+        data: 'plan',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<span class="text">${data.name || ''}</span>`
+          }
+          return data.name || ''
+        }
+      },
+      {
+        data: 'duration',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            const mode = row.mode === 'month' ? 'tháng' : 'năm'
+            const duration = `${data} ${mode}`
+            return `<span class="text">${duration || ''}</span>`
+          }
+          return data || ''
+        }
+      },
+      {
+        data: 'amount',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<span class="text">${data.toLocaleString() + ' đ' || ''}</span>`
+          }
+          return data || ''
+        }
+      },
+      {
+        data: 'discountAmount',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<span class="text">${data.toLocaleString() + ' đ' || ''}</span>`
+          }
+          return data || ''
+        }
+      },
+      {
+        data: 'subtotal',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<span class="text">${data.toLocaleString() + ' đ' || ''}</span>`
+          }
+          return data || ''
+        }
+      },
+      {
+        data: 'vat',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<span class="text">${data.toLocaleString() + ' đ' || ''}</span>`
+          }
+          return data || ''
+        }
+      },
+      {
+        data: 'total',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            return `<span class="text">${data.toLocaleString() + ' đ' || ''}</span>`
+          }
+          return data || ''
+        }
+      },
+      {
+        data: 'paidAt',
+        render: (data, type, row) => {
+          if (!data) {
+            return `<span class="fst-italic text-muted"><i class="bi bi-hourglass-split text-danger"></i> Chưa thanh toán</span>`
+          }
+
+          const date = new Date(data)
+          const formatted = date.toLocaleString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          })
+
+          return `<span class="text-success fw-semibold"><i class="bi bi-check-circle"></i> ${formatted}</span>`
+        }
+      },
+      // {
+      //   data: 'expiredAt',
+      //   render: (data, type, row) => {
+      //     if (type === 'display') {
+      //       const date = new Date(data)
+      //       return `<span class="text">${
+      //         date.toLocaleString('vi-VN', {
+      //           day: '2-digit',
+      //           month: '2-digit',
+      //           year: 'numeric'
+      //         }) || ''
+      //       }</span>`
+      //     }
+      //     return data || ''
+      //   }
+      // },
+      {
+        data: 'status',
+        className: 'text-center',
+        render: (data, type, row) => {
+          if (type === 'display') {
+            const status =
+              data === 'pending'
+                ? `<span class="badge bg-warning py-2">Chờ xác nhận</span>`
+                : data === 'paid'
+                  ? `<span class="badge bg-success py-2">Đã duyệt</span>`
+                  : `<span class="badge bg-danger py-2">Đã hủy</span>`
+            return status
+          }
+          return data || ''
+        }
+      },
+      {
+        data: null,
+        orderable: false,
+        searchable: false,
+        render: (data, type, row) => {
+          if (type === 'display') {
+            if (row.status === 'pending') {
+              return `
+              <div class="btn-group d-flex justify-content-center">
+                <button class="btn btn-sm btn-success btn-approve" title="Duyệt gói">
+                  <i class="bi bi-check-circle"></i>
+                </button>
+                <button class="btn btn-sm btn-danger btn-cancel" title="Hủy giao dịch">
+                  <i class="bi bi-x-circle"></i>
+                </button>
+              </div>
+            `
+            } else {
+              return `<span class="text-muted d-block text-center">—</span>`
+            }
+          }
+          return ''
+        }
+      }
+    )
+
     table = $('#planTransactionTable').DataTable({
       dom:
         '<"top-bar d-flex align-items-center justify-content-between flex-wrap"' +
@@ -41,177 +209,20 @@ $(function () {
       },
       lengthMenu: showList,
       pageLength: numRows,
-      columns: [
-        {
-          data: null,
-          orderable: false,
-          className: 'text-center',
-          render: (data, type, row) =>
-            `<input type="checkbox" class="planCheckbox" data-id="${row._id}">`
-        },
-        {
-          data: 'organization',
-          className: 'py-2',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<span class="text">${data.name || ''}</span>`
-            }
-            return data.name || ''
-          }
-        },
-        {
-          data: 'plan',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<span class="text">${data.name || ''}</span>`
-            }
-            return data.name || ''
-          }
-        },
-        {
-          data: 'duration',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              const mode = row.mode === 'month' ? 'tháng' : 'năm'
-              const duration = `${data} ${mode}`
-              return `<span class="text">${duration || ''}</span>`
-            }
-            return data || ''
-          }
-        },
-        {
-          data: 'amount',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<span class="text">${data.toLocaleString() + ' đ' || ''}</span>`
-            }
-            return data || ''
-          }
-        },
-        {
-          data: 'discountAmount',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<span class="text">${data.toLocaleString() + ' đ' || ''}</span>`
-            }
-            return data || ''
-          }
-        },
-        {
-          data: 'subtotal',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<span class="text">${data.toLocaleString() + ' đ' || ''}</span>`
-            }
-            return data || ''
-          }
-        },
-        {
-          data: 'vat',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<span class="text">${data.toLocaleString() + ' đ' || ''}</span>`
-            }
-            return data || ''
-          }
-        },
-        {
-          data: 'total',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              return `<span class="text">${data.toLocaleString() + ' đ' || ''}</span>`
-            }
-            return data || ''
-          }
-        },
-        {
-          data: 'paidAt',
-          render: (data, type, row) => {
-            if (!data) {
-              return `<span class="fst-italic text-muted"><i class="bi bi-hourglass-split text-danger"></i> Chưa thanh toán</span>`
-            }
-
-            const date = new Date(data)
-            const formatted = date.toLocaleString('vi-VN', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false
-            })
-
-            return `<span class="text-success fw-semibold"><i class="bi bi-check-circle"></i> ${formatted}</span>`
-          }
-        },
-        // {
-        //   data: 'expiredAt',
-        //   render: (data, type, row) => {
-        //     if (type === 'display') {
-        //       const date = new Date(data)
-        //       return `<span class="text">${
-        //         date.toLocaleString('vi-VN', {
-        //           day: '2-digit',
-        //           month: '2-digit',
-        //           year: 'numeric'
-        //         }) || ''
-        //       }</span>`
-        //     }
-        //     return data || ''
-        //   }
-        // },
-        {
-          data: 'status',
-          className: 'text-center',
-          render: (data, type, row) => {
-            if (type === 'display') {
-              const status =
-                data === 'pending'
-                  ? `<span class="badge bg-warning py-2">Chờ xác nhận</span>`
-                  : data === 'paid'
-                    ? `<span class="badge bg-success py-2">Đã duyệt</span>`
-                    : `<span class="badge bg-danger py-2">Đã hủy</span>`
-              return status
-            }
-            return data || ''
-          }
-        },
-        {
-          data: null,
-          orderable: false,
-          searchable: false,
-          render: (data, type, row) => {
-            if (type === 'display') {
-              if (row.status === 'pending') {
-                return `
-                  <div class="btn-group d-flex justify-content-center">
-                    <button class="btn btn-sm btn-success btn-approve" title="Duyệt gói">
-                      <i class="bi bi-check-circle"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger btn-cancel" title="Hủy giao dịch">
-                      <i class="bi bi-x-circle"></i>
-                    </button>
-                  </div>
-                `
-              } else {
-                return `<span class="text-muted d-block text-center">—</span>`
-              }
-            }
-            return ''
-          }
-        }
-      ],
+      columns: columns,
       rowCallback: function (row, data) {
         $(row).attr('data-id', data._id)
       },
       initComplete: function () {
-        $('.right-group').html(`
-          <div class="btn-group flex-wrap mb-2">
-            <button class="btn btn-outline-danger me-2" id="deletePlanBtn">
-              <i class="bi bi-trash"></i> Xóa
-            </button>
-          </div>
-        `)
+        if (isAdmin) {
+          $('.right-group').html(`
+            <div class="btn-group flex-wrap mb-2">
+              <button class="btn btn-outline-danger me-2" id="deletePlanBtn">
+                <i class="bi bi-trash"></i> Xóa
+              </button>
+            </div>
+          `)
+        }
       }
     })
   }

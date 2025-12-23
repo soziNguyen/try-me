@@ -1,5 +1,6 @@
 const orgId = document.getElementById('currentOrgId').value
 const orgInfo = document.querySelector('.org-info')
+const accountType = document.getElementById('accountType').value
 let cropper
 let isLoadingOrgData = false // cờ để tránh update lúc load
 
@@ -34,6 +35,8 @@ async function fetchOrgDetail() {
 
     if (data.success) {
       const org = data.data
+      const profile = org.profile || {}
+
       await fetchWarehouses(org.defaultWarehouse?._id)
 
       $('#taxCode').val(org.taxCode || '')
@@ -64,6 +67,42 @@ async function fetchOrgDetail() {
 
       await listCommunes(provinceId)
       $('#orgCommune').val(communeId).trigger('change')
+
+      if (accountType === 'enterprise') {
+        $('#fullName').val(profile.fullName || '')
+        $('#cccd').val(profile.cccd || '')
+        $('#email').val(profile.email || '')
+        $('#phone').val(profile.phone || '')
+        $('#street').val(profile.street || '')
+
+        const profileProvinceId = profile.province || ''
+        const profileCommuneId = profile.commune || ''
+
+        await listProvinces('#province')
+        $('#province').val(profileProvinceId).trigger('change')
+
+        await listCommunes(profileProvinceId, '#commune')
+        $('#commune').val(profileCommuneId).trigger('change')
+      }
+
+      if (profile.cccdImages?.front) {
+        $('#cccdFrontPreview').attr('src', profile.cccdImages.front).removeClass('d-none')
+        $('#cccdFrontPlaceholder').addClass('d-none')
+      } else {
+        $('#cccdFrontPreview').addClass('d-none')
+        $('#cccdFrontPlaceholder').removeClass('d-none')
+      }
+
+      // CCCD BACK
+      if (profile.cccdImages?.back) {
+        $('#cccdBackPreview').attr('src', profile.cccdImages.back).removeClass('d-none')
+        $('#cccdBackPlaceholder').addClass('d-none')
+      } else {
+        $('#cccdBackPreview').addClass('d-none')
+        $('#cccdBackPlaceholder').removeClass('d-none')
+      }
+
+      renderKycUI(profile)
     } else {
       toastr.error(data.message || 'Không lấy được thông tin tổ chức')
     }
@@ -74,7 +113,29 @@ async function fetchOrgDetail() {
   }
 }
 
-// ================== Auto update field ==================
+async function kycRequest() {
+  try {
+    showConfirmModal({
+      title: 'Yêu cầu KYC',
+      okBtnColor: 'success',
+      message: `Bạn có chắc muốn gửi yêu cầu KYC?`,
+      confirmed: 'Xác nhận',
+      onConfirm: async () => {
+        try {
+          const result = await ajax(`/api/profile/kyc-request/retry`)
+          if (result) {
+            toastr.success('Yêu cầu KYC đã được gửi thành công')
+          }
+        } catch (error) {
+          console.error(error)
+          toastr.error('Có lỗi xảy ra gửi yêu cầu')
+        }
+      }
+    })
+  } catch (error) {}
+}
+
+// Auto update field
 async function updateOrgField(field, value) {
   const csrfToken = document.getElementById('_csrf')?.value
   const payload = { [field]: value }
@@ -108,7 +169,44 @@ async function updateOrgField(field, value) {
   }
 }
 
-// ================== Hàm tạo canvas tròn ==================
+// Update profile field
+async function updateProfileField(field, value) {
+  const csrfToken = document.getElementById('_csrf')?.value
+
+  // Build nested profile object
+  const payload = {
+    profile: {
+      [field]: value
+    }
+  }
+
+  if (field === 'phone') {
+    payload.profile.phone = value ? value.replace(/[\s\.\-]/g, '') : ''
+  }
+
+  try {
+    const res = await fetch(`/api/organization/update/${orgId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrfToken
+      },
+      body: JSON.stringify(payload)
+    })
+    const data = await res.json()
+    if (data.success) {
+      toastr.remove()
+      toastr.success(data.message)
+    } else {
+      toastr.error(data.message || `Lỗi cập nhật ${field}`)
+    }
+  } catch (err) {
+    console.error('Lỗi updateProfileField:', err)
+    toastr.error(err.message || `Lỗi khi cập nhật ${field}`)
+  }
+}
+
+// Hàm tạo canvas tròn
 function createCircularCanvas(sourceCanvas, size = 400) {
   const circularCanvas = document.createElement('canvas')
   const ctx = circularCanvas.getContext('2d')
@@ -124,13 +222,13 @@ function createCircularCanvas(sourceCanvas, size = 400) {
   return circularCanvas
 }
 
-// ================== Document ready ==================
+//  Document ready
 $(document).ready(function () {
   if (!orgInfo) return
 
   fetchOrgDetail()
 
-  // ------------------- Field change handlers -------------------
+  // Organization field change handlers
   $(document).on('change', '.org-update', function () {
     if (isLoadingOrgData) return
 
@@ -158,7 +256,51 @@ $(document).ready(function () {
     updateOrgField(field, value)
   })
 
-  // ------------------- Xem ảnh -------------------
+  // Profile field change handlers (for enterprise)
+  if (accountType === 'enterprise') {
+    $('#fullName, #cccd, #email, #phone, #street').on('change', function () {
+      if (isLoadingOrgData) return
+
+      const fieldMap = {
+        fullName: 'fullName',
+        cccd: 'cccd',
+        email: 'email',
+        phone: 'phone',
+        street: 'street'
+      }
+
+      const field = fieldMap[this.id]
+      const value = $(this).val() || ''
+
+      updateProfileField(field, value)
+    })
+
+    // Profile province change
+    $('#province').on('change', function () {
+      if (isLoadingOrgData) return
+
+      const provinceId = $(this).val()
+      updateProfileField('province', provinceId)
+
+      if (provinceId) {
+        listCommunes(provinceId, '#commune')
+      } else {
+        $('#commune')
+          .empty()
+          .append('<option value="">— Chọn Xã/ Phường —</option>')
+          .prop('disabled', true)
+        initSelect2($('#commune'), '— Chọn Xã/ Phường —')
+      }
+    })
+
+    // Profile commune change
+    $('#commune').on('change', function () {
+      if (isLoadingOrgData) return
+      updateProfileField('commune', $(this).val())
+    })
+  }
+
+  // Xem ảnh
   $('.preview-btn').on('click', () => {
     const imgSrc = $('#orgLogoPreview').attr('src')
     if (!imgSrc || imgSrc.includes('default.png')) return toastr.info('Chưa có ảnh để xem')
@@ -183,7 +325,7 @@ $(document).ready(function () {
     $('#imagePreviewModal').on('hidden.bs.modal', (e) => e.target.remove())
   })
 
-  // ------------------- Upload + Crop -------------------
+  // Upload + Crop
   $('.upload-btn').on('click', () => {
     const input = $('<input type="file" accept="image/*" />')
     input.on('change', (e) => {
@@ -268,4 +410,170 @@ $(document).ready(function () {
         })
     }, mime)
   })
+
+  // CCCD Upload
+  $('#uploadCccdFront').on('click', () => $('#cccdFrontInput').click())
+  $('#uploadCccdBack').on('click', () => $('#cccdBackInput').click())
+
+  $('#cccdFrontInput').on('change', function () {
+    handleCccdChange(this, 'front', '#cccdFrontPreview', '#cccdFrontPlaceholder')
+  })
+
+  $('#cccdBackInput').on('change', function () {
+    handleCccdChange(this, 'back', '#cccdBackPreview', '#cccdBackPlaceholder')
+  })
+
+  function handleCccdChange(input, side, previewSelector, placeholderSelector) {
+    const file = input.files[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toastr.error('Vui lòng chọn file ảnh')
+      input.value = ''
+      return
+    }
+
+    // Preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      $(previewSelector).attr('src', e.target.result).removeClass('d-none')
+      $(placeholderSelector).addClass('d-none')
+    }
+    reader.readAsDataURL(file)
+
+    uploadAndUpdateCccd(file, side)
+  }
+
+  async function uploadAndUpdateCccd(file, side) {
+    const csrfToken = document.getElementById('_csrf')?.value
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'x-csrf-token': csrfToken },
+        body: formData
+      })
+
+      const uploadData = await uploadRes.json()
+      if (!uploadData.success) throw new Error(uploadData.error)
+
+      const updateRes = await fetch('/api/profile/update-cccd', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken
+        },
+        body: JSON.stringify({
+          side,
+          url: uploadData.file.url
+        })
+      })
+
+      const updateData = await updateRes.json()
+      if (!updateData.success) throw new Error(updateData.message)
+
+      $('#verificationNoteContainer').addClass('d-none')
+      $('#verificationNote').text('')
+
+      $('#verificationBadge')
+        .removeClass('bg-danger bg-success')
+        .addClass('bg-warning text-dark')
+        .html('<i class="bi bi-clock-history me-1"></i>Chờ xác minh')
+
+      toastr.success(`Đã tải lên CCCD mặt ${side === 'front' ? 'trước' : 'sau'}`)
+    } catch (err) {
+      console.error(err)
+      toastr.error(err.message || 'Upload CCCD thất bại')
+    }
+  }
+
+  const requestKycBtn = $('#requestKycBtn')
+
+  if (requestKycBtn) {
+    requestKycBtn.on('click', kycRequest)
+  }
+
+  const submitKycBtn = $('#submitKycBtn')
+
+  if (submitKycBtn.length) {
+    submitKycBtn.on('click', async () => {
+      try {
+        showConfirmModal({
+          title: 'Yêu cầu KYC',
+          okBtnColor: 'success',
+          message: 'Bạn có chắc muốn gửi yêu cầu KYC?',
+          confirmed: 'Xác nhận',
+          onConfirm: async () => {
+            try {
+              const result = await ajax('/api/profile/kyc-request')
+              if (result) {
+                toastr.success(result.message || 'Yêu cầu KYC đã được gửi thành công')
+                renderKycUI({
+                  verificationStatus: 'pending',
+                  kycRequest: true
+                })
+              }
+            } catch (err) {
+              console.error(err)
+              toastr.error('Có lỗi xảy ra khi gửi yêu cầu KYC')
+            }
+          }
+        })
+      } catch (err) {
+        console.error(err)
+      }
+    })
+  }
 })
+
+function renderKycUI(profile = {}) {
+  const verificationMap = {
+    pending: {
+      text: 'Chờ xác minh',
+      class: 'bg-warning text-dark',
+      icon: 'bi-hourglass-split'
+    },
+    verified: {
+      text: 'Đã xác minh',
+      class: 'bg-success',
+      icon: 'bi-check-circle'
+    },
+    rejected: {
+      text: 'Từ chối',
+      class: 'bg-danger',
+      icon: 'bi-x-circle'
+    }
+  }
+
+  const status = profile.verificationStatus || 'pending'
+  const config = verificationMap[status]
+
+  // BADGE
+  $('#verificationBadge')
+    .html(`<i class="bi ${config.icon} me-1"></i>${config.text}`)
+    .removeClass('bg-warning bg-success bg-danger bg-secondary text-dark')
+    .addClass(config.class)
+
+  if (profile.kycRequest) {
+    // Đã gửi – đang chờ duyệt
+    $('#submitKycBtn')
+      .prop('disabled', true)
+      .html('<i class="bi bi-hourglass-split me-1"></i> Chờ xác minh')
+
+    $('#verificationNoteContainer').addClass('d-none')
+  } else if (status === 'rejected') {
+    // Bị từ chối – cho gửi lại
+    $('#submitKycBtn').prop('disabled', false).html('<i class="bi bi-send me-1"></i> Gửi lại KYC')
+
+    $('#verificationNote').text(profile.verificationNote || 'Hồ sơ chưa hợp lệ')
+    $('#verificationNoteContainer').removeClass('d-none')
+  } else {
+    // Chưa gửi
+    $('#submitKycBtn').prop('disabled', false).html('<i class="bi bi-send me-1"></i> Gửi KYC')
+
+    $('#verificationNoteContainer').addClass('d-none')
+  }
+}
