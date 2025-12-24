@@ -69,7 +69,7 @@ export function generateOrderCode() {
   const mi = String(now.getMinutes()).padStart(2, '0')
   const ss = String(now.getSeconds()).padStart(2, '0')
 
-  const random = Math.floor(Math.random() * 90000 + 10000) // 5 số
+  const random = Math.floor(Math.random() * 90 + 10) // 5 số
 
   return Number(`${dd}${mm}${yyyy}${hh}${mi}${ss}${random}`)
 }

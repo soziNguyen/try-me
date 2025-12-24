@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (result) {
         walletBalanceEl.textContent = `${result.wallet.balance.toLocaleString()} ${result.wallet.currency}`
         renderTransactions(result.transactions)
-        console.log(result)
       }
     } catch (err) {
       console.error(err)
@@ -85,10 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const result = await ajax('/api/wallet/top-up', { amount, method })
-      if (result) {
-        toastr.success('Gửi yêu cầu nạp tiền thành công')
-        topUpModal.hide()
-        loadWallet()
+      if (result?.paymentUrl) {
+        window.location.href = result.paymentUrl
       }
     } catch (err) {
       console.error(err)

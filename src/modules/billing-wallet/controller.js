@@ -13,7 +13,6 @@ export const getWalletInfo = async (req, res) => {
     if (!wallet) {
       return responseHelper.error(res, 'Ví chưa tồn tại', 404)
     }
-    console.log(payOS)
 
     const transactions = await BillingWalletTransaction.find({ organization: orgId })
       .populate('wallet', 'balance currency')
@@ -53,10 +52,10 @@ export const walletTopup = async (req, res) => {
 
     const orderCode = generateOrderCode()
 
-    const payment = await payOS.createPaymentLink({
+    const payment = await payOS.paymentRequests.create({
       orderCode,
       amount: tx.amount,
-      description: `Nap tien vi - ${tx._id}`,
+      description: `Nap tien vi`,
       returnUrl: `${process.env.DOMAIN}/wallet`,
       cancelUrl: `${process.env.DOMAIN}/wallet`
     })

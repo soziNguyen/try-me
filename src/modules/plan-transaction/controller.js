@@ -34,8 +34,6 @@ export const getPlanTransactions = async (req, res) => {
       .skip(start)
       .limit(length)
 
-    console.log(transactions)
-
     // Trả về
     return res.json({
       draw,
