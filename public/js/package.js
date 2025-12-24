@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', async function () {
   const orgRes = await ajax('/api/organization/current', {}, 'GET')
   const currentPlanCode = orgRes?.plan?.code || 'FREE'
-  let allPlans = []
 
   // Mặc định hiển thị giá theo tháng
   let currentMode = 'month'
@@ -58,7 +57,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 async function fillPlans(currentPlanCode, mode = 'month') {
   const plans = await ajax('/api/admin/plan/active', {}, 'GET')
-  allPlans = plans // Lưu để dùng ở phần submit
 
   const container = document.querySelector('.package__container')
   container.innerHTML = ''

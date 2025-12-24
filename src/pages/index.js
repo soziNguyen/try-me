@@ -931,3 +931,13 @@ export const changePlan = async (req, res) => {
     })
   )
 }
+
+export const walletPage = async (req, res) => {
+  res.render(
+    'billing-wallet/index',
+    getPageData(req, 'Quản lý số dư', 'Wallet', {
+      headerClass: 'admin__header',
+      pageTitle: 'QUẢN LÝ SỐ DƯ'
+    })
+  )
+}

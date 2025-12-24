@@ -500,9 +500,6 @@ input[type=number]::-webkit-inner-spin-button {
   transition: opacity 0.5s;
   border-radius: 50px;
 }
-.price-toggle .toggle-liquid:hover::before {
-  opacity: 0.1;
-}
 .price-toggle .toggle-liquid .option {
   padding: 12px 36px;
   font-size: 15px;

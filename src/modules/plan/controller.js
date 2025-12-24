@@ -5,13 +5,17 @@ import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import CouponPlan from '../coupon-plan/model.js'
 import PlanTransaction from '../plan-transaction/model.js'
 import { generateInvoiceCodeForPlan } from '../../helpers/generateInvoiceCode.js'
+import withTransaction from '../../helpers/withTransaction.js'
+import BusinessError from '../error/BusinessError.js'
+import Warehouse from '../inventory/warehouse/model.js'
+import User from '../user/model.js'
 import { logActivity } from '../activity-logs/service.js'
 import { buildChangeLog } from '../../helpers/changeLog.js'
 
 // Lấy tất cả các gói (chỉ hiển thị gói active)
 export const getActivePlans = async (req, res) => {
   try {
-    const plans = await Plan.find({ isActive: true }).sort({ priceMonth: 1 })
+    const plans = await Plan.find({ isActive: true }).sort({ level: 1 })
     return responseHelper.success(res, plans)
   } catch (error) {
     return responseHelper.error(res, error.message)
@@ -547,3 +551,125 @@ export const cancelPlanTransaction = async (req, res) => {
     return responseHelper.error(res, err.message || 'Lỗi hệ thống')
   }
 }
+
+/*
+export const changePlanForOrganization = async (req, res) => {
+  try {
+    const { organizationId, planId, mode } = req.body
+
+    if (!organizationId || !planId) {
+      throw new BusinessError('Thiếu thông tin tổ chức hoặc gói cước', 400)
+    }
+
+    if (!['month', 'year'].includes(mode)) {
+      throw new BusinessError('Chế độ thanh toán không hợp lệ', 400)
+    }
+
+    const result = await withTransaction(async (session) => {
+      const organization = await Organization.findById(organizationId)
+        .populate('plan')
+        .session(session || null)
+
+      const newPlan = await Plan.findById(planId).session(session || null)
+
+      if (!organization) {
+        throw new BusinessError('Không tìm thấy tổ chức', 404)
+      }
+
+      if (!newPlan || !newPlan.isActive) {
+        throw new BusinessError('Gói cước không tồn tại hoặc đã bị vô hiệu hóa', 404)
+      }
+
+      const currentPlan = organization.plan
+      const now = new Date()
+
+      if (currentPlan && currentPlan._id.toString() === newPlan._id.toString()) {
+        throw new BusinessError('Tổ chức đang sử dụng gói này', 400)
+      }
+
+      const isUpgrade = currentPlan && newPlan.level > currentPlan.level
+      const isDowngrade = currentPlan && newPlan.level < currentPlan.level
+
+      // DOWNGRADE
+      if (isDowngrade) {
+        const [warehouseCount, staffCount] = await Promise.all([
+          Warehouse.countDocuments({ organization: organizationId }).session(session || null),
+          User.countDocuments({ organization: organizationId }).session(session || null)
+        ])
+
+        if (newPlan.warehouseLimit !== null && warehouseCount > newPlan.warehouseLimit) {
+          throw new BusinessError(
+            `Không thể hạ cấp. Tổ chức có ${warehouseCount} kho, vượt quá giới hạn ${newPlan.warehouseLimit} của gói ${newPlan.name}`,
+            400
+          )
+        }
+
+        if (newPlan.staffLimit !== null && staffCount > newPlan.staffLimit) {
+          throw new BusinessError(
+            `Không thể hạ cấp. Tổ chức có ${staffCount} nhân viên, vượt quá giới hạn ${newPlan.staffLimit} của gói ${newPlan.name}`,
+            400
+          )
+        }
+      }
+
+      // ĐĂNG KÝ MỚI / UPGRADE
+      if (!currentPlan || isUpgrade) {
+        const expiredAt = new Date(now)
+
+        if (mode === 'year') {
+          expiredAt.setFullYear(expiredAt.getFullYear() + 1)
+        } else {
+          expiredAt.setMonth(expiredAt.getMonth() + 1)
+        }
+
+        organization.plan = newPlan._id
+        organization.planExpiredAt = expiredAt
+        organization.lastUpgradedAt = now
+
+        // clear downgrade pending
+        organization.pendingPlan = null
+        organization.pendingPlanMode = null
+
+        await organization.save({ session })
+
+        return {
+          actionType: !currentPlan ? 'đăng ký' : 'nâng cấp',
+          organization,
+          effectiveAt: now
+        }
+      }
+
+      // DOWNGRADE (CHỜ HẾT HẠN)
+      if (isDowngrade) {
+        organization.pendingPlan = newPlan._id
+        organization.pendingPlanMode = mode
+
+        await organization.save({ session })
+
+        return {
+          actionType: 'hạ cấp',
+          organization,
+          effectiveAt: organization.planExpiredAt
+        }
+      }
+    })
+
+    return responseHelper.success(
+      res,
+      result.organization,
+      result.actionType === 'hạ cấp'
+        ? `Gói sẽ được hạ xuống sau khi hết hạn vào ${result.effectiveAt.toLocaleDateString()}`
+        : `Đã ${result.actionType} gói thành công`
+    )
+  } catch (error) {
+    console.error('[CHANGE_PLAN_ERROR]', error)
+
+    if (error instanceof BusinessError) {
+      return responseHelper.error(res, error.message, error.statusCode)
+    }
+
+    return responseHelper.error(res, 'Có lỗi xảy ra khi thay đổi gói cước', 500)
+  }
+}
+
+*/
