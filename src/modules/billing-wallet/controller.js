@@ -13,6 +13,7 @@ export const getWalletInfo = async (req, res) => {
     if (!wallet) {
       return responseHelper.error(res, 'Ví chưa tồn tại', 404)
     }
+    console.log(payOS)
 
     const transactions = await BillingWalletTransaction.find({ organization: orgId })
       .populate('wallet', 'balance currency')

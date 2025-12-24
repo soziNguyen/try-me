@@ -1,6 +1,6 @@
 import { PayOS } from '@payos/node'
-import { configDotenv } from 'dotenv'
-configDotenv.config()
+import dotenv from 'dotenv'
+dotenv.config()
 
 export const payOS = new PayOS(
   process.env.PAYOS_CLIENT_ID,
