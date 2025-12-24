@@ -221,5 +221,6 @@ router.get(
   isPermit('Admin', 'SubAdmin'),
   page.changePlan
 )
+router.get('/wallet', isAuthenticated, isPermit('Admin', 'SubAdmin', 'Org'), page.walletPage)
 
 export default router

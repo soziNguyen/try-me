@@ -24,6 +24,7 @@ import { buildChangeLog } from '../../helpers/changeLog.js'
 import { getProvinceName, getCommuneName } from '../../helpers/address.js'
 import { isValidCCCDFormat } from '../../helpers/common.js'
 import Profile from '../profile/model.js'
+import BillingWallet from '../billing-wallet/model.js'
 
 export const createOrganization = async (req, res) => {
   try {
@@ -295,6 +296,15 @@ export const createOrganization = async (req, res) => {
 
       const organization = new Organization(organizationData)
       await organization.save({ session })
+
+      // Create wallet cho organization
+      const wallet = new BillingWallet({
+        organization: organization._id,
+        balance: 0,
+        currency: 'VND',
+        isActive: true
+      })
+      await wallet.save({ session })
 
       // Create admin user
       const adminUser = new User({

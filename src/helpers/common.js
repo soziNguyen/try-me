@@ -58,6 +58,22 @@ export function getDateFromTimestamp(timestamp) {
   return result
 }
 
+export function generateOrderCode() {
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }))
+
+  const dd = String(now.getDate()).padStart(2, '0')
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const yyyy = now.getFullYear()
+
+  const hh = String(now.getHours()).padStart(2, '0')
+  const mi = String(now.getMinutes()).padStart(2, '0')
+  const ss = String(now.getSeconds()).padStart(2, '0')
+
+  const random = Math.floor(Math.random() * 90000 + 10000) // 5 số
+
+  return Number(`${dd}${mm}${yyyy}${hh}${mi}${ss}${random}`)
+}
+
 // remove accents
 export function removeAccents(str) {
   return str

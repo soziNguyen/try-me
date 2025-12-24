@@ -1,0 +1,79 @@
+<%- include('../partials/header.html') %>
+  <%- include('../partials/org_sidebar.html') %>
+    <div class="admin__content">
+      <h2 class="mb-3 bold semi-bold">
+        <%= pageTitle %>
+      </h2>
+
+      <div class="mt-5">
+        <div class="card shadow-sm">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Ví</h4>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#topUpModal">Nạp tiền</button>
+          </div>
+          <div class="card-body">
+            <h5>Số dư hiện tại: <span id="walletBalance">0 VND</span></h5>
+      
+            <hr>
+      
+            <h5>Lịch sử giao dịch</h5>
+            <div class="table-responsive">
+              <table class="table table-striped table-hover" id="walletTransactions">
+                <thead class="table-light">
+                  <tr>
+                    <th>Ngày</th>
+                    <th>Loại</th>
+                    <th>Số tiền</th>
+                    <th>Source</th>
+                    <th>Số dư sau</th>
+                    <th>Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Modal nạp tiền -->
+      <div class="modal fade" id="topUpModal" tabindex="-1" aria-labelledby="topUpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <form id="topUpForm">
+              <div class="modal-header">
+                <h5 class="modal-title" id="topUpModalLabel">Nạp tiền vào Ví</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="topUpAmount" class="form-label">Số tiền (VND)</label>
+                  <input type="number" class="form-control" id="topUpAmount" min="1000" step="1000" required>
+                </div>
+                <div class="mb-3">
+                  <label for="paymentMethod" class="form-label">Phương thức thanh toán</label>
+                  <select class="form-select" id="paymentMethod" required>
+                  </select>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Xác nhận</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+
+  </div>
+</div>
+
+<input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<input type="hidden" id="userRole" value="<%= user.role %>">
+<%- include('../partials/commonjs.html') %>
+<%- include('../partials/sidebar_togglejs.html') %>
+<%- include('../partials/data_tablejs.html') %>
+<script src="/js/wallet/wallet.js"></script>
+<%- include('../partials/footer.html') %>
