@@ -1,4 +1,4 @@
-import PayOS from 'payos'
+import { PayOS } from '@payos/node'
 
 export const payOS = new PayOS(
   process.env.PAYOS_CLIENT_ID,

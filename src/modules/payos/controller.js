@@ -1,7 +1,7 @@
-import BillingWallet from '../billing-wallet/model'
-import BillingWalletTransaction from '../billing-wallet-transaction/model'
-import responseHelper from '../../helpers/responseHelper'
-import withTransaction from '../../helpers/withTransaction'
+import BillingWallet from '../billing-wallet/model.js'
+import BillingWalletTransaction from '../billing-wallet-transaction/model.js'
+import responseHelper from '../../helpers/responseHelper.js'
+import withTransaction from '../../helpers/withTransaction.js'
 
 export const payosWebhook = async (req, res) => {
   try {

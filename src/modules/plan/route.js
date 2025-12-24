@@ -9,9 +9,7 @@ import {
   hardDeletePlan,
   upgradePlan,
   approvePlanTransaction,
-  cancelPlanTransaction,
-  changePlanForOrganization,
-  extendPlanForOrganization
+  cancelPlanTransaction
 } from './controller.js'
 import isAuthenticated from '../../helpers/isAuthenticated.js'
 import { isPermit } from '../../helpers/isPermit.js'
