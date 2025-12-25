@@ -2,26 +2,45 @@ import BillingWallet from '../billing-wallet/model.js'
 import BillingWalletTransaction from '../billing-wallet-transaction/model.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import withTransaction from '../../helpers/withTransaction.js'
+import { payOS } from './service.js'
+import BusinessError from '../error/BusinessError.js'
 
 export const payosWebhook = async (req, res) => {
   try {
-    console.log('=== Payos Webhook ===')
-    console.log('WEBHOOK SIGNATURE:', req.headers['x-payos-signature'])
-    console.log('WEBHOOK BODY:', JSON.stringify(req.body, null, 2))
+    const webhookData = req.body
 
     // Verify webhook signature
-    const signature = req.headers['x-payos-signature']
-    if (!signature) {
-      return responseHelper.error(res, 'Thiếu chữ ký PayOS', 400)
+    try {
+      const verifyResult = payOS.webhooks.verify(webhookData)
+
+      if (!verifyResult) {
+        return res.status(400).json({
+          error: 'INVALID_SIGNATURE',
+          message: 'Chữ ký không hợp lệ'
+        })
+      }
+    } catch (verifyError) {
+      return res.status(400).json({
+        error: 'VERIFICATION_FAILED',
+        message: verifyError.message
+      })
     }
 
-    // SDK v2 verify
-    payOS.webhooks.verify(req.body, signature)
+    const { orderCode, code } = webhookData.data
 
-    const { orderCode, status } = req.body
+    if (!orderCode) {
+      return res.status(400).json({
+        error: 'INVALID_PAYLOAD',
+        message: 'Thiếu orderCode'
+      })
+    }
 
-    if (!orderCode || !status) {
-      return responseHelper.error(res, 'Payload PayOS không hợp lệ', 400)
+    if (code !== '00') {
+      return res.status(200).json({
+        error: 0,
+        message: 'success',
+        data: null
+      })
     }
 
     await withTransaction(async (session) => {
@@ -30,38 +49,85 @@ export const payosWebhook = async (req, res) => {
       }).session(session)
 
       if (!tx) {
-        throw new Error('Không tìm thấy giao dịch')
+        throw new BusinessError('Không tìm thấy giao dịch', 404)
       }
 
-      // Idempotent: đã xử lý rồi thì bỏ qua
-      if (tx.status !== 'pending') {
-        return
+      // next() if processed
+      if (tx.status !== 'pending') return
+
+      // 00 = SUCCESS
+      const wallet = await BillingWallet.findById(tx.wallet).session(session)
+      if (!wallet) {
+        throw new BusinessError('Không tìm thấy ví', 404)
       }
 
-      // Map trạng thái PayOS → hệ thống
-      if (status === 'PAID') {
-        const wallet = await BillingWallet.findById(tx.wallet).session(session)
-        if (!wallet) {
-          throw new Error('Không tìm thấy ví')
-        }
+      wallet.balance += tx.amount
+      await wallet.save({ session })
 
-        wallet.balance += tx.amount
-        await wallet.save({ session })
-
-        tx.status = 'completed'
-        tx.balanceAfter = wallet.balance
-      }
-
-      if (status === 'CANCELLED' || status === 'FAILED') {
-        tx.status = 'failed'
-      }
-
+      tx.status = 'completed'
+      tx.balanceAfter = wallet.balance
       await tx.save({ session })
     })
 
-    return res.status(200).json({ success: true })
+    return res.status(200).json({
+      error: 0,
+      message: 'success',
+      data: null
+    })
   } catch (error) {
-    console.error('PayOS webhook error:', error)
-    return res.status(400).json({ success: false })
+    // return 200 so that PAYOS doesn't keep trying
+    return res.status(200).json({
+      error: 1,
+      message: error.message || 'Internal error',
+      data: null
+    })
+  }
+}
+
+export const payosReturn = async (req, res) => {
+  try {
+    const { cancel, status, orderCode } = req.query
+
+    if (!orderCode) {
+      return res.redirect('/wallet?error=missing_order')
+    }
+
+    const tx = await BillingWalletTransaction.findOne({
+      externalTransactionId: parseInt(orderCode)
+    })
+
+    if (!tx) {
+      return res.redirect('/wallet?error=transaction_not_found')
+    }
+
+    // update if status = pending
+    if (tx.status !== 'pending') {
+      return res.redirect(`/wallet?status=${tx.status}`)
+    }
+
+    // Cancelled
+    if (cancel === 'true' || status === 'CANCELLED') {
+      tx.status = 'cancelled'
+      tx.reason += ' - Người dùng đã hủy thanh toán'
+      tx.balanceAfter = wallet.balance
+      await tx.save()
+
+      return res.redirect('/wallet?status=cancelled')
+    }
+
+    // PAID
+    if (status === 'PAID') {
+      return res.redirect('/wallet?status=success')
+    }
+
+    // PENDING
+    if (status === 'PENDING') {
+      return res.redirect('/wallet?status=processing')
+    }
+
+    return res.redirect('/wallet?status=unknown')
+  } catch (error) {
+    console.error('PayOS return error:', error)
+    res.redirect('/wallet?error=system_error')
   }
 }

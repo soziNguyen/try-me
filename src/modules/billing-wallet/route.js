@@ -1,7 +1,7 @@
 import express from 'express'
 import isAuthenticated from '../../helpers/isAuthenticated.js'
 import { isPermit } from '../../helpers/isPermit.js'
-import { getWalletInfo, walletTopup, walletTopupCallback } from './controller.js'
+import { getWalletInfo, walletTopup } from './controller.js'
 
 const router = express.Router()
 
@@ -11,12 +11,6 @@ router.post(
   isAuthenticated,
   isPermit('Admin', 'SubAdmin', 'Org'),
   walletTopup
-)
-router.post(
-  '/api/wallet/top-up/callback',
-  isAuthenticated,
-  isPermit('Admin', 'SubAdmin', 'Org'),
-  walletTopupCallback
 )
 
 export default router

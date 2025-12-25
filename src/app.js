@@ -109,7 +109,10 @@ app.use(passport.session())
 
 app.use(
   lusca({
-    csrf: true, // CSRF protection
+    csrf: {
+      angular: false,
+      blacklist: ['/api/payos/webhook'] // Bỏ qua CSRF cho route này
+    },
     xframe: 'SAMEORIGIN',
     xssProtection: true,
     csp: {

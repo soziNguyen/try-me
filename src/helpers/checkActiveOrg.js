@@ -11,7 +11,6 @@ function getSafeEndpoints() {
     '/api/profile/update-cccd',
     '/api/profile/kyc-request',
     '/api/wallet/top-up',
-    '/api/wallet/top-up/callback',
     /^\/api\/organization\/update\/[0-9a-f]{24}$/
   ]
 }
