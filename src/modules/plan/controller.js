@@ -7,8 +7,8 @@ import PlanTransaction from '../plan-transaction/model.js'
 import { generateInvoiceCodeForPlan } from '../../helpers/generateInvoiceCode.js'
 import withTransaction from '../../helpers/withTransaction.js'
 import BusinessError from '../error/BusinessError.js'
-import Warehouse from '../inventory/warehouse/model.js'
-import User from '../user/model.js'
+import BillingWallet from '../billing-wallet/model.js'
+import BillingWalletTransaction from '../billing-wallet-transaction/model.js'
 import { logActivity } from '../activity-logs/service.js'
 import { buildChangeLog } from '../../helpers/changeLog.js'
 
@@ -370,76 +370,151 @@ export const upgradePlan = async (req, res) => {
       )
     }
 
-    const basePrice = mode === 'year' ? plan.priceYear : plan.priceMonth
-    const totalBasePrice = basePrice * durationNum
-    let discountAmount = 0
-    let couponUsed = null
+    // START TRANSACTION
+    const result = await withTransaction(async (session) => {
+      const basePrice = mode === 'year' ? plan.priceYear : plan.priceMonth
+      const totalBasePrice = basePrice * durationNum
+      let discountAmount = 0
+      let couponUsed = null
 
-    // ÁP DỤNG MÃ GIẢM GIÁ
-    if (couponCode) {
-      const coupon = await CouponPlan.findOneAndUpdate(
-        {
-          isActive: true,
-          code: couponCode,
-          startDate: { $lte: now },
-          endDate: { $gte: now },
-          $expr: {
-            $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
-          }
-        },
-        { $inc: { usedCount: 1 } },
-        { new: true }
-      )
-
-      if (!coupon) {
-        logActivity(
-          organizationId,
-          req.user._id,
-          req.user.username,
-          'UPGRADE_PLAN',
-          'PLAN',
-          `Áp dụng mã giảm giá ${couponCode}`,
-          plan.name,
-          'FAILED'
+      // ÁP DỤNG MÃ GIẢM GIÁ
+      if (couponCode) {
+        const coupon = await CouponPlan.findOneAndUpdate(
+          {
+            isActive: true,
+            code: couponCode,
+            startDate: { $lte: now },
+            endDate: { $gte: now },
+            $expr: {
+              $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
+            }
+          },
+          { $inc: { usedCount: 1 } },
+          { new: true, session }
         )
-        return responseHelper.error(res, 'Mã giảm giá không hợp lệ hoặc đã hết hạn', 400)
+
+        if (!coupon) {
+          logActivity(
+            organizationId,
+            req.user._id,
+            req.user.username,
+            'UPGRADE_PLAN',
+            'PLAN',
+            `Áp dụng mã giảm giá ${couponCode}`,
+            plan.name,
+            'FAILED'
+          )
+          throw new BusinessError('Mã giảm giá không hợp lệ hoặc đã hết hạn', 400)
+        }
+
+        couponUsed = coupon
+        discountAmount =
+          coupon.discountType === 'percent'
+            ? Math.round((totalBasePrice * coupon.discountValue) / 100)
+            : coupon.discountValue
       }
 
-      couponUsed = coupon
-      discountAmount =
-        coupon.discountType === 'percent'
-          ? Math.round((totalBasePrice * coupon.discountValue) / 100)
-          : coupon.discountValue
-    }
+      // TÍNH GIÁ CUỐI CÙNG
+      const subtotal = Math.max(totalBasePrice - discountAmount, 0)
+      const vatRate = 0.1
+      const vat = Math.round(subtotal * vatRate)
+      const total = subtotal + vat
 
-    // TÍNH GIÁ CUỐI CÙNG
-    const subtotal = Math.max(totalBasePrice - discountAmount, 0)
-    const vatRate = 0.1
-    const vat = Math.round(subtotal * vatRate)
-    const total = subtotal + vat
+      let isPaid = false
+      if (paymentMethodId) {
+        const wallet = await BillingWallet.findOne(
+          {
+            _id: paymentMethodId,
+            organization: organizationId
+          },
+          null,
+          { session }
+        )
 
-    // TẠO MÃ HÓA ĐƠN
-    const invoiceCode = await generateInvoiceCodeForPlan(PlanTransaction, 'HD')
+        if (wallet) {
+          if (wallet.balance < total) {
+            throw new BusinessError('Số dư trong ví không đủ để thanh toán', 400)
+          }
 
-    // TẠO TRANSACTION
-    const transaction = await PlanTransaction.create({
-      code: invoiceCode,
-      organization: organizationId,
-      plan: plan._id,
-      mode,
-      duration: durationNum,
-      amount: totalBasePrice,
-      discountAmount,
-      couponCode: couponUsed?.code || '',
-      subtotal,
-      vat,
-      total,
-      paidAt: null,
-      expiredAt: null,
-      paymentMethod: paymentMethodId,
-      note: `Tổ chức ${org.name} nâng cấp gói ${plan.name} - ${durationNum} ${mode === 'year' ? 'năm' : 'tháng'}`,
-      status: 'pending'
+          wallet.balance -= total
+          await wallet.save({ session })
+
+          await BillingWalletTransaction.create(
+            [
+              {
+                wallet: wallet._id,
+                organization: organizationId,
+                type: 'debit',
+                amount: total,
+                reason: `Thanh toán nâng cấp gói ${plan.name}`,
+                source: 'upgrade',
+                paymentProvider: 'manual',
+                balanceAfter: wallet.balance,
+                status: 'completed'
+              }
+            ],
+            { session }
+          )
+
+          isPaid = true
+        }
+      }
+
+      // TẠO MÃ HÓA ĐƠN
+      const invoiceCode = await generateInvoiceCodeForPlan(PlanTransaction, 'HD')
+
+      // TẠO TRANSACTION
+      const [transaction] = await PlanTransaction.create(
+        [
+          {
+            code: invoiceCode,
+            organization: organizationId,
+            plan: plan._id,
+            mode,
+            duration: durationNum,
+            amount: totalBasePrice,
+            discountAmount,
+            couponCode: couponUsed?.code || '',
+            subtotal,
+            vat,
+            total,
+            paidAt: null,
+            expiredAt: null,
+            paymentMethod: paymentMethodId,
+            note: `Tổ chức ${org.name} nâng cấp gói ${plan.name} - ${durationNum} ${
+              mode === 'year' ? 'năm' : 'tháng'
+            }`,
+            status: isPaid ? 'paid' : 'pending'
+          }
+        ],
+        { session }
+      )
+
+      if (isPaid) {
+        const expireAt = new Date()
+
+        if (mode === 'year') {
+          expireAt.setFullYear(expireAt.getFullYear() + durationNum)
+        } else {
+          expireAt.setMonth(expireAt.getMonth() + durationNum)
+        }
+
+        // cập nhật transaction
+        transaction.paidAt = new Date()
+        transaction.expiredAt = expireAt
+        transaction.status = 'paid'
+        await transaction.save({ session })
+
+        // cập nhật organization
+        org.plan = plan._id
+        org.planExpiredAt = expireAt
+        org.lastUpgradedAt = new Date()
+        await org.save({ session })
+      }
+
+      return { transaction, total }
     })
+    //END TRANSACTION
 
     logActivity(
       organizationId,
@@ -447,7 +522,9 @@ export const upgradePlan = async (req, res) => {
       req.user.username,
       'UPGRADE_PLAN',
       'PLAN',
-      `Gửi yêu cầu nâng cấp gói: Mã gói ${plan.code}, Thời hạn: ${durationNum} ${mode === 'month' ? 'Tháng' : 'Năm'}, Tổng: ${total} đ`,
+      `Gửi yêu cầu nâng cấp gói: Mã gói ${plan.code}, Thời hạn: ${durationNum} ${
+        mode === 'month' ? 'Tháng' : 'Năm'
+      }, Tổng: ${result.total} đ`,
       plan.name,
       'SUCCESS'
     )
@@ -455,13 +532,16 @@ export const upgradePlan = async (req, res) => {
     return responseHelper.success(
       res,
       {
-        redirect: `/checkout/${transaction._id}/invoice`,
-        transactionId: transaction._id,
-        total
+        redirect: `/checkout/${result.transaction._id}/invoice`,
+        transactionId: result.transaction._id,
+        total: result.total
       },
       'Tạo đơn hàng thành công. Đang chuyển đến hóa đơn...'
     )
   } catch (error) {
+    if (error instanceof BusinessError) {
+      return responseHelper.error(res, error.message, error.statusCode)
+    }
     responseHelper.error(res, error.message)
   }
 }

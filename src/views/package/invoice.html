@@ -61,7 +61,7 @@
 
         <div class="fw-semibold fs-5 mb-3 checkout-info">Thông tin thanh toán</div>
         <div class="col-md-9 lh-lg pe-4">
-          <div>Hình thức thanh toán: <strong><%= transaction.paymentMethod?.name || '—' %></strong></div>
+          <div>Hình thức thanh toán: <strong><%= transaction.paymentMethod?.name || 'Thanh toán bằng ví' %></strong></div>
 
           <% if (transaction.paymentMethod?.bankInfo) { %>
             <div>Ngân hàng: <%= transaction.paymentMethod.bankInfo.bankName %></div>
