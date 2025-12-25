@@ -381,6 +381,18 @@ export const getActiveOrganizations = async (req, res) => {
   }
 }
 
+export const getOrganizations = async (req, res) => {
+  try {
+    const organizations = await Organization.find().sort({
+      createdAt: -1
+    })
+
+    responseHelper.success(res, organizations, 'Lấy danh sách tổ chức thành công')
+  } catch (error) {
+    responseHelper.error(res, error.message)
+  }
+}
+
 export const getCurrentOrganization = async (req, res) => {
   try {
     const organizationId = getCurrentOrg(req)
