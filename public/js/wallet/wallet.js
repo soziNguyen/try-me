@@ -60,12 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
   topUpForm.addEventListener('submit', async (e) => {
     e.preventDefault()
     const amount = parseInt(document.getElementById('topUpAmount').value)
-    const method = paymentMethodSelect.value
 
     if (amount <= 0 || !method) return alert('Vui lòng chọn phương thức và số tiền hợp lệ')
 
     try {
-      const result = await ajax('/api/wallet/top-up', { amount, method })
+      const result = await ajax('/api/wallet/top-up', { amount })
       if (result?.paymentUrl) {
         window.location.href = result.paymentUrl
       }
