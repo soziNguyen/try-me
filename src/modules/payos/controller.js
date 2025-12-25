@@ -100,6 +100,9 @@ export const payosReturn = async (req, res) => {
       return res.redirect('/wallet?error=transaction_not_found')
     }
 
+    // get wallet to update balance
+    const wallet = await BillingWallet.findById(tx.wallet)
+
     // update if status = pending
     if (tx.status !== 'pending') {
       return res.redirect(`/wallet?status=${tx.status}`)
@@ -109,7 +112,7 @@ export const payosReturn = async (req, res) => {
     if (cancel === 'true' || status === 'CANCELLED') {
       tx.status = 'cancelled'
       tx.reason += ' - Người dùng đã hủy thanh toán'
-      tx.balanceAfter = wallet.balance
+      tx.balanceAfter = wallet?.balance || 0
       await tx.save()
 
       return res.redirect('/wallet?status=cancelled')
