@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault()
     const amount = parseInt(document.getElementById('topUpAmount').value)
 
-    if (amount <= 0 || !method) return alert('Vui lòng chọn phương thức và số tiền hợp lệ')
+    if (amount <= 0) return alert('Vui lòng nhập số tiền hợp lệ')
 
     try {
       const result = await ajax('/api/wallet/top-up', { amount })
