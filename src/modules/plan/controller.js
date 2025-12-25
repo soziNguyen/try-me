@@ -9,6 +9,8 @@ import withTransaction from '../../helpers/withTransaction.js'
 import BusinessError from '../error/BusinessError.js'
 import Warehouse from '../inventory/warehouse/model.js'
 import User from '../user/model.js'
+import BillingWallet from '../billing-wallet/model.js'
+import BillingWalletTransaction from '../billing-wallet-transaction/model.js'
 import { logActivity } from '../activity-logs/service.js'
 import { buildChangeLog } from '../../helpers/changeLog.js'
 
@@ -418,6 +420,34 @@ export const upgradePlan = async (req, res) => {
     const vat = Math.round(subtotal * vatRate)
     const total = subtotal + vat
 
+    let isPaid = false
+    const wallet = await BillingWallet.findOne({
+      _id: paymentMethodId,
+      organization: organizationId
+    })
+    if (wallet) {
+      if (wallet.balance < total) {
+        return responseHelper.error(res, 'Số dư trong ví không đủ để thanh toán', 400)
+      }
+
+      wallet.balance -= total
+      await wallet.save()
+
+      await BillingWalletTransaction.create({
+        wallet: wallet._id,
+        organization: organizationId,
+        type: 'debit',
+        amount: total,
+        reason: `Thanh toán nâng cấp gói ${plan.name}`,
+        source: 'upgrade',
+        paymentProvider: 'manual',
+        balanceAfter: wallet.balance,
+        status: 'completed'
+      })
+
+      isPaid = true
+    }
+
     // TẠO MÃ HÓA ĐƠN
     const invoiceCode = await generateInvoiceCodeForPlan(PlanTransaction, 'HD')
 
@@ -438,8 +468,30 @@ export const upgradePlan = async (req, res) => {
       expiredAt: null,
       paymentMethod: paymentMethodId,
       note: `Tổ chức ${org.name} nâng cấp gói ${plan.name} - ${durationNum} ${mode === 'year' ? 'năm' : 'tháng'}`,
-      status: 'pending'
+      status: isPaid ? 'paid' : 'pending'
     })
+
+    if (isPaid) {
+      const expireAt = new Date()
+
+      if (mode === 'year') {
+        expireAt.setFullYear(expireAt.getFullYear() + durationNum)
+      } else {
+        expireAt.setMonth(expireAt.getMonth() + durationNum)
+      }
+
+      // cập nhật transaction
+      transaction.paidAt = new Date()
+      transaction.expiredAt = expireAt
+      transaction.status = 'paid'
+      await transaction.save()
+
+      // cập nhật organization
+      org.plan = plan._id
+      org.planExpiredAt = expireAt
+      org.lastUpgradedAt = new Date()
+      await org.save()
+    }
 
     logActivity(
       organizationId,

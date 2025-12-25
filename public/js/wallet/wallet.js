@@ -40,14 +40,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     transactions.forEach((tx) => {
       const tr = document.createElement('tr')
+      const amount = `${tx.amount.toLocaleString('vi-VN')} ${tx.wallet.currency}`
+      const amountType = tx.type === 'credit' ? `+${amount}` : `-${amount}`
+      const amountClass =
+        tx.type === 'credit' ? 'text-success fw-semibold' : 'text-danger fw-semibold'
 
       tr.innerHTML = `
         <td class="py-2 ps-1">${new Date(tx.createdAt).toLocaleString('vi-VN')}</td>
         <td class="py-2 ps-1">${typeMap[tx.type] || tx.type}</td>
-        <td class="py-2 ps-1">
-          ${tx.amount.toLocaleString('vi-VN')} ${tx.wallet.currency}
+        <td class="py-2 ps-1 ${amountClass}">
+          ${amountType}
         </td>
         <td class="py-2 ps-1">${sourceMap[tx.source] || tx.source}</td>
+        <td class="py-2 ps-1">${tx.reason || ''}</td>
         <td class="py-2 ps-1">${tx.balanceAfter.toLocaleString('vi-VN')}</td>
         <td class="py-2 ps-1">${statusMap[tx.status]}</td>
       `
