@@ -2,26 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const walletBalanceEl = document.getElementById('walletBalance')
   const topUpForm = document.getElementById('topUpForm')
   const transactionsTable = document.querySelector('#walletTransactions tbody')
-  const paymentMethodSelect = document.getElementById('paymentMethod')
-  const topUpModalEl = document.getElementById('topUpModal')
-  const topUpModal = new bootstrap.Modal(topUpModalEl)
-
-  async function loadPaymentMethods() {
-    try {
-      const result = await ajax('/api/admin/payment-method/active', {}, 'GET')
-      if (result) {
-        paymentMethodSelect.innerHTML = ''
-        result.forEach((method) => {
-          const option = document.createElement('option')
-          option.value = method.code
-          option.textContent = method.name
-          paymentMethodSelect.appendChild(option)
-        })
-      }
-    } catch (err) {
-      console.error(err)
-    }
-  }
 
   // Fetch wallet info
   async function loadWallet() {
@@ -51,9 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const statusMap = {
-      pending: '<span class="badge bg-warning text-dark">Chờ xử lý</span>',
-      completed: '<span class="badge bg-success">Hoàn thành</span>',
-      failed: '<span class="badge bg-danger">Thất bại</span>'
+      pending: '<span class="badge text-info bg-info bg-opacity-10 p-2">Chờ xử lý</span>',
+      completed:
+        '<span class="badge text-success bg-success bg-opacity-10 p-2">Đã thanh toán</span>',
+      failed: '<span class="badge text-secondary bg-secondary bg-opacity-10 p-2">Thất bại</span>',
+      cancelled: '<span class="badge text-danger bg-danger bg-opacity-10 p-2">Hủy</span>'
     }
 
     transactions.forEach((tx) => {
@@ -89,11 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       console.error(err)
-      alert('Có lỗi xảy ra!')
     }
   })
 
   // Initial load
-  loadPaymentMethods()
   loadWallet()
 })
