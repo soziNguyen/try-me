@@ -71,7 +71,7 @@ export const deletePlanTransactions = async (req, res) => {
     const result = await PlanTransaction.deleteMany({
       _id: { $in: ids }
     })
-    responseHelper.success(res, `Đã xóa ${result.deletedCount} bản ghi`)
+    responseHelper.success(res, '1', `Đã xóa ${result.deletedCount} bản ghi`)
   } catch (error) {
     responseHelper.error(res, error.message)
   }

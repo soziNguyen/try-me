@@ -470,9 +470,9 @@ input[type='number']::-webkit-inner-spin-button {
       border-radius: 50px;
     }
 
-    &:hover::before {
-      opacity: 0.1;
-    }
+    // &:hover::before {
+    //   opacity: 0.1;
+    // }
 
     .option {
       padding: 12px 36px;

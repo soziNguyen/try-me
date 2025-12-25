@@ -5,6 +5,16 @@ export function isDate(str) {
   return !isNaN(d)
 }
 
+export function isValidCCCDFormat(cccd) {
+  if (!cccd) return false
+  cccd = String(cccd).trim()
+  if (!/^\d{12}$/.test(cccd)) return false
+  const provinceCode = Number(cccd.slice(0, 3))
+  if (provinceCode < 1 || provinceCode > 96) return false
+
+  return true
+}
+
 export const formatPhone = (phone) => {
   if (!phone) return ''
   return phone.startsWith('84') ? `+${phone}` : phone
@@ -46,6 +56,22 @@ export function getDateFromTimestamp(timestamp) {
     String(date.getMinutes()).padStart(2, '0') +
     ':00'
   return result
+}
+
+export function generateOrderCode() {
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }))
+
+  const dd = String(now.getDate()).padStart(2, '0')
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const yyyy = now.getFullYear()
+
+  const hh = String(now.getHours()).padStart(2, '0')
+  const mi = String(now.getMinutes()).padStart(2, '0')
+  const ss = String(now.getSeconds()).padStart(2, '0')
+
+  const random = Math.floor(Math.random() * 90 + 10) // 5 số
+
+  return Number(`${dd}${mm}${yyyy}${hh}${mi}${ss}${random}`)
 }
 
 // remove accents

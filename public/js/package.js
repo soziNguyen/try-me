@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', async function () {
   const orgRes = await ajax('/api/organization/current', {}, 'GET')
   const currentPlanCode = orgRes?.plan?.code || 'FREE'
-  let allPlans = []
 
   // Mặc định hiển thị giá theo tháng
   let currentMode = 'month'
@@ -58,7 +57,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 async function fillPlans(currentPlanCode, mode = 'month') {
   const plans = await ajax('/api/admin/plan/active', {}, 'GET')
-  allPlans = plans // Lưu để dùng ở phần submit
 
   const container = document.querySelector('.package__container')
   container.innerHTML = ''
@@ -109,7 +107,7 @@ async function fillPlans(currentPlanCode, mode = 'month') {
     }
 
     planCard.innerHTML = `
-      <form class="card h-100 rounded-4 shadow-sm position-relative plan-form" 
+      <form class="card h-100 rounded-4 shadow border-0 position-relative plan-form" 
         data-id=${plan._id} data-code="${plan.code}">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title text-center fw-bold mt-4 fs-2">${plan.name}</h5>

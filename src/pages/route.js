@@ -215,4 +215,12 @@ router.get(
   isPermit('Admin', 'SubAdmin', 'Org', 'Kitchen'),
   page.kitchenPage
 )
+router.get(
+  '/organization/:id/plan',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin'),
+  page.changePlan
+)
+router.get('/wallet', isAuthenticated, isPermit('Admin', 'SubAdmin', 'Org'), page.walletPage)
+
 export default router

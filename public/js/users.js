@@ -1,5 +1,7 @@
 const logInForm = document.getElementById('login-form')
-const signUpForm = document.getElementById('signup-form')
+const enterpriseForm = document.getElementById('signup-form')
+const personalForm = document.getElementById('signup-form-personal')
+const userForm = document.getElementById('userForm')
 const forgotForm = document.getElementById('forgot-password')
 const resetPasswordForm = document.getElementById('reset-form')
 
@@ -68,7 +70,96 @@ if (logInForm) {
       toastr.error(error.message)
     }
   })
-} else if (signUpForm) {
+} else if (enterpriseForm) {
+  const nextBtn = document.querySelector('.btn-next')
+  const next2Btn = document.querySelector('.btn-step-2')
+  const enterpriseNextBtn = document.querySelector('.btn-enterprise-next')
+  const backBtn = document.querySelector('.btn-back')
+  const accountTypeStep = document.querySelector('.account-type-step')
+
+  let selectedAccountType = null
+  let lastErrorMessage = '' // Lưu error message
+
+  // Step 1: Chọn loại tài khoản
+  nextBtn?.addEventListener('click', () => {
+    const selected = document.querySelector('input[name="accountType"]:checked')
+
+    if (!selected) {
+      toastr.warning('Vui lòng chọn loại tài khoản')
+      return
+    }
+
+    selectedAccountType = selected.value
+    accountTypeStep.classList.add('d-none')
+
+    if (selectedAccountType === 'personal') {
+      personalForm?.classList.remove('d-none')
+    } else if (selectedAccountType === 'enterprise') {
+      enterpriseForm?.classList.remove('d-none')
+    }
+  })
+
+  // Step 2: Từ form cá nhân => Form đăng nhập
+  next2Btn?.addEventListener('click', () => {
+    const formData = new FormData(personalForm)
+
+    const requiredFields = {
+      name: formData.get('name'),
+      cccd: formData.get('cccd'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      province: formData.get('province'),
+      commune: formData.get('commune')
+    }
+
+    if (Object.values(requiredFields).some((value) => !value)) {
+      toastr.warning('Vui lòng điền đầy đủ thông tin cá nhân')
+      return
+    }
+
+    personalForm.classList.add('d-none')
+    userForm.classList.remove('d-none')
+  })
+
+  // Step 2: Từ form doanh nghiệp => Form đăng nhập
+  enterpriseNextBtn?.addEventListener('click', () => {
+    const formData = new FormData(enterpriseForm)
+
+    const requiredFields = {
+      orgName: formData.get('orgName'),
+      orgEmail: formData.get('orgEmail'),
+      orgPhone: formData.get('orgPhone'),
+      orgProvince: formData.get('orgProvince'),
+      orgCommune: formData.get('orgCommune'),
+      repName: formData.get('repName'),
+      repCccd: formData.get('repCccd'),
+      repEmail: formData.get('repEmail'),
+      repPhone: formData.get('repPhone'),
+      repProvince: formData.get('repProvince'),
+      repCommune: formData.get('repCommune')
+    }
+
+    if (Object.values(requiredFields).some((value) => !value)) {
+      toastr.warning('Vui lòng điền đầy đủ thông tin tổ chức và người đại diện')
+      return
+    }
+
+    enterpriseForm.classList.add('d-none')
+    userForm.classList.remove('d-none')
+  })
+
+  // Nút quay lại thủ công
+  backBtn?.addEventListener('click', () => {
+    userForm.classList.add('d-none')
+
+    if (selectedAccountType === 'personal') {
+      personalForm?.classList.remove('d-none')
+    } else if (selectedAccountType === 'enterprise') {
+      enterpriseForm?.classList.remove('d-none')
+    }
+  })
+
+  // Populate business type dropdown
   const accountTypeSelect = document.getElementById('accountType')
 
   const accType = {
@@ -84,64 +175,187 @@ if (logInForm) {
     accountTypeSelect.appendChild(option)
   }
 
-  signUpForm.addEventListener('submit', async (event) => {
-    event.preventDefault()
+  // Hàm phân tích lỗi và xác định step cần quay lại
+  function analyzeError(errorMessage) {
+    const msg = errorMessage.toLowerCase()
 
-    // Lấy data từ form organization + admin
-    const formData = new FormData(signUpForm)
-    const data = {
-      taxCode: formData.get('taxCode'),
-      orgName: formData.get('orgName'),
-      orgEmail: formData.get('orgEmail'),
-      orgPhone: formData.get('orgPhone'),
-      orgProvince: formData.get('orgProvince'),
-      orgCommune: formData.get('orgCommune'),
-      orgStreet: formData.get('orgStreet'),
-      adminUsername: formData.get('adminUsername'),
-      adminEmail: formData.get('adminEmail'),
-      adminPassword: formData.get('adminPassword'),
-      accountType: formData.get('accountType')
+    // Lỗi liên quan đến thông tin cá nhân/tổ chức (cần quay lại step info)
+    const infoErrorKeywords = [
+      // CCCD related
+      'cccd',
+      'căn cước',
+      'mã tỉnh',
+      'chữ số và mã tỉnh',
+
+      // Tax code
+      'mã số thuế',
+      'tax code',
+
+      // Email organization/personal
+      'email tổ chức',
+      'email cá nhân',
+      'email không hợp lệ',
+      'email người đại diện',
+
+      // Phone
+      'số điện thoại tổ chức',
+      'số điện thoại người đại diện',
+      'số điện thoại',
+      'phone',
+
+      // Location
+      'tỉnh',
+      'thành phố',
+      'xã',
+      'phường',
+      'province',
+      'commune',
+
+      // Organization info
+      'tên tổ chức',
+      'thông tin tổ chức',
+      'thông tin cá nhân',
+      'thông tin người đại diện',
+
+      // Duplicate checks from backend
+      'đã tồn tại'
+    ]
+
+    // Lỗi liên quan đến đăng nhập (giữ nguyên ở step login)
+    const loginErrorKeywords = [
+      'tên đăng nhập',
+      'username',
+      'email đăng nhập',
+      'mật khẩu',
+      'password',
+      'loại hình kinh doanh',
+      'business type'
+    ]
+
+    // Kiểm tra lỗi thuộc loại info
+    for (const keyword of infoErrorKeywords) {
+      if (msg.includes(keyword)) {
+        return 'info'
+      }
     }
 
-    const confirmPassword = formData.get('confirmPassword')
+    // Kiểm tra lỗi thuộc loại login
+    for (const keyword of loginErrorKeywords) {
+      if (msg.includes(keyword)) {
+        return 'login'
+      }
+    }
 
-    // Validate
-    if (data.adminPassword !== confirmPassword) {
+    // Mặc định: quay về info để an toàn
+    return 'info'
+  }
+
+  // Override toastr.error để capture error message
+  const originalToastrError = toastr.error
+  toastr.error = function (message, title, options) {
+    lastErrorMessage = message || ''
+    return originalToastrError.call(toastr, message, title, options)
+  }
+
+  // Submit cuối cùng từ userForm
+  userForm?.addEventListener('submit', async (event) => {
+    event.preventDefault()
+
+    // Reset error message
+    lastErrorMessage = ''
+
+    // Lấy thông tin đăng nhập
+    const adminUsername = document.getElementById('adminUsername').value
+    const adminEmail = document.getElementById('adminEmail').value
+    const adminPassword = document.getElementById('adminPassword').value
+    const confirmPassword = document.getElementById('confirmPassword').value
+    const businessType = document.getElementById('accountType').value
+
+    // Validate mật khẩu
+    if (adminPassword !== confirmPassword) {
       toastr.warning('Mật khẩu không khớp')
       return
     }
 
-    const requiredFields = {
-      orgName: data.orgName,
-      orgEmail: data.orgEmail,
-      orgPhone: data.orgPhone,
-      orgProvince: data.orgProvince,
-      orgCommune: data.orgCommune,
-      orgStreet: data.orgStreet,
-      adminUsername: data.adminUsername,
-      adminEmail: data.adminEmail,
-      adminPassword: data.adminPassword,
-      accountType: data.accountType
-    }
-
-    if (Object.values(requiredFields).some((value) => !value)) {
-      toastr.warning('Vui lòng điền đầy đủ thông tin.')
+    if (!adminUsername || !adminEmail || !adminPassword || !businessType) {
+      toastr.warning('Vui lòng điền đầy đủ thông tin đăng nhập')
       return
     }
 
-    try {
-      const result = await ajax('/api/organization/create', data)
+    let data = {}
 
-      if (result) {
-        toastr.success(
-          'Tổ chức và quản trị viên đã được tạo thành công. Đang chuyển hướng đến trang đăng nhập...'
-        )
-        setTimeout(() => {
-          window.location.href = '/login'
-        }, 1000)
+    if (selectedAccountType === 'personal') {
+      // Lấy data từ form cá nhân
+      const personalFormData = new FormData(personalForm)
+
+      data = {
+        accountType: 'personal',
+        name: personalFormData.get('name'),
+        cccd: personalFormData.get('cccd'),
+        email: personalFormData.get('email'),
+        phone: personalFormData.get('phone'),
+        province: personalFormData.get('province'),
+        commune: personalFormData.get('commune'),
+        street: personalFormData.get('street'),
+        adminUsername,
+        adminEmail,
+        adminPassword,
+        businessType
       }
-    } catch (error) {
-      toastr.error(error.message)
+    } else if (selectedAccountType === 'enterprise') {
+      // Lấy data từ form doanh nghiệp
+      const formData = new FormData(enterpriseForm)
+
+      data = {
+        accountType: 'enterprise',
+        taxCode: formData.get('taxCode'),
+        orgName: formData.get('orgName'),
+        orgEmail: formData.get('orgEmail'),
+        orgPhone: formData.get('orgPhone'),
+        orgProvince: formData.get('orgProvince'),
+        orgCommune: formData.get('orgCommune'),
+        orgStreet: formData.get('orgStreet'),
+        repName: formData.get('repName'),
+        repCccd: formData.get('repCccd'),
+        repEmail: formData.get('repEmail'),
+        repPhone: formData.get('repPhone'),
+        repProvince: formData.get('repProvince'),
+        repCommune: formData.get('repCommune'),
+        repStreet: formData.get('repStreet'),
+        adminUsername,
+        adminEmail,
+        adminPassword,
+        businessType
+      }
+    }
+
+    const result = await ajax('/api/organization/create', data)
+
+    if (result === false) {
+      const errorStep = analyzeError(lastErrorMessage)
+
+      if (errorStep === 'info') {
+        setTimeout(() => {
+          userForm.classList.add('d-none')
+
+          if (selectedAccountType === 'personal') {
+            personalForm?.classList.remove('d-none')
+            toastr.info('Vui lòng kiểm tra lại thông tin cá nhân')
+          } else if (selectedAccountType === 'enterprise') {
+            enterpriseForm?.classList.remove('d-none')
+            toastr.info('Vui lòng kiểm tra lại thông tin tổ chức và người đại diện')
+          }
+        }, 1500)
+      }
+      return
+    }
+
+    // Thành công
+    if (result) {
+      toastr.success('Đăng ký thành công! Đang chuyển hướng...')
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 2000)
     }
   })
 } else if (forgotForm) {
@@ -515,6 +729,7 @@ if (logInForm) {
     })
   }
 }
+
 function getRoleLabel(role) {
   const roleMap = {
     Admin: 'Quản trị',
@@ -560,8 +775,8 @@ function renderTable(users = []) {
 }
 
 $(document).ready(function () {
-  if (signUpForm) {
-    listProvinces()
+  if (enterpriseForm) {
+    listProvinces('#orgProvince')
     $('#orgProvince').on('change', function () {
       const provinceId = $(this).val()
       if (provinceId) {
@@ -572,6 +787,36 @@ $(document).ready(function () {
           .append('<option value="">— Chọn Xã/ Phường —</option>')
           .prop('disabled', true)
         initSelect2($('#orgCommune'), '— Chọn Xã/ Phường —')
+      }
+    })
+
+    listProvinces('#repProvince')
+    $('#repProvince').on('change', function () {
+      const provinceId = $(this).val()
+      if (provinceId) {
+        listCommunes(provinceId, '#repCommune')
+      } else {
+        $('#repCommune')
+          .empty()
+          .append('<option value="">— Chọn Xã/ Phường —</option>')
+          .prop('disabled', true)
+        initSelect2($('#repCommune'), '— Chọn Xã/ Phường —')
+      }
+    })
+  }
+
+  if (personalForm) {
+    listProvinces('#province')
+    $('#province').on('change', function () {
+      const provinceId = $(this).val()
+      if (provinceId) {
+        listCommunes(provinceId, '#commune')
+      } else {
+        $('#commune')
+          .empty()
+          .append('<option value="">— Chọn Xã/ Phường —</option>')
+          .prop('disabled', true)
+        initSelect2($('#commune'), '— Chọn Xã/ Phường —')
       }
     })
   }

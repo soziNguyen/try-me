@@ -8,9 +8,11 @@
       <table class="table table-bordered" id="couponTable">
         <thead>
           <tr>
+            <% if (user.role === 'Admin') { %>
             <th>
               <input type="checkbox" id="selectAll">
             </th>
+            <% } %>
             <th>Mã</th>
             <th>Loại giảm</th>
             <th>Giá trị</th>
@@ -32,6 +34,7 @@
 </div>
 
 <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
+<input type="hidden" id="userRole" value="<%= user.role %>">
 <%- include('../partials/commonjs.html') %>
 <%- include('../partials/sidebar_togglejs.html') %>
 <%- include('../partials/data_tablejs.html') %>

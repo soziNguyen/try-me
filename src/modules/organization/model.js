@@ -16,6 +16,16 @@ const OrganizationSchema = new Schema(
       default: 'shop',
       require: true
     },
+    accountType: {
+      type: String,
+      enum: ['personal', 'enterprise'],
+      required: true
+    },
+    profile: {
+      type: Schema.Types.ObjectId,
+      ref: 'Profile',
+      default: null
+    },
     defaultWarehouse: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Warehouse', // collection kho
