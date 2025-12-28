@@ -415,7 +415,7 @@ export const getOrgById = async (req, res) => {
 
     const org = await Organization.findById(id)
       .populate('defaultWarehouse', '_id name location')
-      .populate('plan', '_id code name')
+      .populate('plan', '_id level code name priceMonth')
       .populate('profile')
     if (!org) return responseHelper.error(res, 'Tổ chức không tồn tại', 404)
 
