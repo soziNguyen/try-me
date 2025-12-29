@@ -39,6 +39,19 @@ const OrganizationSchema = new Schema(
       ref: 'Plan', // liên kết với bảng Plan
       default: null
     },
+
+    // số tháng đã mua trong chu kỳ hiện tại
+    planDuration: {
+      type: Number,
+      default: null
+    },
+
+    // tổng tiền đã trả cho chu kỳ hiện tại
+    planTotalPaid: {
+      type: Number,
+      default: null
+    },
+
     planExpiredAt: {
       type: Date,
       default: null

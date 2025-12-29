@@ -460,20 +460,10 @@ $(document).ready(function () {
       const uploadData = await uploadRes.json()
       if (!uploadData.success) throw new Error(uploadData.error)
 
-      const updateRes = await fetch('/api/profile/update-cccd', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken
-        },
-        body: JSON.stringify({
-          side,
-          url: uploadData.file.url
-        })
+      await ajax('/api/profile/update-cccd', {
+        side,
+        url: uploadData.file.url
       })
-
-      const updateData = await updateRes.json()
-      if (!updateData.success) throw new Error(updateData.message)
 
       $('#verificationNoteContainer').addClass('d-none')
       $('#verificationNote').text('')

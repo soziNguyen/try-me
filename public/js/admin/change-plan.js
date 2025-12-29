@@ -64,10 +64,9 @@ function handlePlanChange(e) {
   const newPrice = Number(selected.dataset.price)
 
   const currentLevel = Number(document.getElementById('currentPlanLevel').value)
-  const currentPrice = Number(document.getElementById('currentPlanPriceValue').value)
 
   if (newLevel === currentLevel) {
-    renderSamePlan()
+    renderRenew(newPrice)
     return
   }
 
@@ -77,40 +76,55 @@ function handlePlanChange(e) {
   }
 
   if (newLevel < currentLevel) {
-    renderDowngrade(currentPrice - newPrice)
+    renderDowngrade()
   }
 }
 
 function renderUpgrade(price) {
+  const TAX_RATE = 0.1
   const months = Number(document.getElementById('durationSelect').value)
-  const amount = price * months
+
+  const baseAmount = price * months
+  const taxAmount = Math.round(baseAmount * TAX_RATE)
+  const totalAmount = baseAmount + taxAmount
 
   document.getElementById('durationBox').classList.remove('d-none')
   document.getElementById('planActionText').textContent = 'Nâng cấp gói'
-  document.getElementById('planAmountText').textContent = `Chi phí: ${amount.toLocaleString()} đ`
+  document.getElementById('planAmountText').textContent =
+    `Chi phí: ${totalAmount.toLocaleString()} đ`
 
   setConfirmButton('upgrade', 'btn-primary')
 }
-function renderSamePlan() {
-  document.getElementById('durationBox').classList.add('d-none')
-  document.getElementById('planActionText').textContent = 'Bạn đang sử dụng gói này'
-  document.getElementById('planAmountText').textContent = '---'
 
-  disableConfirmButton()
-}
-
-function renderDowngrade(refund) {
+function renderDowngrade() {
   document.getElementById('durationBox').classList.add('d-none')
   document.getElementById('planActionText').textContent = 'Hạ gói (giữ nguyên thời hạn)'
-  document.getElementById('planAmountText').textContent =
-    `Hoàn vào ví: ${refund.toLocaleString()} đ`
 
   setConfirmButton('downgrade', 'btn-danger')
 }
 
+function renderRenew(price) {
+  const TAX_RATE = 0.1
+  const months = Number(document.getElementById('durationSelect').value)
+
+  const baseAmount = price * months
+  const taxAmount = Math.round(baseAmount * TAX_RATE)
+  const totalAmount = baseAmount + taxAmount
+
+  document.getElementById('durationBox').classList.remove('d-none')
+  document.getElementById('planActionText').textContent = 'Gia hạn gói'
+  document.getElementById('planAmountText').textContent =
+    `Chi phí: ${totalAmount.toLocaleString()} đ`
+
+  setConfirmButton('renew', 'btn-success')
+}
+
 function handleDurationChange() {
   const btn = document.getElementById('confirmChangePlan')
-  if (btn.dataset.action !== 'upgrade') return
+  const action = btn.dataset.action
+
+  // Chỉ upgrade và renew mới cần tính lại
+  if (action !== 'upgrade' && action !== 'renew') return
 
   const select = document.getElementById('newPlanSelect')
   const selected = select.options[select.selectedIndex]
@@ -119,8 +133,13 @@ function handleDurationChange() {
   const price = Number(selected.dataset.price)
   const months = Number(this.value)
 
+  const TAX_RATE = 0.1
+  const baseAmount = price * months
+  const taxAmount = Math.round(baseAmount * TAX_RATE)
+  const totalAmount = baseAmount + taxAmount
+
   document.getElementById('planAmountText').textContent =
-    `Chi phí: ${(price * months).toLocaleString()} đ`
+    `Chi phí: ${totalAmount.toLocaleString()} đ`
 }
 
 async function submitChangePlan() {
@@ -128,12 +147,13 @@ async function submitChangePlan() {
   const action = btn.dataset.action
   const planId = document.getElementById('newPlanSelect').value
   const durationEl = document.getElementById('durationSelect')
-  const duration = action === 'upgrade' ? Number(durationEl?.value) : null
+  const duration = action === 'upgrade' || action === 'renew' ? Number(durationEl?.value) : null
+
   const orgId = getOrganizationIdFromUrl()
 
   if (!action || !planId) return
 
-  if (action === 'upgrade' && (!duration || duration < 1)) {
+  if ((action === 'upgrade' || action === 'renew') && (!duration || duration < 1)) {
     toastr.error('Vui lòng chọn thời hạn gói')
     return
   }
@@ -145,20 +165,42 @@ async function submitChangePlan() {
     duration
   }
 
-  try {
-    const result = await ajax('/api/admin/org/change-plan', payload)
-    if (result) {
-      toastr.success('Thay đổi gói thành công!')
+  const type = action === 'upgrade' ? 'nâng cấp' : action === 'renew' ? 'gia hạn' : 'hạ cấp'
+
+  showConfirmModal({
+    title: 'Xác nhận',
+    message: `Xác nhận ${type} gói ?`,
+    confirmed: 'Xác nhận',
+    okBtnColor: 'success',
+    onConfirm: async function () {
+      try {
+        const result = await ajax('/api/admin/org/change-plan', payload)
+        if (result) {
+          toastr.success('Thay đổi gói thành công!')
+          await getCurrentOrganizationPlan(orgId)
+
+          const selectElement = document.getElementById('newPlanSelect')
+          if (selectElement) {
+            selectElement.selectedIndex = 0
+          }
+
+          // ẨN DURATION BOX VÀ DISABLE BUTTON
+          document.getElementById('durationBox').classList.add('d-none')
+          document.getElementById('planActionText').textContent = ''
+          document.getElementById('planAmountText').textContent = ''
+          disableConfirmButton()
+        }
+      } catch (err) {
+        console.error(err.message || 'Có lỗi xảy ra')
+      }
     }
-  } catch (err) {
-    console.error(err.message || 'Có lỗi xảy ra')
-  }
+  })
 }
 function setConfirmButton(action, className) {
   const btn = document.getElementById('confirmChangePlan')
   btn.disabled = false
   btn.dataset.action = action
-  btn.classList.remove('btn-primary', 'btn-danger')
+  btn.classList.remove('btn-primary', 'btn-danger', 'btn-success')
   btn.classList.add(className)
 }
 

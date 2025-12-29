@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sourceMap = {
       upgrade: 'Nâng cấp gói',
       downgrade: 'Hạ cấp gói',
+      renew: 'Gia hạn gói',
       manual: 'Nạp'
     }
 
