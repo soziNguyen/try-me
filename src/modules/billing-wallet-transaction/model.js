@@ -28,7 +28,7 @@ const BillingWalletTransactionSchema = new Schema(
     },
     source: {
       type: String,
-      enum: ['upgrade', 'downgrade', 'manual'],
+      enum: ['upgrade', 'downgrade', 'manual', 'renew'],
       required: true
     },
     externalTransactionId: {

@@ -4,12 +4,85 @@
       <h2 class="mb-3 bold">
         <%= pageTitle %>
       </h2>
-      
 
+      <div class="row g-3">
+
+      <!-- GÓI HIỆN TẠI -->
+      <div class="col-md-6">
+        <div class="card shadow border-0 h-100">
+          <div class="card-header bg-white fw-semibold">
+            Gói hiện tại
+          </div>
+          <div class="card-body">
+            <p class="mb-2">
+              <span class="text-muted">Tên gói:</span><br>
+              <strong id="currentPlanName"></strong>
+            </p>
+            <p class="mb-2">
+              <span class="text-muted">Hết hạn:</span><br>
+              <strong id="currentPlanExpired"></strong>
+            </p>
+            <p class="mb-0">
+              <span class="text-muted">Giá / tháng:</span><br>
+              <strong id="currentPlanPrice"></strong>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- THAY ĐỔI GÓI -->
+      <div class="col-md-6">
+        <div class="card shadow border-0 h-100">
+          <div class="card-header bg-white fw-semibold">
+            Thay đổi gói
+          </div>
+          <div class="card-body">
+
+            <!-- CHỌN GÓI -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Chọn gói mới</label>
+              <select class="form-select" id="newPlanSelect">
+                <option value="">— Chọn gói —</option>
+              </select>
+            </div>
+
+            <!-- THỜI HẠN (UPGRADE) -->
+            <div class="mb-3 d-none" id="durationBox">
+              <label class="form-label fw-semibold">Thời hạn</label>
+              <select class="form-select" id="durationSelect">
+                <option value="1">1 tháng</option>
+                <option value="3">3 tháng</option>
+                <option value="6">6 tháng</option>
+                <option value="12">12 tháng</option>
+                <option value="24">24 tháng</option>
+                <option value="36">36 tháng</option>
+              </select>
+            </div>
+
+            <!-- TÓM TẮT -->
+            <div class="alert alert-info mb-4" id="planSummary">
+              <div class="fw-semibold mb-1" id="planActionText">
+                Vui lòng chọn gói
+              </div>
+              <div id="planAmountText">
+                ---
+              </div>
+            </div>
+
+            <!-- BUTTON -->
+            <button class="btn btn-primary w-100" id="confirmChangePlan" disabled>
+              Xác nhận thay đổi gói
+            </button>
+
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
+<input type="hidden" id="currentPlanLevel">
+<input type="hidden" id="currentPlanPriceValue">
 <input type="hidden" id="currentUserId" value="<%= currentUserId %>">
 <%- include('../partials/commonjs.html') %>
 <%- include('../partials/sidebar_togglejs.html') %>

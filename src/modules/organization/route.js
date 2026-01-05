@@ -15,6 +15,12 @@ router.get(
 )
 router.get('/organizations', isAuthenticated, isPermit('Admin', 'SubAdmin'), orgManagementPage) // get Page
 router.get(
+  '/api/organization/all',
+  isAuthenticated,
+  isPermit('Admin', 'SubAdmin'),
+  org.getOrganizations
+)
+router.get(
   '/api/organizations',
   isAuthenticated,
   isPermit('Admin', 'SubAdmin'),
