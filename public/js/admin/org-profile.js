@@ -460,20 +460,22 @@ $(document).ready(function () {
       const uploadData = await uploadRes.json()
       if (!uploadData.success) throw new Error(uploadData.error)
 
-      await ajax('/api/profile/update-cccd', {
+      const result = await ajax('/api/profile/update-cccd', {
         side,
         url: uploadData.file.url
       })
 
-      $('#verificationNoteContainer').addClass('d-none')
-      $('#verificationNote').text('')
+      if (result) {
+        $('#verificationNoteContainer').addClass('d-none')
+        $('#verificationNote').text('')
 
-      $('#verificationBadge')
-        .removeClass('bg-danger bg-success')
-        .addClass('bg-warning text-dark')
-        .html('<i class="bi bi-clock-history me-1"></i>Chờ xác minh')
+        $('#verificationBadge')
+          .removeClass('bg-danger bg-success')
+          .addClass('bg-warning text-dark')
+          .html('<i class="bi bi-clock-history me-1"></i>Chờ xác minh')
 
-      toastr.success(`Đã tải lên CCCD mặt ${side === 'front' ? 'trước' : 'sau'}`)
+        toastr.success(`Đã tải lên CCCD mặt ${side === 'front' ? 'trước' : 'sau'}`)
+      }
     } catch (err) {
       console.error(err)
       toastr.error(err.message || 'Upload CCCD thất bại')

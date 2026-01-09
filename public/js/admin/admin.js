@@ -103,7 +103,7 @@ $(function () {
         orderable: false,
         className: 'text-center',
         render: (data, type, row) => {
-          return `<button title="Cập nhật" class="btn btn-outline-primary updateUserBtn" data-id="${row._id}"><i class="bi bi-pencil-square"></i></button>`
+          return `<button title="Cập nhật" class="btn btn-outline-primary updateUserBtn btn-sm" data-id="${row._id}"><i class="bi bi-pencil-square"></i></button>`
         }
       }
     ],

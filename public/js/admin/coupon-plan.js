@@ -183,7 +183,7 @@ $(function () {
         className: 'text-center',
         orderable: false,
         render: (_, __, row) => `
-        <button class="btn btn-sm btn-primary me-1 editBtn" data-id="${row._id}">
+        <button class="btn btn-sm btn-outline-primary me-1 editBtn" data-id="${row._id}">
           <i class="bi bi-pencil-square"></i>
         </button>
         `
