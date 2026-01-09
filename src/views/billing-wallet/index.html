@@ -46,7 +46,7 @@
       
       <!-- Modal nạp tiền -->
       <div class="modal fade" id="topUpModal" tabindex="-1" aria-labelledby="topUpModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-md">
           <div class="modal-content">
             <form id="topUpForm">
               <div class="modal-header">
@@ -57,6 +57,18 @@
                 <div class="mb-3">
                   <label for="topUpAmount" class="form-label">Số tiền (VND)</label>
                   <input type="number" class="form-control shadow" id="topUpAmount" required>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex justify-content-center flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-primary quick-amount" data-amount="50000">50.000</button>
+                    <button type="button" class="btn btn-outline-primary quick-amount" data-amount="100000">100.000</button>
+                    <button type="button" class="btn btn-outline-primary quick-amount" data-amount="200000">200.000</button>
+                    <button type="button" class="btn btn-outline-primary quick-amount" data-amount="500000">500.000</button>
+                    <button type="button" class="btn btn-outline-primary quick-amount" data-amount="1000000">1.000.000</button>
+                    <button type="button" class="btn btn-outline-primary quick-amount" data-amount="2000000">2.000.000</button>
+                    <button type="button" class="btn btn-outline-primary quick-amount" data-amount="3000000">3.000.000</button>
+                    <button type="button" class="btn btn-outline-primary quick-amount" data-amount="5000000">5.000.000</button>
+                  </div>
                 </div>
                 <div class="mb-3">
                   <label class="form-label fw-semibold">Phương thức thanh toán</label>

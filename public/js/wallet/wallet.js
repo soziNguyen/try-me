@@ -62,6 +62,18 @@ document.addEventListener('DOMContentLoaded', () => {
     })
   }
 
+  function fillAmountToInput () {
+    document.querySelectorAll('.quick-amount').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const amount = this.dataset.amount
+        document.getElementById('topUpAmount').value = amount
+        
+        document.querySelectorAll('.quick-amount').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      })
+    })
+  }
+
   // Handle top-up form submit
   topUpForm.addEventListener('submit', async (e) => {
     e.preventDefault()
@@ -81,4 +93,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial load
   loadWallet()
+  fillAmountToInput()
 })

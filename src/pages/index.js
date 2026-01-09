@@ -47,7 +47,8 @@ export const resetPasswordPage = async (req, res) => {
 }
 
 export const profilePage = async (req, res) => {
-  const orgId = req.user.organization
+  const orgId = getCurrentOrg(req)
+  // const orgId = req.user.organization
   const org = await Organization.findById(orgId).populate('profile', 'verificationStatus')
 
   res.render(
