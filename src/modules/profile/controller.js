@@ -3,11 +3,12 @@ import Organization from '../organization/model.js'
 import { deleteFile } from '../upload/helper.js'
 import responseHelper from '../../helpers/responseHelper.js'
 import { logActivity } from '../activity-logs/service.js'
+import { getCurrentOrg } from '../../helpers/orgHelper.js'
 
 export const updateCCCD = async (req, res) => {
   try {
     const { side, url } = req.body
-    const orgId = req.user.organization
+    const orgId = getCurrentOrg(req)
 
     if (!['front', 'back'].includes(side)) {
       return responseHelper.error(res, 'Side không hợp lệ', 400)
@@ -139,7 +140,7 @@ export const verifyProfile = async (req, res) => {
 
 export const kycRequestAgain = async (req, res) => {
   try {
-    const orgId = req.user.organization
+    const orgId = getCurrentOrg(req)
     const org = await Organization.findById(orgId).populate('profile', 'kycRequest')
 
     const profile = org.profile
@@ -161,7 +162,7 @@ export const kycRequestAgain = async (req, res) => {
 
 export const kycRequest = async (req, res) => {
   try {
-    const orgId = req.user.organization
+    const orgId = getCurrentOrg(req)
 
     const org = await Organization.findById(orgId).populate('profile')
     if (!org || !org.profile) {

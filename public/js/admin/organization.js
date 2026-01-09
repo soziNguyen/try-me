@@ -2,6 +2,7 @@ $(function () {
   let table
   let provinceLists = []
   let communeLists = []
+  const csrfToken = $('#_csrf').val()
 
   $.getJSON('data/full_address.json', function (res) {
     if (res.error == 0 && res.data) {
@@ -149,8 +150,11 @@ $(function () {
         className: 'text-center',
         orderable: false,
         render: (_, __, row) => `
-          <button class="btn btn-sm btn-primary me-1 editBtn" data-id="${row._id}">
+          <button class="btn btn-sm btn-outline-primary me-1 editBtn" data-id="${row._id}">
             <i class="bi bi-pencil-square"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-danger me-1 redirect" data-id="${row._id}" title="Truy cập tổ chức">
+            <i class="bi bi-share"></i>
           </button>
           `
       }
@@ -184,6 +188,24 @@ $(function () {
   $('#orgTable').on('click', '.editBtn', function () {
     const id = $(this).data('id')
     window.location.href = `/organization/${id}`
+  })
+
+  $('#orgTable').on('click', '.redirect', function () {
+    const orgId = $(this).data('id')
+    if (orgId) {
+      $.ajax({
+        url: '/api/admin/set-org',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ orgId }),
+        headers: { 'x-csrf-token': csrfToken },
+        success: function (res) {
+          if (res.ok) {
+            window.location.href = `/org/${orgId}/dashboard`
+          }
+        }
+      })
+    }
   })
 
   $('#orgTable').on('click', '.change-plan', function () {

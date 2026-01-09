@@ -673,6 +673,11 @@ export const changePlan = async (req, res) => {
 
       // RENEW - GIA HẠN
       if (action === 'renew') {
+
+        if (currentPlan.level === 1) {
+          throw new BusinessError('Không thể gia hạn gói miễn phí')
+        }
+        
         if (newPlan._id.toString() !== currentPlan._id.toString()) {
           throw new BusinessError('Gia hạn phải cùng gói hiện tại')
         }
