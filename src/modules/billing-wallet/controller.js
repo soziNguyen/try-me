@@ -1,12 +1,13 @@
 import responseHelper from '../../helpers/responseHelper.js'
 import BillingWallet from './model.js'
 import BillingWalletTransaction from '../billing-wallet-transaction/model.js'
+import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { payOS } from '../payos/service.js'
 import { generateOrderCode } from '../../helpers/common.js'
 
 export const getWalletInfo = async (req, res) => {
   try {
-    const orgId = req.user.organization
+    const orgId = getCurrentOrg(req)
     const wallet = await BillingWallet.findOne({ organization: orgId })
     if (!wallet) {
       return responseHelper.error(res, 'Ví chưa tồn tại', 404)
@@ -34,7 +35,7 @@ export const walletTopup = async (req, res) => {
       return responseHelper.error(res, 'Số tiền nạp tối thiểu là 10,000đ', 400)
     }
 
-    const orgId = req.user.organization
+    const orgId = getCurrentOrg(req)
 
     let wallet = await BillingWallet.findOne({ organization: orgId })
     if (!wallet) {
