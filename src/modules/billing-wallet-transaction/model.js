@@ -28,7 +28,7 @@ const BillingWalletTransactionSchema = new Schema(
     },
     source: {
       type: String,
-      enum: ['upgrade', 'downgrade', 'manual'],
+      enum: ['upgrade', 'downgrade', 'manual', 'renew'],
       required: true
     },
     externalTransactionId: {
@@ -46,7 +46,11 @@ const BillingWalletTransactionSchema = new Schema(
       type: Number,
       default: 0
     },
-    status: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' }
+    status: {
+      type: String,
+      enum: ['pending', 'completed', 'failed', 'cancelled'],
+      default: 'pending'
+    }
   },
   { collection: 'BillingWalletTransactions', timestamps: true }
 )

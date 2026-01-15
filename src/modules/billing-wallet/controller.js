@@ -1,14 +1,13 @@
 import responseHelper from '../../helpers/responseHelper.js'
 import BillingWallet from './model.js'
 import BillingWalletTransaction from '../billing-wallet-transaction/model.js'
-import withTransaction from '../../helpers/withTransaction.js'
-import BusinessError from '../error/BusinessError.js'
+import { getCurrentOrg } from '../../helpers/orgHelper.js'
 import { payOS } from '../payos/service.js'
 import { generateOrderCode } from '../../helpers/common.js'
 
 export const getWalletInfo = async (req, res) => {
   try {
-    const orgId = req.user.organization
+    const orgId = getCurrentOrg(req)
     const wallet = await BillingWallet.findOne({ organization: orgId })
     if (!wallet) {
       return responseHelper.error(res, 'Ví chưa tồn tại', 404)
@@ -27,12 +26,16 @@ export const getWalletInfo = async (req, res) => {
 
 export const walletTopup = async (req, res) => {
   try {
-    const { amount, method } = req.body
-    if (!amount || amount <= 0 || !method) {
-      return responseHelper.error(res, 'Số tiền hoặc phương thức không hợp lệ', 400)
+    const { amount } = req.body
+    if (!amount || amount <= 0) {
+      return responseHelper.error(res, 'Số tiền không hợp lệ', 400)
     }
 
-    const orgId = req.user.organization
+    if (amount < 10000) {
+      return responseHelper.error(res, 'Số tiền nạp tối thiểu là 10,000đ', 400)
+    }
+
+    const orgId = getCurrentOrg(req)
 
     let wallet = await BillingWallet.findOne({ organization: orgId })
     if (!wallet) {
@@ -46,7 +49,7 @@ export const walletTopup = async (req, res) => {
       type: 'credit',
       amount,
       source: 'manual',
-      reason: `Nạp tiền qua ${method}`,
+      reason: `Nạp tiền qua PayOS`,
       status: 'pending'
     })
 
@@ -56,8 +59,8 @@ export const walletTopup = async (req, res) => {
       orderCode,
       amount: tx.amount,
       description: `Nap tien vi`,
-      returnUrl: `${process.env.DOMAIN}/wallet`,
-      cancelUrl: `${process.env.DOMAIN}/wallet`
+      returnUrl: `${process.env.DOMAIN}/api/payos/return`,
+      cancelUrl: `${process.env.DOMAIN}/api/payos/return`
     })
 
     tx.externalTransactionId = orderCode
@@ -69,41 +72,6 @@ export const walletTopup = async (req, res) => {
       { paymentUrl: payment.checkoutUrl, transactionId: tx._id },
       'Tạo giao dịch nạp tiền thành công, chờ xác nhận từ cổng thanh toán'
     )
-  } catch (error) {
-    responseHelper.error(res, error.message)
-  }
-}
-
-export const walletTopupCallback = async (req, res) => {
-  try {
-    const { transactionId, status } = req.body
-    if (!transactionId || !['pending', 'completed', 'failed'].includes(status)) {
-      return responseHelper.error(res, 'Dữ liệu callback không hợp lệ', 400)
-    }
-
-    const result = await withTransaction(async (session) => {
-      const tx = await BillingWalletTransaction.findById(transactionId).session(session)
-      if (!tx) throw new BusinessError('Không tìm thấy giao dịch', 404)
-      if (tx.status !== 'pending') return tx // đã xử lý rồi
-
-      if (status === 'completed') {
-        const wallet = await BillingWallet.findById(tx.wallet).session(session)
-        wallet.balance += tx.amount
-        await wallet.save({ session })
-
-        tx.status = 'completed'
-        tx.balanceAfter = wallet.balance
-      }
-
-      if (status === 'failed') {
-        tx.status = 'failed'
-      }
-
-      await tx.save({ session })
-      return { txId: tx._id, status: tx.status }
-    })
-
-    responseHelper.success(res, result, 'Callback đã được xử lý')
   } catch (error) {
     responseHelper.error(res, error.message)
   }

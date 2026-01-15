@@ -90,28 +90,44 @@ async function fillPlanInfoAndSetupConfirm(planId, mode) {
         return
       }
 
-      try {
-        const body = {
-          planId,
-          mode,
-          duration: parseInt(planDurationSelect.value),
-          paymentMethodId: selectedBtn.dataset.id
-        }
-        if (appliedCouponCode) body.couponCode = appliedCouponCode
-
-        const res = await ajax('/api/admin/plan/upgrade', body, 'POST')
-
-        if (res && res.transactionId) {
-          toastr.success('Đăng ký thành công! Đang chuyển đến hóa đơn...')
-          setTimeout(() => {
-            window.location.href = `/checkout/${res.transactionId}/invoice`
-          }, 1500)
-        } else {
-          toastr.error('Không nhận được thông tin giao dịch')
-        }
-      } catch (error) {
-        toastr.error(error.message || 'Không thể đăng ký gói.')
+      let message = ''
+      if (selectedBtn.dataset.code === 'internal_wallet') {
+        message =
+          'Bạn sắp thanh toán <strong>bằng Ví nội bộ</strong>.<br>' +
+          'Số tiền sẽ được <strong>trừ trực tiếp</strong> và <strong>không thể hoàn lại</strong>.<br><br>' +
+          'Bạn có chắc chắn muốn tiếp tục?'
+      } else {
+        message = 'Bạn có chắc chắn muốn gửi yêu cầu nâng cấp gói này?'
       }
+
+      showConfirmModal({
+        title: 'Xác nhận',
+        okBtnColor: 'danger',
+        message,
+        confirmed: 'Đồng ý',
+        onConfirm: async () => {
+          try {
+            const body = {
+              planId,
+              mode,
+              duration: parseInt(planDurationSelect.value),
+              paymentMethodId: selectedBtn.dataset.id
+            }
+            if (appliedCouponCode) body.couponCode = appliedCouponCode
+
+            const res = await ajax('/api/admin/plan/upgrade', body, 'POST')
+
+            if (res && res.transactionId) {
+              toastr.success('Đăng ký thành công! Đang chuyển đến hóa đơn...')
+              setTimeout(() => {
+                window.location.href = `/checkout/${res.transactionId}/invoice`
+              }, 1500)
+            }
+          } catch (error) {
+            toastr.error(error.message || 'Không thể đăng ký gói.')
+          }
+        }
+      })
     })
 
     // Áp dụng / hủy mã giảm giá
@@ -183,29 +199,27 @@ function updatePriceDisplay(price, discount, subtotal, vat, total) {
 
 async function loadPaymentMethods() {
   try {
-    const result = await ajax('/api/admin/payment-method/active', {}, 'GET')
+    const [methods, walletRes] = await Promise.all([
+      ajax('/api/admin/payment-method/active', {}, 'GET'),
+      ajax('/api/wallet', {}, 'GET')
+    ])
+
     const container = document.getElementById('paymentMethods')
     container.innerHTML = ''
 
-    result.forEach((pm) => {
+    // render các phương thức thanh toán
+    methods.forEach((pm) => {
       const btn = document.createElement('button')
       btn.type = 'button'
       btn.className = 'btn btn-outline-primary d-flex align-items-center'
       btn.dataset.code = pm.code
       btn.dataset.id = pm._id
 
-      // tạo thẻ i cho icon
       const icon = document.createElement('i')
-      if (pm.icon) {
-        icon.className = pm.icon + ' me-2'
-      } else {
-        icon.className = 'bi bi-credit-card me-2' // icon mặc định nếu không có
-      }
-
+      icon.className = pm.icon ? pm.icon + ' me-2' : 'bi bi-credit-card me-2'
       btn.appendChild(icon)
       btn.appendChild(document.createTextNode(pm.name))
 
-      // click chọn
       btn.addEventListener('click', () => {
         container.querySelectorAll('button').forEach((b) => b.classList.remove('active'))
         btn.classList.add('active')
@@ -214,6 +228,29 @@ async function loadPaymentMethods() {
 
       container.appendChild(btn)
     })
+
+    // render ví nội bộ
+    if (walletRes.wallet) {
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'btn btn-outline-success d-flex align-items-center'
+      btn.dataset.code = 'internal_wallet'
+      btn.dataset.id = walletRes.wallet._id
+
+      const icon = document.createElement('i')
+      icon.className = 'bi bi-wallet-fill me-2'
+      btn.appendChild(icon)
+      btn.appendChild(document.createTextNode(`Ví nội bộ`))
+
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('button').forEach((b) => b.classList.remove('active'))
+        btn.classList.add('active')
+        btn.dataset.selected = 'true'
+      })
+
+      container.appendChild(btn)
+    }
+
     // mặc định chọn cái đầu tiên
     const firstBtn = container.querySelector('button')
     if (firstBtn) {

@@ -9,10 +9,12 @@ import {
   hardDeletePlan,
   upgradePlan,
   approvePlanTransaction,
-  cancelPlanTransaction
+  cancelPlanTransaction,
+  changePlan
 } from './controller.js'
 import isAuthenticated from '../../helpers/isAuthenticated.js'
 import { isPermit } from '../../helpers/isPermit.js'
+import isAdmin from '../../helpers/isAdmin.js'
 
 const router = express.Router()
 
@@ -41,5 +43,6 @@ router.get(
 router.post('/api/admin/plan/deletes', isAuthenticated, isPermit('Admin'), hardDeletePlan)
 router.post('/api/admin/plan/:id/approve', isPermit('Admin', 'SubAdmin'), approvePlanTransaction)
 router.post('/api/admin/plan/:id/cancel', cancelPlanTransaction)
+router.post('/api/admin/org/change-plan', isAdmin, changePlan)
 
 export default router

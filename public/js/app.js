@@ -366,6 +366,78 @@ function initSelect2($select, placeholder = '— Chọn mục —') {
   }
 }
 
+function initSelect2WithSearch($select, dataSource, placeholder = '— Nhập để tìm kiếm —') {
+  if ($select.hasClass('select2-hidden-accessible')) {
+    $select.select2('destroy')
+  }
+  if (!$select.length) return
+
+  // Xác định dropdownParent
+  let parentElement = $select.closest('.modal')
+  if (!parentElement.length) {
+    parentElement = $select.closest('td')
+  }
+  if (!parentElement.length) {
+    parentElement = $('body')
+  }
+
+  $select.select2({
+    placeholder,
+    width: '100%',
+    multiple: false,
+    dropdownCssClass: 'no-bullet',
+    dropdownParent: parentElement,
+    minimumInputLength: 1,
+    ajax: {
+      delay: 250,
+      transport: function (params, success, failure) {
+        const searchTerm = params.data.term || ''
+
+        // dataSource có thể là array hoặc function trả về promise
+        const getData =
+          typeof dataSource === 'function' ? dataSource() : Promise.resolve(dataSource)
+
+        getData
+          .then((data) => {
+            // Filter data theo search term
+            const filtered = data.filter((item) => {
+              const text = item.text || item.name || ''
+              return text.toLowerCase().includes(searchTerm.toLowerCase())
+            })
+            success(filtered)
+          })
+          .catch((error) => {
+            failure(error)
+          })
+      },
+      processResults: function (data) {
+        return {
+          results: data.map((item) => ({
+            id: item.id || item._id || item.value,
+            text: item.text || item.name
+          }))
+        }
+      }
+    },
+    language: {
+      inputTooShort: function () {
+        return 'Nhập để tìm kiếm...'
+      },
+      noResults: function () {
+        return 'Không tìm thấy kết quả'
+      },
+      searching: function () {
+        return 'Đang tìm...'
+      }
+    }
+  })
+
+  const $form = $select.closest('form')
+  if ($form.length) {
+    $select.next('.select2-container').find('.select2-selection').addClass('form-control')
+  }
+}
+
 $('#btn-print').on('click', function () {
   window.print()
 })

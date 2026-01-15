@@ -1,7 +1,8 @@
 $(function () {
   const $selections = $('#organization-selection')
   const csrfToken = $('#_csrf').val()
-  loadOrganizations($selections)
+
+  initSelect2WithSearch($selections, () => fetchData('organizations'))
 
   $selections.on('change', function () {
     const orgId = $(this).val()

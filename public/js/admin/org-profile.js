@@ -460,30 +460,22 @@ $(document).ready(function () {
       const uploadData = await uploadRes.json()
       if (!uploadData.success) throw new Error(uploadData.error)
 
-      const updateRes = await fetch('/api/profile/update-cccd', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken
-        },
-        body: JSON.stringify({
-          side,
-          url: uploadData.file.url
-        })
+      const result = await ajax('/api/profile/update-cccd', {
+        side,
+        url: uploadData.file.url
       })
 
-      const updateData = await updateRes.json()
-      if (!updateData.success) throw new Error(updateData.message)
+      if (result) {
+        $('#verificationNoteContainer').addClass('d-none')
+        $('#verificationNote').text('')
 
-      $('#verificationNoteContainer').addClass('d-none')
-      $('#verificationNote').text('')
+        $('#verificationBadge')
+          .removeClass('bg-danger bg-success')
+          .addClass('bg-warning text-dark')
+          .html('<i class="bi bi-clock-history me-1"></i>Chờ xác minh')
 
-      $('#verificationBadge')
-        .removeClass('bg-danger bg-success')
-        .addClass('bg-warning text-dark')
-        .html('<i class="bi bi-clock-history me-1"></i>Chờ xác minh')
-
-      toastr.success(`Đã tải lên CCCD mặt ${side === 'front' ? 'trước' : 'sau'}`)
+        toastr.success(`Đã tải lên CCCD mặt ${side === 'front' ? 'trước' : 'sau'}`)
+      }
     } catch (err) {
       console.error(err)
       toastr.error(err.message || 'Upload CCCD thất bại')

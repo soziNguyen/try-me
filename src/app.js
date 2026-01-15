@@ -109,12 +109,17 @@ app.use(passport.session())
 
 app.use(
   lusca({
-    csrf: true, // CSRF protection
+    csrf: {
+      angular: false,
+      blacklist: ['/api/payos/webhook'] // Bỏ qua CSRF cho route này
+    },
     xframe: 'SAMEORIGIN',
     xssProtection: true,
     csp: {
       policy: {
         'default-src': "'self'",
+        'script-src': "'self' https://static.cloudflareinsights.com",
+        'connect-src': "'self' https://cloudflareinsights.com",
         'img-src': "'self' data: https://vietqr.co",
         'style-src': "'self' 'unsafe-inline'"
       }

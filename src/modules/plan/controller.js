@@ -7,8 +7,8 @@ import PlanTransaction from '../plan-transaction/model.js'
 import { generateInvoiceCodeForPlan } from '../../helpers/generateInvoiceCode.js'
 import withTransaction from '../../helpers/withTransaction.js'
 import BusinessError from '../error/BusinessError.js'
-import Warehouse from '../inventory/warehouse/model.js'
-import User from '../user/model.js'
+import BillingWallet from '../billing-wallet/model.js'
+import BillingWalletTransaction from '../billing-wallet-transaction/model.js'
 import { logActivity } from '../activity-logs/service.js'
 import { buildChangeLog } from '../../helpers/changeLog.js'
 
@@ -370,76 +370,156 @@ export const upgradePlan = async (req, res) => {
       )
     }
 
-    const basePrice = mode === 'year' ? plan.priceYear : plan.priceMonth
-    const totalBasePrice = basePrice * durationNum
-    let discountAmount = 0
-    let couponUsed = null
+    // START TRANSACTION
+    const result = await withTransaction(async (session) => {
+      const basePrice = mode === 'year' ? plan.priceYear : plan.priceMonth
+      const totalBasePrice = basePrice * durationNum
+      let discountAmount = 0
+      let couponUsed = null
 
-    // ÁP DỤNG MÃ GIẢM GIÁ
-    if (couponCode) {
-      const coupon = await CouponPlan.findOneAndUpdate(
-        {
-          isActive: true,
-          code: couponCode,
-          startDate: { $lte: now },
-          endDate: { $gte: now },
-          $expr: {
-            $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
-          }
-        },
-        { $inc: { usedCount: 1 } },
-        { new: true }
-      )
-
-      if (!coupon) {
-        logActivity(
-          organizationId,
-          req.user._id,
-          req.user.username,
-          'UPGRADE_PLAN',
-          'PLAN',
-          `Áp dụng mã giảm giá ${couponCode}`,
-          plan.name,
-          'FAILED'
+      // ÁP DỤNG MÃ GIẢM GIÁ
+      if (couponCode) {
+        const coupon = await CouponPlan.findOneAndUpdate(
+          {
+            isActive: true,
+            code: couponCode,
+            startDate: { $lte: now },
+            endDate: { $gte: now },
+            $expr: {
+              $or: [{ $eq: ['$usageLimit', null] }, { $lt: ['$usedCount', '$usageLimit'] }]
+            }
+          },
+          { $inc: { usedCount: 1 } },
+          { new: true, session }
         )
-        return responseHelper.error(res, 'Mã giảm giá không hợp lệ hoặc đã hết hạn', 400)
+
+        if (!coupon) {
+          logActivity(
+            organizationId,
+            req.user._id,
+            req.user.username,
+            'UPGRADE_PLAN',
+            'PLAN',
+            `Áp dụng mã giảm giá ${couponCode}`,
+            plan.name,
+            'FAILED'
+          )
+          throw new BusinessError('Mã giảm giá không hợp lệ hoặc đã hết hạn', 400)
+        }
+
+        couponUsed = coupon
+        discountAmount =
+          coupon.discountType === 'percent'
+            ? Math.round((totalBasePrice * coupon.discountValue) / 100)
+            : coupon.discountValue
       }
 
-      couponUsed = coupon
-      discountAmount =
-        coupon.discountType === 'percent'
-          ? Math.round((totalBasePrice * coupon.discountValue) / 100)
-          : coupon.discountValue
-    }
+      // TÍNH GIÁ CUỐI CÙNG
+      const subtotal = Math.max(totalBasePrice - discountAmount, 0)
+      const vatRate = 0.1
+      const vat = Math.round(subtotal * vatRate)
+      const total = subtotal + vat
 
-    // TÍNH GIÁ CUỐI CÙNG
-    const subtotal = Math.max(totalBasePrice - discountAmount, 0)
-    const vatRate = 0.1
-    const vat = Math.round(subtotal * vatRate)
-    const total = subtotal + vat
+      let isPaid = false
+      if (paymentMethodId) {
+        const wallet = await BillingWallet.findOne(
+          {
+            _id: paymentMethodId,
+            organization: organizationId
+          },
+          null,
+          { session }
+        )
 
-    // TẠO MÃ HÓA ĐƠN
-    const invoiceCode = await generateInvoiceCodeForPlan(PlanTransaction, 'HD')
+        if (wallet) {
+          if (wallet.balance < total) {
+            throw new BusinessError('Số dư trong ví không đủ để thanh toán', 400)
+          }
 
-    // TẠO TRANSACTION
-    const transaction = await PlanTransaction.create({
-      code: invoiceCode,
-      organization: organizationId,
-      plan: plan._id,
-      mode,
-      duration: durationNum,
-      amount: totalBasePrice,
-      discountAmount,
-      couponCode: couponUsed?.code || '',
-      subtotal,
-      vat,
-      total,
-      paidAt: null,
-      expiredAt: null,
-      paymentMethod: paymentMethodId,
-      note: `Tổ chức ${org.name} nâng cấp gói ${plan.name} - ${durationNum} ${mode === 'year' ? 'năm' : 'tháng'}`,
-      status: 'pending'
+          wallet.balance -= total
+          await wallet.save({ session })
+
+          await BillingWalletTransaction.create(
+            [
+              {
+                wallet: wallet._id,
+                organization: organizationId,
+                type: 'debit',
+                amount: total,
+                reason: `Thanh toán nâng cấp gói ${plan.name}`,
+                source: 'upgrade',
+                paymentProvider: 'manual',
+                balanceAfter: wallet.balance,
+                status: 'completed'
+              }
+            ],
+            { session }
+          )
+
+          isPaid = true
+        }
+      }
+
+      // TẠO MÃ HÓA ĐƠN
+      const invoiceCode = await generateInvoiceCodeForPlan(PlanTransaction, 'HD')
+
+      // TẠO TRANSACTION
+      const [transaction] = await PlanTransaction.create(
+        [
+          {
+            code: invoiceCode,
+            organization: organizationId,
+            plan: plan._id,
+            mode,
+            duration: durationNum,
+            amount: totalBasePrice,
+            discountAmount,
+            couponCode: couponUsed?.code || '',
+            subtotal,
+            vat,
+            total,
+            paidAt: null,
+            expiredAt: null,
+            paymentMethod: paymentMethodId,
+            note: `Tổ chức ${org.name} nâng cấp gói ${plan.name} - ${durationNum} ${
+              mode === 'year' ? 'năm' : 'tháng'
+            }`,
+            status: isPaid ? 'paid' : 'pending'
+          }
+        ],
+        { session }
+      )
+
+      if (isPaid) {
+        const expireAt = new Date()
+
+        if (mode === 'year') {
+          expireAt.setFullYear(expireAt.getFullYear() + durationNum)
+        } else {
+          expireAt.setMonth(expireAt.getMonth() + durationNum)
+        }
+
+        // cập nhật transaction
+        transaction.paidAt = new Date()
+        transaction.expiredAt = expireAt
+        transaction.status = 'paid'
+        await transaction.save({ session })
+
+        // cập nhật organization
+        org.plan = plan._id
+        org.planExpiredAt = expireAt
+        org.lastUpgradedAt = new Date()
+
+        // LƯU THÔNG TIN CHU KỲ
+        org.planDuration = mode === 'year' ? durationNum * 12 : durationNum
+        org.planTotalPaid = totalBasePrice // Giá gốc = basePrice * duration
+
+        await org.save({ session })
+      }
+
+      return { transaction, total }
     })
+    //END TRANSACTION
 
     logActivity(
       organizationId,
@@ -447,7 +527,9 @@ export const upgradePlan = async (req, res) => {
       req.user.username,
       'UPGRADE_PLAN',
       'PLAN',
-      `Gửi yêu cầu nâng cấp gói: Mã gói ${plan.code}, Thời hạn: ${durationNum} ${mode === 'month' ? 'Tháng' : 'Năm'}, Tổng: ${total} đ`,
+      `Gửi yêu cầu nâng cấp gói: Mã gói ${plan.code}, Thời hạn: ${durationNum} ${
+        mode === 'month' ? 'Tháng' : 'Năm'
+      }, Tổng: ${result.total} đ`,
       plan.name,
       'SUCCESS'
     )
@@ -455,13 +537,16 @@ export const upgradePlan = async (req, res) => {
     return responseHelper.success(
       res,
       {
-        redirect: `/checkout/${transaction._id}/invoice`,
-        transactionId: transaction._id,
-        total
+        redirect: `/checkout/${result.transaction._id}/invoice`,
+        transactionId: result.transaction._id,
+        total: result.total
       },
       'Tạo đơn hàng thành công. Đang chuyển đến hóa đơn...'
     )
   } catch (error) {
+    if (error instanceof BusinessError) {
+      return responseHelper.error(res, error.message, error.statusCode)
+    }
     responseHelper.error(res, error.message)
   }
 }
@@ -493,6 +578,13 @@ export const approvePlanTransaction = async (req, res) => {
     org.plan = transaction.plan._id
     org.planExpiredAt = expireAt
     org.lastUpgradedAt = new Date()
+
+    // LƯU THÔNG TIN CHU KỲ
+    org.planDuration =
+      transaction.mode === 'year' ? transaction.duration * 12 : transaction.duration
+
+    org.planTotalPaid = transaction.amount
+
     await org.save()
 
     logActivity(
@@ -552,124 +644,295 @@ export const cancelPlanTransaction = async (req, res) => {
   }
 }
 
-/*
-export const changePlanForOrganization = async (req, res) => {
+export const changePlan = async (req, res) => {
   try {
-    const { organizationId, planId, mode } = req.body
+    const { planId, orgId, duration, action } = req.body
 
-    if (!organizationId || !planId) {
-      throw new BusinessError('Thiếu thông tin tổ chức hoặc gói cước', 400)
+    if (!planId || !['upgrade', 'downgrade', 'renew'].includes(action)) {
+      throw new BusinessError('Dữ liệu không hợp lệ')
     }
 
-    if (!['month', 'year'].includes(mode)) {
-      throw new BusinessError('Chế độ thanh toán không hợp lệ', 400)
-    }
+    await withTransaction(async (session) => {
+      const org = await Organization.findById(orgId).populate('plan').session(session)
 
-    const result = await withTransaction(async (session) => {
-      const organization = await Organization.findById(organizationId)
-        .populate('plan')
-        .session(session || null)
-
-      const newPlan = await Plan.findById(planId).session(session || null)
-
-      if (!organization) {
-        throw new BusinessError('Không tìm thấy tổ chức', 404)
+      if (!org) {
+        throw new BusinessError('Tổ chức không tồn tại', 404)
       }
 
-      if (!newPlan || !newPlan.isActive) {
-        throw new BusinessError('Gói cước không tồn tại hoặc đã bị vô hiệu hóa', 404)
+      const currentPlan = org.plan
+
+      const newPlan = await Plan.findById(planId).session(session)
+      if (!newPlan) {
+        throw new BusinessError('Gói không tồn tại', 404)
       }
 
-      const currentPlan = organization.plan
-      const now = new Date()
-
-      if (currentPlan && currentPlan._id.toString() === newPlan._id.toString()) {
-        throw new BusinessError('Tổ chức đang sử dụng gói này', 400)
+      const wallet = await BillingWallet.findOne({ organization: orgId }).session(session)
+      if (!wallet) {
+        throw new BusinessError('Ví không tồn tại', 404)
       }
 
-      const isUpgrade = currentPlan && newPlan.level > currentPlan.level
-      const isDowngrade = currentPlan && newPlan.level < currentPlan.level
+      // RENEW - GIA HẠN
+      if (action === 'renew') {
+
+        if (currentPlan.level === 1) {
+          throw new BusinessError('Không thể gia hạn gói miễn phí')
+        }
+        
+        if (newPlan._id.toString() !== currentPlan._id.toString()) {
+          throw new BusinessError('Gia hạn phải cùng gói hiện tại')
+        }
+
+        if (!duration || duration < 1) {
+          throw new BusinessError('Thời hạn gói không hợp lệ')
+        }
+
+        // TÍNH GIÁ GIA HẠN (bao gồm VAT)
+        const baseAmount = newPlan.priceMonth * duration
+        const vatRate = 0.1
+        const vat = Math.round(baseAmount * vatRate)
+        const totalAmount = baseAmount + vat
+
+        if (wallet.balance < totalAmount) {
+          throw new BusinessError('Số dư ví không đủ', 402)
+        }
+
+        // TRỪ TIỀN
+        wallet.balance -= totalAmount
+        await wallet.save({ session })
+
+        // GHI NHẬN GIAO DỊCH
+        await BillingWalletTransaction.create(
+          [
+            {
+              wallet: wallet._id,
+              organization: orgId,
+              type: 'debit',
+              source: 'renew',
+              amount: totalAmount,
+              balanceAfter: wallet.balance,
+              reason: `Gia hạn gói ${newPlan.name} (${duration} tháng, bao gồm VAT 10%)`,
+              status: 'completed'
+            }
+          ],
+          { session }
+        )
+
+        const now = new Date()
+        const startFrom = org.planExpiredAt && org.planExpiredAt > now ? org.planExpiredAt : now
+        const newExpiredAt = new Date(startFrom)
+        newExpiredAt.setMonth(newExpiredAt.getMonth() + duration)
+
+        // CẬP NHẬT THÔNG TIN
+        org.planExpiredAt = newExpiredAt
+        org.lastUpgradedAt = now
+
+        const invoiceCode = await generateInvoiceCodeForPlan(PlanTransaction, 'HD')
+        await PlanTransaction.create(
+          [
+            {
+              code: invoiceCode,
+              organization: orgId,
+              plan: newPlan._id,
+              mode: 'month',
+              duration: duration,
+              amount: baseAmount,
+              discountAmount: 0,
+              subtotal: baseAmount,
+              vat: vat,
+              total: totalAmount,
+              paidAt: now,
+              expiredAt: newExpiredAt,
+              paymentMethod: wallet._id,
+              note: `Gia hạn gói ${newPlan.name} - ${duration} tháng`,
+              status: 'paid'
+            }
+          ],
+          { session }
+        )
+
+        // CỘNG THÊM duration và totalPaid
+        org.planDuration = (org.planDuration || 0) + duration
+        org.planTotalPaid = (org.planTotalPaid || 0) + baseAmount
+
+        await org.save({ session })
+      }
+
+      // UPGRADE
+      if (action === 'upgrade') {
+        if (newPlan.level <= currentPlan.level) {
+          throw new BusinessError('Gói nâng cấp phải cao hơn gói hiện tại')
+        }
+
+        if (!duration || duration < 1) {
+          throw new BusinessError('Thời hạn gói không hợp lệ')
+        }
+
+        // TÍNH GIÁ GÓI MỚI (bao gồm VAT)
+        const baseAmount = newPlan.priceMonth * duration
+        const vatRate = 0.1
+        const vat = Math.round(baseAmount * vatRate)
+        const totalAmount = baseAmount + vat
+
+        if (wallet.balance < totalAmount) {
+          throw new BusinessError('Số dư ví không đủ', 402)
+        }
+
+        // TRỪ TIỀN
+        wallet.balance -= totalAmount
+        await wallet.save({ session })
+
+        // GHI NHẬN GIAO DỊCH
+        await BillingWalletTransaction.create(
+          [
+            {
+              wallet: wallet._id,
+              organization: orgId,
+              type: 'debit',
+              source: 'upgrade',
+              amount: totalAmount,
+              balanceAfter: wallet.balance,
+              reason: `Nâng cấp gói ${newPlan.name} (${duration} tháng, bao gồm VAT 10%)`,
+              status: 'completed'
+            }
+          ],
+          { session }
+        )
+
+        const now = new Date()
+        const expiredAt = new Date(now)
+        expiredAt.setMonth(expiredAt.getMonth() + duration)
+
+        const invoiceCode = await generateInvoiceCodeForPlan(PlanTransaction, 'HD')
+        await PlanTransaction.create(
+          [
+            {
+              code: invoiceCode,
+              organization: orgId,
+              plan: newPlan._id,
+              mode: 'month',
+              duration: duration,
+              amount: baseAmount,
+              discountAmount: 0,
+              subtotal: baseAmount,
+              vat: vat,
+              total: totalAmount,
+              paidAt: now,
+              expiredAt: expiredAt,
+              paymentMethod: wallet._id,
+              note: `Nâng cấp gói ${newPlan.name} - ${duration} tháng`,
+              status: 'paid'
+            }
+          ],
+          { session }
+        )
+
+        // ÁP DỤNG GÓI MỚI
+        org.plan = newPlan._id
+        org.planExpiredAt = expiredAt
+        org.lastUpgradedAt = now
+        org.planDuration = duration
+        org.planTotalPaid = baseAmount // Lưu giá gốc (không bao gồm VAT)
+
+        await org.save({ session })
+      }
 
       // DOWNGRADE
-      if (isDowngrade) {
-        const [warehouseCount, staffCount] = await Promise.all([
-          Warehouse.countDocuments({ organization: organizationId }).session(session || null),
-          User.countDocuments({ organization: organizationId }).session(session || null)
-        ])
-
-        if (newPlan.warehouseLimit !== null && warehouseCount > newPlan.warehouseLimit) {
-          throw new BusinessError(
-            `Không thể hạ cấp. Tổ chức có ${warehouseCount} kho, vượt quá giới hạn ${newPlan.warehouseLimit} của gói ${newPlan.name}`,
-            400
-          )
+      if (action === 'downgrade') {
+        if (newPlan.level >= currentPlan.level) {
+          throw new BusinessError('Gói downgrade phải thấp hơn gói hiện tại')
         }
 
-        if (newPlan.staffLimit !== null && staffCount > newPlan.staffLimit) {
-          throw new BusinessError(
-            `Không thể hạ cấp. Tổ chức có ${staffCount} nhân viên, vượt quá giới hạn ${newPlan.staffLimit} của gói ${newPlan.name}`,
-            400
-          )
-        }
-      }
-
-      // ĐĂNG KÝ MỚI / UPGRADE
-      if (!currentPlan || isUpgrade) {
-        const expiredAt = new Date(now)
-
-        if (mode === 'year') {
-          expiredAt.setFullYear(expiredAt.getFullYear() + 1)
-        } else {
-          expiredAt.setMonth(expiredAt.getMonth() + 1)
+        if (!org.planExpiredAt || !org.lastUpgradedAt || !org.planDuration || !org.planTotalPaid) {
+          throw new BusinessError('Không xác định được chu kỳ gói')
         }
 
-        organization.plan = newPlan._id
-        organization.planExpiredAt = expiredAt
-        organization.lastUpgradedAt = now
+        const now = new Date()
 
-        // clear downgrade pending
-        organization.pendingPlan = null
-        organization.pendingPlanMode = null
+        const totalDays = diffDays(org.lastUpgradedAt, org.planExpiredAt)
+        const remainingDays = diffDays(now, org.planExpiredAt)
 
-        await organization.save({ session })
-
-        return {
-          actionType: !currentPlan ? 'đăng ký' : 'nâng cấp',
-          organization,
-          effectiveAt: now
+        if (remainingDays <= 0 || totalDays <= 0) {
+          throw new BusinessError('Gói hiện tại đã hết hạn')
         }
-      }
 
-      // DOWNGRADE (CHỜ HẾT HẠN)
-      if (isDowngrade) {
-        organization.pendingPlan = newPlan._id
-        organization.pendingPlanMode = mode
+        // SỬ DỤNG SỐ TIỀN ĐÃ TRẢ THỰC TẾ
+        const totalPaid = org.planTotalPaid
 
-        await organization.save({ session })
+        // Tính giá trị hàng ngày của gói hiện tại
+        const currentDailyRate = totalPaid / totalDays
 
-        return {
-          actionType: 'hạ cấp',
-          organization,
-          effectiveAt: organization.planExpiredAt
-        }
+        // Tính giá trị hàng ngày của gói mới (theo cùng duration)
+        const newTotalPrice = newPlan.priceMonth * org.planDuration
+        const newDailyRate = newTotalPrice / totalDays
+
+        // Hoàn tiền = (chênh lệch giá hàng ngày) × số ngày còn lại
+        let refundAmount = (currentDailyRate - newDailyRate) * remainingDays
+
+        refundAmount = Math.max(0, Math.floor(refundAmount))
+        refundAmount = Math.min(refundAmount, totalPaid)
+
+        wallet.balance += refundAmount
+        await wallet.save({ session })
+
+        await BillingWalletTransaction.create(
+          [
+            {
+              wallet: wallet._id,
+              organization: orgId,
+              type: 'credit',
+              source: 'downgrade',
+              amount: refundAmount,
+              balanceAfter: wallet.balance,
+              reason: `Hoàn tiền phần còn lại (${remainingDays} ngày) khi hạ gói xuống ${newPlan.name}`,
+              status: 'completed'
+            }
+          ],
+          { session }
+        )
+
+        const invoiceCode = await generateInvoiceCodeForPlan(PlanTransaction, 'HD')
+        await PlanTransaction.create(
+          [
+            {
+              code: invoiceCode,
+              organization: orgId,
+              plan: newPlan._id,
+              mode: 'month',
+              duration: 0, // Downgrade không có duration mới
+              amount: -refundAmount, // Số âm để thể hiện hoàn tiền
+              discountAmount: 0,
+              subtotal: -refundAmount,
+              vat: 0,
+              total: -refundAmount,
+              paidAt: now,
+              expiredAt: org.planExpiredAt, // Giữ nguyên expiredAt
+              paymentMethod: wallet._id,
+              note: `Hạ gói xuống ${newPlan.name} - Hoàn tiền ${refundAmount.toLocaleString()} đ (${remainingDays} ngày)`,
+              status: 'paid'
+            }
+          ],
+          { session }
+        )
+
+        // CẬP NHẬT THÔNG TIN CHU KỲ MỚI
+        org.plan = newPlan._id
+        org.planTotalPaid = newTotalPrice
+
+        await org.save({ session })
       }
     })
 
-    return responseHelper.success(
-      res,
-      result.organization,
-      result.actionType === 'hạ cấp'
-        ? `Gói sẽ được hạ xuống sau khi hết hạn vào ${result.effectiveAt.toLocaleDateString()}`
-        : `Đã ${result.actionType} gói thành công`
-    )
-  } catch (error) {
-    console.error('[CHANGE_PLAN_ERROR]', error)
-
-    if (error instanceof BusinessError) {
-      return responseHelper.error(res, error.message, error.statusCode)
+    responseHelper.success(res, 'Thay đổi gói thành công')
+  } catch (err) {
+    if (err instanceof BusinessError) {
+      return responseHelper.error(res, err.message, err.statusCode)
     }
 
-    return responseHelper.error(res, 'Có lỗi xảy ra khi thay đổi gói cước', 500)
+    return responseHelper.error(res, err.message)
   }
 }
 
-*/
+function diffDays(from, to) {
+  const msPerDay = 1000 * 60 * 60 * 24
+  return Math.max(0, Math.ceil((to.getTime() - from.getTime()) / msPerDay))
+}

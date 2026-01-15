@@ -2,12 +2,12 @@ import rateLimit from 'express-rate-limit'
 
 // Rate limit cho login
 export const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 phút
+  windowMs: 5 * 60 * 1000, // 5 phút
   max: 5, // tối đa 5 request
   handler: (req, res) => {
     // Trả JSON hợp lệ
     return res.status(429).json({
-      message: 'Bạn đã nhập sai thông tin quá 5 lần. Hãy thử lại sau 15 phút.'
+      message: 'Bạn đã nhập sai thông tin quá 5 lần. Hãy thử lại sau 5 phút.'
     })
   },
   standardHeaders: true,
