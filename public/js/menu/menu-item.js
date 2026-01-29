@@ -1,11 +1,13 @@
 $(function () {
   let table
   let categories = []
+  let taxes = []
   const csrfToken = $('#_csrf').val()
 
-  Promise.all([fetchData('menu/category/active')])
-    .then(([cats]) => {
+  Promise.all([fetchData('menu/category/active'), fetchData('taxes/active')])
+    .then(([cats, taxList]) => {
       categories = cats
+      taxes = taxList
       initDataTable()
     })
     .catch((err) => {
@@ -143,6 +145,23 @@ $(function () {
           }
         },
         {
+          data: 'tax',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              const selectedTaxId = data?._id || ''
+              const options = taxes.map((tax) => {
+                return `<option value="${tax._id}"${selectedTaxId === tax._id ? ' selected' : ''}>${tax.rate}%</option>`
+              })
+              return `
+                <select class="dataInput form-select form-select-sm" data-field="tax" data-current="${selectedTaxId}">
+                  ${options}
+                </select>
+              `
+            }
+            return data?.rate ? `${data.rate}%` : '0%'
+          }
+        },
+        {
           data: 'description',
           render: (data, type, row) => {
             if (type === 'display') {
@@ -167,8 +186,12 @@ $(function () {
         $(row).attr('data-id', data._id)
       },
       drawCallback: function () {
-        $('#menuTable select.dataInput').each(function () {
+        $('#menuTable select.dataInput[data-field="category"]').each(function () {
           initSelect2($(this), '— Chọn danh mục —')
+        })
+
+        $('#menuTable select.dataInput[data-field="tax"]').each(function () {
+          initSelect2($(this), '— 0% —')
         })
 
         $('#menuTable img').each(function () {

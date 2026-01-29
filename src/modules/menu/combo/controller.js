@@ -79,6 +79,7 @@ export const getCombos = async (req, res) => {
       { $match: baseMatch },
       { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
       ...lookupRef('items.menuItem', 'MenuItems', { as: 'menuItem' }),
+      ...lookupRef('tax', 'Taxes', { as: 'tax' }),
       ...lookupUser('createdBy')
     ]
 
@@ -118,6 +119,7 @@ export const getCombos = async (req, res) => {
           note: { $first: '$note' },
           items: { $push: '$items' },
           isActive: { $first: '$isActive' },
+          tax: { $first: '$tax' },
           createdAt: { $first: '$createdAt' }
         }
       }
@@ -214,7 +216,7 @@ export const createCombo = async (req, res) => {
 export const updateCombo = async (req, res) => {
   try {
     const { id } = req.params
-    const { sku, name, image, items, price, note, isActive } = req.body
+    const { sku, name, image, items, price, note, isActive, tax } = req.body
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -266,9 +268,11 @@ export const updateCombo = async (req, res) => {
 
     const updated = await Combo.findOneAndUpdate(
       matchCondition,
-      { sku, name, image, items, price, note, isActive },
+      { sku, name, image, items, price, note, isActive, tax },
       { new: true }
-    ).populate('items.menuItem', '_id name')
+    )
+      .populate('items.menuItem', '_id name')
+      .populate('tax', 'name rate')
 
     if (!updated) return responseHelper.error(res, 'Cập nhật thất bại', 400)
 

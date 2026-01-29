@@ -3,14 +3,16 @@
 $(function () {
   let table
   let menuItem = []
+  let taxes = []
   let cropper = null
   let currentImageFile = null
   let croppedImageUrl = null
   let croppedImageFile = null
 
-  Promise.all([fetchData('menu/get/active')])
-    .then(([items]) => {
+  Promise.all([fetchData('menu/get/active'), fetchData('taxes/active')])
+    .then(([items, taxList]) => {
       menuItem = items
+      taxes = taxList
       initDataTable()
     })
     .catch((err) => {
@@ -113,6 +115,16 @@ $(function () {
           }
         },
         {
+          data: 'tax',
+          title: 'Thuế',
+          render: (data, type, row) => {
+            if (type === 'display') {
+              return `<span>${data?.rate ? data.rate + '%' : '0%'}</span>`
+            }
+            return data?.rate || 0
+          }
+        },
+        {
           data: 'note',
           render: (data, type, row) => (type === 'display' ? `<span>${data || ''}</span>` : data)
         },
@@ -195,6 +207,13 @@ $(function () {
       $form.data('mode', 'create')
       $form.removeData('comboId')
 
+      const taxSelect = $form.find('[name="tax"]')
+      taxSelect.empty()
+      taxSelect.append('<option value="">— 0% —</option>')
+      taxes.forEach((tax) => {
+        taxSelect.append(`<option value="${tax._id}">${tax.rate}%</option>`)
+      })
+
       croppedImageUrl = null
       croppedImageFile = null
       currentImageFile = null
@@ -220,6 +239,15 @@ $(function () {
       $form.find('[name="price"]').val(data.price || '')
       $form.find('[name="note"]').val(data.note || '')
       $form.find('[name="isActive"]').prop('checked', data.isActive)
+
+      // THÊM: Set tax dropdown
+      const taxSelect = $form.find('[name="tax"]')
+      taxSelect.empty()
+      taxSelect.append('<option value=""> 0% </option>')
+      taxes.forEach((tax) => {
+        const selected = data.tax?._id === tax._id ? 'selected' : ''
+        taxSelect.append(`<option value="${tax._id}" ${selected}>${tax.rate}%</option>`)
+      })
 
       // Set image: url server
       croppedImageUrl = data.image || null
@@ -362,6 +390,7 @@ $(function () {
       const price = parseFloat($form.find('[name="price"]').val())
       const note = $form.find('[name="note"]').val()
       const isActive = $form.find('[name="isActive"]').is(':checked')
+      const tax = $form.find('[name="tax"]').val() || null
       let image = croppedImageUrl || ''
 
       // Lấy items
@@ -404,7 +433,7 @@ $(function () {
         let url = '/api/menu/combo/create'
         if (mode === 'update') url = `/api/menu/combo/update/${comboId}`
 
-        const payload = { sku, name, items, price, note, image, isActive }
+        const payload = { sku, name, items, price, note, image, isActive, tax }
 
         // Gửi tạo/cập nhật combo
         const res = await $.ajax({

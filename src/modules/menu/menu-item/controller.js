@@ -137,6 +137,7 @@ export const getMenus = async (req, res) => {
     const pipeline = [
       { $match: baseMatch },
       ...lookupRef('category', 'MenuCategories', { as: 'category' }),
+      ...lookupRef('tax', 'Taxes', { as: 'tax' }),
       ...lookupUser('createdBy'),
       ...lookupUser('updatedBy')
     ]
@@ -215,6 +216,11 @@ export const getMenus = async (req, res) => {
             _id: '$category._id',
             name: '$category.name'
           },
+          tax: {
+            _id: '$tax._id',
+            name: '$tax.name',
+            rate: '$tax.rate'
+          },
           createdBy: {
             username: '$createdBy.username'
           },
@@ -291,7 +297,7 @@ export const createMenu = async (req, res) => {
 export const updateMenu = async (req, res) => {
   try {
     const { id } = req.params
-    const { sku, image, name, category, price, description, isActive } = req.body
+    const { sku, image, name, category, price, description, isActive, tax } = req.body
 
     const organizationId = getCurrentOrg(req)
     if (!organizationId) return responseHelper.error(res, 'Thiếu thông tin tổ chức', 400)
@@ -347,11 +353,13 @@ export const updateMenu = async (req, res) => {
     if (price !== undefined) dataUpdate.price = price
     if (description !== undefined) dataUpdate.description = description
     if (isActive !== undefined) dataUpdate.isActive = isActive
+    if (tax !== undefined) dataUpdate.tax = tax || null
 
     if (Object.keys(dataUpdate).length === 0) return
 
     const updated = await MenuItem.findOneAndUpdate(matchCondition, dataUpdate, { new: true })
       .populate('category', 'name')
+      .populate('tax', 'name rate')
       .populate('createdBy', 'username -_id')
       .populate('updatedBy', 'username -_id')
 
@@ -372,7 +380,8 @@ export const updateMenu = async (req, res) => {
         { field: 'image', label: 'Ảnh' },
         { field: 'description', label: 'Mô tả' },
         { field: 'price', label: 'Giá' },
-        { field: 'isActive', label: 'Trạng thái' }
+        { field: 'isActive', label: 'Trạng thái' },
+        { field: 'tax', label: 'Thuế' }
       ],
       menu.name,
       'thực đơn'
