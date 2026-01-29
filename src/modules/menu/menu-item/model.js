@@ -8,6 +8,13 @@ const menuItemSchema = new mongoose.Schema(
     description: { type: String, default: '' },
     price: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
+
+    tax: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Tax',
+      default: null
+    },
+
     warehouse: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Warehouse',
