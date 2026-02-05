@@ -6,6 +6,9 @@ toastr.options = {
   // progressBar: true,
 }
 
+const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
 async function ajax(url, data = {}, method = 'POST') {
   const csrfToken = document.getElementById('_csrf').value
   const options = {

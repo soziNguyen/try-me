@@ -150,10 +150,10 @@ $(function () {
         className: 'text-center',
         orderable: false,
         render: (_, __, row) => `
-          <button class="btn btn-sm btn-outline-primary me-1 editBtn" data-id="${row._id}">
+          <button class="btn btn-sm btn-outline-primary me-1 editBtn" data-bs-toggle="tooltip" data-bs-html="true" data-id="${row._id}" data-bs-title="Chỉnh sửa">
             <i class="bi bi-pencil-square"></i>
           </button>
-          <button class="btn btn-sm btn-outline-danger me-1 redirect" data-id="${row._id}" title="Truy cập tổ chức">
+          <button class="btn btn-sm btn-outline-danger me-1 redirect" data-bs-toggle="tooltip" data-bs-html="true" data-id="${row._id}" data-bs-title="Truy cập tổ chức">
             <i class="bi bi-share"></i>
           </button>
           `
@@ -162,6 +162,14 @@ $(function () {
     rowCallback: function (row, data) {
       // Tag row with data-id for update
       $(row).attr('data-id', data._id)
+    },
+    drawCallback: () => {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      tooltipTriggerList.forEach(el => {
+        if (!bootstrap.Tooltip.getInstance(el)) {
+          new bootstrap.Tooltip(el)
+        }
+      })
     },
     initComplete: function () {
       $('.right-group').html(`
