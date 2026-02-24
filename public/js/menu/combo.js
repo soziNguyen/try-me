@@ -209,7 +209,7 @@ $(function () {
 
       const taxSelect = $form.find('[name="tax"]')
       taxSelect.empty()
-      taxSelect.append('<option value="">— 0% —</option>')
+      // taxSelect.append('<option value="">— 0% —</option>')
       taxes.forEach((tax) => {
         taxSelect.append(`<option value="${tax._id}">${tax.rate}%</option>`)
       })
@@ -243,7 +243,7 @@ $(function () {
       // THÊM: Set tax dropdown
       const taxSelect = $form.find('[name="tax"]')
       taxSelect.empty()
-      taxSelect.append('<option value=""> 0% </option>')
+      // taxSelect.append('<option value="">— 0% —</option>')
       taxes.forEach((tax) => {
         const selected = data.tax?._id === tax._id ? 'selected' : ''
         taxSelect.append(`<option value="${tax._id}" ${selected}>${tax.rate}%</option>`)

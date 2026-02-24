@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', async function () {
   const orgRes = await ajax('/api/organization/current', {}, 'GET')
   const currentPlanCode = orgRes?.plan?.code || 'FREE'
+  const currentDuration = orgRes?.planDuration || 1
 
   // Mặc định hiển thị giá theo tháng
   let currentMode = 'month'
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       updateBlob(option)
 
       // Re-render plans
-      fillPlans(currentPlanCode, currentMode)
+      fillPlans(currentPlanCode, currentMode, currentDuration)
     })
   })
 
@@ -52,10 +53,10 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   // Lần đầu render
-  fillPlans(currentPlanCode, currentMode)
+  fillPlans(currentPlanCode, currentMode, currentDuration)
 })
 
-async function fillPlans(currentPlanCode, mode = 'month') {
+async function fillPlans(currentPlanCode, mode = 'month', currentDuration = 1) {
   const plans = await ajax('/api/admin/plan/active', {}, 'GET')
 
   const container = document.querySelector('.package__container')
@@ -64,7 +65,14 @@ async function fillPlans(currentPlanCode, mode = 'month') {
   const currentPlan = plans.find((p) => p.code === currentPlanCode)
 
   plans.forEach((plan) => {
-    const isCurrent = plan.code === currentPlanCode
+    // const isCurrent = plan.code === currentPlanCode
+    const isSamePlan = plan.code === currentPlanCode
+
+    const isUsingYear = currentDuration >= 12
+    const isViewingYear = mode === 'year'
+
+    const isCurrent =
+      isSamePlan && ((isUsingYear && isViewingYear) || (!isUsingYear && !isViewingYear))
     const isLowerLevel = currentPlan && plan.level < currentPlan.level
 
     const badgeText = isCurrent ? 'Gói hiện tại' : ''
