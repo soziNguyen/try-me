@@ -303,10 +303,22 @@ export const upgradePlan = async (req, res) => {
     if (!org) return responseHelper.error(res, 'Không tìm thấy tổ chức', 404)
 
     // Kiểm tra nếu cùng gói hoặc hạ cấp
+    // Nếu cùng plan
     if (org.plan && org.plan.code === plan.code) {
-      return responseHelper.error(res, 'Bạn đang sử dụng gói này rồi', 400)
+      const currentDuration = org.planDuration || 1
+
+      const isUsingYear = currentDuration >= 12
+      const isUpgradeToYear = mode === 'year'
+
+      // Nếu đang dùng year và lại chọn year -> chặn
+      // Nếu đang dùng month và lại chọn month -> chặn
+      if ((isUsingYear && isUpgradeToYear) || (!isUsingYear && !isUpgradeToYear)) {
+        return responseHelper.error(res, 'Bạn đang sử dụng gói này rồi', 400)
+      }
     }
-    if (org.plan && org.plan.level >= plan.level) {
+
+    // Không cho hạ cấp
+    if (org.plan && org.plan.level > plan.level) {
       return responseHelper.error(res, 'Không thể hạ cấp sang gói thấp hơn', 400)
     }
 
@@ -316,6 +328,7 @@ export const upgradePlan = async (req, res) => {
       const existingTransaction = await PlanTransaction.findOne({
         organization: organizationId,
         plan: planId,
+        mode: mode, //them
         status: 'pending',
         paidAt: null
       }).sort({ createdAt: -1 })
@@ -673,11 +686,10 @@ export const changePlan = async (req, res) => {
 
       // RENEW - GIA HẠN
       if (action === 'renew') {
-
         if (currentPlan.level === 1) {
           throw new BusinessError('Không thể gia hạn gói miễn phí')
         }
-        
+
         if (newPlan._id.toString() !== currentPlan._id.toString()) {
           throw new BusinessError('Gia hạn phải cùng gói hiện tại')
         }
