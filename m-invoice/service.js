@@ -29,8 +29,6 @@ class MInvoiceService {
         }
       )
 
-      console.log('TOKEN:', response.data.token)
-
       this.token = response.data.token
       this.tokenExpiry = Date.now() + (response.data.expiresIn || 3600) * 1000
       return this.token
@@ -106,7 +104,7 @@ class MInvoiceService {
    * @returns {number} return.data[].details[].data[].inv_vatAmount - Tiền VAT
    * @returns {number} return.data[].details[].data[].inv_TotalAmount - Thành tiền sau VAT
    */
-  formatInvoiceData(orderData, organization, editmode = 1, invoiceId = null) {
+  formatInvoiceData(orderData, organization) {
     const {
       items,
       customer = {},
@@ -166,10 +164,9 @@ class MInvoiceService {
 
     // Format dữ liệu hóa đơn
     return {
-      editmode,
+      editmode: 1,
       data: [
         {
-          ...(invoiceId && { inv_invoiceAuth_id: invoiceId }), // Thêm id khi update/delete
           // Thông tin hóa đơn
           inv_invoiceSeries: this.defaultSerial,
           inv_invoiceIssuedDate: new Date().toISOString().split('T')[0],
@@ -190,7 +187,6 @@ class MInvoiceService {
           inv_buyerTaxCode: customer.taxCode || '',
           inv_buyerAddressLine: customer.address || '',
           inv_buyerEmail: customer.email || '',
-          buyerTel: customer.phone || '',
           inv_buyerBankAccount: customer.bankAccount || '',
           inv_buyerBankName: customer.bankName || '',
 
@@ -224,7 +220,7 @@ class MInvoiceService {
     await this.ensureToken()
 
     try {
-      const invoiceData = this.formatInvoiceData(orderData, organization, 1)
+      const invoiceData = this.formatInvoiceData(orderData, organization)
 
       const response = await axios.post(`${this.baseURL}/api/InvoiceApi78/Save`, invoiceData, {
         headers: {
@@ -287,102 +283,6 @@ class MInvoiceService {
       }
 
       throw new Error(`Failed to create invoice: ${error.response?.data?.message || error.message}`)
-    }
-  }
-
-  /**
-   * Cập nhật hóa đơn
-   */
-  async updateInvoice(invoiceId, orderData, organization) {
-    await this.ensureToken()
-
-    try {
-      const invoiceData = this.formatInvoiceData(orderData, organization, 2, invoiceId)
-
-      const response = await axios.post(`${this.baseURL}/api/InvoiceApi78/Save`, invoiceData, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`
-        }
-      })
-
-      if (response.data.code === '00' && response.data.ok) {
-        return {
-          success: true,
-          data: {
-            invoiceId: response.data.data.inv_invoiceAuth_id,
-            invoiceNumber: response.data.data.inv_invoiceNumber,
-            invoiceSeries: response.data.data.inv_invoiceSeries,
-            securityCode: response.data.data.sobaomat,
-            totalAmount: response.data.data.inv_TotalAmount,
-            status: response.data.data.tthai,
-            issuedDate: response.data.data.inv_invoiceIssuedDate,
-            rawData: response.data.data
-          }
-        }
-      } else {
-        throw new Error(response.data.message || 'Failed to update invoice')
-      }
-    } catch (error) {
-      throw new Error(`Failed to update invoice: ${error.response?.data?.message || error.message}`)
-    }
-  }
-
-  /**
-   * Hủy hóa đơn
-   */
-  async cancelInvoice(invoiceId) {
-    await this.ensureToken()
-
-    try {
-      const invoiceData = {
-        editmode: 3,
-        data: [
-          {
-            inv_invoiceSeries: this.defaultSerial,
-            inv_invoiceAuth_Id: invoiceId
-          }
-        ]
-      }
-
-      const response = await axios.post(`${this.baseURL}/api/InvoiceApi78/Save`, invoiceData, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`
-        }
-      })
-
-      if (response.data.code === '00') {
-        return {
-          success: true,
-          message: 'Invoice cancelled successfully',
-          rawData: response.data.data
-        }
-      }
-
-      throw new Error(response.data.message || 'Failed to cancel invoice')
-    } catch (error) {
-      throw new Error(`Failed to cancel invoice: ${error.response?.data?.message || error.message}`)
-    }
-  }
-
-  async getInvoiceById(invoiceId) {
-    await this.ensureToken()
-
-    try {
-      const response = await axios.get(this.baseURL + '/api/InvoiceApi78/GetInfoInvoice', {
-        params: {
-          id: invoiceId
-        },
-        headers: {
-          Authorization: `Bearer ${this.token}`
-        }
-      })
-
-      return response.data
-    } catch (error) {
-      console.error('Lỗi lấy hóa đơn:', error.response?.data || error.message)
-      throw error
     }
   }
 }
